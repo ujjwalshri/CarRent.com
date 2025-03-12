@@ -1,0 +1,21 @@
+
+<div class="container-fluid">
+    <div class="row">
+
+        <div class="col-xs-3 col-sm-3 col-md-2 sidebar" style="background-color: #333; color: #ded9d9; height: 100vh; position: fixed;">
+            <h2 ui-sref="admin" class="text-center" style="cursor: pointer;">Admin Portal</h2>
+            <ul class="nav nav-pills nav-stacked">
+                <li><a ui-sref="admin.carApprovals"> 🚗 Car approvals</a></li>
+                <li><a ui-sref="admin.userManagement">👨🏻‍💻 User management</a></li>
+                <li><a ui-sref="admin.analytics">📈 Product Analysis</a></li>
+                <li><a id="logout" ng-click="adminLogout()"> Logout</a></li>
+            </ul>
+        </div>
+
+
+        <div class="col-xs-9 col-sm-9 col-md-10 col-md-offset-2 mainView" ui-view="adminContent" style="padding: 20px;">
+            <h1>Welcome to Admin Portal</h1>
+        </div>
+    </div>
+</div>
+

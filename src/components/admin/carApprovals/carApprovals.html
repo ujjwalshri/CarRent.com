@@ -1,0 +1,44 @@
+<div class="container px-2" style="width: 1000px; padding-left:100px; padding-right: 150px;" ng-init="init()">
+    <h2 class="text-center" ng-if="cars.length === 0">No Car Approvals</h2>
+    
+    <div class="row" ng-if="cars.length > 0">
+        <div class="col-md-6" ng-repeat="car in cars | orderBy:'-createdAt'">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <div uib-carousel active="activeSlide" interval="5000" no-wrap="false">
+                        <div uib-slide ng-repeat="slide in car.vehicleImages track by $index" index="$index">
+                            <img ng-src="{{slide}}" class="carousel-image img-responsive center-block" style="height: 200px; object-fit: cover; border-radius: 8px;" alt="Car Image">
+                        </div>
+                    </div>
+                    
+                    <h3 class="text-center">{{ car.carName }} ({{ car.carModel }})</h3>
+                    <p><strong>Price:</strong> ${{ car.carPrice }}</p>
+                    <p><strong>Type:</strong> {{ car.carType }}</p>
+                    <p><strong>Category:</strong> {{ car.category }}</p>
+                    <p><strong>Mileage:</strong> {{ car.mileage }} kmpl</p>
+                    
+                    <div>
+                        <strong>Features:</strong>
+                        <span class="label label-primary" ng-if="car.features.GPS">GPS</span>
+                        <span class="label label-primary" ng-if="car.features.Sunroof">Sunroof</span>
+                        <span class="label label-primary" ng-if="car.features.Bluetooth">Bluetooth</span>
+                        <span class="label label-primary" ng-if="car.features.RearCamera">Rear Camera</span>
+                        <span class="label label-primary" ng-if="car.features.HeatedSeats">Heated Seats</span>
+                    </div>
+                    
+                    <div class="well well-sm">
+                        <strong>Owner:</strong> {{ car.owner.firstName }} {{ car.owner.lastName }}<br>
+                        <strong>Username:</strong> {{ car.owner.username }}<br>
+                        <strong>City:</strong> {{ car.owner.city }}<br>
+                        <strong>Adhaar No:</strong> {{ car.owner.adhaar }}
+                    </div>
+                    
+                    <div class="text-center">
+                        <button class="btn btn-success" ng-click="approveCar(car.id)">Approve</button>
+                        <button class="btn btn-danger" ng-click="rejectCar(car.id)">Reject</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

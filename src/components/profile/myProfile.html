@@ -1,0 +1,108 @@
+<button style="margin-left: 20px;" ng-click="back()"><<<</button>
+<div ng-init="init()" class="container">
+  <div class="panel panel-default user-card">
+    <div class="panel-heading text-center">
+      <h2 class="panel-title">Your Profile</h2>
+    </div>
+    <div class="panel-body text-center">
+      <button class="btn btn-primary" ng-click="openUpdateModal(user)">
+        <span class="glyphicon glyphicon-edit"></span> Edit Profile
+      </button>
+      <p><strong>Name:</strong> <span class="text-primary">{{ user.firstName }} {{ user.lastName }}</span></p>
+      <p><strong>Username:</strong> {{ user.username }}</p>
+      <p><strong>Email:</strong> {{ user.email }}</p>
+      <p><strong>City:</strong> {{ user.city }}</p>
+      <p><strong>Aadhaar:</strong> {{ user.adhaar }}</p>
+    </div>
+  </div>
+
+  <div class="panel panel-info" ng-if="isSeller">
+    <div class="panel-heading text-center">
+      <h3 class="panel-title">Added Cars</h3>
+    </div>
+    <div class="panel-body text-center">
+      <div class="btn-group">
+        <button class="btn btn-default" ng-click="showRejected()" ng-class="{'active': activeButton === 'rejected'}">
+          Rejected
+        </button>
+        <button class="btn btn-default" ng-click="showApproved()" ng-class="{'active': activeButton === 'approved'}">
+          Approved
+        </button>
+        <button class="btn btn-default" ng-click="showAll()" ng-class="{'active': activeButton === 'all'}">
+          All
+        </button>
+      </div>
+      <div class="row">
+        <div class="col-md-4" ng-repeat="car in userCars" ng-if="userCars.length>0">
+          <div class="thumbnail">
+            <img style="width: 200px; height: 200px;" ng-src="{{ car.vehicleImages[0] }}" alt="{{ car.carName }}" class="img-responsive" ng-click="redirectToCarPage(car.id)">
+            <div class="caption">
+              <p><strong>Price:</strong> ${{ car.carPrice }} per day</p>
+              <p><strong>Car Name:</strong> {{ car.carName }}</p>
+              <p><strong>Type:</strong> {{ car.carType }}</p>
+              <p><strong>Category:</strong> {{ car.category }}</p>
+              <p><strong>Status:</strong> {{ car.isApproved }}</p>
+              <button class="btn btn-warning" ng-click="openPriceModal(car)">
+                <span class="glyphicon glyphicon-pencil"></span> Edit Price
+              </button>
+              <button class="btn btn-danger" ng-click="deleteCar(car.id)" ng-hide="car.deleted">
+                <span class="glyphicon glyphicon-remove"></span> Unlist Car
+              </button>
+              <button class="btn btn-success" ng-click="listCar(car.id)" ng-show="car.deleted">
+                <span class="glyphicon glyphicon-ok"></span> List Car
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script type="text/ng-template" id="priceModal.html">
+    <div class="modal-header">
+      <button type="button" class="close" ng-click="$dismiss()">&times;</button>
+      <h4 class="modal-title">Update Car Price</h4>
+    </div>
+    <div class="modal-body">
+      <input type="number" class="form-control" placeholder="Enter new price"  ng-model="selectedCarPrice.price">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" ng-click="updatePrice()">Save</button>
+    </div>
+  </script>
+
+
+  <script type="text/ng-template" id="updateUserModal.html">
+    <div class="modal-header">
+      <button type="button" class="close" ng-click="$dismiss()">&times;</button>
+      <h4 class="modal-title">Update Profile</h4>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>First Name</label>
+        <input type="text" class="form-control" placeholder="Enter first name" ng-model="updatedUser.firstName">
+      </div>
+      <div class="form-group">
+        <label>Last Name</label>
+        <input type="text" class="form-control" placeholder="Enter last name" ng-model="updatedUser.lastName">
+      </div>
+      <div class="form-group">
+        <label>City</label>
+        <select class="form-control" ng-model="updatedUser.city">
+          <option value="" disabled>Please select your city</option>
+          <option value="Delhi">Delhi</option>
+          <option value="Mumbai">Mumbai</option>
+          <option value="Gwalior">Gwalior</option>
+          <option value="Bhind">Bhind</option>
+          <option value="Gurugram">Gurugram</option>
+          <option value="Agra">Agra</option>
+          <option value="Shiv puri">Shiv Puri</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" ng-click="updateUser()">Save</button>
+    </div>
+  </script>
+</div>

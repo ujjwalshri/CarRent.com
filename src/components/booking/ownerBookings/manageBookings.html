@@ -1,0 +1,28 @@
+<button style="margin-left: 20px;" ng-click="back()"><<<</button>
+<div ng-init="init()" class="container" style="display: flex; justify-content: center; align-items: center; height: 100vh;">
+    <div class="panel panel-primary" style="width: 400px; padding: 20px; border-radius: 10px; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); animation: fadeIn 0.5s ease-in-out;">
+      <div class="panel-heading text-center">
+      </div>
+      <div class="panel-body text-center">
+        <div ng-hide="ended">
+          <div ng-show="started" class="alert alert-info">Start Odometer reading: {{booking.startOdometerValue}} kms</div>
+          <div ng-show="!started">
+            <input type="number" class="form-control" ng-model="startOdometerValue" placeholder="Start Odometer Value">
+            <button class="btn btn-success btn-block" style="margin-top: 10px;" ng-click="startTrip()">Start Trip</button>
+          </div>
+          <div ng-show="started">
+            <input type="number" class="form-control" ng-model="endOdometerValue" placeholder="End Odometer Value">
+            <button class="btn btn-danger btn-block" style="margin-top: 10px;" ng-click="endTrip()">End Trip</button>
+          </div>
+        </div>
+        <div ng-show="ended" class="text-center">
+          <h3>Booking Ended</h3>
+          <div class="well">
+            <h4>Start Odometer Value: {{booking.startOdometerValue}} kms</h4>
+            <h4>End Odometer Value: {{booking.endOdometerValue}} kms</h4>
+          </div>
+          <button class="btn btn-primary btn-block" ng-click="downloadBillAsPDF()">Download Invoice</button>
+        </div>
+      </div>
+    </div>
+  </div>

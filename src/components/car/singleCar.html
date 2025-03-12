@@ -1,0 +1,85 @@
+<head>
+    <link rel="stylesheet" href="/src/components/car/singleCar.css">
+</head>
+<button style="margin-left: 20px;" ng-click="back()"><<<</button>
+<div class="outer-div" ng-init="init()">
+    <div class="car-booking-container"></div>
+    
+    <div class="single-car-container panel panel-default" ng-if="car">
+        <div class="panel-heading text-center">
+            <h1 class="panel-title">{{ car.carName }} ({{ car.carModel }})</h1>
+        </div>
+        
+        <div class="panel-body">
+            <div uib-carousel active="activeSlide" interval="5000" no-wrap="false"> <div uib-slide ng-repeat="slide in car.vehicleImages track by $index" index="$index"> <img ng-src="{{slide}}" style="width: 600px; height: 400px;" class="carousel-image" alt="Car Image"> </div> </div>
+            <div class="car-info">
+                <p><strong>Average Rating:</strong> {{averageRating}} ⭐</p>
+                <p><strong>Price:</strong> ${{ car.carPrice }} per day or bid</p>
+                <p class="text-warning"><strong>Note:</strong> Extra charges apply after 300km</p>
+                <p><strong>Type:</strong> {{ car.carType }}</p>
+                <p><strong>Category:</strong> {{ car.category }}</p>
+                <p><strong>Mileage:</strong> {{ car.mileage }} kmpl</p>
+                <p><strong>Location:</strong> {{ car.location }}</p>
+            </div>
+            
+            <div class="panel panel-info owner-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Owner Information</h3>
+                </div>
+                <div class="panel-body">
+                    <p><strong>Name:</strong> {{ car.owner.firstName }} {{ car.owner.lastName }}</p>
+                    <p><strong>Username:</strong> {{ car.owner.username }}</p>
+                    <p><strong>Email:</strong> {{ car.owner.email }}</p>
+                    <p ng-hide="user === car.owner.username">
+                        <strong>Chat with Owner:</strong> <button class="btn btn-primary btn-sm" ng-click="chatWithOwner(car.owner)">Chat 💬</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="panel panel-success book-car-form" ng-hide="isSeller">
+        <div class="panel-heading">
+            <h2 class="panel-title">Book This Car</h2>
+        </div>
+        <div class="panel-body">
+            <form>
+                <div class="form-group">
+                    <label for="amount">Bid Amount - Min: ${{car.carPrice}},Max Bid: $10000</label>
+                    <input type="number" id="amount" class="form-control" ng-model="amount" min="500" max="10000" required>
+                    <p ng-show="amount > 100000" class="text-danger">Bid amount cannot exceed $100,000.</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="dateRangePicker">Booking Dates:</label>
+                    <input type="text" id="dateRangePicker" class="form-control" placeholder="Select Start & End Date" required>
+                </div>
+                
+                <button type="submit" ng-show="calculateBookingPrice(startDate, endDate, amount) > 0" class="btn btn-success btn-block" ng-click="placeBid()">
+                    Place Bid at ${{ calculateBookingPrice(startDate, endDate, amount) === 0 ? 0: calculateBookingPrice(startDate, endDate, amount) }}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-default reviews-container">
+    <div class="panel-heading">
+        <h2 class="panel-title">Customer Reviews</h2>
+    </div>
+    <div class="panel-body">
+        <div class="panel panel-warning review-card" ng-repeat="review in carReviews">
+            <div class="panel-heading">
+                <strong>User:</strong> {{ review.reviewer.username || 'Anonymous' }}
+                <span class="badge badge-warning">⭐ {{ review.rating }} / 5</span>
+            </div>
+            <div class="panel-body">
+                <p class="review-text">"{{ review.review }}"</p>
+                <p class="text-muted">{{ review.createdAt | date:'medium' }}</p>
+            </div>
+        </div>
+        <p ng-if="!carReviews.length" class="alert alert-info">No reviews yet. Be the first to review!</p>
+    </div>
+</div>
+
+

@@ -1,0 +1,41 @@
+
+<button style="margin-left: 20px;" ng-click="back()"><<<</button>
+
+<div ng-init="init()" class="container">
+    <h2 class="text-center" ng-show="bookings.length > 0">Booking History</h2>
+    <h2 class="text-center text-muted" ng-show="bookings.length === 0">No Booking History</h2>
+    <br>
+
+    <label for="startDate" ng-show="bookings.length > 0">Filter by booking Start Date:</label><br>
+    <input type="date" ng-model="startDate"ng-show="bookings.length > 0"> <button  ng-click="filterByStartDate()" ng-show="bookings.length > 0">filter</button>
+    <button ng-click="resetFilter()" ng-show="bookings.length > 0">reset filter</button>
+ 
+    <div class="panel panel-default" ng-repeat="booking in paginatedBookings">
+        <div class="panel-heading">
+            <h4 class="panel-title">Booking ID: {{booking.id}}</h4>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Total Payable Amount:</strong> ${{calculateBookingPrice(booking.startDate, booking.endDate, booking.amount)}}</p>
+                    <p><strong>Start Date:</strong> {{booking.startDate | date: 'yyyy-MM-dd'}}</p>
+                    <p><strong>End Date:</strong> {{booking.endDate | date: 'yyyy-MM-dd'}}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Owner Details:</strong></p>
+                    <p><strong>Name:</strong> {{booking.owner.firstName}} {{booking.owner.lastName}}</p>
+                    <p><strong>Username:</strong> {{booking.owner.username}}</p>
+
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Car Details:</strong></p>
+                    <p><strong>Name:</strong> {{booking.vehicle.carName}} </p>
+                    <p><strong>CarType:</strong> {{booking.vehicle.carType}}</p> 
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="text-center" ng-show="bookings.length > 0">
+        <ul uib-pagination boundary-links="true" total-items="totalItems" ng-model="currentPage" ng-change="pageChanged()" items-per-page="itemsPerPage" class="pagination-sm" previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"></ul>
+    </div>
+</div>

@@ -1,0 +1,55 @@
+<button style="margin-left: 20px;" ng-click="back()"><<<</button>
+<div class="container ">
+    <h1 class="text-center" ng-show="bookings.length > 0">Your Biddings</h1>
+    <h1 class="text-center text-danger" ng-show="bookings.length === 0">NO BIDDINGS</h1>
+    <select class="filter-container panel panel-default p-3" name="location" ng-model="biddingStatus" ng-change="applyFilter()" required>
+        <option value="" disabled selected>Search Booking type</option>
+        <option value="rejected">rejected</option>
+        <option value="pending">pending</option>
+    </select>
+    <button ng-click="resetFilter()">reset filter</button>
+    <div class="filters text-center mt-3 mb-3" ng-show="bookings.length > 0">
+        <input type="text" class="form-control w-50 mx-auto" ng-model="searchCarName" placeholder="🔍 Search by Car Name" />
+    </div>
+    <div class="table-responsive" ng-show="bookings.length > 0" style="max-height: 400px; overflow-y: auto;">
+        <table class="table table-hover table-striped table-bordered bidding-table">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Car Name</th>
+                    <th>Model</th>
+                    <th>Type</th>
+                    <th>Price/Day</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Total Price</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="booking in paginatedBookings | ownerBookingFilter:searchCarName | orderBy: '-createdAt'">
+                    <td>{{ booking.vehicle.carName }}</td>
+                    <td>{{ booking.vehicle.carModel }}</td>
+                    <td>{{ booking.vehicle.carType }}</td>
+                    <td>${{ booking.vehicle.carPrice }}</td>
+                    <td>{{ booking.startDate | date: 'yyyy-MM-dd' }}</td>
+                    <td>{{ booking.endDate | date: 'yyyy-MM-dd' }}</td>
+                    <td class="font-weight-bold text-success">
+                        ${{ calculateBookingPrice(booking.startDate, booking.endDate, booking.amount) }}
+                    </td>
+                    <td>{{ booking.owner.username }}</td>
+                    <td>{{ booking.owner.email }}</td>
+                    <td>
+                        <span class="badge badge-pill" ng-class="{ 'badge-warning': booking.status === 'Pending', 'badge-danger': booking.status === 'rejected'}">
+                            {{ booking.status }}
+                        </span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="text-center">
+            <ul uib-pagination boundary-links="true" total-items="totalItems" ng-model="currentPage" ng-change="pageChanged()" items-per-page="itemsPerPage" class="pagination-sm" previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"></ul>
+        </div>
+    </div>
+</div>

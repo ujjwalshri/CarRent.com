@@ -1,0 +1,51 @@
+<button style="margin-left: 20px;" ng-click="back()"><<<</button>
+<div ng-init="init()" class="container-fluid" style="background-color: #f8f9fa; height: 100vh; padding: 10px;">
+    <div class="row">
+      <div class="col-md-4 panel panel-default" style="height: 90vh; overflow-y: auto; background-color: #ffffff; border-right: 2px solid #ddd;">
+        <div class="panel-heading" style="background-color: #007bff; color: white;">
+          <h3 class="panel-title">Chats</h3>
+        </div>
+        <div class="list-group">
+          <a  class="list-group-item" style="border-bottom: 1px solid #ddd;" ng-repeat="conversation in myConversations | orderBy : '-createdAt'" ng-click="fetchMessages(conversation.id)">
+            <h4 class="list-group-item-heading" style="color: #007bff;">{{conversation.car.carName}} ({{conversation.car.carModel}})</h4>
+            <p class="list-group-item-text">{{conversation.car.carType}}</p>
+            <small style="color: gray;">{{conversation.participants[1].username === loggedUser ? conversation.participants[0].username : conversation.participants[1].username}}</small>
+          </a>
+        </div>
+      </div>
+      
+      <div class="col-md-8 panel panel-default" style="height: 90vh; display: flex; flex-direction: column; background-color: #e9ecef;">
+        <div class="panel-heading" style="background-color: #007bff; color: white;">
+          <h3 class="panel-title" ng-show="selectedConversation">{{selectedConversation.participants[1].username === loggedUser ? selectedConversation.participants[0].username : selectedConversation.participants[1].username}}</h3>
+          <p ng-hide="selectedConversation">Click on a conversation to view messages</p>
+        </div>
+        
+        <div class="panel-body" style="flex-grow: 1; overflow-y: auto; padding: 10px;">
+          <div class="media" ng-repeat="message in messages | orderBy: 'createdAt'" ng-class="{'text-right': message.sender === loggedUser, 'text-left': message.sender !== loggedUser}" style="margin-bottom: 10px;">
+            <div class="media-body" style="padding: 10px; border-radius: 10px; background-color: #ffffff; box-shadow: 2px 2px 5px rgba(0,0,0,0.1);">
+              <h5 class="media-heading" style="color: #007bff;"><strong>{{message.sender}}</strong></h5>
+              <p>{{message.message}}</p>
+              <div >
+                <img  ng-src="{{message.images[0]}}" ng-show="message.images" class="img-responsive" style="max-width: 200px; max-height: 200px; border-radius: 5px;" ng-class="{'pull-right': message.sender === loggedUser, 'pull-left': message.sender !== loggedUser}">
+              </div>
+              <div >
+                
+              
+          </div>
+        </div>
+        <p class="text-muted">{{message.createdAt | date:'shortTime'}}</p>
+      </div>
+        </div>
+        
+        <div class="panel-footer" ng-show="selectedConversation" style="background-color: #ffffff; border-top: 2px solid #ddd; display: flex; align-items: center;">
+          <div class="input-group">
+            <input type="text" class="form-control" placeholder="Type a message..." ng-model="inputMessage" ng-keypress="$event.keyCode===13 ? sendMessage(): ''">
+            <span class="input-group-btn" style="display: flex; align-items: center;">
+              <input type="file" id="file" accept="image/*" ng-model="image" onchange="angular.element(this).scope().previewImages(this)" class="btn btn-default"> <button class="btn btn-primary" ng-click="sendMessage()">Send</button>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  

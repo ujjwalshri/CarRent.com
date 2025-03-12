@@ -1,0 +1,126 @@
+
+<button style="margin-left: 20px;" ng-click="back()"><<<</button>
+<div class="container" ng-app="carApp" ng-controller="addCarCtrl">
+    <h2 class="text-center">Add a New Car</h2>
+    <form id="addCarForm" class="form-horizontal">
+        
+
+        <div class="form-group">
+            <label class="col-sm-3 control-label" for="carType">Car Type:</label>
+            <div class="col-sm-9">
+                <select class="form-control" id="carType" name="carType" ng-model="carType" required>
+                    <option value="" disabled selected>Select Car Type</option>
+                    <option value="4-seater">4 Seater</option>
+                    <option value="6-seater">6 Seater</option>
+                    <option value="8-seater">8 Seater</option>
+                </select>
+            </div>
+        </div>
+        
+
+        <div class="form-group">
+            <label class="col-sm-3 control-label" for="carName">Car Name:</label>
+            <div class="col-sm-9">
+                <input type="text" class="form-control" id="carName" name="carName" ng-model="carName" placeholder="Write the whole name for better searches" required>
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <label class="col-sm-3 control-label" for="carModel">Car Model Year:</label>
+            <div class="col-sm-9">
+                <input type="number" class="form-control" id="carModel" name="carModel" ng-model="carModel" placeholder="enter the model year" required>
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <label class="col-sm-3 control-label" for="category">Category:</label>
+            <div class="col-sm-9">
+                <select class="form-control" id="category" name="category" ng-model="category">
+                    <option value="" disabled selected>Select Car Category</option>
+                    <option value="SUV">SUV</option>
+                    <option value="Sedan">Sedan</option>
+                </select>
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <label class="col-sm-3 control-label" for="location">Location:</label>
+            <div class="col-sm-9">
+                <select class="form-control" id="location" name="location" ng-model="location" required>
+                    <option value="" disabled selected>Select Location Type</option>
+                    <option value="local">Local</option>
+                    <option value="outstation">Outstation</option>
+                    <option value="both">Both</option>
+                </select>
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <label class="col-sm-3 control-label" for="carPrice">Car Price per Day:</label>
+            <div class="col-sm-9">
+                <input type="number" class="form-control" id="carPrice" name="carPrice" ng-model="carPrice" placeholder="Enter the price from 500 to 20000"  required>
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <label class="col-sm-3 control-label" for="mileage">Mileage (km):</label>
+            <div class="col-sm-9">
+                <input type="number" class="form-control" id="mileage" name="mileage" ng-model="mileage" placeholder="enter the mileage in kms" required>
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <label class="col-sm-3 control-label" for="imageUpload">Car Images:</label>
+            <div class="col-sm-9">
+                <input type="file" class="form-control" id="imageUpload" accept=".jpg, .jpeg, .png" multiple onchange="angular.element(this).scope().previewImages(this)">
+            </div>
+        </div>
+
+
+        <div class="form-group">
+            <div class="col-sm-offset-3 col-sm-9">
+                <div class="row" id="imagePreview">
+                    <div class="col-xs-4" ng-repeat="image in images">
+                        <img ng-src="{{image.base64}}" class="img-responsive img-thumbnail">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <fieldset class="form-group">
+            <legend class="col-sm-12">Select Car Features:</legend>
+            <div class="col-sm-offset-3 col-sm-9">
+                <div class="checkbox">
+                    <label><input type="checkbox" ng-model="GPS"> GPS Navigation</label>
+                </div>
+                <div class="checkbox">
+                    <label><input type="checkbox" ng-model="Sunroof"> Sunroof</label>
+                </div>
+                <div class="checkbox">
+                    <label><input type="checkbox" ng-model="Bluetooth"> Bluetooth Connectivity</label>
+                </div>
+                <div class="checkbox">
+                    <label><input type="checkbox" ng-model="RearCamera"> Rear Camera</label>
+                </div>
+                <div class="checkbox">
+                    <label><input type="checkbox" ng-model="HeatedSeats"> Heated Seats</label>
+                </div>
+            </div>
+        </fieldset>
+
+
+        <div class="form-group">
+            <div class="col-sm-offset-3 col-sm-9">
+                <button type="submit" class="btn btn-success btn-block" ng-click="submitCarForm()">Add Car</button>
+            </div>
+        </div>
+
+    </form>
+</div>

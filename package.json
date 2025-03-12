@@ -1,0 +1,17 @@
+{
+  "name": "vehicle-rent-angular",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  
+        "scripts": {
+      "start": "ng serve --port 5000",
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^3.2.6"
+  }
+}

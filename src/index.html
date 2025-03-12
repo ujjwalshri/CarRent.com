@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myApp">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vehical Rental</title>
+
+    <!--importing global css for the whole app -->
+    <link rel="stylesheet" href="global.style.css" />
+    <!-- angular -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+   
+    <!-- ui Router -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/1.0.29/angular-ui-router.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.5.6/ui-bootstrap-tpls.min.js"></script>
+
+    <!-- Flatpickr CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!--importing the async library -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/async/3.2.6/async.min.js"
+      integrity="sha512-Ps4UroO9GAII8QTM2IE4KcHjslTEZjoZY6OhztAFKSnnqshNnPR8PQl1usQpGiHQXnyRCwEMZAsVJgGg2z8Kog=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <!--importing the pdfKit lib to download the pdf of the bill generated-->
+    <script
+      type="text/javascript"
+      src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.56/pdfmake.min.js"
+    ></script>
+    <script
+      type="text/javascript"
+      src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.56/vfs_fonts.js"
+    ></script>
+    <!--importing the chart js library-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <!--importing the css for the toastify library-->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <!--importing the js for the toastify library-->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+
+    <!-- importing the app.js which has the main Controller for whole application -->
+    <script src="app.controller.js"></script>
+    <!--importing the admin controller-->
+    <script src="/src/components/admin/admin.controller.js"></script>
+
+    <!--importing the analytics controller-->
+    <script src="/src/components/admin/Analytics/analytics.controller.js"></script>
+    <!--importing the car controller-->
+    <script src="/src/components/admin/carApprovals/carController.js"></script>
+    <!--importing the home controller-->
+    <script src="/src/components/home/home.controller.js"></script>
+    <!--importing the single Car controller-->
+    <script src="/src/components/car/singleCar.controller.js"></script>
+    <!--importing the signup controller -->
+    <script src="/src/components/auth/signup.controller.js"></script>
+    <!--importing the login controller -->
+    <script src="/src/components/auth/login.controller.js"></script>
+    <!--importing the owner Booking controller -->
+    <script src="/src/components/booking/ownerBookings/ownerBookings.controller.js"></script>
+    <!-- importing the add Car controller  -->
+    <script src="/src/components/car/addCarController.js"></script>
+    <!--importing the myProfile controller -->
+    <script src="/src/components/profile/myProfile.controller.js"></script>
+    <!--importing the userManagement controller-->
+    <script src="/src/components/admin/userManagement/userManagement.controller.js"></script>
+    <!--importing the conversations contorller-->
+    <script src="/src/components/conversations/conversations.controller.js"></script>
+    <!--importing the owner confirmed booking controller -->
+    <script src="/src/components/booking/ownerBookings/confirmedBookings.controller.js"></script>
+    <!--importing the myBiddings controller -->
+    <script src="/src/components/booking/userBookings/myBiddings.controller.js"></script>
+    <!--importing the user  booking controller -->
+    <script src="/src/components/booking/userBookings/userBookings.controller.js"></script>
+    <!--importing the manageBookings controller-->
+    <script src="/src/components/booking/ownerBookings/manageBookings.controller.js"></script>
+    <!--importing the sellerAnalytics controller-->
+    <script src="/src/components/sellerAnalytics/sellerAnalytics.controller.js"></script>
+    <!--importing the bookingsHistory controller-->
+    <script src="/src/components/booking/userBookings/bookingsHistory.controller.js"></script>
+
+    <!--importing the app routes -->
+    <script src="routes/app.routes.js"></script>
+
+    <!--importing the IDB service -->
+    <script src="/src/services/IDB.service.js"></script>
+    <!--importing the route protection service-->
+    <script src="/src/services/routeProtection.service.js"></script>
+    <!--importing the auth service-->
+    <script src="/src/services/Auth.service.js"></script>
+    <!--importing the Toast service-->
+    <script src="/src/services/Toast.service.js"></script>
+    <!--importing the chart service-->
+    <script src="/src/services/Chart.service.js"></script>
+
+
+
+    
+    <!--factory for hashing the password-->
+    <script src="/src/factories/hashPassword.js"></script>
+    <!--importing the factory for calculating the booking price-->
+    <script src="/src/factories/Booking.js"></script>
+    <!--importing the factory for getting the isValid bidding details-->
+    <script src="/src/factories/Bidding.js"></script>
+    <!--importing the factory for car validation-->
+    <script src="/src/factories/carValidations.js" ></script>
+    <!--importing the factory for review validation and other functions-->
+    <script src="/src/factories/Review.js"></script>
+    <!--importing the factory for the Buttons-->
+    <script src="/src/factories/Button.js"></script>
+    
+  
+    <!--importing the car filters-->
+    <script src="/src/filters/carFilters.js"></script>
+    <!--importing the owner Bookings filter-->
+    <script src="/src/filters/ownerBooking.js"></script>
+    <!--importing the confirmed booking filter-->
+    <script src="/src/filters/confirmedBookingsFilter.js"></script>
+    <!--importing the userBookings filter-->
+    <script src="/src/filters/userBookings.js"></script>
+
+    <!--importing the bootstrap css-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css"
+    />
+    <!-- angular material -->
+    <script src="https://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-2.5.0.js"></script>
+    
+
+  </head>
+  <body ng-controller="appCtrl" ng-init="init()">
+   
+    <nav class="navbar navbar-inverse" ng-hide="adminLogged">
+        <div class="container-fluid">
+           
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" ng-click="isNavCollapsed = !isNavCollapsed">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" ui-sref="home">Car.com</a>
+            </div>
+
+           
+            <div class="collapse navbar-collapse" uib-collapse="isNavCollapsed">
+                <ul class="nav navbar-nav">
+                    <li><a ui-sref="home">Home</a></li>
+                    
+                   
+                    <li class="dropdown" uib-dropdown ng-show="isLogged">
+                        <a href="#" uib-dropdown-toggle>More <span class="caret"></span></a>
+                        <ul class="dropdown-menu" uib-dropdown-menu>
+                            <li id="profile"><a ui-sref="myProfile">Profile</a></li>
+                            <li id="addCar"><a ui-sref="car">Add a car</a></li>
+                            <li id="chats"><a ui-sref="conversations({id:0})">Chats</a></li>
+                            <li id="chats" ng-if="!isSeller">
+                                <a ui-sref="userBookings">Bookings</a>
+                            </li>
+                            <li id="chats">
+                                <a ui-sref="bookingHistory">Booking History</a>
+                            </li>
+                            <li id="chats" ng-if="isSeller">
+                                <a ui-sref="ownerBookings">Biddings</a>
+                            </li>
+                            <li id="sellerAnalytics" ng-if="isSeller">
+                                <a ui-sref="sellerAnalytics">Analytics</a>
+                            </li>
+                            <li ng-if="!isSeller"><a ui-sref="myBiddings">My Biddings</a></li>
+                            <li id="chats" ng-if="isSeller">
+                                <a ui-sref="confirmedBookings">Confirmed Bookings</a>
+                            </li>
+                            <li id="logout" ng-click="logout()">
+                                <a ui-sref="login">Logout</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+
+               
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a ui-sref="login" class="btn btn-success navbar-btn" style="color:white" ng-show="!isLogged">Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div id="main-view" ui-view></div>
+</body>
+
+</html>
