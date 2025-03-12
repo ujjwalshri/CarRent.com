@@ -4,12 +4,13 @@ const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 9000;
 
-app.get('/', (req,res)=>{
-    res.json({message: 'API is running...'});
-})
+app.get('/', (req, res) => {
+    res.json({ message: 'API is running...' });
+});
 
-app.listen(PORT, ()=>{
+const server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-})
+});
+
