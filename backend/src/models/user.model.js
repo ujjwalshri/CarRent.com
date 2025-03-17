@@ -3,29 +3,29 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema({
     username:{
         type:String,
-        required:true,
+        required:[true, "Username is required"],
         unique:true
     },
     password:{
         type:String,
-        required:true
+        required:[true, "Password is required"],
     },
     firstName: {
         type: String,
-        required: true,
+        required: [true, "First name is required"],
     },
     lastName: {
         type: String,
-        required: true,
+        required: [true, "Last name is required"],
     },
     email: {
         type: String,
-        required: true,
+        required: [true, "Email is required"],
         unique: true,
     },
     password: {
         type: String,
-        required: true,
+        required: [true, "Password is required"],
     },
     isBlocked:{
         type:Boolean,
@@ -42,6 +42,11 @@ const userSchema = new mongoose.Schema({
     isAdmin: {
         type: Boolean,
         default: false,
+    },
+    adhaar:{
+        type:String,
+        required:[ true, "Adhaar is required"],
+        unique:true
     }
     }, {timestamps:true});
 

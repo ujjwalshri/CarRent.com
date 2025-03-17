@@ -1,14 +1,24 @@
 import User from '../models/user.model.js';
 import bcrypt from 'bcryptjs';
+import validateUser from '../validation/user.validate.js';
 import {generateTokenAndSetCookie} from '../utils/gen.token.js';
 
 
 export const signupController = async (req, res) => {
-    const { username, password, firstName, lastName, email, city } = req.body;
+    const { username, password, firstName, lastName, email, city,adhaar } = req.body;
     console.log(req.body);
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     try {
+       const userData = {
+              username,
+              password,
+              firstName,
+              lastName,
+              email,
+              city,
+              adhaar
+       }
        
        const user = new User({
               username,
@@ -16,12 +26,22 @@ export const signupController = async (req, res) => {
               firstName,
               lastName,
               email,
-              city
+              city, 
+              adhaar
        })
+       console.log(user);
+
+        
+        const validUser = validateUser(userData);
+        if(validUser.error){
+            console.log("validate to hua");
+            return res.status(400).json({ err: `error ${validUser.error}` });
+        }
+
         await user.save();
 
         if(user){
-            await generateTokenAndSetCookie(user, res); // Generate token and set cookie
+            await generateTokenAndSetCookie(user, res); 
             return  res.status(201).json({ 
                 _id: user._id,
                 username: user.username,
@@ -34,6 +54,7 @@ export const signupController = async (req, res) => {
                 isBlocked: user.isBlocked,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
+                adhaar: user.adhaar
              });
         }else {
             return res.status(400).json({ err: "Invalid user data" });
@@ -86,6 +107,33 @@ export const loginController = async (req, res) => {
         } else {
             console.error('Response headers already sent', err);
         }
+    }
+}
+
+export const meController = async (req, res) => {
+    try{
+        const userId = req.user;
+        const user = await User.findById(userId);
+        if(user){
+            return res.status(200).json({
+                _id: user._id,
+                username: user.username,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                city: user.city,
+                isSeller: user.isSeller,
+                isAdmin: user.isAdmin,
+                isBlocked: user.isBlocked,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+            });
+        }else{
+            return res.status(404).json({ err: "User not found" });
+        }
+
+    }catch(err){
+        res.status(500).json({ message: `error in the me controller ${err.message}` });
     }
 }
 

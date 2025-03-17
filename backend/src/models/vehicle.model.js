@@ -9,8 +9,8 @@ const vehicleSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    model: {
-        type: String,
+    modelYear: {
+        type: Number,
         required: true,
     },
     price: {
@@ -19,10 +19,6 @@ const vehicleSchema = new mongoose.Schema({
     },
     color: {
         type: String,
-        required: true,
-    },
-    year: {
-        type: Number,
         required: true,
     },
     mileage: {
@@ -49,15 +45,41 @@ const vehicleSchema = new mongoose.Schema({
         type:String,
         required:true
     },
-    Owner:{
-        type: Object,
-        required: true,
+    owner: {
+        _id: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true
+        },
+        username: {
+            type: String,
+            required: true
+        },
+        email: {
+            type: String,
+            required: true
+        },
+        firstName: {
+            type: String,
+            required: true
+        },
+        lastName: {
+            type: String,
+            required: true
+        },
+        city: {
+            type: String,
+            required: true
+        },
+        adhaar: {
+            type: String,
+            required: true
+        },
+        isBlocked: {
+            type: Boolean,
+            required: true
+        }
     },
-    mileage:{
-        type:Number,
-        required:true
-    },
-    vehicleImages : {
+    vehicleImages: {
         type: Array,
         required: true,
     }
@@ -65,4 +87,4 @@ const vehicleSchema = new mongoose.Schema({
 
 const Vehicle = mongoose.model('Vehicle', vehicleSchema);
 
-module.exports = Vehicle;
+export default Vehicle;

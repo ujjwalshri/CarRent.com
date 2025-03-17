@@ -1,5 +1,5 @@
 // auth service to interact with the database
-angular.module('myApp').service('AuthService', function($q, IDB) {
+angular.module('myApp').service('AuthService', function($q, IDB, ApiService, $http,$state) {
     // function to validate the user
     this.validateUser = function(user) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // regex for email validation 
@@ -23,21 +23,63 @@ angular.module('myApp').service('AuthService', function($q, IDB) {
         }
         return $q.resolve();
     };
+    // function to get the user from the database by userId of the cookie
+    this.getMe = function(){
+        const deferred = $q.defer();
+        $http.get(`${ApiService.baseURL}/api/auth/me`, { withCredentials: true })
+            .then(function(response) {
+                console.log('User:', response.data);
+                deferred.resolve(response.data);
+            })
+            .catch(function(error) {
+                console.error();
+                deferred.reject(`'Error getting the loggedin user:', ${error}`); // Reject the promise with the error
+            });
+        return deferred.promise
+    }
+
      // function to login the user
     this.loginUser = function(username, password) {
         const deferred = $q.defer();
-        IDB.loginUser(username, password)
-            .then(res => {
-                deferred.resolve(res);
+        $http({method: "POST",
+            url: "http://localhost:8000/api/auth/login",
+            data: {
+                username: username,
+                password: password
+            },
+            withCredentials: true})
+            .then(function(response) {
+                console.log('User logged in:', response.data);
+                deferred.resolve(response.data);
+                return response.data; // Return the response data from the server
             })
-            .catch(err => {
-                deferred.reject(err);
+            .catch(function(error) {
+                console.error('Error logging in user:', error);
+                deferred.reject(`Error logging in user: ${error}`); // Reject the promise with the error
             });
         return deferred.promise;
     };
 // function to register the user
-    this.registerUser = function(user) {
-        user.id = crypto.randomUUID(); // generating a random id for the user
-        return IDB.registerUser(user);
-    };
+this.registerUser = function(user) {
+    let deffered = $q.defer();
+    $http.post(`${ApiService.baseURL}/api/auth/signup`, {
+        username: user.username,
+        password: user.password,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        city: user.city,
+        adhaar: user.adhaar
+    }, { withCredentials: true })
+        .then(function(response) {
+            console.log('User registered:', response.data);
+            deffered.resolve(response.data);
+            return response.data; // Return the response data from the server
+        })
+        .catch(function(error) {
+            console.error('Error registering user:', error);
+            deffered.reject(error); // Reject the promise with the error
+        });
+    return deffered.promise;
+};
 });

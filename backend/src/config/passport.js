@@ -9,7 +9,7 @@ const cookieExtractor = (req) => {
 };
 
 const opts = {
-  jwtFromRequest: cookieExtractor, // Extract JWT from cookies
+  jwtFromRequest: cookieExtractor, 
   secretOrKey: process.env.JWT_SECRET,
 };
 
