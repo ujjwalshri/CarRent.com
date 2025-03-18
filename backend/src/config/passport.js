@@ -13,6 +13,7 @@ const opts = {
   secretOrKey: process.env.JWT_SECRET,
 };
 
+
 passport.use(
   new Strategy(opts, async (jwt_payload, done) => {
     try {

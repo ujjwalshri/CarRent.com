@@ -4,7 +4,7 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
         $http.get(`${ApiService.baseURL}/api/vehicle/allApprovedVehicles`)
         .then((res)=>{
             deferred.resolve(res);
-            console.log($scope.allCars);
+            console.log(res);
         })
         .catch(err=>{
             deferred.reject("Error fetching cars");
@@ -14,7 +14,7 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
     }
     this.getCarById = (carId)=>{
         let deferred = $q.defer();
-        $http.get(`${ApiService.baseURL}/api/vehicle/${carId}`)
+        $http.get(`${ApiService.baseURL}/api/vehicle/getVehicle/${carId}`, { withCredentials: true })
         .then((res)=>{
             deferred.resolve(res);
         })

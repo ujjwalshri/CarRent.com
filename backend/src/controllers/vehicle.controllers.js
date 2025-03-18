@@ -8,10 +8,10 @@ export const addCarController = async (req, res) => {
     const {
         name, company, modelYear, price, color, mileage, fuelType, category, city
     } = req.body;
-   
+    
+
     
     try {
-       
         const user = await User.findById(req.user._id);
        
         if (!user) {
@@ -49,33 +49,12 @@ export const addCarController = async (req, res) => {
 
         const savedCar = await newCar.save();
 
-
         res.status(201).json({
             message: 'Car added successfully',
             car: savedCar
         });
     } catch (error) {
         console.error('Add car error:', error);
-        if (req.files) {
-            try {
-                await Promise.all(req.files.map(file => s3Client.deleteObject({
-                    Bucket: process.env.S3_BUCKET_NAME,
-                    Key: file.key
-                }).promise()));
-            } catch (cleanupError) {
-                console.error('Failed to cleanup S3:', cleanupError);
-            }
-        }
-        if (error.name === 'ValidationError') {
-            return res.status(400).json({
-                error: 'Validation Error',
-                details: Object.values(error.errors).map(err => err.message)
-            });
-        }
-        res.status(500).json({
-            error: 'Failed to add car',
-            message: error.message
-        });
     }
 };
 

@@ -7,19 +7,18 @@
     
     <div class="single-car-container panel panel-default" ng-if="car">
         <div class="panel-heading text-center">
-            <h1 class="panel-title">{{ car.carName }} ({{ car.carModel }})</h1>
+            <h1 class="panel-title">{{ car.name }} ({{ car.modelYear }})</h1>
         </div>
         
         <div class="panel-body">
-            <div uib-carousel active="activeSlide" interval="5000" no-wrap="false"> <div uib-slide ng-repeat="slide in car.vehicleImages track by $index" index="$index"> <img ng-src="{{slide}}" style="width: 600px; height: 400px;" class="carousel-image" alt="Car Image"> </div> </div>
+            <div uib-carousel active="activeSlide" interval="5000" no-wrap="false"> <div uib-slide ng-repeat="slide in car.vehicleImages track by $index" index="$index"> <img ng-src="{{slide.url}}" style="width: 600px; height: 400px;" class="carousel-image" alt="Car Image"> </div> </div>
             <div class="car-info">
                 <p><strong>Average Rating:</strong> {{averageRating}} ⭐</p>
-                <p><strong>Price:</strong> ${{ car.carPrice }} per day or bid</p>
+                <p><strong>Price:</strong> ${{ car.price }} per day or bid</p>
                 <p class="text-warning"><strong>Note:</strong> Extra charges apply after 300km</p>
-                <p><strong>Type:</strong> {{ car.carType }}</p>
                 <p><strong>Category:</strong> {{ car.category }}</p>
                 <p><strong>Mileage:</strong> {{ car.mileage }} kmpl</p>
-                <p><strong>Location:</strong> {{ car.location }}</p>
+                <p><strong>Location:</strong> {{ car.city }}</p>
             </div>
             
             <div class="panel panel-info owner-info">

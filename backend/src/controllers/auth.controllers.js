@@ -30,8 +30,6 @@ export const signupController = async (req, res) => {
               adhaar
        })
       
-
-        
         // const validUser = validateUser(userData);
         // if(validUser.error){
         //     console.log("validate to hua");

@@ -12,25 +12,39 @@ angular
       Booking,
       $timeout,
       ToastService,
-      BackButton
+      BackButton, 
+      CarService
     ) {
       $scope.back = BackButton.back; // back function to go back to the previous page
-      const loggedInUser = JSON.parse(sessionStorage.getItem("user")); // get the logged in user from the session storage
+    
       $scope.calculateBookingPrice = Booking.calculate; // function to calculate the booking price
-      $scope.user = loggedInUser.username; // get the username of the logged in user
+      
       $scope.car = {}; // initial car object
       $scope.carReviews = []; // intital car reviews array
       $scope.blockedDates = []; //initial blocked dates array
       $scope.averageRating = 0; // initial average rating for each car
       // init function to fetch the car, reviews and blocked dates
       $scope.init = () => {
-        fetchCarData();
+        // fetchCarData();
+         fetchSingleCarData();
       };
+      const fetchSingleCarData = ()=>{
+        CarService.getCarById($stateParams.id).then((res)=>{
+            $scope.car = res.data;
+            console.log($scope.car);
+        }).catch(err=>{
+            ToastService.error(err);
+        })
+      }
+
+      
+
+
 
       // function to fetch all the car data to be displayed on the single car page
       function fetchCarData() {
         $q.all([
-          IDB.getCarByID($stateParams.id), // get the car by the id
+         
           IDB.getReviewsByCarID($stateParams.id), // get the reviews by the car id
           IDB.getBookingsByCarID($stateParams.id), // get the bookings by the car id
         ])

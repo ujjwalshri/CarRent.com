@@ -1,4 +1,4 @@
-angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastService, CarService) {
+angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastService, CarService,$timeout) {
     $scope.allCars = []; // array to hold all the cars
     $scope.priceFilter = ''; // filter to hold the price filter
     $scope.search = ''; // filter to hold the search filter
@@ -9,8 +9,11 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
     
     // init function to run when the page mounts
     $scope.init = function (){
-        // function to get all the cars that have status === approved
-        fetchAllCars();
+
+
+            fetchAllCars();
+
+       
     };
     // function to get all the cars that have status === approved and car is not deleted
     function fetchAllCars(){

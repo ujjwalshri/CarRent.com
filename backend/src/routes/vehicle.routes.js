@@ -13,4 +13,4 @@ router.post('/toggleVehicleStatus/:id',protectRoute,toggleVehicleStatusControlle
 router.put('/updateVehicle/:id', protectRoute, updateVehicleController); // update a vehicle
 router.get('/getVehicle/:id', protectRoute, getVehicleByIdController ); // get a vehicle by id
 
-export default router;
+export default router; // export the router object

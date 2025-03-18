@@ -5,10 +5,10 @@ app.controller("appCtrl", function($scope,$rootScope, ToastService) {
        $rootScope.adminLogged  = false; // set the adminLogged to false initially
        $rootScope.isLogged = false; // set the isLogged to false initially
         $rootScope.isSeller = false; // set the isSeller to false initially
-            const loggedInUser = JSON.parse(sessionStorage.getItem("user"));// fetch the loggedInUser
-            $rootScope.adminLogged = loggedInUser && loggedInUser.role === "admin"; // check if the user is admin
-            $rootScope.isSeller = loggedInUser && loggedInUser.isSeller === true; // check if the user is seller
-            $rootScope.isLogged = loggedInUser; // check if the user is logged in
+            // const loggedInUser = JSON.parse(sessionStorage.getItem("user"));// fetch the loggedInUser
+            // $rootScope.adminLogged = loggedInUser && loggedInUser.role === "admin"; // check if the user is admin
+            // $rootScope.isSeller = loggedInUser && loggedInUser.isSeller === true; // check if the user is seller
+            // $rootScope.isLogged = loggedInUser; // check if the user is logged in
     };
 
     //logout function to remove the user from the session storage

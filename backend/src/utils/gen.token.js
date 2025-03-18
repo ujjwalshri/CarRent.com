@@ -3,18 +3,17 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const generateTokenAndSetCookie = async(user, res) => {
+  // Generate token
   const token =  jwt.sign(
     { id: user.id },
     process.env.JWT_SECRET, 
     {  expiresIn: '15d' } 
   );
 
+  // Set cookie
   res.cookie("jwt", token, {
-    maxAge: 15 * 24 * 60 * 60 * 1000,
     httpOnly: true,
-    sameSite: "None", 
-    secure: true, 
-    path: "/",
+    sameSite: "none", 
 });
 
 };

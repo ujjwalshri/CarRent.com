@@ -18,13 +18,13 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             url: "/login",
             templateUrl: "components/auth/login.html",
             controller: "loginCtrl",
-            resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    if(RouteProtection.isAuthorized()){
-                        $state.go('home');
-                    }
-                }]
-            }
+            // resolve : {
+            //     auth: ['$state', 'RouteProtection', function($state, RouteProtection){
+            //         if(RouteProtection.isAuthorized()){
+            //             $state.go('home');
+            //         }
+            //     }]
+            // }
         })
         .state("signup",{
            url: "/signup",
