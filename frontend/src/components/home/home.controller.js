@@ -1,4 +1,4 @@
-angular.module("myApp").controller("homeCtrl", function($scope, $state, IDB) {
+angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastService, CarService) {
     $scope.allCars = []; // array to hold all the cars
     $scope.priceFilter = ''; // filter to hold the price filter
     $scope.search = ''; // filter to hold the search filter
@@ -14,14 +14,12 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, IDB) {
     };
     // function to get all the cars that have status === approved and car is not deleted
     function fetchAllCars(){
-        IDB.getApprovedCars().then((cars) => {
-            $scope.allCars = cars.filter((car) => {
-                return !car.deleted; // filter out the deleted cars 
-            });
-        })
-        .catch((err) => {
-           ToastService.error(`Error fetching cars ${err}`); // show the error message
+        CarService.getAllApprovedCars().then((res)=>{
+            $scope.allCars = res.data;
+        }).catch(err=>{
+            ToastService.error(err);
         });
+       
     }
 
     // function to reset all the filters on the page

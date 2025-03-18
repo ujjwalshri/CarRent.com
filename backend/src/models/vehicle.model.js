@@ -39,6 +39,7 @@ const vehicleSchema = new mongoose.Schema({
     },
     status: {
         type: String,
+        enum: ["pending", "approved", "rejected"],
         default: "pending",
     },
     city:{
@@ -72,10 +73,6 @@ const vehicleSchema = new mongoose.Schema({
         },
         adhaar: {
             type: String,
-            required: true
-        },
-        isBlocked: {
-            type: Boolean,
             required: true
         }
     },

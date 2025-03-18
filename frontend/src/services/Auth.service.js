@@ -61,6 +61,7 @@ angular.module('myApp').service('AuthService', function($q, IDB, ApiService, $ht
     };
 // function to register the user
 this.registerUser = function(user) {
+    console.log(user);
     let deffered = $q.defer();
     $http.post(`${ApiService.baseURL}/api/auth/signup`, {
         username: user.username,

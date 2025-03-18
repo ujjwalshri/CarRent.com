@@ -10,6 +10,6 @@ angular.module('myApp').service('RouteProtection', function() {
         return false;
     }
     this.isBuyer = ()=>{  // check if user is a buyer
-      return false;
+      return true;
     }
 });

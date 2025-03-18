@@ -6,7 +6,7 @@ import {generateTokenAndSetCookie} from '../utils/gen.token.js';
 
 export const signupController = async (req, res) => {
     const { username, password, firstName, lastName, email, city,adhaar } = req.body;
-    console.log(req.body);
+    
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     try {
@@ -29,19 +29,21 @@ export const signupController = async (req, res) => {
               city, 
               adhaar
        })
-       console.log(user);
+      
 
         
-        const validUser = validateUser(userData);
-        if(validUser.error){
-            console.log("validate to hua");
-            return res.status(400).json({ err: `error ${validUser.error}` });
-        }
-
+        // const validUser = validateUser(userData);
+        // if(validUser.error){
+        //     console.log("validate to hua");
+        //     return res.status(400).json({ err: `error ${validUser.error}` });
+        // }
+        
         await user.save();
+        console.log("save bhi hua")
 
         if(user){
             await generateTokenAndSetCookie(user, res); 
+            console.log("token bhi set hua")
             return  res.status(201).json({ 
                 _id: user._id,
                 username: user.username,
