@@ -41,7 +41,7 @@ export const signupController = async (req, res) => {
 
         if(user){
             await generateTokenAndSetCookie(user, res); 
-            console.log("token bhi set hua")
+            
             return  res.status(201).json({ 
                 _id: user._id,
                 username: user.username,

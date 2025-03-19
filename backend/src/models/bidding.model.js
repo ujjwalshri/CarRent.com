@@ -39,6 +39,10 @@ const biddingSchema = new mongoose.Schema({
         }
     },
     vehicle:{
+        _id:{
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
+        },
         name: {
             type: String,
             required: true,
@@ -113,11 +117,11 @@ const biddingSchema = new mongoose.Schema({
     },
     startOdometerValue:{
         type:Number,
-        required:true
+        default:-1
     }, 
     endOdometerValue:{
         type:Number,
-        required:true
+        default:-1
     },
     status:{
         type:String,

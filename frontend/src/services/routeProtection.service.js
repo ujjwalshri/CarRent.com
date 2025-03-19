@@ -1,7 +1,6 @@
 angular.module('myApp').service('RouteProtection', function() {
     this.isAuthorized = ()=>{ // check if user is logged in
-        console.log("agohuidgahai");
-        return true;
+        return false;
     }
     this.isAdmin = () => {   // check if user is an admin
         return false;

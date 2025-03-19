@@ -1,14 +1,13 @@
 import express from "express";
 import protectRoute from "../middlewares/protectRoute.js";
-import {addBidController, updateBidStatusController} from "../controllers/bidding.controller.js";
-
-
+import {addBidController, updateBidStatusController, getBidForOwnerController, getBidForUserController,getAllBids, getBookingsAtCarIdController } from "../controllers/bidding.controller.js";
 const router = express.Router();
 
-router.post('/addBid', protectRoute, addBidController); // route to add a bid
+router.post('/addBid/:carId', protectRoute, addBidController); // route to add a bid
 router.patch('/updateBookingStatus/:id', protectRoute, updateBidStatusController); // route to toggle the booking status
-router.get('/getBid/owner', protectRoute); // route to get the bid at user id
+router.get('/getBids/owner', protectRoute, getBidForOwnerController); // route to get the bid at user id
+router.get('/getBids/user', protectRoute, getBidForUserController); // route to get the bid at user id
+router.get('/getAllBiddings', protectRoute, getAllBids )  // get all biddings
+router.get('/getBookings/car/:carId', protectRoute,getBookingsAtCarIdController); // get all biddings at car id
 
-
-
-export default router;
+export default router; 

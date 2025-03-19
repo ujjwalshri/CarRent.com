@@ -6,16 +6,16 @@ export const generateTokenAndSetCookie = async(user, res) => {
   // Generate token
   const token =  jwt.sign(
     { id: user.id },
-    process.env.JWT_SECRET, 
-    {  expiresIn: '15d' } 
+    process.env.JWT_SECRET,
   );
 
   // Set cookie
   res.cookie("jwt", token, {
-    httpOnly: true,
-    sameSite: "none", 
-});
+     maxAge: 24*60*60*1000, // 24 hours 
+     httpOnly: true,
+  });
 
+  
 };
 
 

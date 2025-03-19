@@ -98,16 +98,16 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             url: '/singleCar/:id',
             templateUrl: 'components/car/singleCar.html',
             controller: 'singleCarCtrl',
-            resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    if(!RouteProtection.isAuthorized()){
-                        $state.go('login');
-                    }
-                    if(RouteProtection.isAdmin()){
-                        $state.go('admin');
-                    }
-                }]
-            }
+            // resolve : {
+            //     auth: ['$state', 'RouteProtection', function($state, RouteProtection){
+            //         if(!RouteProtection.isAuthorized()){
+            //             $state.go('login');
+            //         }
+            //         if(RouteProtection.isAdmin()){
+            //             $state.go('admin');
+            //         }
+            //     }]
+            // }
         })
         .state('conversations', {
             url: '/conversations:id',

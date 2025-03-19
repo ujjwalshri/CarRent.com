@@ -1,9 +1,12 @@
 import User from "../models/user.model.js";
 import Vehicle from "../models/vehicle.model.js"; 
 import { s3Client } from "../config/s3.connection.js";
+import validateCar from '../validation/car.validation.js';
 import {Types} from 'mongoose';
 
-
+/*
+@description: Add a new car to the database
+*/
 export const addCarController = async (req, res) => {
     const {
         name, company, modelYear, price, color, mileage, fuelType, category, city
@@ -46,6 +49,9 @@ export const addCarController = async (req, res) => {
                 adhaar: user.adhaar,
             },
         });
+        // if(validateCar(newCar).error){
+        //     return res.status(400).json({error: `error ${validateCar(newCar).error}`});
+        // }
 
         const savedCar = await newCar.save();
 
@@ -57,11 +63,13 @@ export const addCarController = async (req, res) => {
         console.error('Add car error:', error);
     }
 };
-
+/*
+@description: function to get all the approved cars from the database
+*/
 export const getAllCarController = async(req, res)=>{
     try{
         const cars = await Vehicle.find({status: 'approved'});
-        console.log(cars);
+       
         if(!cars){
             return res.status(404).json({message: 'No cars found'});
         }
@@ -71,7 +79,6 @@ export const getAllCarController = async(req, res)=>{
        res.status(500).json({message: `error in the getAllCarController ${err.message}`});
     }
 }
-
 
 export const getVehicleByStatus = async(req, res)=>{
     const {statusValue} = req.body;
@@ -151,5 +158,44 @@ export const getVehicleByIdController = async (req, res) => {
     }catch(err){
         console.log(`error in the get vehicle controller ${err}`);
         res.status(500).json({message: `error in the get vehicle controller ${err}`});
+    }
+}
+
+export const getAllCarsByUser = async (req, res) => {
+    const{
+        city,
+        category,
+        status
+    } = req.query;
+    try {
+        // const aggregationPipeline = [
+        //     {
+        //         $match: { 'owner._id': req.user._id },
+        //     },
+        //     {
+        //         $sort: { createdAt: -1 }
+        //     },
+        //     {
+        //         $match : {'city': city} 
+        //     },
+        //     {
+        //         $match: {
+        //             'category': category
+        //         }
+        //     },
+        //     {
+        //         $match: {
+        //             'status': status
+        //         }
+        //     }
+        // ]
+        const cars = await Vehicle.find({ 'owner._id': req.user._id });
+        if(!cars){
+            return res.status(404).json({message: 'No cars found'});
+        }
+       return res.status(200).json(cars);
+    } catch (error) {
+        console.error('Get all cars by user error:', error);
+        return res.status(500).json({ error: error.message });
     }
 }

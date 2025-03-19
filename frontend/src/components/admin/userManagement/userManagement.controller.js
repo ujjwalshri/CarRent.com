@@ -37,7 +37,6 @@ angular
           function (callback) {
             IDB.blockUserByUserId(userId) // calling the db function to block the user
               .then((response) => {
-               
                 ToastService.success("user deleted successfully"); // showing the success message
                 fetchUsers(); // fetching the users again
                 callback(null, userId); // calling the next function in the waterfall
