@@ -48,4 +48,32 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
         })
         return deferred.promise;
     }
+    this.addCar = (car)=>{
+        let deferred = $q.defer();
+        $http.post(`${ApiService.baseURL}/api/vehicle/addVehicle`, car, { withCredentials: true,   
+            headers: { 'Content-Type': undefined },
+            transformRequest: angular.identity
+         }, )
+        .then((res)=>{
+            deferred.resolve(res.data);
+        })
+        .catch(err=>{
+            deferred.reject("Error adding car");
+            console.log(err);
+        })
+        return deferred.promise;
+    }
+    this.fetchUserCars = (status)=>{
+        let deferred = $q.defer();
+        $http.get(`${ApiService.baseURL}/api/vehicle/getAllCarsByUser?carStatus=${status}`, { withCredentials: true })
+        .then((res)=>{
+            deferred.resolve(res);
+        })
+        .catch(err=>{
+            deferred.reject("Error fetching user cars");
+            console.log(err);
+        })
+        return deferred.promise;
+
+    }
 });

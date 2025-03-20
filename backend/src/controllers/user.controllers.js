@@ -5,11 +5,9 @@ import User from "../models/user.model.js";
 */
 export const getAllUsers = async(req, res)=>{
     const {city} = req.query;
+    
     try {
         const users = await User.find({city: city});
-        if(!users){
-            return res.status(404).json({message: 'No users found'});
-        }
         return res.status(200).json({message: 'Users found', users});
     } catch (error) {
         console.log(`error in the getAllUsers ${error.message}`);
@@ -24,9 +22,7 @@ export const blockUnblockUser = async(req, res)=>{
     const {userId} = req.params;
     try {
         const user = await User.findById(userId);
-        if(!user){
-            return res.status(404).json({message: 'User not found'});
-        }
+       
         user.isBlocked = !user.isBlocked;
         const savedUser = await user.save();
         if(!savedUser){
@@ -37,5 +33,22 @@ export const blockUnblockUser = async(req, res)=>{
     }catch(err){
         console.log(`error in the blockUserController ${err.message}`);
         res.status(500).json({message: `error in the blockUserController ${err.message}`});
+    }
+}
+
+/*
+@description: function to make a user seller
+*/
+export const makeUserSeller = async(req, res)=>{
+    const {userId} = req.params;
+    if(!userId){
+        return res.status(400).json({message: 'userId is required'});
+    }
+    try {
+        const user = User.updateOne({_id: userId}, {isSeller: true});
+        return res.status(200).json({message: 'User is now a seller', user: user});
+    }catch(err){
+        console.log(`error in the makeUserSeller ${err.message}`);
+        res.status(500).json({message: `error in the makeUserSeller ${err.message}`});
     }
 }

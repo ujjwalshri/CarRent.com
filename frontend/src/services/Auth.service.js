@@ -23,20 +23,21 @@ angular.module('myApp').service('AuthService', function($q, IDB, ApiService, $ht
         }
         return $q.resolve();
     };
-    // function to get the user from the database by userId of the cookie
-    this.getMe = function(){
-        const deferred = $q.defer();
-        $http.get(`${ApiService.baseURL}/api/auth/me`, { withCredentials: true })
-            .then(function(response) {
-                console.log('User:', response.data);
-                deferred.resolve(response.data);
-            })
-            .catch(function(error) {
-                console.error();
-                deferred.reject(`'Error getting the loggedin user:', ${error}`); // Reject the promise with the error
-            });
-        return deferred.promise
+
+    // function logout a user on the server
+    this.logout = function(){
+        let deffered = $q.defer();
+        $http.post(`${ApiService.baseURL}/api/auth/logout`, {}, { withCredentials: true }).then((res)=>{
+            
+            deffered.resolve(`logged out successfully`);
+            $state.go('login');
+        }).catch((err)=>{
+            deffered.reject(`error logging out ${err}`);
+        })
+        return deffered.promise;
     }
+   
+  
 
      // function to login the user
     this.loginUser = function(username, password) {

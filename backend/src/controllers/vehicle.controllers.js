@@ -1,32 +1,41 @@
 import User from "../models/user.model.js";
 import Vehicle from "../models/vehicle.model.js"; 
 import { s3Client } from "../config/s3.connection.js";
-import validateCar from '../validation/car.validation.js';
+import { createCarValidation } from "../validation/car.validation.js";
 import {Types} from 'mongoose';
+
 
 /*
 @description: Add a new car to the database
 */
 export const addCarController = async (req, res) => {
     const {
-        name, company, modelYear, price, color, mileage, fuelType, category, city
+        name, company, modelYear, price, color, mileage, fuelType, category, city, location
     } = req.body;
-    
-
     
     try {
         const user = await User.findById(req.user._id);
-       
-        if (!user) {
-            return res.status(404).json({ error: 'User not found' });
-        }
-
         const images = req.files.map(file => ({
             url: file.location,
             key: file.key,
             name: file.originalname,
             uploadedAt: new Date()
         }));
+
+        const carData = {
+            name, company, modelYear, price, color, mileage, fuelType,location, category, city, owner:{
+                username: user.username,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                city: user.city,
+                adhaar: user.adhaar,
+            }
+        }
+        const isValidCar = createCarValidation.validate(carData);
+        if(isValidCar.error){
+            return res.status(400).json({error: isValidCar.error.details[0].message});
+        }
 
         const newCar = new Vehicle({
             name,
@@ -36,6 +45,7 @@ export const addCarController = async (req, res) => {
             color,
             mileage,
             fuelType,
+            location, 
             category,
             city,
             vehicleImages: images,
@@ -49,9 +59,7 @@ export const addCarController = async (req, res) => {
                 adhaar: user.adhaar,
             },
         });
-        // if(validateCar(newCar).error){
-        //     return res.status(400).json({error: `error ${validateCar(newCar).error}`});
-        // }
+       
 
         const savedCar = await newCar.save();
 
@@ -61,6 +69,7 @@ export const addCarController = async (req, res) => {
         });
     } catch (error) {
         console.error('Add car error:', error);
+        res.status(500).json({ error: error.message });
     }
 };
 /*
@@ -69,10 +78,6 @@ export const addCarController = async (req, res) => {
 export const getAllCarController = async(req, res)=>{
     try{
         const cars = await Vehicle.find({status: 'approved'});
-       
-        if(!cars){
-            return res.status(404).json({message: 'No cars found'});
-        }
         res.status(200).json(cars);
     }catch(err){
        console.log(`error in the getAllCarController ${err.message}`);
@@ -82,11 +87,11 @@ export const getAllCarController = async(req, res)=>{
 
 export const getVehicleByStatus = async(req, res)=>{
     const {statusValue} = req.body;
+    if(!statusValue){
+        return res.status(400).json({message: 'statusValue is required'});
+    }
     try{
         const cars = await Vehicle.find({status : statusValue});
-        if(!cars){
-            return res.status(404).json({message: 'No cars found'});
-        }
         res.status(200).json(cars);
     }catch(err){
          console.log(`error in the getVehicleByStatus ${err.message}`);
@@ -101,10 +106,6 @@ export const toggleVehicleStatusController = async (req, res) => {
            return res.status(404).json({message: 'Invalid vehicle id'});
          }
         const car = await Vehicle.findById(req.params.id);
-        console.log(car);
-        if (!car) {
-            return res.status(404).json({ message: 'Error retrieving the car' });
-        }
         car.status = vehicleStatus;
         console.log("updated car", car);
         const updatedCar = await car.save();
@@ -150,9 +151,6 @@ export const getVehicleByIdController = async (req, res) => {
             return res.status(404).json({message: 'Invalid vehicle id'});
         }
         const car = await Vehicle.findById(id);
-        if(!car){
-            return res.status(404).json({message: 'Car not found'});
-        }
         res.status(200).json(car);
 
     }catch(err){
@@ -162,40 +160,20 @@ export const getVehicleByIdController = async (req, res) => {
 }
 
 export const getAllCarsByUser = async (req, res) => {
-    const{
-        city,
-        category,
-        status
-    } = req.query;
+    const { carStatus } = req.query;
+
     try {
-        // const aggregationPipeline = [
-        //     {
-        //         $match: { 'owner._id': req.user._id },
-        //     },
-        //     {
-        //         $sort: { createdAt: -1 }
-        //     },
-        //     {
-        //         $match : {'city': city} 
-        //     },
-        //     {
-        //         $match: {
-        //             'category': category
-        //         }
-        //     },
-        //     {
-        //         $match: {
-        //             'status': status
-        //         }
-        //     }
-        // ]
-        const cars = await Vehicle.find({ 'owner._id': req.user._id });
-        if(!cars){
-            return res.status(404).json({message: 'No cars found'});
+
+        const query = { 'owner._id': req.user._id };
+        if (carStatus !== 'all') {
+            query.status = carStatus; 
         }
-       return res.status(200).json(cars);
+
+        const cars = await Vehicle.find(query);
+     
+        return res.status(200).json(cars);
     } catch (error) {
         console.error('Get all cars by user error:', error);
         return res.status(500).json({ error: error.message });
     }
-}
+};

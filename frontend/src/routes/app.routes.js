@@ -8,9 +8,10 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             controller: "homeCtrl",
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    if(RouteProtection.isAdmin()){
-                        $state.go('admin');
-                    }
+                    
+                    // if(RouteProtection.isAdmin()){
+                    //     $state.go('admin');
+                    // }
                 }]
             }
         })
@@ -43,12 +44,13 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             controller: 'addCarCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    if(!RouteProtection.isAuthorized()){
-                        $state.go('login');
-                    }
-                    if(RouteProtection.isAdmin()){
-                        $state.go('admin');
-                    }
+                    console.log(RouteProtection.isAuthorized());
+                    // if(!RouteProtection.isAuthorized()){
+                    //     $state.go('login');
+                    // }
+                    // if(RouteProtection.isAdmin()){
+                    //     $state.go('admin');
+                    // }
                 }]
             }
         })
@@ -145,12 +147,15 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             controller: 'userBookingsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
+                    console.log(RouteProtection.isAuthorized());
                     if(!RouteProtection.isAuthorized()){
                         $state.go('login');
                     }
+                    console.log(RouteProtection.isAdmin());
                     if(RouteProtection.isAdmin()){
                         $state.go('admin');
                     }
+                    console.log(RouteProtection.isSeller());
                     if(RouteProtection.isSeller()){
                         $state.go('ownerBookings');
                     }
@@ -252,12 +257,15 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             controller: 'sellerAnalyticsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
+                    console.log(RouteProtection.isAuthorized());
                     if(!RouteProtection.isAuthorized()){
                         $state.go('login');
                     }
+                    console.log(RouteProtection.isAdmin());
                     if(RouteProtection.isAdmin()){
                         $state.go('admin');
                     }
+                    console.log(RouteProtection.isBuyer());
                     if(RouteProtection.isBuyer()){
                         $state.go('home');
                     }

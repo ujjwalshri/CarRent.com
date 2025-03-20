@@ -14,8 +14,6 @@ export const generateTokenAndSetCookie = async(user, res) => {
      maxAge: 24*60*60*1000, // 24 hours 
      httpOnly: true,
   });
-
-  
 };
 
 

@@ -31,16 +31,21 @@
           All
         </button>
       </div>
+      <div class="col-12 text-center" ng-show="userCars.length === 0">
+        <div class="alert alert-warning mt-4">
+            <strong>No available cars matching your filters.</strong>
+        </div>
+    </div>
       <div class="row">
         <div class="col-md-4" ng-repeat="car in userCars" ng-if="userCars.length>0">
           <div class="thumbnail">
-            <img style="width: 200px; height: 200px;" ng-src="{{ car.vehicleImages[0] }}" alt="{{ car.carName }}" class="img-responsive" ng-click="redirectToCarPage(car.id)">
+            <img style="width: 200px; height: 200px;" ng-src="{{ car.vehicleImages[0].url }}" alt="{{ car.carName }}" class="img-responsive" ng-click="redirectToCarPage(car._id)">
             <div class="caption">
-              <p><strong>Price:</strong> ${{ car.carPrice }} per day</p>
-              <p><strong>Car Name:</strong> {{ car.carName }}</p>
-              <p><strong>Type:</strong> {{ car.carType }}</p>
+              <p><strong>Price:</strong> ${{ car.price }} per day</p>
+              <p><strong>Car Name:</strong> {{ car.name }}</p>
+
               <p><strong>Category:</strong> {{ car.category }}</p>
-              <p><strong>Status:</strong> {{ car.isApproved }}</p>
+              <p><strong>Status:</strong> {{ car.status }}</p>
               <button class="btn btn-warning" ng-click="openPriceModal(car)">
                 <span class="glyphicon glyphicon-pencil"></span> Edit Price
               </button>
@@ -99,7 +104,9 @@
           <option value="Shiv puri">Shiv Puri</option>
         </select>
       </div>
+      
     </div>
+    
     <div class="modal-footer">
       <button class="btn btn-primary" ng-click="updateUser()">Save</button>
     </div>

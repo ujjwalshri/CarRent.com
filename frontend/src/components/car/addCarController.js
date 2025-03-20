@@ -1,99 +1,66 @@
 angular
   .module("myApp")
-  .controller("addCarCtrl", function ($scope, $state, IDB, $timeout,carValidation, ToastService, BackButton ) {
+  .controller("addCarCtrl", function ($scope, $state, IDB, $timeout,carValidation, ToastService, BackButton, CarService ) {
     $scope.back = BackButton.back; // back function to go back to the previous page
     const loggedInUser = JSON.parse(sessionStorage.getItem("user")); // getting the loggedInUser
     $scope.images = []; // This will store the selected images
+    $scope.isLoading = false;
     // Function to handle image preview and Base64 conversion
     $scope.previewImages = function (input) {
       if (input.files) {
         let files = Array.from(input.files); // Convert FileList to an array
-        let totalFiles = files.length;
-        let processedFiles = 0;
-    
-        files.forEach((file) => {
-          let reader = new FileReader();
-          reader.readAsDataURL(file); // converts file into the base64 string
-          
-          reader.onload = function (e) {
-         
-            $scope.images.push({ file: file, base64: e.target.result }); // pushing the base64 converted images 
-            processedFiles++;
-  
-            console.log("Image added:", file.name);
-            
-            if (processedFiles === totalFiles) {
-              console.log("All images processed:", $scope.images);
-            }
-    
-            // using timeout for no delay to the angualrr digest cycle
-            $timeout();
-          };
-        });
+        $scope.images = files; // Store the files directly
+        console.log("Selected images:", $scope.images);
+        $timeout(); // Trigger Angular digest cycle
       }
     };
+
+
+
     
     // Submit form function
     $scope.submitCarForm = function () {
+      $scope.isLoading = true;
+      const formData = new FormData();
+     console.log($scope.carName, $scope.company, $scope.carModel, $scope.category, $scope.location, $scope.carPrice, $scope.mileage, $scope.color, $scope.fuelType, $scope.city);
 
-      // Car object to be added to the database
-      const car = {
-        carType: $scope.carType,
-        carName: $scope.carName,
-        carModel: $scope.carModel,
-        category: $scope.category,
-        location: $scope.location,
-        isApproved: "pending",
-        owner: {
-          id: loggedInUser.id,
-          username: loggedInUser.username,
-          firstName: loggedInUser.firstName,
-          lastName: loggedInUser.lastName,
-          email: loggedInUser.email,
-          adhaar: loggedInUser.adhaar,
-          city: loggedInUser.city,
-          isBlocked: loggedInUser.isBlocked
-        },
-        carPrice: $scope.carPrice,
-        mileage: $scope.mileage,
-        vehicleImages: [], // This will store the base64 images
-        features: {
-          GPS: $scope.GPS,
-          Sunroof: $scope.Sunroof,
-          Bluetooth: $scope.Bluetooth,
-          RearCamera: $scope.RearCamera,
-          HeatedSeats: $scope.HeatedSeats,
-        },
-        deleted:false,
-        createdAt: new Date(),
-      };
-    
-    
-      // adding the base64 strings from the images to the car object's vehicleImages array
-      car.vehicleImages = $scope.images.map((image) => image.base64);
+      formData.append('name', $scope.carName);
+      formData.append('company', $scope.company);
+      formData.append('modelYear', $scope.carModel);
+      formData.append('category', $scope.category);
+      formData.append('location', $scope.location);
+      formData.append('price', $scope.carPrice);
+      formData.append('mileage', $scope.mileage);
+      formData.append('color', $scope.color);
+      formData.append('fuelType', $scope.fuelType);
+      formData.append('city', $scope.city);
+  
 
-      // validate the car schema for the car object properties
-      if (!carValidation.validateCarSchema(car)) {v
-        ToastService.error("please fill all the required fields");
-        return;
+      if ($scope.images && $scope.images.length > 0) {
+          $scope.images.forEach((image, index) => {
+            formData.append(`images`, image); 
+          });
       }
-      // validating the car object details
-      if(!carValidation.validateCar(car).success){
-        ToastService.error(`invalid car details ${carValidation.validateCar(car).message}`);
-        return;
+  
+     
+  
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
       }
+      
+    
 
-      // Add the car to the database
-      IDB.addCar(car)
-        .then((response) => {
-          ToastService.success(`car added successfully`); // Success message
-          return IDB.makeUserSeller(loggedInUser.id); // Returns the next promise
-        })
-        .then((response) => {
-          $state.go("home"); // Redirect to the home page
-        })
-        .catch((error) => {
-          ToastService.error(`error adding car ${error}`); // Error message
-        });
-    };
-  });
+  
+      // Call the CarService to add the car
+      CarService.addCar(formData)
+          .then((res) => {
+              console.log("Car added successfully", res);
+              $scope.isLoading = false;
+              ToastService.success("Car added successfully");
+              $state.go("profile");
+          })
+          .catch((err) => {
+              console.log("Error in addCarCtrl", err);
+          });
+  }
+});

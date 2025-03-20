@@ -1,5 +1,6 @@
 import Bidding from '../models/bidding.model.js';
 import Vehicle from '../models/vehicle.model.js';
+import mongoose from 'mongoose';
 
 /*
  @description function to Add a bid to the database
@@ -17,35 +18,36 @@ export const addBidController = async (req, res) => {
     } = req.body;
     const { _id, username, email, firstName, lastName, city } = req.user;
     const from = { _id, username, email, firstName, lastName, city };
-    const vehicle = await Vehicle.findById(carId);
-    const biddingData = {
-        amount, 
-        startDate, 
-        endDate, 
-        startOdometerValue,
-        endOdometerValue,
-        owner, 
-        vehicle : {
-            _id: vehicle._id,
-            name: vehicle.name,
-            company: vehicle.company,
-            modelYear: vehicle.modelYear,
-            price: vehicle.price,
-            color: vehicle.color,
-            mileage: vehicle.mileage,
-            fuelType: vehicle.fuelType,
-            category: vehicle.category,
-            deleted: vehicle.deleted,
-            status: vehicle.status,
-            city: vehicle.city,
-        },
-        status,
-        from
-    }
+   
  
     try {
+        const vehicle = await Vehicle.findById(carId);
+        const biddingData = {
+            amount, 
+            startDate, 
+            endDate, 
+            startOdometerValue,
+            endOdometerValue,
+            owner, 
+            vehicle : {
+                _id: vehicle._id,
+                name: vehicle.name,
+                company: vehicle.company,
+                modelYear: vehicle.modelYear,
+                price: vehicle.price,
+                color: vehicle.color,
+                mileage: vehicle.mileage,
+                fuelType: vehicle.fuelType,
+                category: vehicle.category,
+                deleted: vehicle.deleted,
+                status: vehicle.status,
+                city: vehicle.city,
+            },
+            status,
+            from
+        }
         const bidding = new Bidding(biddingData);
-          await bidding.save();
+        await bidding.save();
         return res.status(201).json({ bidding });
     } catch (error) {
         console.log(`error in the addBidController ${error.message}`);
@@ -54,29 +56,57 @@ export const addBidController = async (req, res) => {
 }
 
 /*
- @description: This function will update bids at particular status
+ @description: This function will update bids at a particular status and reject overlapping bids
 */
 export const updateBidStatusController = async (req, res) => {
-    const {biddingStatus} = req.body;
-  try{
-    const bidding = await Bidding.findById(req.params.id);
-    console.log("bidding agyi hai");
-    if(!bidding){
-     console.log("bidding agyi hai");
-      return res.status(404).json({error:"Bidding not found"});
-    }
-    bidding.status = biddingStatus;
-    const biddingSaved = await bidding.save();
-    if(!biddingSaved){
-        return res.status(400).json({error:"Error in updating the bidding status"});
-    }
-    return res.status(200).json({mssg: "bidding status changed" , bidding: bidding});
-  }catch(err){
-    console.log(`error in the toggleBidStatusController ${err.message}`);
-    return res.status(400).json({error:err.message});
-  }
-}
+    const { biddingStatus } = req.body;
 
+    if (!biddingStatus) {
+        return res.status(400).json({ error: 'Bidding status is required' });
+    }
+
+    let session; 
+    try {
+        session = await mongoose.startSession();
+        session.startTransaction();
+
+        const bidding = await Bidding.findById(req.params.id).session(session);
+        if (!bidding) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(404).json({ error: "Bidding not found" });
+        }
+        
+        bidding.status = biddingStatus;
+        await bidding.save({ session });
+
+        if (biddingStatus === "approved") {
+            const { startDate, endDate } = bidding;
+            await Bidding.updateMany(
+                {
+                    _id: { $ne: bidding._id },
+                    status: { $ne: "rejected" },
+                    startDate: { $lte: endDate },
+                    endDate: { $gte: startDate },
+                },
+                { $set: { status: "rejected" } },
+                { session }
+            );
+        }
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return res.status(200).json({ mssg: "Bidding status changed", bidding: bidding });
+    } catch (err) {
+        if (session) {
+            await session.abortTransaction();
+            session.endSession();
+        }
+        console.error(`Error in updateBidStatusController: ${err.message}`);
+        return res.status(500).json({ error: err.message });
+    }
+};
 /*
  @description function to get the bids according to the search query from the request.query
 */
@@ -176,9 +206,6 @@ export const getBidForUserController = async (req, res) => {
 export const getAllBids = async (req, res)=>{
     try{
         const bids = await Bidding.find();
-        if(!bids){
-            return res.status(404).json({message: 'No bids found'});
-        }
        return  res.status(200).json(bids);
     }catch(err){
         console.log(`error in the getAllBids ${err.message}`);
@@ -190,14 +217,15 @@ export const getAllBids = async (req, res)=>{
 */
 export const getBookingsAtCarIdController = async (req, res)=>{
     const {carId} = req.params;
+    if(!carId){
+        return res.status(400).json({error: 'carId is required'});
+    }
+    const objectIdCarId = new mongoose.Types.ObjectId(String(carId)); 
     try{
         const bookings = await Bidding.aggregate([
-            {$match: {'vehicle._id': carId}},
+            {$match: {'vehicle._id': objectIdCarId}},
             {$match : {'status': 'approved'}}
-        ])
-        if(!bookings){
-            return res.status(404).json({message: 'No bids found'});
-        }
+        ]);
         return res.status(200).json({bookings});
     }catch(err){
         console.log(`error in the getBookingsAtCarIdController ${err.message}`);

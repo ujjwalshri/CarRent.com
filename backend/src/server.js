@@ -18,7 +18,7 @@ app.use(express.json()); // middle ware to parse req.body
 app.use(express.urlencoded({extended : true})); //  to parse the form data in the req.body
 app.use(cookieParser()); // to parse the cookies in the req.cookies
 
-
+// CORS middleware
 app.use(cors({
     origin: "http://localhost:5500", 
     credentials: true, 
@@ -29,7 +29,7 @@ app.get('/test', (req, res) => {
     res.json({ message: 'API is running...' }); 
 });
 
-app.use('/api/auth' , authRoutes);
+app.use('/api/auth' , authRoutes); 
 app.use('/api/vehicle', vehicleRoutes);
 app.use('/api/bidding', biddingRoutes);
 app.use('/api/user', userRoutes);
@@ -37,7 +37,7 @@ app.use('/api/review', reviewRoutes)
 
 
 
-const server = app.listen(PORT, () => {
+app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     connectMongoDB();
 });

@@ -13,7 +13,6 @@
                     uib-typeahead="car for car in carList | filter:$viewValue | limitTo:8">
             </div>
 
-
             <div class="col-md-4">
                 <label>Price Range:</label>
                 <uib-dropdown class="mb-2">
@@ -102,15 +101,6 @@
                         <p class="price-tag"><strong>$ {{ car.price }}</strong> per day</p>
                         <p><i class="fa fa-tag"></i> <strong>Category:</strong> {{ car.category }}</p>
                         <p><i class="fa fa-tachometer"></i> <strong>Mileage:</strong> {{ car.mileage }} kmpl</p>
-
-                        <div class="features">
-                            <strong><i class="fa fa-cogs"></i> Features:</strong>
-                            <span class="label label-info" ng-if="car.features.GPS"><i class="fa fa-map-marker"></i> GPS</span>
-                            <span class="label label-success" ng-if="car.features.Sunroof"><i class="fa fa-sun-o"></i> Sunroof</span>
-                            <span class="label label-warning" ng-if="car.features.Bluetooth"><i class="fa fa-bluetooth"></i> Bluetooth</span>
-                            <span class="label label-primary" ng-if="car.features.RearCamera"><i class="fa fa-camera"></i> Rear Camera</span>
-                            <span class="label label-danger" ng-if="car.features.HeatedSeats"><i class="fa fa-fire"></i> Heated Seats</span>
-                        </div>
 
                         <div class="owner well well-sm text-center">
                             <strong><i class="fa fa-user"></i> Owner:</strong> {{ car.owner.firstName }} {{ car.owner.lastName }} <br>

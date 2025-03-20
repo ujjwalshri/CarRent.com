@@ -37,7 +37,7 @@ export const signupController = async (req, res) => {
         // }
         
         await user.save();
-        console.log("save bhi hua")
+        
 
         if(user){
             await generateTokenAndSetCookie(user, res); 
