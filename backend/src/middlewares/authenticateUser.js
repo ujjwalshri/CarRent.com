@@ -1,12 +1,11 @@
-
-const protectFromSeller = (req, res, next) => {
+const protectFromUser = (req, res, next) => {
     const user = req.user;
-     if(!user.isSeller || user.isAdmin){
+     if(user.isSeller || user.isAdmin){
           next();
      }
      else{
          res.status(401).json({message: 'Unauthorized access'});
      }
-   }
+}
  
- export default protectFromSeller;
+ export default protectFromUser;

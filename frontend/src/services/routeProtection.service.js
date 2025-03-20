@@ -1,42 +1,23 @@
 angular.module('myApp').service('RouteProtection', function($http, ApiService) {
-    let cachedUser = null;
-    this.getMe = async function() {
-        if (cachedUser !== null) {
-            return cachedUser;
-        }
-        try {
-            const response = await $http.get(`${ApiService.baseURL}/api/auth/me`, { withCredentials: true });
-            cachedUser = response.data;
-            return cachedUser;
-        } catch {
-            cachedUser = null;
-            return null;
-        }
-    }();
-
+   
 
     this.isAuthorized =  () => {
-       return cachedUser?true:false;
+       
+       return true;
     };
 
     this.isAdmin =  () => {
-        if(cachedUser === null){
-            return false;
-        }
-        return cachedUser.isAdmin;
+       
+        return false;
     };
 
     this.isSeller =  () => {
-        if(cachedUser === null){
-            return false;
-        }
-       return cachedUser.isSeller;
+      
+       return false;
     };
 
     this.isBuyer =  () => {
-        if(cachedUser === null){
-            return false;
-        }
-       return cachedUser.isSeller === false;
+      
+       return true;
     };
 });

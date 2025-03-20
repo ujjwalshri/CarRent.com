@@ -22,14 +22,9 @@ export const blockUnblockUser = async(req, res)=>{
     const {userId} = req.params;
     try {
         const user = await User.findById(userId);
-       
         user.isBlocked = !user.isBlocked;
         const savedUser = await user.save();
-        if(!savedUser){
-            return res.status(400).json({message: 'Error in blocking/unblocking the user'});
-        }
         return res.status(200).json({message: 'User blocked/Unblocked successfully', user: savedUser});
-
     }catch(err){
         console.log(`error in the blockUserController ${err.message}`);
         res.status(500).json({message: `error in the blockUserController ${err.message}`});
@@ -52,3 +47,4 @@ export const makeUserSeller = async(req, res)=>{
         res.status(500).json({message: `error in the makeUserSeller ${err.message}`});
     }
 }
+

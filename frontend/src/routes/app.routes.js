@@ -45,12 +45,12 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
                     console.log(RouteProtection.isAuthorized());
-                    // if(!RouteProtection.isAuthorized()){
-                    //     $state.go('login');
-                    // }
-                    // if(RouteProtection.isAdmin()){
-                    //     $state.go('admin');
-                    // }
+                    if(!RouteProtection.isAuthorized()){
+                        $state.go('login');
+                    }
+                    if(RouteProtection.isAdmin()){
+                        $state.go('admin');
+                    }
                 }]
             }
         })
