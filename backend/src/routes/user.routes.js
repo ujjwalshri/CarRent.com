@@ -3,7 +3,6 @@ import protectRoute from "../middlewares/protectRoute.js";
 import protectFromUser from '../middlewares/authenticateUser.js';
 import protectFromSeller from '../middlewares/authenticateSeller.js';
 import {getAllUsers, blockUnblockUser, makeUserSeller} from '../controllers/user.controllers.js';
-
 const router = express.Router();
 
 router.get('/getAllUsers', protectRoute,protectFromUser,protectFromSeller, getAllUsers)

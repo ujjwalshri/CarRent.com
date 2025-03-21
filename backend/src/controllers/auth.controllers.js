@@ -3,7 +3,9 @@ import bcrypt from 'bcryptjs';
 import validateUser from '../validation/user.validate.js';
 import {generateTokenAndSetCookie} from '../utils/gen.token.js';
 
-
+/*
+@description function to signup a user
+*/
 export const signupController = async (req, res) => {
     const { username, password, firstName, lastName, email, city,adhaar } = req.body;
     
@@ -40,7 +42,7 @@ export const signupController = async (req, res) => {
         
 
         if(user){
-            await generateTokenAndSetCookie(user, res); 
+            await generateTokenAndSetCookie(user, res); // Generate token and set cookie
             
             return  res.status(201).json({ 
                 _id: user._id,
@@ -70,7 +72,9 @@ export const signupController = async (req, res) => {
     }
 }
 
-
+/*
+@description function to login a user
+*/
 export const loginController = async (req, res) => {
     const { username, password } = req.body;
     try{
@@ -110,13 +114,15 @@ export const loginController = async (req, res) => {
     }
 }
 
+/*
+@description function to get the current loggedin user
+*/
 export const meController = async (req, res) => {
     try{
         const userId = req.user;
         const user = await User.findById(userId);
         if(user){
             return res.status(200).json({
-                _id: user._id,
                 username: user.username,
                 firstName: user.firstName,
                 lastName: user.lastName,
@@ -136,7 +142,9 @@ export const meController = async (req, res) => {
         res.status(500).json({ message: `error in the me controller ${err.message}` });
     }
 }
-
+/*
+@description function to logout a user
+*/
 export const logoutController = async (req, res) => {
     try{
         res.clearCookie('jwt');

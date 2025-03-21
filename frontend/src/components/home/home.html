@@ -97,7 +97,7 @@
                 <div class="panel-body"> 
                     <img class="img-responsive center-block car-image" style="width: 300px; height: 200px;"  ng-src="{{ car.vehicleImages[0].url || 'default-car.jpg' }}" alt="{{ car.carName }}">
                     <div class="car-details text-center">
-                        <h4 class="text-primary">{{ car.name }} ({{ car.modelYear }})</h4>
+                        <h4 class="text-primary">{{car.company}} {{ car.name }} ({{ car.modelYear }})</h4>
                         <p class="price-tag"><strong>$ {{ car.price }}</strong> per day</p>
                         <p><i class="fa fa-tag"></i> <strong>Category:</strong> {{ car.category }}</p>
                         <p><i class="fa fa-tachometer"></i> <strong>Mileage:</strong> {{ car.mileage }} kmpl</p>

@@ -7,24 +7,16 @@
                 <div class="panel-body">
                     <div uib-carousel active="activeSlide" interval="5000" no-wrap="false">
                         <div uib-slide ng-repeat="slide in car.vehicleImages track by $index" index="$index">
-                            <img ng-src="{{slide}}" class="carousel-image img-responsive center-block" style="height: 200px; object-fit: cover; border-radius: 8px;" alt="Car Image">
+                            <img ng-src="{{slide.url}}" class="carousel-image img-responsive center-block" style="height: 200px; object-fit: cover; border-radius: 8px;" alt="Car Image">
                         </div>
                     </div>
                     
-                    <h3 class="text-center">{{ car.carName }} ({{ car.carModel }})</h3>
-                    <p><strong>Price:</strong> ${{ car.carPrice }}</p>
-                    <p><strong>Type:</strong> {{ car.carType }}</p>
+                    <h3 class="text-center">{{car.company}} {{ car.name }} ({{ car.modelYear }})</h3>
+                    <p><strong>Price:</strong> ${{ car.price }}</p>
+                    <p><strong>Fuel Type</strong> {{car.fuelType}}</p>
                     <p><strong>Category:</strong> {{ car.category }}</p>
                     <p><strong>Mileage:</strong> {{ car.mileage }} kmpl</p>
                     
-                    <div>
-                        <strong>Features:</strong>
-                        <span class="label label-primary" ng-if="car.features.GPS">GPS</span>
-                        <span class="label label-primary" ng-if="car.features.Sunroof">Sunroof</span>
-                        <span class="label label-primary" ng-if="car.features.Bluetooth">Bluetooth</span>
-                        <span class="label label-primary" ng-if="car.features.RearCamera">Rear Camera</span>
-                        <span class="label label-primary" ng-if="car.features.HeatedSeats">Heated Seats</span>
-                    </div>
                     
                     <div class="well well-sm">
                         <strong>Owner:</strong> {{ car.owner.firstName }} {{ car.owner.lastName }}<br>

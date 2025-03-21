@@ -1,4 +1,4 @@
-angular.module("myApp").controller("carCtrl", function ($scope, $state, IDB, ToastService) {
+angular.module("myApp").controller("carCtrl", function ($scope, $state, IDB, ToastService, CarService) {
 
   
   $scope.init = () => {
@@ -10,13 +10,12 @@ angular.module("myApp").controller("carCtrl", function ($scope, $state, IDB, Toa
     @returns none
    */
   function fetchPendingCars() {
-    IDB.getPendingCars() // calling the db function to get the pending cars
-      .then((cars) => {
-        $scope.cars = cars; // setting the cars array to the cars fetched from the db
-      })
-      .catch((err) => {
-       ToastService.error("error fetching cars"); // showing the error message
-      });
+    CarService.getCars().then((cars) => {
+      $scope.cars = cars; 
+      console.log($scope.cars);
+    }).catch((err)=>{
+      ToastService.error("Error fetching pending cars");
+    })
   }
 
 

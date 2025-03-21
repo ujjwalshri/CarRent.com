@@ -128,27 +128,11 @@ export const getBidForOwnerController = async (req, res) => {
             { $sort: finalSort },
             { $skip: skip },
             { $limit: limitNumber },
-            {
-                $facet: {
-                    bids: [],
-                    totalBids: [{ $count: "count" }]
-                }
-            }
         ];
 
         const result = await Bidding.aggregate(aggregationPipeline);
-        const bids = result[0].bids;
-        const totalBids = result[0].totalBids[0] ? result[0].totalBids[0].count : 0;
-        const totalPages = Math.ceil(totalBids / limitNumber);
-
         return res.status(200).json({
-            bids,
-            pagination: {
-                totalBids,
-                totalPages,
-                currentPage: pageNumber,
-                pageSize: limitNumber
-            }
+            result
         });
     } catch (error) {
         return res.status(400).json({ error: error.message });
@@ -167,33 +151,17 @@ export const getBidForUserController = async (req, res) => {
     
     try{
         const aggregationPipeline = [
-            { $match: { "owner._id": req.user._id } },
+            { $match: { "from._id": req.user._id } },
             { $match: { "status": status } },
             { $sort: finalSort },
             { $skip: skip },
-            { $limit: limitNumber },
-            {
-                $facet: {
-                    bids: [],
-                    totalBids: [{ $count: "count" }]
-                }
-            }
+            { $limit: limitNumber }
         ];
         const result = await Bidding.aggregate(aggregationPipeline);
-        const bids = result[0].bids;
-        const totalBids = result[0].totalBids[0] ? result[0].totalBids[0].count : 0;
-        const totalPages = Math.ceil(totalBids / limitNumber);
+        const bids = result
         return res.status(200).json({
-            bids,
-            pagination: {
-                totalBids,
-                totalPages,
-                currentPage: pageNumber,
-                pageSize: limitNumber
-            }
+            bids
         });
-
-
     }catch(err){
         console.log(`error in the getBidForUserController ${err.message}`);
         return res.status(400).json({error: err.message});

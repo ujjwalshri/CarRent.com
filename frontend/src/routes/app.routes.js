@@ -8,10 +8,13 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             controller: "homeCtrl",
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    
-                    // if(RouteProtection.isAdmin()){
-                    //     $state.go('admin');
-                    // }
+                    RouteProtection.getLoggedinUser().then((user)=>{
+                        if(user && user.isAdmin){
+                            $state.go('admin');
+                        }
+                    }).catch((err)=>{
+                     
+                    })
                 }]
             }
         })
@@ -19,13 +22,21 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             url: "/login",
             templateUrl: "components/auth/login.html",
             controller: "loginCtrl",
-            // resolve : {
-            //     auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-            //         if(RouteProtection.isAuthorized()){
-            //             $state.go('home');
-            //         }
-            //     }]
-            // }
+            resolve : {
+                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
+                    RouteProtection.getLoggedinUser().then((user)=>{
+                        if(user && user.isAdmin){
+                            $state.go('admin');
+                        }
+                        if(user){
+                            $state.go('home');
+                        }
+                        
+                    }).catch((err)=>{
+                        
+                    })
+                }]
+            }
         })
         .state("signup",{
            url: "/signup",
@@ -33,9 +44,16 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
            controller: "signupCtrl",
               resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                     if(RouteProtection.isAuthorized()){
-                          $state.go('home');
-                     }
+                    RouteProtection.getLoggedinUser().then((user)=>{
+                        if(user && user.isAdmin){
+                            $state.go('admin');
+                        }
+                        if(user){
+                            $state.go('home');
+                        }
+                    }).catch((err)=>{
+                        
+                    })
                 }]}
         })
         .state('car', {
@@ -44,13 +62,14 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             controller: 'addCarCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    console.log(RouteProtection.isAuthorized());
-                    if(!RouteProtection.isAuthorized()){
-                        $state.go('login');
-                    }
-                    if(RouteProtection.isAdmin()){
+                   RouteProtection.getLoggedinUser().then((user)=>{
+                    if(user.isAdmin){
                         $state.go('admin');
                     }
+                }).catch((err)=>{
+                    console.log(err);
+                    $state.go('login');
+                })
                 }]
             }
         })
@@ -60,12 +79,13 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             controller: 'adminCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    if(!RouteProtection.isAuthorized()){
-                        $state.go('login');
-                    }
-                    if(!RouteProtection.isAdmin()){
+                  RouteProtection.getLoggedinUser().then((user)=>{
+                    if(!user.isAdmin){
                         $state.go('home');
                     }
+                }  ).catch((err)=>{
+                    $state.go('login');
+                })
                 }]
             }
         })
@@ -100,16 +120,16 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             url: '/singleCar/:id',
             templateUrl: 'components/car/singleCar.html',
             controller: 'singleCarCtrl',
-            // resolve : {
-            //     auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-            //         if(!RouteProtection.isAuthorized()){
-            //             $state.go('login');
-            //         }
-            //         if(RouteProtection.isAdmin()){
-            //             $state.go('admin');
-            //         }
-            //     }]
-            // }
+            resolve : {
+                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
+                  RouteProtection.getLoggedinUser().then((user)=>{
+                    if(user && user.isAdmin){
+                        $state.go('admin');
+                    }}).catch((err)=>{
+                        $state.go('login');
+                    })
+                }]
+            }
         })
         .state('conversations', {
             url: '/conversations:id',
@@ -117,12 +137,13 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             controller: 'conversationsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    if(!RouteProtection.isAuthorized()){
-                        $state.go('login');
-                    }
-                    if(RouteProtection.isAdmin()){
+                   RouteProtection.getLoggedinUser().then((user)=>{
+                    if(user && user.isAdmin){
                         $state.go('admin');
                     }
+                   }).catch((err)=>{
+                    $state.go('login');
+                })
                 }]
             }
         }) 
@@ -132,12 +153,13 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             controller: 'myProfileCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    if(!RouteProtection.isAuthorized()){
+                    RouteProtection.getLoggedinUser().then(user=>{
+                        if(user && user.isAdmin){
+                            $state.go('admin');
+                        }
+                    }).catch(err=>{
                         $state.go('login');
-                    }
-                    if(RouteProtection.isAdmin()){
-                        $state.go('admin');
-                    }
+                    })
                 }]
             }
         })
@@ -147,18 +169,16 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             controller: 'userBookingsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    console.log(RouteProtection.isAuthorized());
-                    if(!RouteProtection.isAuthorized()){
-                        $state.go('login');
-                    }
-                    console.log(RouteProtection.isAdmin());
-                    if(RouteProtection.isAdmin()){
+                   RouteProtection.getLoggedinUser().then((user)=>{
+                    if(user && user.isAdmin){
                         $state.go('admin');
                     }
-                    console.log(RouteProtection.isSeller());
-                    if(RouteProtection.isSeller()){
+                    if(user.isSeller){
                         $state.go('ownerBookings');
                     }
+                   }).catch((err)=>{
+                    $state.go('login');
+                })
                 }]
             }
             
@@ -169,15 +189,16 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             controller: 'ownerBookingsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    if(!RouteProtection.isAuthorized()){
+                    RouteProtection.getLoggedinUser().then((user)=>{
+                        if(user && user.isAdmin){
+                            $state.go('admin');
+                        }
+                        if(user.isSeller === false ){
+                            $state.go('userBookings');
+                        }
+                    }).catch((err)=>{
                         $state.go('login');
-                    }
-                    if(RouteProtection.isAdmin()){
-                        $state.go('admin');
-                    }
-                    if(RouteProtection.isBuyer()){
-                        $state.go('userBookings');
-                    }
+                    })
                 }]
             }
         })
@@ -187,13 +208,13 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             controller: 'bookingsHistoryCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    if(!RouteProtection.isAuthorized()){
-                        $state.go('login');
-                    }
-                    if(RouteProtection.isAdmin()){
+                   RouteProtection.getLoggedinUser().then((user)=>{
+                    if(user && user.isAdmin){
                         $state.go('admin');
                     }
-                    
+                   }).catch((err)=>{
+                    $state.go('login'); 
+                })
                 }]
             }
         })
@@ -203,15 +224,16 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             controller: 'confirmedBookingsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    if(!RouteProtection.isAuthorized()){
-                        $state.go('login');
-                    }
-                    if(RouteProtection.isAdmin()){
+                  RouteProtection.getLoggedinUser().then((user)=>{
+                    if(user && user.isAdmin){
                         $state.go('admin');
                     }
-                    if(RouteProtection.isBuyer()){
-                        $state.go('userBookings');
+                    if(user.isSeller){
+                        $state.go('manageBookings');
                     }
+                   }).catch((err)=>{
+                    $state.go('login'); 
+                   });
                 }]
             }
         })
@@ -221,15 +243,17 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             controller: 'manageBookingsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    if(!RouteProtection.isAuthorized()){
+                    RouteProtection.getLoggedinUser().then((user)=>{
+                        if(user && user.isAdmin){
+                            $state.go('admin');
+                        }
+                        if(user.isSeller === false){
+                            $state.go('userBookings');
+                        }
+                       
+                    }).catch((err)=>{
                         $state.go('login');
-                    }
-                    if(RouteProtection.isAdmin()){
-                        $state.go('admin');
-                    }
-                    if(RouteProtection.isBuyer()){
-                        $state.go('userBookings');
-                    }
+                    })
                 }]
             }
         })
@@ -239,15 +263,15 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             controller: 'myBiddingsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    if(!RouteProtection.isAuthorized()){
+                    RouteProtection.getLoggedinUser().then((user)=>{
+                        if(user && user.isAdmin){
+                            $state.go('admin');
+                        }
+
+                        
+                    }).catch((err)=>{
                         $state.go('login');
-                    }
-                    if(RouteProtection.isAdmin()){
-                        $state.go('admin');
-                    }
-                    if(RouteProtection.isSeller()){
-                        $state.go('ownerBookings');
-                    }
+                    })
                 }]
             }
         })
@@ -257,18 +281,16 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             controller: 'sellerAnalyticsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    console.log(RouteProtection.isAuthorized());
-                    if(!RouteProtection.isAuthorized()){
+                    RouteProtection.getLoggedinUser().then((user)=>{
+                        if(user && user.isAdmin){
+                            $state.go('admin');
+                        }
+                        if(user.isSeller === false){
+                            $state.go('home');
+                        }
+                    }).catch((err)=>{
                         $state.go('login');
-                    }
-                    console.log(RouteProtection.isAdmin());
-                    if(RouteProtection.isAdmin()){
-                        $state.go('admin');
-                    }
-                    console.log(RouteProtection.isBuyer());
-                    if(RouteProtection.isBuyer()){
-                        $state.go('home');
-                    }
+                    })
                 }]
             }
             

@@ -41,7 +41,7 @@ export const makeUserSeller = async(req, res)=>{
     }
     try {
         const user = User.updateOne({_id: userId}, {isSeller: true});
-        return res.status(200).json({message: 'User is now a seller', user: user});
+        return res.status(200).json({message: 'User is now a seller'});
     }catch(err){
         console.log(`error in the makeUserSeller ${err.message}`);
         res.status(500).json({message: `error in the makeUserSeller ${err.message}`});

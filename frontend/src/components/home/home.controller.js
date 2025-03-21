@@ -10,9 +10,7 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
     // init function to run when the page mounts
     $scope.init = function (){
 
-
             fetchAllCars();
-
        
     };
     // function to get all the cars that have status === approved and car is not deleted

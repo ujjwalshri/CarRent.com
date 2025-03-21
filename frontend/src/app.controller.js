@@ -1,14 +1,17 @@
 const app = angular.module("myApp", ["ui.router", "ui.bootstrap"]);
 app.controller("appCtrl", function($scope,$rootScope, ToastService,AuthService, RouteProtection) {
     //init function to run when the app first loads
-    
-    
-    
     $scope.init = async function() {
-        
-       $rootScope.adminLogged  = false; // set the adminLogged to false initially
-       $rootScope.isLogged = true; // set the isLogged to false initially
-        $rootScope.isSeller = false; // set the isSeller to false initially
+        RouteProtection.getLoggedinUser().then((user)=>{
+            $rootScope.isLogged = true;
+            if(user.isAdmin){
+                $rootScope.adminLogged = true;
+            }
+            if(user.isSeller){
+                $rootScope.isSeller = true;
+            }
+        }
+    )
     };
 
     //logout function to remove the user from the session storage

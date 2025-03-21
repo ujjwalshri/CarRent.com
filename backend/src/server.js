@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.routes.js";
 import vehicleRoutes from "./routes/vehicle.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import adminAnalyticsRoutes from "./routes/admin.analytics.routes.js";
 import biddingRoutes from "./routes/bidding.routes.js";
 import reviewRoutes from "./routes/review.routes.js";
 import passport from "./config/passport.js"
@@ -34,6 +35,7 @@ app.use('/api/vehicle', vehicleRoutes);
 app.use('/api/bidding', biddingRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/review', reviewRoutes)
+app.use('/api/admin', adminAnalyticsRoutes)
 
 
 

@@ -76,4 +76,16 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
         return deferred.promise;
 
     }
+    this.getCars = ()=>{
+        let deferred = $q.defer();
+        $http.get(`${ApiService.baseURL}/api/vehicle/getPendingCars`, { withCredentials: true })
+        .then((res)=>{
+            deferred.resolve(res.data);
+        })
+        .catch(err=>{
+            deferred.reject("Error fetching cars");
+        })
+        return deferred.promise;
+
+    }
 });
