@@ -22,7 +22,7 @@ const upload = multer({
         },
         key: function (req, file, cb) {
             const fileExtension = file.originalname.split('.').pop();
-            cb(null, `ujjwalcars/${Date.now()}.${fileExtension}`);
+            cb(null, `ujjwalcars/${Date.now()}.${fileExtension}`); // add uniqueness
         }
     }),
     fileFilter: (req, file, cb) => {

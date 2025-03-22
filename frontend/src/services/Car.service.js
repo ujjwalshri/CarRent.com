@@ -1,7 +1,8 @@
 angular.module('myApp').service('CarService', function($http, ApiService, $q) {
-    this.getAllApprovedCars = ()=>{
+    this.getAllApprovedCars = (search, price, city,category, skip)=>{
+        console.log('skip', skip);
         let deferred = $q.defer();
-        $http.get(`${ApiService.baseURL}/api/vehicle/allApprovedVehicles`)
+        $http.get(`${ApiService.baseURL}/api/vehicle/allApprovedVehicles?search=${search===undefined?'':search}&priceRange=${price}&city=${city}&category=${category}&skip=${skip}`, { withCredentials: true })
         .then((res)=>{
             deferred.resolve(res);
             console.log(res);
@@ -88,4 +89,31 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
         return deferred.promise;
 
     }
+    this.approveCar= (carId)=>{
+        let deferred = $q.defer();
+        $http.patch(`${ApiService.baseURL}/api/vehicle/toggleVehicleStatus/${carId}`,{
+           vehicleStatus: 'approved'
+        },{ withCredentials: true })
+        .then((res)=>{
+            deferred.resolve(`car approved successfully`);
+        })
+        .catch(err=>{
+            deferred.reject("Error approving car");
+        })
+        return deferred.promise;
+    }
+    this.rejectCar= (carId)=>{
+        let deferred = $q.defer();
+        $http.patch(`${ApiService.baseURL}/api/vehicle/toggleVehicleStatus/${carId}`,{
+           vehicleStatus: 'rejected'
+        },{ withCredentials: true })
+        .then((res)=>{
+            deferred.resolve(`car rejected successfully`);
+        })
+        .catch(err=>{
+            deferred.reject(`Error rejecting car ${err}`);
+        })
+        return deferred.promise;
+    }
+    
 });

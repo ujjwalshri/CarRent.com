@@ -3,14 +3,19 @@
 
 <div ng-init="init()" class="container">
     <h2 class="text-center" ng-show="bookings.length > 0">Booking History</h2>
-    <h2 class="text-center text-muted" ng-show="bookings.length === 0">No Booking History</h2>
+    <div class="container-fluid text-center" style="height: 100vh; background-color: #f8f9fa; display: flex; justify-content: center; align-items: center;">
+        <div class="well" style="max-width: 500px; width: 100%; padding: 20px; border-radius: 10px; background: white; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);">
+          <h1 style="font-size: 5rem;">🗓️</h1>
+          <h2 class="text-muted">No Booking History</h2>
+        </div>
+      </div>
     <br>
 
     <label for="startDate" ng-show="bookings.length > 0">Filter by booking Start Date:</label><br>
     <input type="date" ng-model="startDate"ng-show="bookings.length > 0"> <button  ng-click="filterByStartDate()" ng-show="bookings.length > 0">filter</button>
     <button ng-click="resetFilter()" ng-show="bookings.length > 0">reset filter</button>
  
-    <div class="panel panel-default" ng-repeat="booking in paginatedBookings">
+    <div class="panel panel-default" ng-repeat="booking in bookings">
         <div class="panel-heading">
             <h4 class="panel-title">Booking ID: {{booking.id}}</h4>
         </div>

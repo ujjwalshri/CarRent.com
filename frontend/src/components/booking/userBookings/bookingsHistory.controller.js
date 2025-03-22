@@ -1,10 +1,11 @@
-angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, IDB, Booking, ToastService, Review, BackButton) {
+angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, IDB, Booking, ToastService, Review, BackButton, BiddingService) {
     $scope.back = BackButton.back; // back function to go back to the previous page
     $scope.bookings = []; // array to hold all the boooking histories
     const loggedInUser = JSON.parse(sessionStorage.getItem("user")); // getting the logged in user
     $scope.calculateBookingPrice = Booking.calculate; // function to calculate the booking price from the booking factory
     $scope.currentPage = 1; // setting the current page to 1
     $scope.itemsPerPage = 5; // setting the items per page to 5
+    $scope.isLoading = false; // setting the isLoading to false
      //  init to initialize the page data 
     $scope.init = ()=>{
         fetchBookingHistory(); // initially fetching the booking history for the logged in user
@@ -16,23 +17,16 @@ angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, IDB, 
     @{returns} none
     */
     function fetchBookingHistory() {
-        IDB.getAllBookings().then((bookings) => {
-            $scope.bookings = bookings
-                .filter((booking) => {
-                    return booking.status === "reviewed"; // filtering out the approved bookings
-                })
-                .filter((booking) => {
-                    return booking.from.id === loggedInUser.id; // filtering out the bookings of the logged in user
-                });
-    
-            
-             $scope.totalItems = $scope.bookings.length;
-            $scope.pageChanged();
-    
+        $scope.isLoading = true;
+        BiddingService.getUserBookingsHistory().then((bookings)=>{
+            $scope.bookings = bookings.bookings;
+            console.log(bookings);
             console.log($scope.bookings);
-        }).catch((err) => {
-            ToastService.error(`error fetching the bookings ${err}`); // show error message if there is an error
-        });
+        }).catch((err)=>{
+            ToastService.error(`Error fetching bookings ${err}`);
+        }).finally(()=>{
+            $scope.isLoading = false;
+        })
     }
     // function to change the page
     $scope.pageChanged = function() {

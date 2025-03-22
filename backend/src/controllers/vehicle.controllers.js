@@ -77,13 +77,20 @@ export const addCarController = async (req, res) => {
 /*
 @description: function to get all the approved cars from the database
 */
-export const getAllCarController = async(req, res)=>{
-    const { search = '', priceRange, city, category } = req.query;
+export const getAllCarController = async (req, res) => {
+
+
+    let { search = '', priceRange, city, category, limit = 6, skip = 0 } = req.query;
+    skip = parseInt(skip);
+    console.log('skip', skip);
+    if (priceRange === 'undefined') priceRange = false;
+    if (city === 'undefined') city = undefined;
+    if (category === 'undefined') category = undefined;
 
     try {
         const aggregationPipeline = [];
 
-        
+       
         if (search.trim()) {
             aggregationPipeline.push({
                 $search: {
@@ -92,57 +99,64 @@ export const getAllCarController = async(req, res)=>{
                         query: search,
                         path: ["company", "modelYear", "name"],
                         fuzzy: {
-                            maxEdits: 2,
-                        }
-                    }
-                }
+                           
+                        },
+                    },
+                },
             });
         }
 
-        
+       
         aggregationPipeline.push({
             $match: {
-                status: 'approved'
-            }
+                status: 'approved',
+            },
         });
 
-        
+       
         if (priceRange) {
             const [minPrice, maxPrice] = priceRange.split('-').map(Number);
             aggregationPipeline.push({
                 $match: {
-                    price: { $gte: minPrice, $lte: maxPrice }
-                }
+                    price: { $gte: minPrice, $lte: maxPrice },
+                },
             });
         }
 
-
-        if (city !== undefined) {
-           
+       
+        if (city) {
             aggregationPipeline.push({
                 $match: {
-                    city: city
-                }
+                    city: city,
+                },
             });
         }
 
-
+       
         if (category) {
             aggregationPipeline.push({
                 $match: {
-                    category: category
-                }
+                    category: category,
+                },
             });
         }
-        console.log(aggregationPipeline);
 
+        
+        aggregationPipeline.push(
+            { $skip: parseInt(skip) },
+            { $limit: parseInt(limit) } 
+        );
+
+       
         const cars = await Vehicle.aggregate(aggregationPipeline);
+
+       
         res.status(200).json(cars);
     } catch (err) {
-        console.log(`Error in the getAllCarController: ${err.message}`);
+        console.error(`Error in the getAllCarController: ${err.message}`);
         res.status(500).json({ message: `Error in the getAllCarController: ${err.message}` });
     }
-}
+};
 /*
 @description: function to get all the cars from the database
 */
@@ -170,7 +184,7 @@ export const toggleVehicleStatusController = async (req, res) => {
          }
         const vehicle = await Vehicle.findById(req.params.id);
         const ownerId = vehicle.owner._id;
-        
+
         const car = await Vehicle.updateOne({'_id': req.params.id}, { status: vehicleStatus });
         if(vehicleStatus === 'approved' ){
             // then make user a seller on the platform

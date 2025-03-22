@@ -1,12 +1,14 @@
 angular
   .module("myApp")
-  .controller("userBookingsCtrl", function ($scope, IDB, Booking, ToastService, Review, BackButton) {
+  .controller("userBookingsCtrl", function ($scope, IDB, Booking, ToastService, Review, BackButton, BiddingService) {
     $scope.back = BackButton.back; // back function to go back to the previous page
     $scope.bookings = []; // array to hold the bookings of the logged in user
     $scope.calculateBookingPrice = Booking.calculate; // function to calculate the booking price from the booking factory
     const loggedInUser = JSON.parse(sessionStorage.getItem("user")); // get the logged in user
     $scope.currentPage = 1; // setting the current page to 1
-    $scope.itemsPerPage = 3; // setting the items per page to 5
+    $scope.itemsPerPage = 1; // setting the items per page to 5
+    $scope.isLoading = false;
+    $scope.sortBy = '';
 
 
     
@@ -14,9 +16,7 @@ angular
     
      // function to handle pagination
     $scope.pageChanged = function() {
-        var start = ($scope.currentPage - 1) * $scope.itemsPerPage; // setting the start index
-        var end = start + $scope.itemsPerPage; // setting the end index
-        $scope.paginatedBookings = $scope.bookings.slice(start, end); // setting the paginated bookings to the bookings from start to end
+        getAllBookings();
     };
 
     // $scope.variables to store all the variables
@@ -35,27 +35,28 @@ angular
       isModalOpen = false;
     }
 
+    $scope.handleSorting = ()=>{
+      getAllBookings();
+    }
+
 
    // function to get all the bookings of the logged in user
-    function getAllBookings() {
-      // getting all the bookings from the database
-      IDB.getAllBookings().then((bookings) => {
-        $scope.bookings = bookings
-          .filter((booking) => {
-            return booking.status === "approved"; // filtering out the approved bookings
-          })
-          .filter((booking) => {
-            return (
-              booking.from.id ===
-              JSON.parse(sessionStorage.getItem("user")).id
-            ); // filtering out the bookings of the logged in user
-          });
-           
-          $scope.totalItems = $scope.bookings.length;
-          $scope.pageChanged();
-          console.log($scope.bookings);
-      }).catch((err)=>{
-         ToastService.error( `error fetching the bookings ${err}`);
+  function getAllBookings() {
+     console.log($scope.sortBy);
+      const params = {
+        page: $scope.currentPage,
+        limit: $scope.itemsPerPage,
+        sort: $scope.sortBy ? { [$scope.sortBy]: 1 } : undefined
+      }
+      $scope.isLoading = true;
+      BiddingService.getBookingsForUser(params).then((biddings) => {
+        $scope.bookings = biddings.bookings;
+        $scope.totalPages = Math.ceil(biddings.totalDocs/$scope.itemsPerPage);
+        console.log($scope.bookings);
+      }).catch((err) => {
+        ToastService.error(`Error fetching bookings ${err}`);
+      }).finally(()=>{
+        $scope.isLoading = false;
       })
     }
     // function to check if the booking is reviewed or not

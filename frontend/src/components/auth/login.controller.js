@@ -12,9 +12,10 @@ angular.module("myApp").controller("loginCtrl", function($scope, $state, $rootSc
         AuthService.loginUser($scope.username, $scope.password)
             .then(function(res) {
                     ToastService.success("Logged in successfully");
-                    // $rootScope.adminLogged = JSON.parse(sessionStorage.getItem("user")).role !==undefined;
+                    
                      $rootScope.isLogged = true; 
-                    // $rootScope.isSeller = JSON.parse(sessionStorage.getItem("user")).isSeller; // setting the rootScope of isSeller to true if the user is a seller
+                     res.isSeller ? $rootScope.isSeller = true : $rootScope.isSeller = false;
+                     res.isAdmin ? $rootScope.adminLogged = true : $rootScope.adminLogged = false;
                     $state.go("home");
             })
             .catch(function(error) {

@@ -1,16 +1,25 @@
 <button style="margin-left: 20px;" ng-click="back()"><<<</button>
 <div ng-controller="confirmedBookingsCtrl" class="confirmed-Bookings">
    
-    <h1 class="text-center" ng-if="bookings.length>0">Confirmed Bookings</h1>
-    <h3 class="text-center text-muted" ng-if="bookings.length===0">No bookings available</h3>
-    <label for="">Search by Booking type: </label><br>
-    <select class="filter-container panel panel-default p-3" name="location" ng-model="bookingsType.type" ng-change="applyFilter()" required>
-        <option value="" disabled selected>Search Booking type</option>
-        <option value="today">Today</option>
-        <option value="later">Later</option>
+    <h1 class="text-center" ng-if="allBookings.length>0">Confirmed Bookings</h1>
+    <h3 class="text-center text-muted" ng-if="allBookings.length===0">No bookings available</h3>
+    <!-- Loading Spinner -->
+<div class="text-center" ng-show="isLoading">
+    <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
+    <span>Loading...</span>
+</div>
+<div class="form-group">
+    <label for="bookingType" class="control-label">🔍 Search by Booking Type:</label>   <button ng-click="resetFilter()">reset filter</button>
+    <select id="bookingType" class="form-control" name="location" ng-model="bookingsType.type" ng-change="applyFilter()" required> 
+      <option value="" disabled selected>🔽 Select Booking Type</option> 
+      <option value="today"> Today</option>
+      <option value="later"> Later</option>
     </select>
-    <button ng-click="resetFilter()">reset filter</button>
-    <div class="table-responsive" ng-if="bookings.length>0">
+  </div>
+  
+
+   
+    <div class="table-responsive" ng-if="allBookings.length>0">
         <table class="table table-striped table-bordered table-hover">
             <thead class="thead-dark">
                 <tr>
@@ -21,12 +30,11 @@
                     <th>User Details</th>
                     <th>Vehicle Details</th>
                     <th>Manage Booking</th>
-                    <th>Vehicle Images</th>
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="booking in bookings| orderBy : '-createdAt'">
-                    <td>{{booking.id}}</td>
+                <tr ng-repeat="booking in allBookings| orderBy : '-createdAt'">
+                    <td>{{booking._id}}</td>
                     <td>${{calculateBookingPrice(booking.startDate, booking.endDate, booking.amount)}}</td>
                     <td>{{booking.startDate | date: 'yyyy-MM-dd'}}</td>
                     <td>{{booking.endDate | date: 'yyyy-MM-dd'}}</td>
@@ -37,10 +45,10 @@
                         <p><strong>Email:</strong> {{booking.from.email}}</p>
                     </td>
                     <td>
-                        <p><strong>Car Name:</strong> {{booking.vehicle.carName}}</p>
-                        <p><strong>Car Model:</strong> {{booking.vehicle.carModel}}</p>
-                        <p><strong>Car Type:</strong> {{booking.vehicle.carType}}</p>
-                        <p><strong>Car Price:</strong> ${{booking.vehicle.carPrice}}</p>
+                        <p><strong>Car Name:</strong> {{booking.vehicle.name}}</p>
+                        <p><strong>Car Model:</strong> {{booking.vehicle.modelYear}}</p>
+                        <p><strong>Fuel Type:</strong> {{booking.vehicle.fuelType}}</p>
+                        <p><strong>Car Price:</strong> ${{booking.vehicle.price}}</p>
                         <p><strong>Category:</strong> {{booking.vehicle.category}}</p>
                         <p><strong>Mileage:</strong> {{booking.vehicle.mileage}} kmpl</p>
                     </td>
@@ -51,12 +59,6 @@
                             Manage Booking
                         </button>
                         <span class="badge badge-secondary" ng-if="!todayBooking(booking)">Coming Soon</span>
-                    </td>
-                    <td class="text-center">
-                        <img ng-src="{{booking.vehicle.vehicleImages[0]}}" 
-                             alt="Vehicle Image" 
-                             class="img-thumbnail" 
-                             width="100">
                     </td>
                 </tr>
             </tbody>

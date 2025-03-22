@@ -1,9 +1,8 @@
 angular.module("myApp").controller("carCtrl", function ($scope, $state, IDB, ToastService, CarService) {
-
-  
   $scope.init = () => {
     fetchPendingCars(); // initial fetch of pending cars
   };
+
    /*
    function to get the pending cars from the database
     @params none
@@ -21,26 +20,21 @@ angular.module("myApp").controller("carCtrl", function ($scope, $state, IDB, Toa
 
   // function to approve a car
   $scope.approveCar = (carID) => {
-    console.log(carID);
-    IDB.approveCar(carID) // calling the db function to approve the car
-      .then(() => {
-        ToastService.success("car approved successfully"); // showing the success message
-        fetchPendingCars(); // fetching the pending cars again
-      })
-      .catch((err) => {
-        ToastService.error(`error approving car ${err}`);// showing the error message
+    CarService.approveCar(carID).then(()=>{
+      ToastService.success("Car approved successfully");
+      fetchPendingCars();
+    }).catch((err)=>{
+      ToastService.error(`Error approving car ${err}`);
       });
   };
 
   // function to reject a car
   $scope.rejectCar = (carID) => {
-    IDB.rejectCar(carID) // calling the db function to reject the car
-      .then(() => {
-        ToastService.success("car rejected successfully"); // showing the success message
-        fetchPendingCars(); // fetching the pending cars again
-      })
-      .catch((err) => {
-        ToastService.error(`error rejecting the car ${err}`); // showing the error message
+    CarService.rejectCar(carID).then(()=>{
+      ToastService.success("Car rejected successfully");
+      fetchPendingCars();
+    }).catch((err)=>{
+      ToastService.error(`Error rejecting car ${err}`);
       });
   };
 });

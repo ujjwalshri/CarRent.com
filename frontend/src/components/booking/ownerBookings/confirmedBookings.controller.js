@@ -2,7 +2,7 @@ angular
   .module("myApp")
   .controller(
     "confirmedBookingsCtrl",
-    function ($scope, $state, IDB, Booking, BackButton) {
+    function ($scope, $state, IDB, Booking, BackButton, BiddingService, ToastService) {
       $scope.back = BackButton.back; // back function to go back to the previous page
       $scope.calculateBookingPrice = Booking.calculate; // function to calculate the booking price from the booking factory
       $scope.todayBooking = Booking.todayBookingCalculator; // function to check if the booking is for today from the booking factory 
@@ -12,6 +12,8 @@ angular
       $scope.bookingsType ={ // Initialize bookingsType object as an empty object
         type: ''
       };
+      $scope.sortBy = ''; // Initialize sortBy
+      $scope.isLoading = false;
       
     
       // Fetch bookings initially
@@ -20,19 +22,27 @@ angular
       function to fetch the bookings for logged in owner
       */
       function fetchOwnerConfirmedBookings() {
-        const loggedInUser = JSON.parse(sessionStorage.getItem("user"));
-        IDB.getBookingsByOwnerId(loggedInUser.id)
-          .then((bookings) => {
-            bookings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Sort by createdAt to make sure the latest booking comes first
-            $scope.allBookings = bookings.filter(
-              (booking) => booking.status === "approved" || booking.status === "reviewed"
-            );
-            $scope.totalItems = $scope.allBookings.length;
-            console.log($scope.allBookings);
-            $scope.pageChanged(); // Update paginated list
-          })
-          .catch((err) => console.log(err));
+        const params = {
+          page: $scope.currentPage,
+          limit: $scope.itemsPerPage,
+          sort: $scope.sortBy
+        }
+        $scope.isLoading = true;
+        BiddingService.getBookingsForOwner().then((bookings)=>{
+          console.log(bookings);
+          $scope.allBookings = bookings.bookings;
+          console.log($scope.allBookings);
+        }).catch((err)=>{
+          ToastService.error(`Error fetching bookings ${err}`);
+          console.log(err);
+        }).finally(()=>{  
+          $scope.isLoading = false;
+        });
+        
       }
+
+
+
       // Pagination logic starts here
       $scope.totalPages = Math.ceil($scope.allBookings.length / $scope.itemsPerPage); // Initialize totalPages
       
@@ -86,7 +96,7 @@ angular
       function to handle the opening on the manage booking page routes the user to the manage booking page with the booking id
       */
       $scope.openManageBooking = (booking) => {
-        $state.go("manageBookings", { id: booking.id }); // using $state to navigate to the manage booking page with the booking id
+        $state.go("manageBookings", { id: booking._id }); // using $state to navigate to the manage booking page with the booking id
        };
  
     $scope.resetFilter = ()=>{

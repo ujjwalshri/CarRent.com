@@ -10,12 +10,14 @@
                 <label>Search:</label>
                 <input type="text" ng-model="search" placeholder="Search for cars" 
                     class="form-control mb-2" 
-                    uib-typeahead="car for car in carList | filter:$viewValue | limitTo:8">
+                    uib-typeahead="car for car in carList | filter:$viewValue | limitTo:8"
+                    ng-change="filterCarsWithDelay()"
+                    >
             </div>
 
             <div class="col-md-4">
                 <label>Price Range:</label>
-                <uib-dropdown class="mb-2">
+                <uib-dropdown class="mb-2" on-toggle="filterCars()">
                     <button class="btn btn-default dropdown-toggle form-control" uib-dropdown-toggle>
                         {{ priceFilter || 'All' }} <span class="caret"></span>
                     </button>
@@ -45,11 +47,11 @@
                 </uib-dropdown>
             </div>
 
-            <!-- City Dropdown -->
+
             <div class="col-md-4">
                 <label>City:</label>
-                <uib-dropdown>
-                    <button class="btn btn-default dropdown-toggle form-control" uib-dropdown-toggle>
+                <uib-dropdown on-toggle="filterCars()">
+                    <button class="btn btn-default dropdown-toggle form-control" uib-dropdown-toggle >
                         {{ city || 'Select City' }} <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu" uib-dropdown-menu>
@@ -69,11 +71,11 @@
 
             <div class="col-md-4">
                 <label>Category:</label>
-                <uib-dropdown class="mb-2">
-                    <button class="btn btn-default dropdown-toggle form-control" uib-dropdown-toggle>
+                <uib-dropdown class="mb-2" on-toggle="filterCars()" >
+                    <button class="btn btn-default dropdown-toggle form-control" uib-dropdown-toggle >
                         {{ category || 'Select Category' }} <span class="caret"></span>
                     </button>
-                    <ul class="dropdown-menu" uib-dropdown-menu>
+                    <ul class="dropdown-menu" uib-dropdown-menu >
                         <li ng-click="category='SUV'"><a href="#">SUV</a></li>
                         <li ng-click="category='Sedan'"><a href="#">Sedan</a></li>
                     </ul>
@@ -92,7 +94,7 @@
 
 <div id="cars-listing" ng-init="init()" class="container mt-4">
     <div class="row">
-        <div class="col-md-6 col-xs-6" style="border-radius: 10px;" ng-repeat="car in filteredCars = (allCars | orderBy:'-createdAt' | carFilters: search:priceFilter:category:city)">
+        <div class="col-md-6 col-xs-6" style="border-radius: 10px;" ng-repeat="car in allCars ">
             <div class="panel panel-default car-panel" ng-click="redirectCarPage(car._id)">
                 <div class="panel-body"> 
                     <img class="img-responsive center-block car-image" style="width: 300px; height: 200px;"  ng-src="{{ car.vehicleImages[0].url || 'default-car.jpg' }}" alt="{{ car.carName }}">
@@ -111,6 +113,7 @@
                 </div>
             </div>
         </div>
+       
 
         <div class="col-12 text-center" ng-if="filteredCars.length === 0">
             <div class="alert alert-warning mt-4">
@@ -118,4 +121,15 @@
             </div>
         </div>
     </div>
+    <div class="text-center" ng-click="loadMoreCars()" ng-if="hasMoreCars" style="margin-bottom: 20px;">
+        <button id="load-more-btn" class="btn btn-primary mt-3">
+            Load More <span class="glyphicon glyphicon-chevron-down"></span>
+          </button>
+    </div>
+
+<div class="text-center" ng-show="isLoading">
+    <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
+    <span>Loading...</span>
+</div>
+
 </div>

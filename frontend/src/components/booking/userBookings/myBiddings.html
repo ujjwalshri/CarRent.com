@@ -1,23 +1,29 @@
 <button style="margin-left: 20px;" ng-click="back()"><<<</button>
-<div class="container ">
+<div class="container">
     <h1 class="text-center" ng-show="bookings.length > 0">Your Biddings</h1>
     <h1 class="text-center text-danger" ng-show="bookings.length === 0">NO BIDDINGS</h1>
-    <select class="filter-container panel panel-default p-3" name="location" ng-model="biddingStatus" ng-change="applyFilter()" required>
+    <select class="filter-container panel panel-default p-3" name="location" ng-model="biddingStatus"  required>
         <option value="" disabled selected>Search Booking type</option>
         <option value="rejected">rejected</option>
         <option value="pending">pending</option>
     </select>
+    <button ng-click="applyFilter()">apply filter</button>
     <button ng-click="resetFilter()">reset filter</button>
     <div class="filters text-center mt-3 mb-3" ng-show="bookings.length > 0">
         <input type="text" class="form-control w-50 mx-auto" ng-model="searchCarName" placeholder="🔍 Search by Car Name" />
     </div>
+   
+<div class="text-center" ng-show="isLoading">
+    <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
+    <span>Loading...</span>
+</div>
     <div class="table-responsive" ng-show="bookings.length > 0" style="max-height: 400px; overflow-y: auto;">
         <table class="table table-hover table-striped table-bordered bidding-table">
             <thead class="thead-dark">
                 <tr>
                     <th>Car Name</th>
                     <th>Model</th>
-                    <th>Type</th>
+                    <th>Fuel Type</th>
                     <th>Price/Day</th>
                     <th>Start Date</th>
                     <th>End Date</th>
@@ -28,11 +34,11 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="booking in paginatedBookings | ownerBookingFilter:searchCarName | orderBy: '-createdAt'">
-                    <td>{{ booking.vehicle.carName }}</td>
-                    <td>{{ booking.vehicle.carModel }}</td>
-                    <td>{{ booking.vehicle.carType }}</td>
-                    <td>${{ booking.vehicle.carPrice }}</td>
+                <tr ng-repeat="booking in bookings">
+                    <td>{{ booking.vehicle.name }}</td>
+                    <td>{{ booking.vehicle.modelYear }}</td>
+                    <td>{{ booking.vehicle.fuelType }}</td>
+                    <td>${{ booking.vehicle.price }}</td>
                     <td>{{ booking.startDate | date: 'yyyy-MM-dd' }}</td>
                     <td>{{ booking.endDate | date: 'yyyy-MM-dd' }}</td>
                     <td class="font-weight-bold text-success">

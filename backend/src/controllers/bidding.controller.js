@@ -112,7 +112,9 @@ export const updateBidStatusController = async (req, res) => {
 */
 export const getBidForOwnerController = async (req, res) => {
     const user = req.user;
+    console.log(req.query.page, req.query.limit, req.query.status);
     const {  page = 1, limit = 10, sort={}} = req.query;
+    console.log(sort, page, limit);
     const status = req.query.status || 'pending';
     console.log(status, page, limit);
     const pageNumber = parseInt(page);
@@ -122,6 +124,7 @@ export const getBidForOwnerController = async (req, res) => {
     const skip = (pageNumber - 1) * limitNumber;
 
     try {
+        const totalDocs = await Bidding.countDocuments({ "owner._id": user._id, status });
         const aggregationPipeline = [
             { $match: { "owner._id": user._id } },
             { $match: {"status": status } },
@@ -132,7 +135,8 @@ export const getBidForOwnerController = async (req, res) => {
 
         const result = await Bidding.aggregate(aggregationPipeline);
         return res.status(200).json({
-            result
+            result,
+            totalDocs
         });
     } catch (error) {
         return res.status(400).json({ error: error.message });
@@ -143,13 +147,17 @@ export const getBidForOwnerController = async (req, res) => {
  @description function to get the bids according to the search query from the request.query
 */
 export const getBidForUserController = async (req, res) => {
-    const { page = 1, limit = 10, sort = {}, status="pending" } = req.query;
+    console.log("req.query" ,req.query);
+    let { page = 1, limit = 10, sort = {}, status="pending" } = req.query;
+    console.log(status, page, limit);
+    console.log("149", status);
     const pageNumber = parseInt(page);
     const limitNumber = parseInt(limit);
     let finalSort = { ...sort, createdAt: -1 };
     const skip = (pageNumber - 1) * limitNumber;
     
     try{
+        const totalDocs = await Bidding.countDocuments({ "from._id": req.user._id, status });
         const aggregationPipeline = [
             { $match: { "from._id": req.user._id } },
             { $match: { "status": status } },
@@ -160,7 +168,8 @@ export const getBidForUserController = async (req, res) => {
         const result = await Bidding.aggregate(aggregationPipeline);
         const bids = result
         return res.status(200).json({
-            bids
+            bids, 
+            totalDocs
         });
     }catch(err){
         console.log(`error in the getBidForUserController ${err.message}`);
@@ -201,5 +210,88 @@ export const getBookingsAtCarIdController = async (req, res)=>{
     }
 }
 
+export const getAllBookingsAtOwnerIdController = async (req, res)=>{
+    const { page = 1, limit = 10, sort = {} } = req.query;
+    const userId = req.user._id;
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    let finalSort = { ...sort, createdAt: -1 };
+    const skip = (pageNumber - 1) * limitNumber;
+    try{
+        const aggregationPipeline = [
+            { $match: { "owner._id": userId } },
+            { $match: { "status": "approved" } },
+            { $sort: finalSort },
+            { $skip: skip },
+            { $limit: limitNumber }
+        ];
+        const bookings = await Bidding.aggregate(aggregationPipeline);
+        return res.status(200).json({ bookings });
+    }catch(err){
+        console.log(`error in the getAllBookingsAtOwnerIdController ${err.message}`);
+        return res.status(500).json({error: `error in the getAllBookingsAtOwnerIdController ${err.message}`});
+    }
+}
 
 
+export const getAllBookingsAtUserIdController = async (req, res)=>{
+    console.log(req.query);
+
+    let { page = 1, limit = 10, sort = {} } = req.query;
+     if(req.query.sort !== undefined){
+        let parsedSort;
+        try {
+          
+            parsedSort = JSON.parse(sort);
+        } catch (err) {
+            console.log(`Error parsing sort parameter: ${err.message}`);
+            return res.status(400).json({ error: 'Invalid sort parameter' });
+        }
+        sort = parsedSort;
+     }
+    
+    const userId = req.user._id;
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    let finalSort = { ...sort, createdAt: -1 };
+    const skip = (pageNumber - 1) * limitNumber;
+    try{
+        const totalDocs = await Bidding.countDocuments({ "from._id": userId, status: "approved" });
+        const aggregationPipeline = [
+            { $match: { "from._id": userId } },
+            { $match: { "status": "approved" } },
+            { $sort: finalSort },
+            { $skip: skip },
+            { $limit: limitNumber }
+        ];
+        const bookings = await Bidding.aggregate(aggregationPipeline);
+        return res.status(200).json({ bookings, totalDocs });
+    }catch(err){
+        console.log(`error in the getAllBookingsAtUserIdController ${err.message}`);
+        return res.status(500).json({error: `error in the getAllBookingsAtUserIdController ${err.message}`});
+    }
+}
+
+export const getUserBookingHistory = async (req,res)=>{
+    const { page = 1, limit = 10, sort = {} } = req.query;
+    const userId = req.user._id;
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    let finalSort = { ...sort, createdAt: -1 };
+    const skip = (pageNumber - 1) * limitNumber;
+    try{
+        const aggregationPipeline = [
+            { $match: { "from._id": userId } },
+            { $match: { "status": "reviewed"} },
+            { $sort: finalSort },
+            { $skip: skip },
+            { $limit: limitNumber }
+        ];
+        const bookings = await Bidding.aggregate(aggregationPipeline);
+        return res.status(200).json({ bookings });
+    }catch(err){
+        console.log(`error in the getUserBookingHistory ${err.message}`);
+        return res.status(500).json({error: `error in the getUserBookingHistory ${err.message}`});
+    }
+
+}
