@@ -1,19 +1,27 @@
+<button class="btn btn-outline-primary m-3" ng-click="back()">&#x25C0; Back</button>
+<div class="container mt-4 p-4 shadow bg-white rounded" ng-app="carApp" ng-controller="addCarCtrl">
+    <h2 class="text-center text-primary mb-4">Add a New Car</h2>
+    <form id="addCarForm" class="form-horizontal" name="addCarForm" novalidate ng-submit="submitCarForm(addCarForm)">
 
-<button style="margin-left: 20px;" ng-click="back()"><<<</button>
-<div class="container" ng-app="carApp" ng-controller="addCarCtrl">
-    <h2 class="text-center">Add a New Car</h2>
-    <form id="addCarForm" class="form-horizontal">
-        
-        <div class="form-group">
-            <label class="col-sm-3 control-label" for="carName">Car Name:</label>
+
+        <div class="form-group row">
+            <label class="col-sm-3 col-form-label">Car Name:</label>
             <div class="col-sm-9">
-                <input type="text" class="form-control" id="carName" name="carName" ng-model="carName" placeholder="Write the whole name for better searches" required>
+                <input type="text" class="form-control" ng-model="carName" name="carName" placeholder="Enter car name" required ng-minlength="3">
+                <div class="text-danger" ng-show="addCarForm.carName.$touched && addCarForm.carName.$error.required">
+                    Car name is required.
+                </div>
+                <div class="text-danger" ng-show="addCarForm.carName.$touched && addCarForm.carName.$error.minlength">
+                    Car name must be at least 3 characters long.
+                </div>
             </div>
         </div>
-        <div class="form-group">
-            <label class="col-sm-3 control-label" for="company">Company:</label>
+
+
+        <div class="form-group row">
+            <label class="col-sm-3 col-form-label">Company:</label>
             <div class="col-sm-9">
-                <select class="form-control" id="company" name="company" ng-model="company">
+                <select class="form-control" ng-model="company" name="company" required>
                     <option value="" disabled selected>Select Car company</option>
                     <option value="Toyota">Toyota</option>
                     <option value="Ford">Ford</option>
@@ -26,121 +34,149 @@
                     <option value="Hyundai">Hyundai</option>
                     <option value="Volkswagen">Volkswagen</option>
                 </select>
+                <div class="text-danger" ng-show="addCarForm.company.$touched && addCarForm.company.$error.required">
+                    Company is required.
+                </div>
             </div>
         </div>
 
 
-        <div class="form-group">
-            <label class="col-sm-3 control-label" for="carModel">Car Model Year:</label>
+        <div class="form-group row">
+            <label class="col-sm-3 col-form-label">Model Year:</label>
             <div class="col-sm-9">
-                <input type="number" class="form-control" id="carModel" name="carModel" ng-model="carModel" placeholder="enter the model year" required>
+                <input type="number" class="form-control" ng-model="carModel" name="carModel" placeholder="Enter model year" required ng-max="{{currentYear}}">
+                <div class="text-danger" ng-show="addCarForm.carModel.$touched && addCarForm.carModel.$error.required">
+                    Model year is required.
+                </div>
+                <div class="text-danger" ng-show="addCarForm.carModel.$touched && addCarForm.carModel.$error.max">
+                    Model year cannot be in the future.
+                </div>
             </div>
         </div>
 
 
-        <div class="form-group">
-            <label class="col-sm-3 control-label" for="category">Category:</label>
+        <div class="form-group row">
+            <label class="col-sm-3 col-form-label">Category:</label>
             <div class="col-sm-9">
-                <select class="form-control" id="category" name="category" ng-model="category">
-                    <option value="" disabled selected>Select Car Category</option>
+                <select class="form-control" ng-model="category" name="category" required>
+                    <option value="" disabled selected>Select Category</option>
                     <option value="SUV">SUV</option>
                     <option value="Sedan">Sedan</option>
                 </select>
+                <div class="text-danger" ng-show="addCarForm.category.$touched && addCarForm.category.$error.required">
+                    Category is required.
+                </div>
             </div>
         </div>
-        <div class="form-group">
-            <label class="col-sm-3 control-label" for="fuelType">Fuel type:</label>
+
+
+        <div class="form-group row">
+            <label class="col-sm-3 col-form-label">Fuel Type:</label>
             <div class="col-sm-9">
-                <select class="form-control" id="fuelType" name="fuelType" ng-model="fuelType">
-                    <option value="" disabled selected>Select Car Fuel Type</option>
+                <select class="form-control" ng-model="fuelType" name="fuelType" required>
+                    <option value="" disabled selected>Select Fuel Type</option>
                     <option value="petrol">Petrol</option>
-                    <option value="diesel">diesel</option>
+                    <option value="diesel">Diesel</option>
                     <option value="electric">Electric</option>
                 </select>
+                <div class="text-danger" ng-show="addCarForm.fuelType.$touched && addCarForm.fuelType.$error.required">
+                    Fuel type is required.
+                </div>
             </div>
         </div>
 
 
-        <div class="form-group">
-            <label class="col-sm-3 control-label" for="location">Location:</label>
+        <div class="form-group row">
+            <label class="col-sm-3 col-form-label">Location:</label>
             <div class="col-sm-9">
-                <select class="form-control" id="location" name="location" ng-model="location" required>
-                    <option value="" disabled selected>Select Location Type</option>
+                <select class="form-control" ng-model="location" name="location" required>
+                    <option value="" disabled selected>Select Location</option>
                     <option value="local">Local</option>
                     <option value="outstation">Outstation</option>
                     <option value="both">Both</option>
                 </select>
-            </div>
-        </div>
-        <div class="form-group">
-            <label class="col-sm-3 control-label" for="color">Car Color:</label>
-            <div class="col-sm-9">
-                <input type="color" class="form-control" id="color" name="color" ng-model="color" required>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label class="col-sm-3 control-label" for="carPrice">Car Price per Day:</label>
-            <div class="col-sm-9">
-                <input type="number" class="form-control" id="carPrice" name="carPrice" ng-model="carPrice" placeholder="Enter the price from 500 to 20000"  required>
-            </div>
-        </div>
-
-
-        <div class="form-group">
-            <label class="col-sm-3 control-label" for="mileage">Mileage (km):</label>
-            <div class="col-sm-9">
-                <input type="number" class="form-control" id="mileage" name="mileage" ng-model="mileage" placeholder="enter the mileage in kms" required>
-            </div>
-        </div>
-
-
-        <div class="form-group">
-            <label class="col-sm-3 control-label" for="imageUpload">Car Images:</label>
-            <div class="col-sm-9">
-                <input type="file" class="form-control" id="imageUpload" accept=".jpg, .jpeg, .png" multiple onchange="angular.element(this).scope().previewImages(this)">
-            </div>
-        </div>
-        <div class="form-group"  class="col-sm-3 control-label" ng-class="{'has-error': userForm.city.$touched && userForm.city.$invalid}">
-            <label for="city">City:</label>
-            <select class="form-control" id="city" name="city" ng-model="city" required>
-              <option value="" disabled selected>Please select car city</option>
-              <option value="Delhi">Delhi</option>
-              <option value="Mumbai">Mumbai</option>
-              <option value="Gwalior">Gwalior</option>
-              <option value="Bhind">Bhind</option>
-              <option value="Gurugram">Gurugram</option>
-              <option value="Agra">Agra</option>
-              <option value="Shiv puri">Shiv Puri</option>
-            </select>
-            <span class="help-block" ng-show="userForm.city.$error.required && userForm.city.$touched">Please select a city.</span>
-          </div>
-
-
-        <div class="form-group">
-            <div class="col-sm-offset-3 col-sm-9">
-                <div class="row" id="imagePreview">
-                    <div class="col-xs-4" ng-repeat="image in images">
-                        <img ng-src="{{image.base64}}" class="img-responsive img-thumbnail">
-                    </div>
+                <div class="text-danger" ng-show="addCarForm.location.$touched && addCarForm.location.$error.required">
+                    Location is required.
                 </div>
             </div>
         </div>
-       
 
 
-        <div class="form-group">
-            <div class="col-sm-offset-3 col-sm-9">
-                <button type="submit" class="btn btn-success btn-block" ng-click="submitCarForm()">Add Car</button>
+        <div class="form-group row">
+            <label class="col-sm-3 col-form-label">Car Color:</label>
+            <div class="col-sm-9">
+                <input type="color" class="form-control" ng-model="color" name="color" required>
+                <div class="text-danger" ng-show="addCarForm.color.$touched && addCarForm.color.$error.required">
+                    Car color is required.
+                </div>
             </div>
         </div>
-            <!-- Loading Spinner -->
-<div class="text-center" ng-show="isLoading">
-    <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
-    <span>Loading...</span>
-</div>
+
+
+        <div class="form-group row">
+            <label class="col-sm-3 col-form-label">Price Per Day:</label>
+            <div class="col-sm-9">
+                <input type="number" class="form-control" ng-model="carPrice" name="carPrice" placeholder="500 - 10000" required ng-min="500" ng-max="10000">
+                <div class="text-danger" ng-show="addCarForm.carPrice.$touched && addCarForm.carPrice.$error.required">
+                    Price per day is required.
+                </div>
+                <div class="text-danger" ng-show="addCarForm.carPrice.$touched && (addCarForm.carPrice.$error.min || addCarForm.carPrice.$error.max)">
+                    Price must be between 500 and 10000.
+                </div>
+            </div>
+        </div>
+
+
+        <div class="form-group row">
+            <label class="col-sm-3 col-form-label">Mileage (km):</label>
+            <div class="col-sm-9">
+                <input type="number" class="form-control" ng-model="mileage" name="mileage" placeholder="Enter mileage" required>
+                <div class="text-danger" ng-show="addCarForm.mileage.$touched && addCarForm.mileage.$error.required">
+                    Mileage is required.
+                </div>
+            </div>
+        </div>
+
+
+        <div class="form-group row">
+            <label class="col-sm-3 col-form-label">Car Images:</label>
+            <div class="col-sm-9">
+                <input type="file" class="form-control" accept=".jpg, .jpeg, .png" multiple onchange="angular.element(this).scope().previewImages(this)">
+            </div>
+        </div>
+
+
+        <div class="form-group row">
+            <label class="col-sm-3 col-form-label">City:</label>
+            <div class="col-sm-9">
+                <select class="form-control" ng-model="city" name="city" required>
+                    <option value="" disabled selected>Select City</option>
+                    <option value="Delhi">Delhi</option>
+                    <option value="Mumbai">Mumbai</option>
+                    <option value="Gwalior">Gwalior</option>
+                    <option value="Bhind">Bhind</option>
+                    <option value="Gurugram">Gurugram</option>
+                    <option value="Agra">Agra</option>
+                    <option value="Shiv puri">Shiv Puri</option>
+                </select>
+                <div class="text-danger" ng-show="addCarForm.city.$touched && addCarForm.city.$error.required">
+                    City is required.
+                </div>
+            </div>
+        </div>
+
+
+        <div class="form-group row">
+            <div class="col-sm-offset-3 col-sm-9">
+                <button type="submit" class="btn btn-success btn-block" ng-disabled="addCarForm.$invalid">Add Car</button>
+            </div>
+        </div>
+
+
+        <div class="text-center" ng-show="isLoading">
+            <i class="fa fa-spinner fa-spin fa-3x fa-fw text-primary"></i>
+            <span class="text-primary">Processing...</span>
+        </div>
 
     </form>
-
-
 </div>

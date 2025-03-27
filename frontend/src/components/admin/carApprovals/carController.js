@@ -18,7 +18,11 @@ angular.module("myApp").controller("carCtrl", function ($scope, $state, IDB, Toa
   }
 
 
-  // function to approve a car
+/*
+   function to approve car from the database
+    @params carID
+    @returns none
+   */  
   $scope.approveCar = (carID) => {
     CarService.approveCar(carID).then(()=>{
       ToastService.success("Car approved successfully");
@@ -28,7 +32,12 @@ angular.module("myApp").controller("carCtrl", function ($scope, $state, IDB, Toa
       });
   };
 
-  // function to reject a car
+
+/*
+   function to reject car from the database
+    @params carID
+    @returns none
+   */  
   $scope.rejectCar = (carID) => {
     CarService.rejectCar(carID).then(()=>{
       ToastService.success("Car rejected successfully");

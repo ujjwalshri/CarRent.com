@@ -1,118 +1,92 @@
-angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope,$q, IDB, ToastService, ChartService, BackButton) {
+angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope,$q, IDB, ToastService, ChartService, BackButton, ChartService) {
      // retriving the loggedinUser 
     $scope.back = BackButton.back; // back function
-    const loggedInUser = JSON.parse(sessionStorage.getItem("user"));
+    $scope.startDate;
+    $scope.endDate;
+    $scope.totalRevenue;
+    $scope.myBids;
+    $scope.otherSellersAvgBids;
+    $scope.onGoingBookings;
+    
+
     $scope.init = () => {
         $scope.months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']; // array of months
-        $scope.monthWiseBookings = []; // map to store the bookings at each month
-        $scope.carsAndBidsMap = {}; // map to store all cars names and the amount of bids they have
-        $scope.cityAndBookingMap = {}; // map to store all cities of users and the amount of bookings they have
-        $scope.carAndBookingsMap = {}; // map to store all cars and the amount of bookings they have
         fetchChartDataForSeller();
     }
     // functions to fetch all biddings for a particular seller
     function fetchChartDataForSeller(){
+         // Convert to Date objects and strip the time
+   if(startDate !== undefined && endDate !== undefined){
+    const startDate = new Date($scope.startDate);
+    const endDate = new Date($scope.endDate);
+
+    // Set time to midnight for both dates
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(0, 0, 0, 0);
+
+    // compare if the startDate is today date or future date
+    if (startDate > new Date().setHours(0,0,0,0) || endDate > new Date().setHours(0,0,0,0)) {
+        ToastService.error("Start date must be earlier then today.");
+        return;
+    }
+
+    // Compare only the date
+    if (startDate >= endDate) {
+       ToastService.error("Start date must be earlier than end date.");
+        return;
+    }
+   }
+
+        const params = {
+            startDate: $scope.startDate,
+            endDate: $scope.endDate
+        }
+
        $q.all([
-        IDB.getAllCarsByUser(loggedInUser.id), // get all cars by the user
-        IDB.getBookingsByOwnerId(loggedInUser.id), // get all biddings for the user's car
-        IDB.getAllBookings(), // get all biddings
-        IDB.getAllUsers() // get all users
-        
+       ChartService.getCarDescription(),
+       ChartService.getTop3MostPopularCars(params),
+       ChartService.getNumberOfBookingsPerCarCityForSeller(params),
+       ChartService.getTotalCarsAddedBySeller(params),
+       ChartService.getBidsPerLocationTypeForSeller(params),
+       ChartService.getTotalBookingRevenueForSeller(),
+       ChartService.onGoingBookingsForSeller(),
+       ChartService.myBidsAndOtherSellersAvgBidsForSeller(), 
+       ChartService.getcarWiseBookingsForSeller(),
+       ChartService.getMonthWiseBookingsForSeller()
+        // IDB.getAllCarsByUser(loggedInUser.id), // get all cars by the user
+        // IDB.getBookingsByOwnerId(loggedInUser.id), // get all biddings for the user's car
+        // IDB.getAllBookings(), // get all biddings
+        // IDB.getAllUsers() // get all users
        ])
-       .then((res)=>{
-        console.log(res);
-        calculateChartData(res); // calculate the data
+       .then(([carDescription, topCars, topBookingsPerCarCity, totalCarsAdded, bids, totalBookingRevenue ,  onGoingBookings, myBidsVsOtherSellerAvg, carWiseBookings, monthWiseBookings])=>{
+       console.log(bids.carCountByLocalVsOutstationVsBoth);
+       $scope.myBids = myBidsVsOtherSellerAvg?.result?.[0]?.totalBids || 0;
+       $scope.otherSellersAvgBids = myBidsVsOtherSellerAvg?.res1?.[0]?.avgBids || 0;
+       $scope.onGoingBookings = onGoingBookings?.result?.length === 0 ? 0 : (onGoingBookings?.result?.[0]?.count || 0);
+       $scope.totalRevenue = (totalBookingRevenue?.totalRevenueData?.totalRevenue || 0) + (totalBookingRevenue?.totalRevenueData?.totalFineCollected || 0);
+       $scope.numberOfCars = totalCarsAdded?.totalCarsAdded?.[0]?.count || 0;
+        
+        
+        ChartService.createBarChart("bar", bids.carCountByLocalVsOutstationVsBoth.map(obj=> obj._id),bids.carCountByLocalVsOutstationVsBoth.map(obj=>obj.count), 'Number of bids',"Biddings on my cars by fuel type","petrolVsDeiselVsElectric"); // call the createBarChart function from the ChartService
+        ChartService.createBarChart("bar", monthWiseBookings.monthWiseBookings.map((booking)=> booking._id),monthWiseBookings.monthWiseBookings.map((booking)=>booking.count), 'Number of bookings',"Month wise bookings","numberOfBookingsPerMonth"); // call the createBarChart function from the ChartService
+        ChartService.createBarChart("bar", topBookingsPerCarCity.numberOfBidsPerLocation.map(city => city._id), topBookingsPerCarCity.numberOfBidsPerLocation.map(city => city.count), 'Number of bids',"City Wise biddings on my cars","cityWiseBooking"); // call the createBarChart function from the ChartService
+        ChartService.createBarChart("bar", carWiseBookings.carWiseBookings.map(car => car._id), carWiseBookings.carWiseBookings.map(car => car.count), 'Number  of Bookings',"Cars","carAndBookingsChart"); // call the createBarChart function from the ChartService
+        ChartService.createBarChart("bar", topCars.top3MostPopularCars.map(car => car._id), topCars.top3MostPopularCars.map(car => car.count), 'Number of bids',"Top 3 Most Popular cars of yours","myMostPopularCar"); // call the createBarChart function from the ChartService
+        ChartService.createPieChart(["SUV", "Sedan"],[carDescription.suvVsSedan[1].count, carDescription.suvVsSedan[0].count], 'Number of cars suvVsSedans', 'suvVsSedanForSeller'); // call the createPieChart function from the ChartService
         createSellerCharts(); // create the charts
        })
        .catch((err)=>{
-         ToastService.error(`error fetching seller data ${err}` ); // error toast
+         ToastService.error(`error fetching seller data ${err}` ); 
        })
     }
 
-    function calculateChartData(res){
-        const cars = res[0];
-         $scope.suvCars = cars.filter(car=> car.category=== 'SUV' && car.deleted === false);
-         $scope.sedanCars = cars.filter(car=> car.category=== 'Sedan' && car.deleted === false);
-         $scope.numberOfCars = cars.length;
-         console.log(res[1]);
-         const biddings = res[1];
-         $scope.numberOfBidsOnLocalCars = biddings.filter((bidding)=> bidding.vehicle.location==="local").length;
-         $scope.numberOfBidsOnOutstationCars = biddings.filter((bidding)=> bidding.vehicle.location==="outstation").length;
-         $scope.numberOfBidsOnBothCars = biddings.filter((bidding)=> bidding.vehicle.location==="both").length;
-         
-         $scope.numberOfBiddingsInLast7days = biddings.filter((bidding)=> bidding.createdAt >= new Date(new Date().setDate(new Date().getDate() - 7))).length;
-         $scope.bookings = biddings.filter(booking => booking.status === "approved" || booking.status==="reviewed"); // filter out the approved biddings
-     
-         biddings.forEach(bidding => {  // loop through all biddings
-             const carName = bidding.vehicle.carName + ' ' + bidding.vehicle.carModel;
-             if ($scope.carsAndBidsMap[carName]) {
-                 $scope.carsAndBidsMap[carName] += 1;
-             } else {
-                 $scope.carsAndBidsMap[carName] = 1;
-             }
-         });
-       
-         $scope.bookings.forEach(booking => { // loop through all bookings
-             const city = booking.from.city;
-             if ($scope.cityAndBookingMap[city]) { // if the city is already in the map increment the count
-                 $scope.cityAndBookingMap[city] += 1;
-             } else {
-                 $scope.cityAndBookingMap[city] = 1; // else add the city to the map
-             }
-         });
- 
-         $scope.bookings.forEach(bookings =>{
-             const carName = bookings.vehicle.carName + ' ' + bookings.vehicle.carModel;
-             if($scope.carAndBookingsMap[carName]){
-                 $scope.carAndBookingsMap[carName] += 1;
-             }else{
-                 $scope.carAndBookingsMap[carName] = 1;
-             }
-         })
- 
-         $scope.months.forEach((month, index)=>{
-             $scope.monthWiseBookings[index] = $scope.bookings.filter(booking => new Date(booking.startDate).getMonth() === index).length; // filter the bookings with the start month equal to the index value in the array
-         });
- 
- 
-         console.log($scope.monthWiseBookings);
-         
-         console.log($scope.carAndBookingsMap);
- 
-         console.log($scope.cityAndBookingMap);
-         console.log($scope.carsAndBidsMap);
-         $scope.carsAndBidsMap = Object.entries($scope.carsAndBidsMap).sort((a, b) => b[1] - a[1]); // sort the map by the number of bids and return an array of sorted entries
-         const allBiddings = res[2];
-         $scope.myBiddingsInLast7days = biddings.filter((bidding)=> bidding.createdAt >= new Date(new Date().setDate(new Date().getDate() - 7))).length;
-         const otherUsersBiddingsInLast7days = allBiddings.filter((bid)=>{
-             return bid.createdAt >= new Date(new Date().setDate(new Date().getDate() - 7)) && bid.owner.id !== loggedInUser.id;
-         }).length;
-         const otherSellers = res[3].filter((user)=> user.isSeller && user.username !== loggedInUser.username).length;
-         $scope.averageBidsOfOtherSellers = (otherUsersBiddingsInLast7days / otherSellers).toFixed(2);
-         if(otherSellers === 0){
-             $scope.averageBidsOfOtherSellers = 0;
-         }
-         console.log($scope.myBiddingsInLast7days);
-         console.log($scope.averageBidsOfOtherSellers);
- 
-         // calculate the number of bids in last week and the number of bids in the 2nd last week
-         $scope.lastWeekBids = biddings.filter((bidding) => bidding.createdAt >= new Date(new Date().setDate(new Date().getDate() - 7)).getTime());
-         $scope.secondLastWeekBids = biddings.filter((bidding) => bidding.createdAt >= new Date(new Date().setDate(new Date().getDate() - 14)).getTime() && bidding.createdAt < new Date(new Date().setDate(new Date().getDate() - 7)).getTime());
-         console.log($scope.lastWeekBids);
-         console.log($scope.secondLastWeekBids);
- 
- 
- 
- 
+
+ $scope.getAnalytics = ()=>{
+    fetchChartDataForSeller();
  }
 
     function createSellerCharts(){
-        ChartService.createPieChart(["SUV", "Sedan"],[$scope.suvCars.length,$scope.sedanCars.length], 'Number of bookings per month', 'suvVsSedanForSeller'); // call the createPieChart function from the ChartService
-        ChartService.createBarChart("bar" ,  Object.keys($scope.carAndBookingsMap), Object.values($scope.carAndBookingsMap),'Number of bookings',"Car wise bookings", "carAndBookingsChart" ); // call the createBarChart function from the ChartService
-        ChartService.createBarChart("bar",Object.keys($scope.cityAndBookingMap), Object.values($scope.cityAndBookingMap),'Number of bookings', "City Wise Bookings",  "cityWiseBooking"); // call the createBarChart function from the ChartService create city wise bookings chart
-        ChartService.createBarChart("bar", $scope.carsAndBidsMap.slice(0, 3).map(car => car[0]), $scope.carsAndBidsMap.slice(0, 3).map(car => car[1]), 'Number of bids',"Top 3 Most Popular cars of yours","myMostPopularCar"); // call the createBarChart function from the ChartService
-        ChartService.createBarChart("bar", $scope.months,$scope.monthWiseBookings, 'Number of bookings',"Month wise bookings","numberOfBookingsPerMonth"); // call the createBarChart function from the ChartService
-        ChartService.createPieChart( ["Local", "Outstation", "Both"], [$scope.numberOfBidsOnLocalCars, $scope.numberOfBidsOnOutstationCars, $scope.numberOfBidsOnBothCars], 'Number of bidding LocalVsOutstationVsBoth', 'localVsOutstationVsBoth'); // call the createPieChart function from the ChartService
+    
         createMyBiddingsVsOtherSellersAvgChart(); // creating the multiline charts
         createLastWeekBidsVsSecondLastWeekBidsChart(); // create the multiline charts
     }
@@ -121,11 +95,15 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope,$q, ID
    
             
 
-
+    /* 
+    function to create a line chart for the user's biddings in the last 7 days vs the average of other sellers  
+    @params none
+    @returns none
+    */
     function createMyBiddingsVsOtherSellersAvgChart(){
         // create a line chart with two lines one for the user and the other for the average of other sellers
         const labels = ['You', 'Other Sellers'];
-        const data = [$scope.myBiddingsInLast7days, $scope.averageBidsOfOtherSellers];
+        const data = [$scope.myBids, $scope.otherSellersAvgBids];
         var ctx = document.getElementById("biddingsInLast7days").getContext("2d");
         const myBiddingsVsOtherSellersAvgChart = new Chart(ctx, {
             type: 'line',
@@ -162,7 +140,11 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope,$q, ID
             }
         });
     }
-
+    /*
+    function to create a line chart for the user's biddings in the last week vs the biddings in the second last week
+    @params none
+    @returns none
+    */
     function createLastWeekBidsVsSecondLastWeekBidsChart() {
         // Get the canvas context
         var ctx = document.getElementById("bidComparasion").getContext("2d");

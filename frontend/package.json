@@ -10,7 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "async": "^3.2.6"
+    "async": "^3.2.6",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^19.2.1"

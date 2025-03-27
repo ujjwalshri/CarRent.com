@@ -3,15 +3,12 @@
     <h1 class="text-center" ng-show="bookings.length > 0">Your Biddings</h1>
     <h1 class="text-center text-danger" ng-show="bookings.length === 0">NO BIDDINGS</h1>
     <select class="filter-container panel panel-default p-3" name="location" ng-model="biddingStatus"  required>
-        <option value="" disabled selected>Search Booking type</option>
+        <option value="" disabled selected> change bidding status {{  biddingStatus }}</option>
         <option value="rejected">rejected</option>
         <option value="pending">pending</option>
     </select>
     <button ng-click="applyFilter()">apply filter</button>
     <button ng-click="resetFilter()">reset filter</button>
-    <div class="filters text-center mt-3 mb-3" ng-show="bookings.length > 0">
-        <input type="text" class="form-control w-50 mx-auto" ng-model="searchCarName" placeholder="🔍 Search by Car Name" />
-    </div>
    
 <div class="text-center" ng-show="isLoading">
     <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>

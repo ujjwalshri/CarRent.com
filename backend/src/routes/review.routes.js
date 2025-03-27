@@ -6,7 +6,7 @@ import protectFromSeller from '../middlewares/authenticateSeller.js';
 
 const router = express.Router(); // create a new router object
 
-router.get('/getAllReviews/car/:id',protectRoute,protectFromAdmin, getAllReviewsAtCarIdController);
+router.get('/getAllReviews/car/:id',protectRoute, getAllReviewsAtCarIdController);
 router.post('/addReview/car/:id',protectRoute,protectFromAdmin,protectFromSeller,addReviewController);
 
 export default router; // export the router object

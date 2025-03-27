@@ -7,7 +7,7 @@ angular
       $scope.calculateBookingPrice = Booking.calculate; // function to calculate the booking price from the booking factory
       $scope.todayBooking = Booking.todayBookingCalculator; // function to check if the booking is for today from the booking factory 
       $scope.currentPage = 1; // Initialize currentPage
-      $scope.itemsPerPage = 10; // Initialize itemsPerPage
+      $scope.itemsPerPage = 6; // Initialize itemsPerPage
       $scope.allBookings = []; // Initialize to an empty array
       $scope.bookingsType ={ // Initialize bookingsType object as an empty object
         type: ''
@@ -25,12 +25,15 @@ angular
         const params = {
           page: $scope.currentPage,
           limit: $scope.itemsPerPage,
-          sort: $scope.sortBy
+          sort: $scope.sortBy,
+          bookingsType : $scope.bookingsType.type
         }
+        console.log(params);
         $scope.isLoading = true;
-        BiddingService.getBookingsForOwner().then((bookings)=>{
+        BiddingService.getBookingsForOwner(params).then((bookings)=>{
           console.log(bookings);
           $scope.allBookings = bookings.bookings;
+          $scope.totalPages = Math.ceil(bookings.totalDocs/$scope.itemsPerPage);
           console.log($scope.allBookings);
         }).catch((err)=>{
           ToastService.error(`Error fetching bookings ${err}`);
@@ -65,31 +68,13 @@ angular
       function to handle the pagination when user clicks on the page number
       */
       $scope.pageChanged = function () {
-          var start = ($scope.currentPage - 1) * $scope.itemsPerPage;
-          var end = start + $scope.itemsPerPage;
-          $scope.bookings = $scope.allBookings.slice(start, end);
-          
-          // Update total pages
-          $scope.totalPages = Math.ceil($scope.allBookings.length / $scope.itemsPerPage);
+        fetchOwnerConfirmedBookings();
       };
 
 
       $scope.applyFilter = ()=>{
-        
-        $scope.currentPage = 1;
-        console.log($scope.bookingsType.type);
-       if($scope.bookingsType.type == "today"){
-        $scope.allBookings = $scope.allBookings.filter((booking) => {
-          return Booking.todayBookingCalculator(booking);
-        });
-      
-       }else if($scope.bookingsType.type == "later"){
-         $scope.allBookings = $scope.allBookings.filter((booking) => {
-          return !Booking.todayBookingCalculator(booking); 
-         });
-      }
-      $scope.totalItems = $scope.allBookings.length;
-      $scope.pageChanged();
+        console.log("appling filter")
+        fetchOwnerConfirmedBookings();
     }
       
       /* 
@@ -98,10 +83,12 @@ angular
       $scope.openManageBooking = (booking) => {
         $state.go("manageBookings", { id: booking._id }); // using $state to navigate to the manage booking page with the booking id
        };
- 
+     /* 
+     function to reset the filter
+     */
     $scope.resetFilter = ()=>{
-      fetchOwnerConfirmedBookings();
       $scope.bookingsType.type = "";
+      fetchOwnerConfirmedBookings();
     } 
   }
   );

@@ -1,29 +1,28 @@
 angular
   .module("myApp")
-  .controller("userBookingsCtrl", function ($scope, IDB, Booking, ToastService, Review, BackButton, BiddingService) {
+  .controller("userBookingsCtrl", function ($scope, IDB, Booking, ToastService, Review, BackButton, BiddingService, CarService,$state) {
     $scope.back = BackButton.back; // back function to go back to the previous page
     $scope.bookings = []; // array to hold the bookings of the logged in user
     $scope.calculateBookingPrice = Booking.calculate; // function to calculate the booking price from the booking factory
-    const loggedInUser = JSON.parse(sessionStorage.getItem("user")); // get the logged in user
     $scope.currentPage = 1; // setting the current page to 1
-    $scope.itemsPerPage = 1; // setting the items per page to 5
+    $scope.itemsPerPage = 6; // setting the items per page to 5
     $scope.isLoading = false;
+    $scope.hasMoreData = true;
+    $scope.bookings = [];
     $scope.sortBy = '';
-
-
-    
-    getAllBookings();  // function to get all the bookings of the logged in user
-    
-     // function to handle pagination
-    $scope.pageChanged = function() {
-        getAllBookings();
-    };
-
     // $scope.variables to store all the variables
     $scope.review = {
       rating:"",
       newReview:""
     }
+
+     // function to handle pagination
+    $scope.pageChanged = function() {
+      $scope.currentPage = $scope.currentPage + 1;
+      getAllBookings();
+    };
+
+    
     // function to handle the open of the modal
     $scope.openModal =(booking)=>{
       $scope.selectedBooking = booking; 
@@ -32,10 +31,12 @@ angular
     }
     //  function to handle the close of the modal
     $scope.closeModal = ()=>{
-      isModalOpen = false;
+      $scope.isModalOpen = false;
     }
 
     $scope.handleSorting = ()=>{
+      $scope.currentPage = 1;
+      $scope.bookings = [];
       getAllBookings();
     }
 
@@ -50,8 +51,12 @@ angular
       }
       $scope.isLoading = true;
       BiddingService.getBookingsForUser(params).then((biddings) => {
-        $scope.bookings = biddings.bookings;
+        console.log(biddings); 
+        $scope.bookings = $scope.bookings.concat(biddings.bookings);
+        $scope.hasMoreData = biddings.totalDocs > $scope.bookings.length;
+        console.log(biddings.totalDocs);
         $scope.totalPages = Math.ceil(biddings.totalDocs/$scope.itemsPerPage);
+        console.log($scope.totalPages);
         console.log($scope.bookings);
       }).catch((err) => {
         ToastService.error(`Error fetching bookings ${err}`);
@@ -59,29 +64,16 @@ angular
         $scope.isLoading = false;
       })
     }
-    // function to check if the booking is reviewed or not
-    $scope.isReviewed = Review.isReviewed;
+
     /*
     function to add a review to the booking
     */
     $scope.addReview = function () {
-      const car = $scope.selectedBooking.vehicle; // get the car from the booking
+      const carId = $scope.selectedBooking.vehicle._id; // get the car from the booking
+      const bookingId = $scope.selectedBooking._id;
       const review = {
-        id: crypto.randomUUID(),
-        car: car,
         rating: parseInt($scope.review.rating),
-        review: $scope.review.newReview,
-        reviewer: {
-          id:loggedInUser.id,
-          username: loggedInUser.username,
-          firstName: loggedInUser.firstName,
-          lastName: loggedInUser.lastName,
-          email: loggedInUser.email,
-          isBlocked: loggedInUser.isBlocked,
-          isSeller: loggedInUser.isSeller,
-          city: loggedInUser.city,
-        },
-        createdAt: new Date(),
+        review: $scope.review.newReview
       };
       
       //check if the review is a valid review or not
@@ -91,16 +83,14 @@ angular
         return;
       }
       // if the review is valid then add the review to the database
-      IDB.addReview(review)
+      CarService.addReview(carId, review, bookingId)
         .then((res) => {
+          console.log("hi");
           // call the IDB service addReview function to add the review to the database
           ToastService.success("Review added successfully");
-          return IDB.updateBookingStatus($scope.selectedBooking.id, "reviewed");
-        })
-        .then(()=>{
-          $scope.reviewed = true;
           $scope.isModalOpen = false;
-          getAllBookings(); // get all the bookings again
+          $scope.reviewed = true;
+          $state.reload();
         })
         .catch((err) => {
          ToastService.error(`Error adding review ${err}`);  // show error message if there is an error

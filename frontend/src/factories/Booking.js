@@ -39,7 +39,6 @@ app.factory('Booking', function(){
             today.setHours(0, 0, 0, 0); // set the hours to 0
             bookingStartDate.setHours(0, 0, 0, 0); // set the hours to 0
             bookingEndDate.setHours(23, 59, 59, 999); // set the hours to 23
-    
             return today >= bookingStartDate && today <= bookingEndDate;// check if the booking can be for today
           }
     };

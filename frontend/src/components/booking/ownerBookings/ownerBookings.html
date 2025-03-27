@@ -2,14 +2,21 @@
 <div ng-controller="ownerBookingsCtrl" class="owner-bookings">
     <h1 class="text-center" ng-if="bookings.length > 0">Bidding Requests</h1>
 
-
-    <div class="searchBar text-center" ng-show="bookings.length > 0">
-        <input type="text" ng-model="searchCarName" placeholder="Search by Car Name" class="form-control w-50 mx-auto" />
+    <div class="container-fluid text-center" style="height: 100vh; background-color: #f8f9fa; display: flex; justify-content: center; align-items: center;" ng-hide="bookings.length>0">
+        <div class="well" style="max-width: 500px; width: 100%; padding: 20px; border-radius: 10px; background: white; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);">
+          <h1 style="font-size: 5rem;">❌</h1>
+          <h2 class="text-muted">No biddings </h2>
+        </div>
+      </div>
+   
+    <div class="panel panel-default p-3"  ng-if="bookings.length > 0">
+        <label for="sortBy" class="control-label">Sort By:</label>
+        <select id="sortBy" class="form-control" ng-model="sortBy"  ng-change="fetchBookings()">
+            <option value="" disabled selected>Select Sorting Option</option>
+            <option value="amount">Price</option>
+            <option value="startDate">Start Date</option>
+        </select>
     </div>
-
-    <h3 class="text-center text-muted" ng-if="bookings.length === 0">NO BIDDINGS</h3>
-
-<!-- Loading Spinner -->
 <div class="text-center" ng-show="isLoading">
     <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
     <span>Loading...</span>

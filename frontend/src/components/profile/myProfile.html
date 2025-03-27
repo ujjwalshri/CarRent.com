@@ -14,8 +14,10 @@
       <p><strong>City:</strong> {{ user.city }}</p>
     </div>
   </div>
-
-  <div class="panel panel-info" ng-if="isSeller">
+  <div class="alert alert-warning mt-4" ng-if="user.isSeller===false">
+    <strong >Want to become a seller??  <button ng-click="navigate()" class="btn btn-primary"> Add Car </button> </strong>
+</div>
+  <div class="panel panel-info" ng-if="user.isSeller">
     <div class="panel-heading text-center">
       <h3 class="panel-title">Added Cars</h3>
     </div>
@@ -30,12 +32,16 @@
         <button class="btn btn-default" ng-click="showAll()" ng-class="{'active': activeButton === 'all'}">
           All
         </button>
+        <button class="btn btn-primary" ng-click="reset()" ng-class="{'active': activeButton === 'all'}">
+          reset
+        </button>
       </div>
       <div class="col-12 text-center" ng-show="userCars.length === 0">
         <div class="alert alert-warning mt-4">
             <strong>No available cars matching your filters.</strong>
         </div>
     </div>
+   
       <div class="row">
         <div class="col-md-4" ng-repeat="car in userCars" ng-if="userCars.length>0">
           <div class="thumbnail">
@@ -49,18 +55,19 @@
               <button class="btn btn-warning" ng-click="openPriceModal(car)">
                 <span class="glyphicon glyphicon-pencil"></span> Edit Price
               </button>
-              <button class="btn btn-danger" ng-click="deleteCar(car.id)" ng-hide="car.deleted">
-                <span class="glyphicon glyphicon-remove"></span> Unlist Car
-              </button>
-              <button class="btn btn-success" ng-click="listCar(car.id)" ng-show="car.deleted">
-                <span class="glyphicon glyphicon-ok"></span> List Car
-              </button>
             </div>
           </div>
         </div>
       </div>
+     
     </div>
+    <div class="text-center" ng-click="loadMore()" ng-if="hasMoreCars" style="margin-bottom: 20px;">
+      <button id="load-more-btn" class="btn btn-primary mt-3">
+          Load More <span class="glyphicon glyphicon-chevron-down"></span>
+        </button>
   </div>
+  </div>
+
 
 
   <script type="text/ng-template" id="priceModal.html">
@@ -78,7 +85,7 @@
 
 
   <script type="text/ng-template" id="updateUserModal.html">
-    <div class="modal-header">
+    <div class="modal-header" ng-if="isModalOpen">
       <button type="button" class="close" ng-click="$dismiss()">&times;</button>
       <h4 class="modal-title">Update Profile</h4>
     </div>

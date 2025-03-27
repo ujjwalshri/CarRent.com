@@ -1,6 +1,4 @@
-<head>
-    <link rel="stylesheet" href="/frontend/src/components/car/singleCar.css">
-</head>
+
 <button style="margin-left: 20px;" ng-click="back()"><<<</button>
 <div class="outer-div" ng-init="init()">
     <div class="car-booking-container"></div>
@@ -11,13 +9,14 @@
         </div>
         
         <div class="panel-body">
-            <div uib-carousel active="activeSlide" interval="5000" no-wrap="false"> <div uib-slide ng-repeat="slide in car.vehicleImages track by $index" index="$index"> <img ng-src="{{slide.url}}" style="width: 600px; height: 400px;" class="carousel-image" alt="Car Image"> </div> </div>
+            <div uib-carousel active="activeSlide" interval="5000" no-wrap="false"> <div uib-slide ng-repeat="slide in car.vehicleImages track by $index" index="$index"> <img ng-src="{{slide.url}}" style="width: 500px; height: 300px;" class="carousel-image" alt="Car Image"> </div> </div>
             <div class="car-info">
                 <p><strong>Average Rating:</strong> {{averageRating}} ⭐</p>
                 <p><strong>Price:</strong> ${{ car.price }} per day or bid</p>
-                <p class="text-warning"><strong>Note:</strong> Extra charges apply after 300km</p>
+                <p class="text-warning"><strong>Note:</strong> $10 per kms Extra charges apply after 300km</p>
                 <p><strong>Category:</strong> {{ car.category }}</p>
                 <p><strong>Mileage:</strong> {{ car.mileage }} kmpl</p>
+                <p><strong>fuel type:</strong> {{ car.fuelType }}</p>
                 <p><strong>Location:</strong> {{ car.city }}</p>
             </div>
             
@@ -29,7 +28,7 @@
                     <p><strong>Name:</strong> {{ car.owner.firstName }} {{ car.owner.lastName }}</p>
                     <p><strong>Username:</strong> {{ car.owner.username }}</p>
                     <p><strong>Email:</strong> {{ car.owner.email }}</p>
-                    <p ng-hide="user === car.owner.username">
+                    <p ng-hide="LoggedinUser.username === car.owner.username">
                         <strong>Chat with Owner:</strong> <button class="btn btn-primary btn-sm" ng-click="chatWithOwner(car.owner)">Chat 💬</button>
                     </p>
                 </div>
@@ -44,7 +43,7 @@
         <div class="panel-body">
             <form>
                 <div class="form-group">
-                    <label for="amount">Bid Amount - Min: ${{car.carPrice}},Max Bid: $10000</label>
+                    <label for="amount">Bid Amount - Min: ${{car.price}},Max Bid: $10000</label>
                     <input type="number" id="amount" class="form-control" ng-model="amount" min="500" max="10000" required>
                     <p ng-show="amount > 100000" class="text-danger">Bid amount cannot exceed $100,000.</p>
                 </div>
@@ -57,6 +56,12 @@
                 <button type="submit" ng-show="calculateBookingPrice(startDate, endDate, amount) > 0" class="btn btn-success btn-block" ng-click="placeBid()">
                     Place Bid at ${{ calculateBookingPrice(startDate, endDate, amount) === 0 ? 0: calculateBookingPrice(startDate, endDate, amount) }}
                 </button>
+                  <!-- Loading Spinner -->
+        <div class="text-center" ng-show="isLoading">
+            <i class="fa fa-spinner fa-spin fa-3x fa-fw text-primary"></i>
+            <span class="text-primary">Processing...</span>
+        </div>
+
             </form>
         </div>
     </div>
@@ -78,6 +83,11 @@
             </div>
         </div>
         <p ng-if="!carReviews.length" class="alert alert-info">No reviews yet. Be the first to review!</p>
+    </div>
+    <div class="text-center" ng-click="loadMoreReviews()" ng-if="hasMoreReviews" style="margin-bottom: 20px;">
+        <button id="load-more-btn" class="btn btn-primary mt-3">
+            Load More <span class="glyphicon glyphicon-chevron-down"></span>
+          </button>
     </div>
 </div>
 

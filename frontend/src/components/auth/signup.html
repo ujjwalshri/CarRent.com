@@ -1,73 +1,116 @@
+<div class="container" ng-controller="signupCtrl">
+  <div class="row" style="min-height: 100vh; display: flex; justify-content: center; align-items: center;">
+      <div class="col-lg-4 col-md-6 col-sm-8 col-xs-10">
+          <form id="userForm" name="userForm" ng-submit="signup()" novalidate class="panel panel-default">
+              <div class="panel-heading text-center">
+                  <h3 class="panel-title">Sign Up</h3>
+              </div>
+              <div class="panel-body">
+                  
+                  <div class="form-group">
+                      <label for="firstName">First Name:</label>
+                      <input type="text" class="form-control" id="firstName" name="firstName"
+                          placeholder="Enter your first name" ng-model="firstName" required>
+                      <span class="text-danger" ng-show="userForm.firstName.$error.required && userForm.firstName.$touched">
+                          First Name is required.
+                      </span>
+                  </div>
 
-<form id="userForm" name="userForm"  style="padding-left: 200px;padding-top: 20px; padding-right: 200px;" ng-submit="signup()" ng-controller="signupCtrl" novalidate class="panel panel-default">
-  <div class="panel-heading">
-    <h3 class="panel-title">Sign Up</h3>
+                  <div class="form-group">
+                      <label for="lastName">Last Name:</label>
+                      <input type="text" class="form-control" id="lastName" name="lastName"
+                          placeholder="Enter your last name" ng-model="lastName" required>
+                      <span class="text-danger" ng-show="userForm.lastName.$error.required && userForm.lastName.$touched">
+                          Last Name is required.
+                      </span>
+                  </div>
+
+                  <div class="form-group">
+                      <label for="username">Username:</label>
+                      <input type="text" class="form-control" id="username" name="username"
+                          placeholder="Enter your username" ng-model="username" required ng-minlength="5">
+                      <span class="text-danger" ng-show="userForm.username.$error.required && userForm.username.$touched">
+                          Username is required.
+                      </span>
+                      <span class="text-danger" ng-show="userForm.username.$error.minlength && userForm.username.$touched">
+                          Must be at least 5 characters.
+                      </span>
+                  </div>
+
+                  <div class="form-group">
+                      <label for="email">Email:</label>
+                      <input type="email" class="form-control" id="email" name="email"
+                          placeholder="Enter a valid email" ng-model="email" required>
+                      <span class="text-danger" ng-show="userForm.email.$error.required && userForm.email.$touched">
+                          Email is required.
+                      </span>
+                      <span class="text-danger" ng-show="userForm.email.$error.email && userForm.email.$touched">
+                          Enter a valid email.
+                      </span>
+                  </div>
+
+                  <div class="form-group">
+                      <label for="password">Password:</label>
+                      <input type="password" class="form-control" id="password" name="password"
+                          placeholder="Enter a password" ng-model="password" required ng-minlength="6">
+                      <span class="text-danger" ng-show="userForm.password.$error.required && userForm.password.$touched">
+                          Password is required.
+                      </span>
+                      <span class="text-danger" ng-show="userForm.password.$error.minlength && userForm.password.$touched">
+                          Must be at least 6 characters.
+                      </span>
+                  </div>
+
+                  <div class="form-group">
+                      <label for="confirm-password">Confirm Password:</label>
+                      <input type="password" class="form-control" id="confirm-password" name="confirmPassword"
+                          placeholder="Confirm your password" ng-model="confirmPassword" required>
+                      <span class="text-danger" ng-show="userForm.confirmPassword.$error.required && userForm.confirmPassword.$touched">
+                          Confirm Password is required.
+                      </span>
+                      <span class="text-danger" ng-show="confirmPassword !== password && userForm.confirmPassword.$touched">
+                          Passwords do not match.
+                      </span>
+                  </div>
+
+                  <div class="form-group">
+                      <label for="city">City:</label>
+                      <select class="form-control" id="city" name="city" ng-model="city" required>
+                          <option value="" disabled selected>Select your city</option>
+                          <option value="Delhi">Delhi</option>
+                          <option value="Mumbai">Mumbai</option>
+                          <option value="Gwalior">Gwalior</option>
+                          <option value="Bhind">Bhind</option>
+                          <option value="Gurugram">Gurugram</option>
+                          <option value="Agra">Agra</option>
+                          <option value="Shiv puri">Shiv Puri</option>
+                      </select>
+                      <span class="text-danger" ng-show="userForm.city.$error.required && userForm.city.$touched">
+                          Please select a city.
+                      </span>
+                  </div>
+
+                  <div class="form-group">
+                      <label for="adhaar">Aadhaar Number:</label>
+                      <input type="number" class="form-control" id="adhaar" name="adhaar"
+                          placeholder="Enter Aadhaar number" ng-model="adhaar" required ng-pattern="/^\d{12}$/">
+                      <span class="text-danger" ng-show="userForm.adhaar.$error.required && userForm.adhaar.$touched">
+                          Aadhaar number is required.
+                      </span>
+                      <span class="text-danger" ng-show="userForm.adhaar.$error.pattern && userForm.adhaar.$touched">
+                          Must be exactly 12 digits.
+                      </span>
+                  </div>
+
+              </div>
+
+              <div class="panel-footer text-center">
+                  <span>Already a user? <a ui-sref="login">Login</a></span>
+                  <button type="submit" class="btn btn-success btn-block" ng-disabled="userForm.$invalid">
+                      Submit
+                  </button>
+              </div>
+          </form>
+      </div>
   </div>
-  <div class="panel-body">
-    <div class="form-group" ng-class="{'has-error': userForm.firstName.$touched && userForm.firstName.$invalid}">
-      <label for="firstName">Name:</label>
-      <input type="text" class="form-control" id="firstName" name="firstName" placeholder="Enter your first name" ng-model="firstName" required>
-      <span class="help-block" ng-show="userForm.firstName.$error.required && userForm.firstName.$touched">First Name is required.</span>
-    </div>
-
-    <div class="form-group" ng-class="{'has-error': userForm.lastName.$touched && userForm.lastName.$invalid}">
-      <label for="lastName">Last Name:</label>
-      <input type="text" class="form-control" id="lastName" name="lastName" placeholder="Enter your last name" ng-model="lastName" required>
-      <span class="help-block" ng-show="userForm.lastName.$error.required && userForm.lastName.$touched">Last Name is required.</span>
-    </div>
-
-    <div class="form-group" ng-class="{'has-error': userForm.username.$touched && userForm.username.$invalid}">
-      <label for="username">Username:</label>
-      <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" ng-model="username" required ng-minlength="5">
-      <span class="help-block" ng-show="userForm.username.$error.required && userForm.username.$touched">Username is required.</span>
-      <span class="help-block" ng-show="userForm.username.$error.minlength && userForm.username.$touched">Username must be at least 5 characters.</span>
-    </div>
-
-    <div class="form-group" ng-class="{'has-error': userForm.email.$touched && userForm.email.$invalid}">
-      <label for="email">Email:</label>
-      <input type="email" class="form-control" id="email" name="email" placeholder="Enter your valid email" ng-model="email" required>
-      <span class="help-block" ng-show="userForm.email.$error.required && userForm.email.$touched">Email is required.</span>
-      <span class="help-block" ng-show="userForm.email.$error.email && userForm.email.$touched">Enter a valid email address.</span>
-    </div>
-
-    <div class="form-group" ng-class="{'has-error': userForm.password.$touched && userForm.password.$invalid}">
-      <label for="password">Password:</label>
-      <input type="password" class="form-control" id="password" name="password" placeholder="Enter a password" ng-model="password" required ng-minlength="6">
-      <span class="help-block" ng-show="userForm.password.$error.required && userForm.password.$touched">Password is required.</span>
-      <span class="help-block" ng-show="userForm.password.$error.minlength && userForm.password.$touched">Password must be at least 6 characters.</span>
-    </div>
-
-    <div class="form-group" ng-class="{'has-error': confirmPassword !== password && userForm.confirmPassword.$touched}">
-      <label for="confirm-password">Confirm Password:</label>
-      <input type="password" class="form-control" id="confirm-password" name="confirmPassword" placeholder="Confirm your password" ng-model="confirmPassword" required>
-      <span class="help-block" ng-show="userForm.confirmPassword.$error.required && userForm.confirmPassword.$touched">Confirm Password is required.</span>
-      <span class="help-block" ng-show="confirmPassword !== password && userForm.confirmPassword.$touched">Passwords do not match.</span>
-    </div>
-
-    <div class="form-group" ng-class="{'has-error': userForm.city.$touched && userForm.city.$invalid}">
-      <label for="city">City:</label>
-      <select class="form-control" id="city" name="city" ng-model="city" required>
-        <option value="" disabled selected>Please select your city</option>
-        <option value="Delhi">Delhi</option>
-        <option value="Mumbai">Mumbai</option>
-        <option value="Gwalior">Gwalior</option>
-        <option value="Bhind">Bhind</option>
-        <option value="Gurugram">Gurugram</option>
-        <option value="Agra">Agra</option>
-        <option value="Shiv puri">Shiv Puri</option>
-      </select>
-      <span class="help-block" ng-show="userForm.city.$error.required && userForm.city.$touched">Please select a city.</span>
-    </div>
-
-    <div class="form-group" ng-class="{'has-error': userForm.adhaar.$touched && userForm.adhaar.$invalid}">
-      <label for="adhaar">Aadhaar Number:</label>
-      <input type="number" class="form-control" id="adhaar" name="adhaar" placeholder="Enter Aadhaar number" ng-model="adhaar" required ng-pattern="/^\d{12}$/">
-      <span class="help-block" ng-show="userForm.adhaar.$error.required && userForm.adhaar.$touched">Aadhaar number is required.</span>
-      <span class="help-block" ng-show="userForm.adhaar.$error.pattern && userForm.adhaar.$touched">Aadhaar must be exactly 12 digits.</span>
-    </div>
-  </div>
-  <div class="panel-footer text-center">
-    <span>Already a user? <a ui-sref="login">Login</a></span>
-    <button type="submit" class="btn btn-success btn-block" ng-disabled="userForm.$invalid">Submit</button>
-  </div>
-</form>
+</div>

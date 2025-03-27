@@ -12,8 +12,7 @@ export const s3Client = new S3Client({
 });
 
 
-
-const upload = multer({
+export const upload = multer({
     storage: multerS3({
         s3: s3Client,
         bucket: process.env.S3_BUCKET_NAME,
@@ -22,7 +21,30 @@ const upload = multer({
         },
         key: function (req, file, cb) {
             const fileExtension = file.originalname.split('.').pop();
-            cb(null, `ujjwalcars/${Date.now()}.${fileExtension}`); // add uniqueness
+            cb(null, `ujjwalcars/${Date.now()}${crypto.randomUUID(3)}.${fileExtension}`); // add uniqueness
+        }
+    }),
+    fileFilter: (req, file, cb) => {
+        if (!file.originalname.match(/\.(jpg|jpeg|png|webp)$/i)) {
+            return cb(new Error('Only image files are allowed!'), false);
+        }
+        cb(null, true);
+    },
+    limits: {
+        fileSize: 5 * 1024 * 1024
+    }
+});
+
+export const uploadchat = multer({
+    storage: multerS3({
+        s3: s3Client,
+        bucket: process.env.S3_BUCKET_NAME,
+        metadata: function (req, file, cb) {
+            cb(null, { fieldName: file.fieldname });
+        },
+        key: function (req, file, cb) {
+            const fileExtension = file.originalname.split('.').pop();
+            cb(null, `ujjwalcars-chat/${Date.now()}${crypto.randomUUID(3)}.${fileExtension}`); // add uniqueness
         }
     }),
     fileFilter: (req, file, cb) => {

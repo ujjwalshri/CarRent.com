@@ -1,28 +1,57 @@
 <button style="margin-left: 20px;" ng-click="back()"><<<</button>
-<div ng-init="init()" class="container" style="display: flex; justify-content: center; align-items: center; height: 100vh;">
-    <div class="panel panel-primary" style="width: 400px; padding: 20px; border-radius: 10px; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); animation: fadeIn 0.5s ease-in-out;">
-      <div class="panel-heading text-center">
-      </div>
-      <div class="panel-body text-center">
-        <div ng-hide="ended">
-          <div ng-show="started" class="alert alert-info">Start Odometer reading: {{booking.startOdometerValue}} kms</div>
-          <div ng-show="!started">
-            <input type="number" class="form-control" ng-model="startOdometerValue" placeholder="Start Odometer Value">
-            <button class="btn btn-success btn-block" style="margin-top: 10px;" ng-click="startTrip()">Start Trip</button>
-          </div>
-          <div ng-show="started">
-            <input type="number" class="form-control" ng-model="endOdometerValue" placeholder="End Odometer Value">
-            <button class="btn btn-danger btn-block" style="margin-top: 10px;" ng-click="endTrip()">End Trip</button>
-          </div>
+<div ng-init="init()" class="container" style="display: flex; margin-top: 150px; margin-bottom: 20px; justify-content: center; align-items: center; height: 30vh;">
+    <div class="panel panel-primary" style="width: 600px; padding: 20px; border-radius: 10px; box-shadow: 2px 2px 10px rgba(0,0,0,0.1); animation: fadeIn 0.5s ease-in-out;">
+        <div class="panel-heading text-center">
+            <h3>Booking Details</h3>
         </div>
-        <div ng-show="ended" class="text-center">
-          <h3>Booking Ended</h3>
-          <div class="well">
-            <h4>Start Odometer Value: {{booking.startOdometerValue}} kms</h4>
-            <h4>End Odometer Value: {{booking.endOdometerValue}} kms</h4>
-          </div>
-          <button class="btn btn-primary btn-block" ng-click="downloadBillAsPDF()">Download Invoice</button>
+        <div class="panel-body text-center">
+            <div class="well">
+                <h4><strong>Car Name:</strong> {{booking.vehicle.company}} {{booking.vehicle.name}}</h4>
+                <h4><strong>Booking from:</strong> {{booking.startDate | date:'shortDate'}} - {{booking.endDate | date:'shortDate'}}</h4>
+                <h4><strong>Amount:</strong> ${{booking.amount}}</h4>
+                <h4><strong>User:</strong> {{booking.from.firstName }} {{booking.from.lastName }}</h4>
+            </div>
+            <div ng-hide="booking.status === 'ended' || booking.status === 'reviewed'">
+                <div ng-show="booking.status === 'started'" class="alert alert-info">Start Odometer reading: {{booking.startOdometerValue}} kms</div>
+                
+                <div ng-show="booking.status === 'approved'">
+                    <form name="startTripForm" novalidate>
+                        <input type="number" class="form-control" ng-model="startOdometerValue" name="startOdometerValue"
+                               placeholder="Start Odometer Value" required min="0">
+                        <div class="text-danger" ng-show="startTripForm.startOdometerValue.$touched && startTripForm.startOdometerValue.$invalid">
+                            <small ng-show="startTripForm.startOdometerValue.$error.required">Start odometer value is required.</small>
+                            <small ng-show="startTripForm.startOdometerValue.$error.min">Value cannot be less than 0.</small>
+                        </div>
+                        <button class="btn btn-success btn-block" style="margin-top: 10px;" 
+                                ng-click="startTrip()" ng-disabled="startTripForm.$invalid">Start Trip</button>
+                    </form>
+                </div>
+
+                <div ng-show="booking.status === 'started'">
+                    <form name="endTripForm" novalidate>
+                        <input type="number" class="form-control" ng-model="endOdometerValue" name="endOdometerValue"
+                               placeholder="End Odometer Value" required min="0" 
+                               ng-min="startOdometerValue + 1">
+                        <div class="text-danger" ng-show="endTripForm.endOdometerValue.$touched && endTripForm.endOdometerValue.$invalid">
+                            <small ng-show="endTripForm.endOdometerValue.$error.required">End odometer value is required.</small>
+                            <small ng-show="endTripForm.endOdometerValue.$error.min">End value must be greater than start value.</small>
+                        </div>
+                        <button class="btn btn-danger btn-block" style="margin-top: 10px;" 
+                                ng-click="endTrip()" ng-disabled="endTripForm.$invalid">End Trip</button>
+                    </form>
+                </div>
+            </div>
+
+            <div ng-show="booking.status === 'ended' || booking.status === 'reviewed'" class="text-center">
+                <h3>Booking Ended</h3>
+                <div class="well">
+                    <h4><strong>Start Odometer Value:</strong> {{booking.startOdometerValue}} kms</h4>
+                    <h4><strong>End Odometer Value:</strong> {{booking.endOdometerValue}} kms</h4>
+                    <h4><strong>Total Distance:</strong> {{booking.endOdometerValue - booking.startOdometerValue}} kms</h4>
+                </div>
+                <button class="btn btn-primary btn-block" ng-click="downloadBillAsPDF()">Download Invoice</button>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
+</div>
+

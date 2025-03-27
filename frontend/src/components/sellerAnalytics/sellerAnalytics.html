@@ -1,39 +1,103 @@
 <button style="margin-left: 20px;" ng-click="back()"><<<</button>
-<h1 class="panel-heading text-center">
-    Seller Analytics Dashboard
-</h1>
-<div class="container-fluid" style="margin-right: 20px;" ng-init="init()">
+<h1 class="panel-heading text-center">Seller Analytics Dashboard</h1>
+
+<div class="container-fluid" ng-init="init()">
+    <!-- Date Filters -->
+    <div class="row g-3 p-3 border rounded shadow-sm bg-light">
+        <div class="col-md-6">
+            <label for="startDate" class="form-label fw-bold">Start Date:</label>
+            <input type="date" id="startDate" class="form-control" ng-model="startDate" ng-init="minDate = new Date().toISOString().split('T')[0]" min="{{minDate}}">
+        </div>
+        <div class="col-md-6">
+            <label for="endDate" class="form-label fw-bold">End Date:</label>
+            <input type="date" id="endDate" class="form-control" ng-model="endDate" min="{{minDate}}">
+        </div>
+        <div class="col-12 text-center mt-3">
+            <button class="btn btn-success px-4 py-2 fw-bold" ng-click="getAnalytics()">
+                <i class="fas fa-chart-line me-2"></i> Get Analytics
+            </button> 
+        </div>   
+    </div>
+    
+
    
-    <div class="row">
-        <div class="col-md-8 col-md-offset-2 mt-3">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="panel panel-info">
-                        <div class="panel-heading">Total Cars Added</div>
-                        <div class="panel-body">
-                            <h4 class="text-center">{{numberOfCars}}</h4>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="panel panel-warning">
-                        <div class="panel-heading">Bids in Last 7 Days</div>
-                        <div class="panel-body">
-                            <h4 class="text-center">{{numberOfBiddingsInLast7days}}</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6" ng-repeat="chartId in ['myMostPopularCar', 'cityWiseBooking', 'suvVsSedanForSeller', 'carAndBookingsChart', 'numberOfBookingsPerMonth', 'biddingsInLast7days', 'bidComparasion', 'localVsOutstationVsBoth']">
-                    <div class="panel panel-primary">
-                        <div class="panel-body">
-                            <canvas id="{{chartId}}" width="400" height="400"></canvas>
-                        </div>
-                    </div>
+
+    <!-- Graphs Dependent on Date -->
+    <div class="row mt-4">
+        <h3 class="text-center">Date-Dependent Analytics</h3>
+        <div class="col-md-4">
+            <div class="panel panel-primary">
+                <div class="panel-body">
+                    <canvas id="myMostPopularCar" width="400" height="400"></canvas>
                 </div>
             </div>
         </div>
-    </div>  
+        <div class="col-md-4">
+            <div class="panel panel-primary">
+                <div class="panel-body">
+                    <canvas id="cityWiseBooking" width="400" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="panel panel-primary">
+                <div class="panel-body">
+                    <canvas id="petrolVsDeiselVsElectric" width="400" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Independent Graphs -->
+    <div class="row mt-4">
+        <h3 class="text-center">General Analytics</h3>
+        <div class="col-md-6">
+            <div class="panel panel-primary">
+                <div class="panel-body">
+                    <canvas id="carAndBookingsChart" width="400" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="panel panel-primary">
+                <div class="panel-body">
+                    <canvas id="numberOfBookingsPerMonth" width="400" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="panel panel-primary">
+                <div class="panel-body">
+                    <canvas id="biddingsInLast7days" width="400" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="panel panel-primary">
+                <div class="panel-body">
+                    <canvas id="suvVsSedanForSeller" width="400" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Overview Metrics -->
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="panel panel-info">
+                <div class="panel-heading">Total Cars Added</div>
+                <div class="panel-body">
+                    <h4 class="text-center">{{numberOfCars}}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="panel panel-info">
+                <div class="panel-heading">Ongoing Trips</div>
+                <div class="panel-body">
+                    <h4 class="text-center">{{onGoingBookings}}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

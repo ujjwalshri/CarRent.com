@@ -3,32 +3,30 @@ angular
   .controller(
     "ownerBookingsCtrl",
     function ($scope, $state, IDB, Booking, ToastService, BackButton, BiddingService) {
-      $scope.back = BackButton.back; // Go back function
-      const loggedInUser = JSON.parse(sessionStorage.getItem("user")); // Get logged-in user
+      $scope.back = BackButton.back;  // back function to go back to the previous page
+      $scope.bookings = [];   // array to hold the bookings of the logged in user
+      $scope.bookingsType = { type: "pending" };  // variable to hold the booking type
+      $scope.searchCarName = "";  // variable to hold the search car name
+      $scope.calculateBookingPrice = Booking.calculate; // function to calculate the booking price from the booking factory
+      $scope.sortBy=""; // variable to hold the sort by value
+      $scope.currentPage = 1; // setting the current page to 1
+      $scope.itemsPerPage = 6; // setting the items per page to 6
+      $scope.totalPages = 0; // setting the total pages to 0
+      $scope.isLoading = false; // setting the isLoading to false
 
-      $scope.bookings = []; // Store bookings
-      $scope.bookingsType = { type: "pending" }; // Default filter type
-      $scope.searchCarName = ""; // Search model
-      $scope.calculateBookingPrice = Booking.calculate; // Booking price calculator
-     
-      
-      // Pagination variables
-      $scope.currentPage = 1;
-      $scope.itemsPerPage = 3;
-      $scope.totalPages = 0;
-      $scope.isLoading = false;
-
-      // Fetch bookings initially
+     /* 
+     function to fetch the bookings for logged in owner
+     */
       $scope.fetchBookings = function () {
         $scope.isLoading = true;
         const params = {
           page: $scope.currentPage,
           limit: $scope.itemsPerPage,
-          status: $scope.bookingsType.type, // Filtering by status (e.g., 'today', 'later', 'pending')
-          sort: $scope.sort,
+          status: $scope.bookingsType.type, 
+          sort: $scope.sortBy?{[$scope.sortBy]:-1}:undefined, 
         };
 
-        BiddingService.getOwnerBids(params)
+        BiddingService.getOwnerBids(params) // get the bookings for the owner
           .then((response) => {
             $scope.bookings = response.result || [];
             console.log(response.result.length);
@@ -43,12 +41,16 @@ angular
           });
       };
 
-      // Handle page change
+      /*
+      function to handle pageChanged event
+      */
       $scope.pageChanged = function () {
-        $scope.fetchBookings(); // Fetch bookings for new page
+        $scope.fetchBookings(); 
       };
 
-      // Previous page function
+      /*
+      function to handle prev page button
+      */
       $scope.prevPage = function () {
         if ($scope.currentPage > 1) {
           $scope.currentPage--;
@@ -56,7 +58,9 @@ angular
         }
       };
 
-      // Next page function
+      /*
+      function to handle next page button
+      */
       $scope.nextPage = function () {
         if ($scope.currentPage < $scope.totalPages) {
           $scope.currentPage++;
@@ -64,13 +68,18 @@ angular
         }
       };
 
-      // Filter Bookings based on Type
+      /*
+      function to apply filter
+      */
       $scope.applyFilter = function () {
-        $scope.currentPage = 1; // Reset to first page on filter change
+        $scope.currentPage = 1; 
         $scope.fetchBookings();
       };
 
-      // Approve Bidding
+      /*
+      function to approve bidding
+      @params bidID
+      */
       $scope.approveBidding = function (bidID) {
         BiddingService.approveBid(bidID)
           .then(() => {
@@ -82,7 +91,10 @@ angular
           });
       };
 
-      // Reject Bidding
+       /*
+      function to reject bidding
+      @params bidID
+      */
       $scope.rejectBidding = function (bidID) {
         BiddingService.rejectBid(bidID)
           .then(() => {
@@ -94,7 +106,7 @@ angular
           });
       };
 
-      // Initial Fetch
+      
       $scope.fetchBookings();
     }
   );

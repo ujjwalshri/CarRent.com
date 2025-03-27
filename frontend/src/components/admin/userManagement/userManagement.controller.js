@@ -1,95 +1,89 @@
 angular
   .module("myApp")
-  .controller("userManagementCtrl", function ($scope, IDB, ToastService)  {
-    $scope.allUsers = [];
-    $scope.buyers = [];
-    $scope.sellers = [];
-    // call database function to get all the users
-    $scope.users = [];
+  .controller("userManagementCtrl", function ($scope, IDB, ToastService, UserService, $timeout)  {
+    $scope.allUsers = []; // array to hold all the users
+    $scope.city = ""; // variable to hold the city
+    $scope.search = ''; // variable to hold the search query
+    let searchTimeout; // variable to hold the search timeout
+    $scope.users = []; // array to hold the users
+
+ 
+    
     $scope.init = () => {
       fetchUsers(); // initial fetch of users
     };
 
-    //for fetching all the users and then filtering them into buyers and sellers
+     /* 
+     function to fetch all the users from the database
+      @params none
+      @returns none
+     */
     function fetchUsers() {
-      IDB.getAllUsers() 
+      UserService.getAllUsers($scope.city, $scope.search) 
         .then((users) => {
-          $scope.blockedUsers = users.filter((user) => user.isBlocked === true); // filtering out the blocked users
-          $scope.allUsers = users.filter((user) => user.isBlocked === false); // filtering out the non blocked users
-          $scope.buyers = $scope.allUsers.filter((user) => {
-            return user.isSeller === false; // filtering out the buyers
-          });
-          $scope.sellers = $scope.allUsers.filter((user) => {
-            return user.isSeller === true; // filtering out the sellers
-          });
+          $scope.allUsers = users.users;
+          console.log($scope.allUsers);
         })
         .catch((err) => {
          ToastService.error(`Error fetching users ${err}`);
         });
     }
+    // function to filter the users
+    $scope.filterUsers = ()=>{
+      fetchUsers();
+    }
+
+    // function to reset the filter
+    $scope.resetFilter = ()=>{
+      $scope.city = "";
+      fetchUsers();
+    }
+
+    /*
+    function to filter the users with a delay when using the search bar 
+      @params none
+      @returns none
+    */
+    $scope.filterUsersWithDelay = () => {
+      if (searchTimeout) {
+          $timeout.cancel(searchTimeout); 
+      }
+  
+      searchTimeout = $timeout(() => {
+          $scope.filterUsers(); 
+      }, 200);
+  };
+
     
-   
-    // function to block a user and then getting all the cars of that user and then deleting all the cars of that user
-    // using the async libary to do the task in a waterfall manner
+    /*
+    function to block a user from the database, and the delete all the cars of the user on the platform
+      @params userId
+      @returns none
+    */
     $scope.block = (userId) => { // blocking function 
-      async.waterfall(    // using async.waterfall() to run the functions in a waterfall manner
-        [
-          function (callback) {
-            IDB.blockUserByUserId(userId) // calling the db function to block the user
-              .then((response) => {
-                ToastService.success("user deleted successfully"); // showing the success message
-                fetchUsers(); // fetching the users again
-                callback(null, userId); // calling the next function in the waterfall
-              })
-              .catch((err) => {
-                ToastService.error(`error blocking user ${err}`); // showing the error message
-                callback(err);
-              });
-          },
-          function (userId, callback) {
-            IDB.getAllCarsByUser(userId) // calling the db function to get all the cars of the user
-              .then((cars) => {
-                callback(null, cars); // calling the next function in the waterfall
-              })
-              .catch((err) => {
-                ToastService.error(`error fetching cars ${err}`); // showing the error message
-                callback(err);
-              });
-          },
-          function (cars, callback) {
-            async.each(  // using async.each() to iterate over the cars and delete them parallely
-              cars,
-              (car, cb) => {
-                IDB.rejectCar(car.id) // calling the db function to reject the car
-                  .then((response) => {
-                   
-                    cb();
-                  })
-                  .catch((err) => {
-                    ToastService.error(`error rejecting car ${err}`); // showing the error message
-                    cb(err);
-                  });
-              },
-              (err) => {
-                if (err) {
-                  ToastService.error(`error rejecting car ${err}`); // showing the error message
-                  callback(err);
-                } else {
-                  callback(null);
-                }
-              }
-            );
-          },
-        ],
-        function (err) {
-          if (err) {
-            console.log(err);
-            alert("Error in the process");
-          } else {
-            console.log("All cars deleted successfully");
-          }
-        }
-      );
-    };
+      UserService.blockUser(userId)
+        .then(() => {
+          ToastService.success("User blocked successfully");
+          fetchUsers();
+        })
+        .catch((err) => {
+          ToastService.error(`Error blocking user ${err}`);
+        });
+    }
+    /*
+    function to unblock a user from the database, and the bring back all the cars of the user on the platform
+      @params userId
+      @returns none
+    */
+    $scope.unblock = (userId) => { // unblocking function
+      UserService.unblockUser(userId)
+        .then(() => {
+          ToastService.success("User unblocked successfully");
+          fetchUsers();
+        })
+        .catch((err) => {
+          ToastService.error(`Error unblocking user ${err}`);
+        });
+    }
 
   });

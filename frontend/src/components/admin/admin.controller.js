@@ -8,6 +8,5 @@ angular.module("myApp").controller("adminCtrl", function($scope, $state, $rootSc
         }).catch(err=>{
             console.log(err);
         });
-   
     }
 });

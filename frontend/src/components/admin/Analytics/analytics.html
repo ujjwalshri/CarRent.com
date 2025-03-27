@@ -1,71 +1,84 @@
-
 <div ng-init="init()" class="container-fluid">
-  <h1 class="panel-heading text-center" style="margin-left: 100px;">
-     Analytics Dashboard
-  </h1>
-  <div class="row">
-    <div class="col-md-10 col-md-offset-2 mt-3">
-      <div class="row">
-        <div class="col-md-4">
+  <h1 class="text-center">Analytics Dashboard</h1>
+
+  <!-- Date Filter Section (For First 4 Charts) -->
+  <div class="row p-3 border rounded shadow-sm bg-light">
+      <div class="col-md-5">
+          <label for="startDate" class="form-label">Start Date:</label>
+          <input type="date" id="startDate" class="form-control" ng-model="startDate">
+      </div>
+      <div class="col-md-5">
+          <label for="endDate" class="form-label">End Date:</label>
+          <input type="date" id="endDate" class="form-control" ng-model="endDate">
+      </div>
+      <div class="col-md-2 text-center">
+          <button class="btn btn-success btn-block" ng-click="filterByDate()">
+              <i class="fa fa-chart-line"></i> Get Analytics
+          </button>
+      </div>
+  </div>
+
+  <!-- Summary Statistics -->
+  <div class="row text-center mt-3">
+      <div class="col-md-3">
           <div class="panel panel-info">
-            <div class="panel-heading">Average Booking Duration</div>
-            <div class="panel-body">
-              <h4 class="text-center">{{averageBookingDuration}} days</h4>
-            </div>
+              <div class="panel-heading">Ongoing Bookings</div>
+              <div class="panel-body"><h4>{{ongoingBookings}}</h4></div>
           </div>
-        </div>
-        <div class="col-md-4">
+      </div>
+      <div class="col-md-3">
+          <div class="panel panel-info">
+              <div class="panel-heading">Avg Booking Duration</div>
+              <div class="panel-body"><h4>{{averageBookingDuration}} days</h4></div>
+          </div>
+      </div>
+      <div class="col-md-3">
           <div class="panel panel-warning">
-            <div class="panel-heading">Blocked Users</div>
-            <div class="panel-body">
-              <h4 class="text-center">{{blocked.length}}</h4>
-            </div>
+              <div class="panel-heading">Blocked Users</div>
+              <div class="panel-body"><h4>{{blockedUsers}}</h4></div>
           </div>
-        </div>
-        <div class="col-md-4">
+      </div>
+      <div class="col-md-3">
+          <div class="panel panel-primary">
+              <div class="panel-heading">Bidding Conversion %</div>
+              <div class="panel-body"><h4>{{biddingConversionRate}}%</h4></div>
+          </div>
+      </div>
+  </div>
+
+  <!-- New Users in Last 30 Days -->
+  <div class="row">
+      <div class="col-md-4 col-md-offset-4">
+          <div class="panel panel-danger">
+              <div class="panel-heading">New Users in Last 30 Days</div>
+              <div class="panel-body text-center"><h4>{{newUsers}}</h4></div>
+          </div>
+      </div>
+  </div>
+
+  <!-- Date-Dependent Charts Section -->
+  <h3 class="text-center text-primary">Date-Dependent Graphs</h3>
+  <div class="row">
+      <div class="col-md-6" ng-repeat="chartId in ['top10Cars','top3Sellers', 'suvVsSedan','top5MostReviewedCars']">
+          <div class="panel panel-primary">
+              <div class="panel-heading text-center">{{ chartId }}</div>
+              <div class="panel-body text-center">
+                  <canvas id="{{chartId}}" width="400" height="400"></canvas>
+              </div>
+          </div>
+      </div>
+  </div>
+
+  <!-- Non-Date-Dependent Charts Section -->
+  <h3 class="text-center text-success">Other Graphs</h3>
+  <div class="row">
+      <div class="col-md-6" ng-repeat="chartId in ['userDescriptionChart','ownersPerCity', 'buyersPerCity']">
           <div class="panel panel-success">
-            <div class="panel-heading">Total Bookings</div>
-            <div class="panel-body">
-              <h4 class="text-center">{{confirmedBookings.length}}</h4>
-            </div>
+              <div class="panel-heading text-center">{{ chartId }}</div>
+              <div class="panel-body text-center">
+                  <canvas id="{{chartId}}" width="400" height="400"></canvas>
+              </div>
           </div>
-        </div>
       </div>
-      <div class="row">
-        <div class="col-md-4">
-          <div class="panel panel-primary">
-            <div class="panel-heading">Bidding Conversion Percentage</div>
-            <div class="panel-body">
-              <h4 class="text-center">{{calculatedBiddingConversionRate}}%</h4>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="panel panel-danger">
-            <div class="panel-heading">Bids in Last 7 Days</div>
-            <div class="panel-body">
-              <h4 class="text-center">{{numberOfBidsThisWeekAndMonth[0]}}</h4>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="panel panel-danger">
-            <div class="panel-heading">Bids in Last 30 Days</div>
-            <div class="panel-body">
-              <h4 class="text-center">{{numberOfBidsThisWeekAndMonth[1]}}</h4>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-6" ng-repeat="chartId in ['userDescriptionChart', 'monthwiseCarTrips', 'top10Cars', 'top3Sellers', 'top5MostReviewedCars', 'numberOfUsersPerCity', 'suvVsSedan', 'leastRentedCars', 'mostRentedCars', 'highestRatedCars']">
-          <div class="panel panel-primary">
-            <div class="panel-body">
-              <canvas id="{{chartId}}" width="400" height="400"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </div>

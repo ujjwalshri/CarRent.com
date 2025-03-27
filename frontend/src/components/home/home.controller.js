@@ -9,14 +9,20 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
     $scope.skip = 0; // variable to hold the skip value for pagination
     $scope.isLoading = false; // variable to hold the loading state of the page
     $scope.limit = 5; // variable to hold the limit of the cars to be fetched
+    let searchTimeout; // variable to hold the search timeout
    
    
     
     // init function to run when the page mounts
     $scope.init = function (){
-            fetchAllCars($scope.skip);
+         fetchAllCars($scope.skip);
     };
-    // function to get all the cars that have status === approved and car is not deleted
+
+    /*
+    function to fetch all the cars from the database
+    @params skip
+    @returns cars
+    */
     function fetchAllCars(skip){
         CarService.getAllApprovedCars($scope.search, $scope.priceFilter, $scope.city, $scope.category, skip).then((res)=>{
             console.log("cars", res.data);
@@ -27,17 +33,28 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
         });
     }
 
+    // function to filter the cars
     $scope.filterCars = () => {
         fetchAllCars(0);
     };
 
+
+    // function to filter the cars with a delay for debouncing
     $scope.filterCarsWithDelay = () => {
         // call the all cars with the all filters but with a delay of 1 second
-       $timeout(()=>{
+        if (searchTimeout) {
+            $timeout.cancel(searchTimeout); 
+        }
+      searchTimeout = $timeout(()=>{
          $scope.filterCars();
-       },300)
+       },200)
     };
- 
+
+    /*
+    function to load more cars when the user clicks on the load more button
+    @params none
+    @returns none
+    */
     $scope.loadMoreCars = () => {
         $scope.isLoading = true; 
         console.log('isLoading');

@@ -1,5 +1,10 @@
-app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService) {
-  // function to signup the user 
+app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService, $rootScope) {
+  
+   /*
+   function to singup the user
+    @params none
+    @returns none
+   */
   $scope.signup = function () {
     // creating the user object
     const user = {
@@ -19,6 +24,7 @@ app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService
         return AuthService.registerUser(user); // calling the register user function
       })
       .then(function() {
+        $rootScope.isLogged = true; // setting the isLogged to true,
         $state.go("login"); // redirecting to the login page
       })
       .catch(function(error) {

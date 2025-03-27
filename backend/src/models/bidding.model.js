@@ -81,7 +81,7 @@ const biddingSchema = new mongoose.Schema({
         },
         status: {
             type: String,
-            enum: ["pending", "approved", "rejected"],
+            enum: ["pending", "approved", "rejected", "started", "ended", "reviewed"],
             default: "pending",
         },
         city:{

@@ -7,46 +7,94 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, IDB
     $scope.deleted = false; // deleted false intially
     $scope.activeButton = 'all'; // setting the active button to all
     $scope.selectedCarPrice = { price: 0 }; // setting the selected car price to 0
+    $scope.skip = 0;
+    $scope.limit = 5;
+    $scope.hasMoreCars = true;
+    $scope.status;
+
     
-    // function to initialize the controller
+    /*
+    function to initialize the controller
+    @params none
+    @returns none
+    */
     $scope.init = () => {
         fetchUserProfile();
         fetchCars();
     };
-    
-   
-
-
+    /*
+    function to get profile of the user
+    @params none
+    @returns none
+    */
     function fetchUserProfile(){
         UserService.getUserProfile().then((res)=>{
             $scope.user = res.data;
-           
+            
+            console.log($scope.user);
+            $scope.updatedUser = $scope.user;
         }).catch((err)=>{
             ToastService.error("error fetching user profile");
         });
     }
+    
+    /*
+    function to navigate to the car page
+    @params none
+    @returns none
+    */
+    $scope.navigate = ()=>{
+        $state.go('car');
+    }
+    /*
+    function to loadMore Cars and add them
+    @params none
+    @returns 
+    */
+    $scope.loadMore =()=>{
+        $scope.skip = $scope.skip + $scope.limit;
+        fetchCars($scope.status);
+    }
 
-   
+    /*
+    function to refresh the page
+    @params none
+    @returns none
+    */
+    $scope.reset = ()=>{
+        $state.reload();
+    }
 
    /*
    function to fetch all cars by a user id
     @params none
     @returns none
     */
-    function fetchCars() {
-        CarService.fetchUserCars("all").then((res)=>{
+    function fetchCars(status) {
+        const params = {
+            skip : $scope.skip,
+            limit: $scope.limit
+        }
+        console.log(params);
+        CarService.fetchUserCars(status ? status : 'all', params).then((res)=>{
             console.log(res);
-            $scope.userCars = res.data;
+            $scope.skip==0 ? $scope.userCars = res.data : $scope.userCars = $scope.userCars.concat(res.data); 
+            
+            $scope.hasMoreCars = res.data.length > 0;
             console.log($scope.userCars);
         }).catch((err)=>{
             ToastService.error(`error fetching cars ${err}`);
         })
     }
-    // function to open the price modal
+    /*
+    function to open the price modal
+    @params car
+    @returns none
+    */
     $scope.openPriceModal = (car) => {
-        $scope.selectedCarId = car.id;
-        $scope.selectedCarPrice.price = car.carPrice;
-
+        console.log(car);
+        $scope.selectedCarId = car._id;
+        $scope.selectedCarPrice.price = car.price;
         $uibModal.open({
             templateUrl: 'priceModal.html',
             scope: $scope
@@ -58,14 +106,17 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, IDB
         console.log($scope.selectedCarPrice.price);
         const carPrice = $scope.selectedCarPrice.price;
         console.log(carPrice);  
+        console.log(carId);
+        console.log($scope.selectedCarPrice.price);
       
-        IDB.updateCarPrice(carId, $scope.selectedCarPrice.price)
+        CarService.updateCarPrice(carId, $scope.selectedCarPrice.price)
             .then(() => {
                 ToastService.success("Car price updated successfully");
-                fetchUserCars();
+                fetchCars();
             })
             .catch((err) => {
-                ToastService.error(`error updating the car price ${err}`);
+                console.log(err);
+                ToastService.error(`error updating the car price ${err.data.message}`);
             });
     };
     // function to open the update modal
@@ -83,55 +134,42 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, IDB
         }
         const { firstName, lastName, city } = $scope.updatedUser;
         console.log(firstName, lastName, city);
-        IDB.updateUser(loggedInUser.username, firstName, lastName, city, new Date()).then(() => {
-            ToastService.success("User updated successfully");
-            $scope.user = JSON.parse(sessionStorage.getItem("user"));
+        const data = {
+            firstName,
+            lastName,
+            city
+        }
+        UserService.updateUserProfile(data).then((user) => {
+            console.log(user);
+            ToastService.success("User profile updated successfully");
+            $scope.user = user.data.user;
+        }).catch((err) => {
+            ToastService.error(`error updating user profile ${err}`);
         });
     };
     // function to delete the user
     $scope.showRejected = () => {
         $scope.activeButton = 'rejected';
-        CarService.fetchUserCars("rejected").then(res=>{
-            $scope.userCars =  res.data;
-            console.log($scope.userCars);
-        }).catch(err=>{
-            ToastService.error(`error fetching cars ${err}`);
-        })
+        $scope.status = 'rejected';
+       fetchCars("rejected");
     };
-    
+    // function to show the approved cars
     $scope.showApproved = () => {
         $scope.activeButton = 'approved';
-         CarService.fetchUserCars("approved").then(res=>{
-            $scope.userCars =  res.data;
-            console.log($scope.userCars);
-        }).catch(err=>{
-            ToastService.error(`error fetching cars ${err}`);
-        })
+        $scope.status = 'approved';
+        fetchCars("approved");
     };
+
+    // function to show all the cars
     $scope.showAll = () => {
         $scope.activeButton = 'all';
-        fetchCars();
+        $scope.status = 'all';
+        fetchCars('all');
     };
 
 
-    $scope.deleteCar = (carID) => {
-        IDB.toggleUserCars(carID, true).then(() => {
-            ToastService.success("car deleted successfully");
-            $scope.deleted = true;
-            fetchUserCars();
-        }).catch((err) => {
-            ToastService.error(`error deleting the car ${err}`);
-        });
-    };
-
-    $scope.listCar = (carId) => {
-        IDB.toggleUserCars(carId, false).then(() => {
-            ToastService.success("Car listed successfully");
-            fetchUserCars();
-        }).catch((err) => {
-            ToastService.error(`error listing the car ${err}`);
-        });
-    };
+   
+   
 
     $scope.redirectToCarPage = (carID) => {
         $state.go("singleCar", { id: carID });

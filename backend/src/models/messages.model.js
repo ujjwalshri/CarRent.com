@@ -6,12 +6,26 @@ const messageSchema = new mongoose.Schema(
             type: Object,
             required: true,
         },
-        images: {
-            type: Array,
+        image: {
+            type: Object,
         },
         message: {
             type: String,
         },
+        sender:{
+            username:{
+                type:String,
+                required:[true, "Username is required"],
+            },
+            firstName: {
+                type: String,
+                required: [true, "First name is required"],
+            },
+            lastName: {
+                type: String,
+                required: [true, "Last name is required"],
+            }
+        }
     },
     { timestamps: true }
 );

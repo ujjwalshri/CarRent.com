@@ -10,7 +10,7 @@
                 <label>Search:</label>
                 <input type="text" ng-model="search" placeholder="Search for cars" 
                     class="form-control mb-2" 
-                    uib-typeahead="car for car in carList | filter:$viewValue | limitTo:8"
+                   
                     ng-change="filterCarsWithDelay()"
                     >
             </div>
@@ -115,7 +115,7 @@
         </div>
        
 
-        <div class="col-12 text-center" ng-if="filteredCars.length === 0">
+        <div class="col-12 text-center" ng-if="allCars.length === 0">
             <div class="alert alert-warning mt-4">
                 <strong>No available cars matching your filters.</strong>
             </div>

@@ -1,46 +1,58 @@
-
 <button style="margin-left: 20px;" ng-click="back()"><<<</button>
 
 <div ng-init="init()" class="container">
     <h2 class="text-center" ng-show="bookings.length > 0">Booking History</h2>
-    <div class="container-fluid text-center" style="height: 100vh; background-color: #f8f9fa; display: flex; justify-content: center; align-items: center;">
+   
+
+    <div class="container-fluid text-center" style="height: 100vh; background-color: #f8f9fa; display: flex; justify-content: center; align-items: center;" 
+         ng-hide="bookings.length > 0">
         <div class="well" style="max-width: 500px; width: 100%; padding: 20px; border-radius: 10px; background: white; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);">
-          <h1 style="font-size: 5rem;">🗓️</h1>
-          <h2 class="text-muted">No Booking History</h2>
-        </div>
-      </div>
-    <br>
-
-    <label for="startDate" ng-show="bookings.length > 0">Filter by booking Start Date:</label><br>
-    <input type="date" ng-model="startDate"ng-show="bookings.length > 0"> <button  ng-click="filterByStartDate()" ng-show="bookings.length > 0">filter</button>
-    <button ng-click="resetFilter()" ng-show="bookings.length > 0">reset filter</button>
- 
-    <div class="panel panel-default" ng-repeat="booking in bookings">
-        <div class="panel-heading">
-            <h4 class="panel-title">Booking ID: {{booking.id}}</h4>
-        </div>
-        <div class="panel-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Total Payable Amount:</strong> ${{calculateBookingPrice(booking.startDate, booking.endDate, booking.amount)}}</p>
-                    <p><strong>Start Date:</strong> {{booking.startDate | date: 'yyyy-MM-dd'}}</p>
-                    <p><strong>End Date:</strong> {{booking.endDate | date: 'yyyy-MM-dd'}}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Owner Details:</strong></p>
-                    <p><strong>Name:</strong> {{booking.owner.firstName}} {{booking.owner.lastName}}</p>
-                    <p><strong>Username:</strong> {{booking.owner.username}}</p>
-
-                </div>
-                <div class="col-md-6">
-                    <p><strong>Car Details:</strong></p>
-                    <p><strong>Name:</strong> {{booking.vehicle.carName}} </p>
-                    <p><strong>CarType:</strong> {{booking.vehicle.carType}}</p> 
-                </div>
-            </div>
+            <h1 style="font-size: 5rem;">🗓️</h1>
+            <h2 class="text-muted">No Booking History</h2>
         </div>
     </div>
-    <div class="text-center" ng-show="bookings.length > 0">
-        <ul uib-pagination boundary-links="true" total-items="totalItems" ng-model="currentPage" ng-change="pageChanged()" items-per-page="itemsPerPage" class="pagination-sm" previous-text="&lsaquo;" next-text="&rsaquo;" first-text="&laquo;" last-text="&raquo;"></ul>
+   
+    
+    <br>
+   
+    <br>
+
+    <div class="table-responsive" ng-show="bookings.length > 0">
+        <table class="table table-hover table-bordered table-striped">
+            <thead class="table-primary">
+                <tr class="text-center">
+                    <th>#</th>
+                    <th>Total Payable Amount</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Owner Name</th>
+                    <th>Owner Username</th>
+                    <th>Car Name</th>
+                    <th>Car Type</th>
+                    <th>downloadBillAsPDF</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="booking in bookings" class="text-center">
+                    <td>{{$index + 1}}</td>
+                    <td>${{calculateBookingPrice(booking.startDate, booking.endDate, booking.amount)}}</td>
+                    <td>{{booking.startDate | date: 'yyyy-MM-dd'}}</td>
+                    <td>{{booking.endDate | date: 'yyyy-MM-dd'}}</td>
+                    <td>{{booking.owner.firstName}} {{booking.owner.lastName}}</td>
+                    <td>{{booking.owner.username}}</td>
+                    <td>{{booking.vehicle.company}} {{booking.vehicle.name}}</td>
+                    <td>{{booking.vehicle.fuelType}}</td>
+                    <td>
+                        <button class="btn btn-primary" ng-click="downloadBillAsPDF(booking)">Download Invoice</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-center" ng-click="pageChanged()" ng-if="hasMoreData" style="margin-bottom: 20px;">
+        <button id="load-more-btn" class="btn btn-primary mt-3">
+            Load More <span class="glyphicon glyphicon-chevron-down"></span>
+        </button>
     </div>
 </div>

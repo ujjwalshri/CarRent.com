@@ -1,58 +1,65 @@
 <h1 class="text-center">Users</h1>
-<div class="container" style="width: 900px; height: 1000px; padding-left: 100px; padding-right:100px;" ng-init="init()">
+
+<div class="container-fluid" ng-init="init()">
     <div class="row">
-        <div class="col-md-4" ng-repeat="user in buyers">
-            <div class="panel panel-primary">
-                <div class="panel-heading">
-                    <h3 class="panel-title">{{user.firstName}} {{user.lastName}}</h3>
-                </div>
-                <div class="panel-body">
-                    <p><strong>Username:</strong> {{user.username}}</p>
-                    <p><strong>Email:</strong> {{user.email}}</p>
-                    <p><strong>Role:</strong> Buyer</p>
-                </div>
-                <div class="panel-footer text-center">
-                    <button class="btn btn-danger" ng-click="block(user.id)">
-                        <span class="glyphicon glyphicon-trash"></span> Delete User
-                    </button>
-                </div>
+        <div class="col-xs-12 col-md-10 col-md-offset-1">
+            <!-- City Filter Dropdown -->
+            <div class="dropdown" uib-dropdown on-toggle="filterUsers()" style="margin-bottom: 20px;">
+                <button id="cityFilter" type="button" class="btn btn-primary dropdown-toggle" uib-dropdown-toggle>
+                    <i class="glyphicon glyphicon-map-marker"></i> Select City {{city}} <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu text-center" uib-dropdown-menu style="min-width: 150px;">
+                    <li ng-click="city = 'Delhi'"><a><strong>Delhi</strong></a></li>
+                    <li ng-click="city = 'Mumbai'"><a><strong>Mumbai</strong></a></li>
+                    <li ng-click="city = 'Gwalior'"><a><strong>Gwalior</strong></a></li>
+                    <li ng-click="city = 'Bhind'"><a><strong>Bhind</strong></a></li>
+                    <li ng-click="city = 'Gurugram'"><a><strong>Gurugram</strong></a></li>
+                    <li ng-click="city = 'Agra'"><a><strong>Agra</strong></a></li>
+                    <li ng-click="city = 'Shiv puri'"><a><strong>Shiv Puri</strong></a></li>
+                </ul>
+                <button class="btn btn-default" ng-click="resetFilter()">Reset Filter</button>
             </div>
-        </div>
-    </div>
-    
-    <div class="row">
-        <div class="col-md-4" ng-repeat="user in sellers">
-            <div class="panel panel-success">
-                <div class="panel-heading">
-                    <h3 class="panel-title">{{user.firstName}} {{user.lastName}}</h3>
-                </div>
-                <div class="panel-body">
-                    <p><strong>Username:</strong> {{user.username}}</p>
-                    <p><strong>Email:</strong> {{user.email}}</p>
-                    <p><strong>Role:</strong> Seller</p>
-                </div>
-                <div class="panel-footer text-center">
-                    <button class="btn btn-danger" ng-click="block(user.id)">
-                        <span class="glyphicon glyphicon-trash"></span> Delete User
-                    </button>
-                </div>
+
+            <!-- Search Input -->
+            <div class="form-group">
+                <label>Search:</label>
+                <input type="text" ng-model="search" placeholder="Search for user by username/name" 
+                    class="form-control" 
+                    uib-typeahead="car for car in carList | filter:$viewValue | limitTo:8"
+                    ng-change="filterUsersWithDelay()">
             </div>
-        </div>
-    </div>
-    
-    <div class="row">
-        <div class="col-md-4" ng-repeat="user in blockedUsers">
-            <div class="panel panel-warning">
-                <div class="panel-heading">
-                    <h3 class="panel-title">{{user.firstName}} {{user.lastName}}</h3>
-                </div>
-                <div class="panel-body">
-                    <p><strong>Username:</strong> {{user.username}}</p>
-                    <p><strong>Email:</strong> {{user.email}}</p>
-                    <p><strong>Role:</strong> {{user.isSeller ? 'Seller' : 'Buyer'}}</p>
-                </div>
+
+            <!-- Responsive Table -->
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="user in allUsers">
+                            <td>{{user.firstName}} {{user.lastName}}</td>
+                            <td>{{user.username}}</td>
+                            <td>{{user.email}}</td>
+                            <td>{{user.isSeller ? 'Seller' : 'Buyer'}}</td>
+                            <td class="text-center">
+                                <button class="btn btn-danger btn-sm" ng-hide="user.isBlocked" ng-click="block(user._id)">
+                                    <span class="glyphicon glyphicon-ban-circle"></span> Block
+                                </button>
+                                <button class="btn btn-success btn-sm" ng-show="user.isBlocked" ng-click="unblock(user._id)">
+                                    <span class="glyphicon glyphicon-ok-circle"></span> Unblock
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+
         </div>
     </div>
 </div>
-

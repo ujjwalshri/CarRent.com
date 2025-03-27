@@ -2,11 +2,13 @@ angular.module('myApp').controller('myBiddingsCtrl', function($scope, $state, ID
     $scope.back = BackButton.back; // back function to go back to the previous page
     $scope.calculateBookingPrice = Booking.calculate; // function to calculate the booking price from the booking factory
     const loggedInUser = JSON.parse(sessionStorage.getItem('user')); // retrieving the logged in user from the session storage
-    $scope.biddingStatus = ''; // setting the bidding status to an empty string
+    $scope.biddingStatus = 'pending'; // setting the bidding status to an empty string
     $scope.currentPage = 1; // setting the current page to 1
-    $scope.itemsPerPage = 5; // setting the items per page to 2
+    $scope.itemsPerPage = 6; // setting the items per page to 2
     $scope.totalItems = 0; /// total number of items for pagination
     $scope.isLoading = false; // loading state
+
+    fetchAllBiddings(); // fetch all biddings initially
 
     // Fetch all biddings with pagination
     function fetchAllBiddings() {
@@ -15,13 +17,14 @@ angular.module('myApp').controller('myBiddingsCtrl', function($scope, $state, ID
         const params = {
             page: $scope.currentPage,
             limit: $scope.itemsPerPage,
-            status: $scope.biddingStatus || undefined, // Include status if it's set
+            status: $scope.biddingStatus || undefined, 
         };
 
         BiddingService.getBiddingsForUser(params)
             .then((biddings) => {
                 $scope.bookings = biddings.bids || [];
-                $scope.totalItems = biddings.totalDocs || 0; // Set total items for pagination
+                $scope.totalItems = biddings.totalDocs || 0; 
+                
             })
             .catch((err) => {
                 ToastService.error(`Error fetching bookings: ${err}`);
@@ -32,24 +35,23 @@ angular.module('myApp').controller('myBiddingsCtrl', function($scope, $state, ID
             });
     }
 
-    // Initial fetch
-    fetchAllBiddings();
-
-    // Handle page change
+    /*
+    function to handle the pagination when user clicks on the previous button
+    */
     $scope.pageChanged = function () {
         fetchAllBiddings();
     };
 
     // Apply filter
     $scope.applyFilter = () => {
-        $scope.currentPage = 1; // Reset to the first page when applying a filter
+        $scope.currentPage = 1;
         fetchAllBiddings();
     };
 
     // Reset filter
     $scope.resetFilter = () => {
-        $scope.biddingStatus = ''; // Clear the filter
-        $scope.currentPage = 1; // Reset to the first page
+        $scope.biddingStatus = '';
+        $scope.currentPage = 1; 
         fetchAllBiddings();
     };
 

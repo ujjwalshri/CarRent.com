@@ -1,11 +1,28 @@
 import Bidding from '../models/bidding.model.js';
 import Vehicle from '../models/vehicle.model.js';
+import generateAndSendMail from '../utils/gen.mail.js';
+import { processBids } from '../config/SQS.js';
+import validateBiddingData from '../validation/bid.validation.js';
+import dotenv from 'dotenv';
+import AWS from 'aws-sdk';
+
+dotenv.config();
+AWS.config.update({
+    accessKeyId: process.env.S3_ACCESS_KEY,
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+    region: process.env.S3_BUCKET_REGION
+});
+
+const sqs = new AWS.SQS();
+
 import mongoose from 'mongoose';
+
 
 /*
  @description function to Add a bid to the database
 */
 export const addBidController = async (req, res) => {
+    
     const {carId} = req.params;
     const {
         amount, 
@@ -18,8 +35,10 @@ export const addBidController = async (req, res) => {
     } = req.body;
     const { _id, username, email, firstName, lastName, city } = req.user;
     const from = { _id, username, email, firstName, lastName, city };
-   
- 
+
+    if(startDate > endDate){
+        return res.status(400).json({error: 'startDate cannot be greater than endDate'});
+    }
     try {
         const vehicle = await Vehicle.findById(carId);
         const biddingData = {
@@ -46,9 +65,19 @@ export const addBidController = async (req, res) => {
             status,
             from
         }
-        const bidding = new Bidding(biddingData);
-        await bidding.save();
-        return res.status(201).json({ bidding });
+        if(validateBiddingData(biddingData).error){
+            return res.status(400).json({error: validateBiddingData(biddingData).error.details[0].message});
+        }
+
+        // use the SQS to send the bidding to the SQS queue 
+        const params = {
+            MessageBody: JSON.stringify(biddingData),
+            QueueUrl: process.env.QUEUE_LINK
+        };
+      const result =   await sqs.sendMessage(params).promise();
+        processBids();
+        console.log(result);
+        return res.status(201).json({ message:  `message bidding added successfully` });
     } catch (error) {
         console.log(`error in the addBidController ${error.message}`);
         return res.status(500).json({ error : `error in the addBidController ${error.message}` });
@@ -64,13 +93,22 @@ export const updateBidStatusController = async (req, res) => {
     if (!biddingStatus) {
         return res.status(400).json({ error: 'Bidding status is required' });
     }
-
+    
     let session; 
     try {
         session = await mongoose.startSession();
         session.startTransaction();
 
         const bidding = await Bidding.findById(req.params.id).session(session);
+        console.log(req.user._id.toString(), "and", bidding.owner._id.toString());
+
+        if (req.user._id.toString() !== bidding.owner._id.toString()) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(403).json({ error: "You are not authorized to change the status of this bid" });
+        }
+
+
         if (!bidding) {
             await session.abortTransaction();
             session.endSession();
@@ -85,18 +123,19 @@ export const updateBidStatusController = async (req, res) => {
             await Bidding.updateMany(
                 {
                     _id: { $ne: bidding._id },
-                    status: { $ne: "rejected" },
+                    'vehicle._id': bidding.vehicle._id,
+                    status: { $nin: ["rejected", "approved", "ended", "started", "reviewed"] }, 
                     startDate: { $lte: endDate },
                     endDate: { $gte: startDate },
                 },
                 { $set: { status: "rejected" } },
                 { session }
             );
+            generateAndSendMail({ subject: "Bidding Approved", text: `Congrats Your bid on vehicle ${bidding.vehicle.name} has been approved by the owner ${bidding.owner.username}, the bid amount is ${bidding.amount}, startDate is ${new Date(bidding.startDate).toLocaleDateString()}, endDate is ${new Date(bidding.endDate).toLocaleDateString()}` });
         }
 
         await session.commitTransaction();
         session.endSession();
-
         return res.status(200).json({ mssg: "Bidding status changed", bidding: bidding });
     } catch (err) {
         if (session) {
@@ -201,7 +240,7 @@ export const getBookingsAtCarIdController = async (req, res)=>{
     try{
         const bookings = await Bidding.aggregate([
             {$match: {'vehicle._id': objectIdCarId}},
-            {$match : {'status': 'approved'}}
+            { $match: { 'status': { $in: ['approved', 'started'] } } }
         ]);
         return res.status(200).json({bookings});
     }catch(err){
@@ -210,29 +249,91 @@ export const getBookingsAtCarIdController = async (req, res)=>{
     }
 }
 
-export const getAllBookingsAtOwnerIdController = async (req, res)=>{
-    const { page = 1, limit = 10, sort = {} } = req.query;
+/*
+    @description function to get the bookings by the owner id
+*/
+export const getAllBookingsAtOwnerIdController = async (req, res) => {
+
+    const { page = 1, limit = 10, sort = {}, bookingsType='' } = req.query;
+    console.log("ownerID wali bids" , sort, page, limit, bookingsType);
+    
     const userId = req.user._id;
     const pageNumber = parseInt(page);
     const limitNumber = parseInt(limit);
-    let finalSort = { ...sort, createdAt: -1 };
     const skip = (pageNumber - 1) * limitNumber;
-    try{
-        const aggregationPipeline = [
-            { $match: { "owner._id": userId } },
-            { $match: { "status": "approved" } },
-            { $sort: finalSort },
-            { $skip: skip },
-            { $limit: limitNumber }
-        ];
-        const bookings = await Bidding.aggregate(aggregationPipeline);
-        return res.status(200).json({ bookings });
-    }catch(err){
-        console.log(`error in the getAllBookingsAtOwnerIdController ${err.message}`);
-        return res.status(500).json({error: `error in the getAllBookingsAtOwnerIdController ${err.message}`});
-    }
-}
+    
 
+    const finalSort = { ...sort, createdAt: -1 };
+    
+    try {
+        let totalDocs = await Bidding.countDocuments({ "owner._id": userId, status: { $in: ['approved', 'started', 'ended','reviewed'] } });
+        const aggregationPipeline = [
+            {
+                $match: {
+                    "owner._id": userId,
+                    status: { $in: ['approved', 'started', 'ended','reviewed'] },
+                },
+            },
+            { $sort: finalSort }, 
+            { $skip: skip }, 
+            { $limit: limitNumber },
+        ];
+       
+        let filter;
+
+        if(bookingsType === 'started'){
+             filter =  {
+                $match :{
+                    'owner._id' : userId,
+                    status: 'started'
+                }
+            }
+            aggregationPipeline[0] = filter;
+        }
+
+        if(bookingsType === 'ended'){
+             filter =  {
+                $match :{
+                    'owner._id' : userId,
+                    status: 'ended'
+                }
+            }
+            aggregationPipeline[0] = filter;
+        }
+        if(bookingsType === 'reviewed'){
+             filter =  {
+                $match :{
+                    'owner._id' : userId,
+                    status: 'reviewed'
+                }
+            }
+            aggregationPipeline[0] = filter;
+        }
+        if(bookingsType === 'today'){
+            filter = {
+                $match : {
+                    'owner._id' : userId,
+                    'status': { $in: ['approved', 'started', 'ended'] },
+                    createdAt: { $gte: new Date(new Date().setHours(0, 0, 0)), $lt: new Date(new Date().setHours(23, 59, 59)) }
+                }
+            }
+        }
+
+        if(filter !== undefined){
+            totalDocs = await Bidding.countDocuments(filter.$match);
+        }
+
+
+        
+    
+
+        const bookings = await Bidding.aggregate(aggregationPipeline);
+        return res.status(200).json({ bookings, totalDocs });
+    } catch (err) {
+        console.error(`Error in the getAllBookingsAtOwnerIdController: ${err.message}`);
+        return res.status(500).json({ error: `Error in the getAllBookingsAtOwnerIdController: ${err.message}` });
+    }
+};
 
 export const getAllBookingsAtUserIdController = async (req, res)=>{
     console.log(req.query);
@@ -256,10 +357,14 @@ export const getAllBookingsAtUserIdController = async (req, res)=>{
     let finalSort = { ...sort, createdAt: -1 };
     const skip = (pageNumber - 1) * limitNumber;
     try{
-        const totalDocs = await Bidding.countDocuments({ "from._id": userId, status: "approved" });
+        const totalDocs = await Bidding.countDocuments({ "from._id": userId, status:  { $in: ['approved', 'started', 'ended'] } });
         const aggregationPipeline = [
             { $match: { "from._id": userId } },
-            { $match: { "status": "approved" } },
+            { 
+                $match: { 
+                    "status": { $in: ['approved', 'started', 'ended'] } 
+                } 
+            },
             { $sort: finalSort },
             { $skip: skip },
             { $limit: limitNumber }
@@ -272,26 +377,147 @@ export const getAllBookingsAtUserIdController = async (req, res)=>{
     }
 }
 
-export const getUserBookingHistory = async (req,res)=>{
-    const { page = 1, limit = 10, sort = {} } = req.query;
+export const getUserBookingHistory = async (req, res) => {
+    const { page = 1, limit = 10, sort = {}, startDate = '', search = '' } = req.query;
+    console.log(sort, page, limit, startDate);
     const userId = req.user._id;
-    const pageNumber = parseInt(page);
-    const limitNumber = parseInt(limit);
-    let finalSort = { ...sort, createdAt: -1 };
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+
+    // Validate page and limit
+    if (isNaN(pageNumber) || pageNumber <= 0) {
+        return res.status(400).json({ error: "Invalid page number. It must be a positive integer." });
+    }
+    if (isNaN(limitNumber) || limitNumber <= 0) {
+        return res.status(400).json({ error: "Invalid limit number. It must be a positive integer." });
+    }
+
     const skip = (pageNumber - 1) * limitNumber;
-    try{
-        const aggregationPipeline = [
-            { $match: { "from._id": userId } },
-            { $match: { "status": "reviewed"} },
+    const finalSort = { ...sort, createdAt: -1 };
+
+    try {
+        let aggregationPipeline = [];
+
+        // Count total documents for pagination
+        const totalDocs = await Bidding.countDocuments({ "from._id": userId, status: "reviewed" });
+        console.log(`Total documents: ${totalDocs}`);
+
+        // Add match stage for user and status
+        const matchStage = {
+            $match: {
+                "from._id": userId,
+                status: "reviewed",
+            },
+        };
+        aggregationPipeline.push(matchStage);
+
+
+        // Add pagination and sorting stages
+        aggregationPipeline.push(
             { $sort: finalSort },
             { $skip: skip },
             { $limit: limitNumber }
-        ];
+        );
+
+        console.log(aggregationPipeline);
+
+
+        // Execute aggregation pipeline
         const bookings = await Bidding.aggregate(aggregationPipeline);
-        return res.status(200).json({ bookings });
+        console.log(`Bookings fetched: ${bookings.length}`);
+
+        return res.status(200).json({ bookings, totalDocs });
+    } catch (err) {
+        console.error(`Error in getUserBookingHistory: ${err.message}`);
+        return res.status(500).json({ error: `Error in getUserBookingHistory: ${err.message}` });
+    }
+};
+export const getBookingAtBookingIdController = async (req, res)=>{
+    const bookingId = req.params.bookingId;
+    console.log(bookingId);
+    if(!bookingId){
+        return res.status(400).json({error: 'bookingId is required'});
+    }
+    try{
+        const booking = await Bidding.findById(bookingId);
+        return res.status(200).json({booking}); 
     }catch(err){
-        console.log(`error in the getUserBookingHistory ${err.message}`);
-        return res.status(500).json({error: `error in the getUserBookingHistory ${err.message}`});
+        console.log(`error in the getBookingAtBookingIdController ${err.message}`);
+        return res.status(500).json({error: `error in the getBookingAtBookingIdController ${err.message}`});
+    }
+}
+
+export const startBookingController = async (req, res)=>{
+
+    const bookingId = req.params.bookingId;
+    const { startOdometerValue } = req.body;
+    console.log(startOdometerValue);
+    if(startOdometerValue<0 ){
+       return res.status(400).json({error : "startOdometer value canno be less than 0 and cannot be empty" });
+    }
+    console.log(bookingId, startOdometerValue);
+    if(!bookingId){
+        return res.status(400).json({error: 'bookingId is required'});
+    }
+    try{
+        const booking = await Bidding.findByIdAndUpdate(
+            bookingId, 
+            { 
+              status: 'started', 
+              startOdometerValue: startOdometerValue 
+            }, 
+            { new: true }
+          );
+          console.log(booking);
+          generateAndSendMail({ subject: "Bidding Started", text: `Congrats Your booking on vehicle ${booking.vehicle.name} has been started by the owner ${booking.owner.username} at odometer value ${startOdometerValue} kms, the bid amount is ${booking.amount}, startDate is ${new Date(booking.startDate).toLocaleDateString()}, endDate is ${new Date(booking.endDate).toLocaleDateString()}` });
+          return res.status(200).json({ booking });
+    }catch(err){
+        console.log(`error in the startBookingController ${err.message}`);
+        return res.status(500).json({error: `error in the startBookingController ${err.message}`});
+    }
+}
+
+export const endBookingController = async (req, res)=>{
+    const bookingId = req.params.bookingId;
+    const { endOdometerValue } = req.body;
+    if(!bookingId){
+        return res.status(400).json({error: 'bookingId is required'});
+    }
+    try{
+        const booking = await Bidding.findByIdAndUpdate(
+            bookingId, 
+            { 
+              status: 'ended', 
+              endOdometerValue: endOdometerValue 
+            }, 
+            { new: true }
+          );
+          console.log(booking);
+          generateAndSendMail({ subject: "Bidding Ended", text: `Congrats Your booking on vehicle ${booking.vehicle.name} has been ended by the owner ${booking.owner.username} at odometer value ${endOdometerValue} kms, the bid amount is ${booking.amount}, startDate is ${new Date(booking.startDate).toLocaleDateString()}, endDate is ${new Date(booking.endDate).toLocaleDateString()}` });
+          return res.status(200).json({ booking });
+    }catch(err){
+        console.log(`error in the endBookingController ${err.message}`);
+        return res.status(500).json({error: `error in the endBookingController ${err.message}`});
+    }
+
+}
+
+export const reviewBookingController = async(req, res)=>{
+    const bookingId = req.params.bookingId;
+    try{
+        const booking = await Bidding.findByIdAndUpdate(
+            bookingId, 
+            { 
+              status: 'reviewed'
+            }, 
+            { new: true }
+          );
+
+          console.log("booking status changed");
+          return res.status(200).json({ booking });
+    }catch(err){
+        console.log(`error in the reviewBookingController ${err.message}`);
+        return res.status(500).json({error: `error in the reviewBookingController ${err.message}`});
     }
 
 }

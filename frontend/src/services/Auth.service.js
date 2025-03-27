@@ -1,6 +1,9 @@
 // auth service to interact with the database
 angular.module('myApp').service('AuthService', function($q, IDB, ApiService, $http,$state) {
-    // function to validate the user
+    /* function to validate the user
+    @params user
+    @returns promise
+    */
     this.validateUser = function(user) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // regex for email validation 
         if (user.password.trim() !== user.confirmPassword.trim()) {
@@ -24,7 +27,11 @@ angular.module('myApp').service('AuthService', function($q, IDB, ApiService, $ht
         return $q.resolve();
     };
 
-    // function logout a user on the server
+    /*
+    function to logout the user
+    @params none
+    @returns promise
+    */
     this.logout = function(){
         let deffered = $q.defer();
         $http.post(`${ApiService.baseURL}/api/auth/logout`, {}, { withCredentials: true }).then((res)=>{
@@ -39,7 +46,12 @@ angular.module('myApp').service('AuthService', function($q, IDB, ApiService, $ht
    
   
 
-     // function to login the user
+     /*
+    function to login the user
+    @params username, password
+    @returns promise
+    */
+
     this.loginUser = function(username, password) {
         const deferred = $q.defer();
         $http({method: "POST",
@@ -56,11 +68,16 @@ angular.module('myApp').service('AuthService', function($q, IDB, ApiService, $ht
             })
             .catch(function(error) {
                 console.error('Error logging in user:', error);
-                deferred.reject(`Error logging in user: ${error}`); // Reject the promise with the error
+                console.log(error.data.err);
+                deferred.reject(`Error logging in user: ${error.data.err}`); // Reject the promise with the error
             });
         return deferred.promise;
     };
-// function to register the user
+  /*
+    function to register the user
+    @params user
+    @returns promise
+    */
 this.registerUser = function(user) {
     console.log(user);
     let deffered = $q.defer();
@@ -79,8 +96,8 @@ this.registerUser = function(user) {
             return response.data; // Return the response data from the server
         })
         .catch(function(error) {
-            console.error('Error registering user:', error);
-            deffered.reject(error); // Reject the promise with the error
+            console.error('Error registering user:', error.data.message);
+            deffered.reject(error.data.message); 
         });
     return deffered.promise;
 };

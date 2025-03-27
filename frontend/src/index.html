@@ -12,12 +12,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/1.0.29/angular-ui-router.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.5.6/ui-bootstrap-tpls.min.js"></script>
 
+    <!--importing the socket.io cdn link-->
+
     <!-- Flatpickr CSS -->
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
     />
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <!--importing the socket.io client -->
+    <script src="/frontend/node_modules/socket.io-client/dist/socket.io.js"></script>
     <!--importing the async library -->
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/async/3.2.6/async.min.js"
@@ -42,6 +47,10 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <!--importing the font awesome-->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!--importing the node emailer -->
+    <script src="
+https://cdn.jsdelivr.net/npm/nodemailer@6.10.0/lib/nodemailer.min.js
+"></script>
 
 
     <!-- importing the app.js which has the main Controller for whole application -->
@@ -105,6 +114,9 @@
     <script src="/frontend/src/services/Bidding.service.js"></script>
     <!--importing the user service-->
     <script src="/frontend/src/services/User.service.js"></script>
+    <!--importing the chat service -->
+    <script src="/frontend/src/services/Chat.service.js"></script>
+
 
 
     
@@ -115,7 +127,7 @@
     <!--importing the factory for getting the isValid bidding details-->
     <script src="/frontend/src/factories/Bidding.js"></script>
     <!--importing the factory for car validation-->
-    <script src="/frontend/src/factories/carValidations.js" ></script>
+    <script src="/frontend/src/factories/Car.js"></script>
     <!--importing the factory for review validation and other functions-->
     <script src="/frontend/src/factories/Review.js"></script>
     <!--importing the factory for the Buttons-->

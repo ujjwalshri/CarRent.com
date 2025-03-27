@@ -10,7 +10,7 @@ export const addCarController = async (req, res) => {
     const {
         name, company, modelYear, price, color, mileage, fuelType, category, city, location
     } = req.body;
-    
+    console.log(req.files);
     try {
         const user = await User.findById(req.user._id);
         const images = req.files.map(file => ({
@@ -33,9 +33,6 @@ export const addCarController = async (req, res) => {
         const isValidCar = createCarValidation.validate(carData);
         if(isValidCar.error){
             return res.status(400).json({error: isValidCar.error.details[0].message});
-        }
-        if(user.isSeller ){
-
         }
 
         const newCar = new Vehicle({
@@ -78,8 +75,6 @@ export const addCarController = async (req, res) => {
 @description: function to get all the approved cars from the database
 */
 export const getAllCarController = async (req, res) => {
-
-
     let { search = '', priceRange, city, category, limit = 6, skip = 0 } = req.query;
     skip = parseInt(skip);
     console.log('skip', skip);
@@ -110,6 +105,7 @@ export const getAllCarController = async (req, res) => {
         aggregationPipeline.push({
             $match: {
                 status: 'approved',
+                deleted: false,
             },
         });
 
@@ -144,7 +140,7 @@ export const getAllCarController = async (req, res) => {
         
         aggregationPipeline.push(
             { $skip: parseInt(skip) },
-            { $limit: parseInt(limit) } 
+            { $limit: parseInt(limit) }
         );
 
        
@@ -205,7 +201,10 @@ export const toggleVehicleStatusController = async (req, res) => {
 export const updateVehicleController = async (req, res)=>{
      const{ id }= req.params;
      console.log(id);
-     const {price, mileage} = req.body;
+     const {price} = req.body;
+     if(price<0 || price<500 || price>10000){
+            return res.status(400).json({message: 'Invalid price range'});
+     }
      console.log(req.body);
         try{
             if(!Types.ObjectId.isValid(id)){
@@ -213,7 +212,7 @@ export const updateVehicleController = async (req, res)=>{
             }
             await Vehicle.updateOne(
                 { _id: id }, 
-                { mileage: mileage, price: price } 
+                { price: price } 
             );
             res.status(200).json({ message: 'Car updated successfully' });
         }catch(err){
@@ -243,16 +242,45 @@ export const getVehicleByIdController = async (req, res) => {
 @description: function to getAllCarsByUser from the database
 */
 export const getAllCarsByUser = async (req, res) => {
-    const { carStatus } = req.query;
+    const { carStatus, skip=0, limit=5 } = req.query;
+    console.log(typeof(carStatus));
     
     try {
 
         const query = { 'owner._id': req.user._id };
-        if (carStatus !== 'all') {
-            query.status = carStatus; 
-        }
 
-        const cars = await Vehicle.find(query);
+        if (carStatus !== 'all') {
+            query.status = carStatus;
+        }
+        
+        const cars = await Vehicle.aggregate([
+           
+            {
+                $match: query
+            },
+          
+            {
+                $skip: parseInt(skip)
+            },
+
+            {
+                $limit: parseInt(limit)
+            }
+        ]);
+        console.log([
+           
+            {
+                $match: query
+            },
+          
+            {
+                $skip: parseInt(skip)
+            },
+
+            {
+                $limit: parseInt(limit)
+            }
+        ]);
      
         return res.status(200).json(cars);
     } catch (error) {
@@ -281,3 +309,16 @@ export const getPendingCars = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+export const listUnlistCarController = async (req, res)=>{
+    const {vehicleId} = req.params;
+    console.log(vehicleId);
+    try{
+        const vehicle = await Vehicle.findByIdAndUpdate(vehicleId, {deleted: !deleted});
+        res.status(200).json({message: 'Car updated successfully', vehicle});
+    }catch(err){
+        console.log(`error in the listUnlistCarController ${err.message}`);
+        res.status(500).json({message: `error in the listUnlistCarController ${err.message}`});
+    }
+
+}
