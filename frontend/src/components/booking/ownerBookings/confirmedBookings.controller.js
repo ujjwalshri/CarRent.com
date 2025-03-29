@@ -2,9 +2,9 @@ angular
   .module("myApp")
   .controller(
     "confirmedBookingsCtrl",
-    function ($scope, $state, IDB, Booking, BackButton, BiddingService, ToastService) {
+    function ($scope, $state, IDB, BiddingFactory, BackButton, BiddingService, ToastService, Booking) {
       $scope.back = BackButton.back; // back function to go back to the previous page
-      $scope.calculateBookingPrice = Booking.calculate; // function to calculate the booking price from the booking factory
+      $scope.calculateBookingPrice = BiddingFactory.calculate; // function to calculate the booking price from the booking factory
       $scope.todayBooking = Booking.todayBookingCalculator; // function to check if the booking is for today from the booking factory 
       $scope.currentPage = 1; // Initialize currentPage
       $scope.itemsPerPage = 6; // Initialize itemsPerPage
@@ -44,8 +44,6 @@ angular
         
       }
 
-
-
       // Pagination logic starts here
       $scope.totalPages = Math.ceil($scope.allBookings.length / $scope.itemsPerPage); // Initialize totalPages
       
@@ -81,8 +79,12 @@ angular
       function to handle the opening on the manage booking page routes the user to the manage booking page with the booking id
       */
       $scope.openManageBooking = (booking) => {
-        $state.go("manageBookings", { id: booking._id }); // using $state to navigate to the manage booking page with the booking id
-       };
+        if (!booking || !booking._id) {
+          ToastService.error("Invalid booking data");
+          return;
+        }
+        $state.go("manageBookings", { id: booking._id });
+      };
      /* 
      function to reset the filter
      */

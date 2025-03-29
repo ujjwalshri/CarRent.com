@@ -10,6 +10,7 @@ export const addCarController = async (req, res) => {
     const {
         name, company, modelYear, price, color, mileage, fuelType, category, city, location
     } = req.body;
+    console.log(req.body);
     console.log(req.files);
     try {
         const user = await User.findById(req.user._id);

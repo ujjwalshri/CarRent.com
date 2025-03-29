@@ -31,22 +31,39 @@ const io = new Server(server, {
 
  // Store the Socket.IO instance in the app for use in controllers
  app.set('io', io);
-
+ let onlineUsers = [];
  io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
+    socket.on('userOnline', (username) => {
+        if(!onlineUsers.includes(username)){
+            onlineUsers.push(username);
+            console.log(onlineUsers);
+            console.log(`User ${username} is online`);
+            
+        }
+        socket.emit('onlineUsers', onlineUsers);
+    });
+
+    socket.on('userOffline', (username) => {
+        onlineUsers = onlineUsers.filter(user => user !== username);
+        console.log(onlineUsers);
+        socket.emit('onlineUsers', onlineUsers);
+    });
 
     // Join a specific chat room
     socket.on('joinedConversation', (conversationId) => {
+      
       socket.join(conversationId);
       console.log(`User joined chat: ${conversationId}`);
     });
 
+
     
 
-    // Handle disconnection
-    socket.on('disconnect', () => {
-      console.log('A user disconnected:', socket.id);
-    });
+    // // Handle disconnection
+    // socket.on('disconnect', (conversationId) => {
+    //   console.log(`User disconnected: ${conversationId}`);
+    // });
   });
 
 dotenv.config(); // to use the .env file

@@ -35,7 +35,7 @@
             <tbody>
                 <tr ng-repeat="booking in bookings" class="text-center">
                     <td>{{$index + 1}}</td>
-                    <td>${{calculateBookingPrice(booking.startDate, booking.endDate, booking.amount)}}</td>
+                    <td>${{booking.calculate()}}</td>
                     <td>{{booking.startDate | date: 'yyyy-MM-dd'}}</td>
                     <td>{{booking.endDate | date: 'yyyy-MM-dd'}}</td>
                     <td>{{booking.owner.firstName}} {{booking.owner.lastName}}</td>
@@ -43,7 +43,7 @@
                     <td>{{booking.vehicle.company}} {{booking.vehicle.name}}</td>
                     <td>{{booking.vehicle.fuelType}}</td>
                     <td>
-                        <button class="btn btn-primary" ng-click="downloadBillAsPDF(booking)">Download Invoice</button>
+                        <button class="btn btn-primary" ng-click="booking.generatePDF()">Download Invoice</button>
                     </td>
                 </tr>
             </tbody>

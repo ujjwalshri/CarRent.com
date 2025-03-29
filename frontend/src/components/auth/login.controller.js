@@ -9,7 +9,7 @@ angular.module("myApp").controller("loginCtrl", function($scope, $state, $rootSc
     $scope.login = function() {
         // Add any additional validation if needed
         if (!$scope.username || !$scope.password) {
-            alert("Please enter username and password");
+            ToastService.error("Please enter username and password");
             return;
         }  
        // calling auth service to loginUser user

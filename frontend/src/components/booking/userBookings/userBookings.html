@@ -38,7 +38,7 @@
                 <tr ng-repeat="booking in bookings">
                     <td>{{$index + 1}}</td>
                     <td>{{booking._id}}</td>
-                    <td><strong>${{calculateBookingPrice(booking.startDate, booking.endDate, booking.amount)}}</strong></td>
+                    <td><strong>${{booking.calculate()}}</strong></td>
                     <td>{{booking.startDate | date: 'yyyy-MM-dd'}}</td>
                     <td>{{booking.endDate | date: 'yyyy-MM-dd'}}</td>
                     <td>

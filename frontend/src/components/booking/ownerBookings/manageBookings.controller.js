@@ -1,7 +1,7 @@
-angular.module('myApp').controller('manageBookingsCtrl', function($scope, $stateParams, IDB, Booking,$state, ToastService,BackButton, BiddingService) {
+angular.module('myApp').controller('manageBookingsCtrl', function($scope, $stateParams, IDB, BiddingFactory,$state, ToastService,BackButton, BiddingService) {
     $scope.back = BackButton.back; // back function to go back to the previous page
     const bookingID = $stateParams.id; // get the booking id from the state params
-    $scope.calculateBookingPrice = Booking.calculate; // function to calculate the booking price from the booking factory
+    $scope.calculateBookingPrice = BiddingFactory.calculate; // function to calculate the booking price from the booking factory
     $scope.startOdometerValue = 0; // initial start odometer value
    
    // init function to run when the page mounts
@@ -11,7 +11,8 @@ angular.module('myApp').controller('manageBookingsCtrl', function($scope, $state
         $scope.ended = false; // initial end status
         console.log(bookingID);
         BiddingService.getBid(bookingID).then((booking) => { // get the booking by the booking id
-            $scope.booking = booking.booking;
+            $scope.booking = BiddingFactory.createBid(booking.booking, false); 
+            console.log($scope.booking);    
             $scope.started = $scope.booking.status === 'started'; // set started to the booking started status
             console.log($scope.booking);
             $scope.booking.startDate = new Date($scope.booking.startDate); // convert startDate to Date object
@@ -22,45 +23,7 @@ angular.module('myApp').controller('manageBookingsCtrl', function($scope, $state
             ToastService.error(`Error fetching the booking ${err}`); // show error message if there is an error
         });
     };
-    // function create a pdf of the booking details when the user clicks on the download invoice button
-    $scope.downloadBillAsPDF = () => {
-        var docDefinition = { // defining the document structure for the pdf
-            content: [
-                { text: 'Booking Details', style: 'header' },
-                { text: 'Booking ID: ' + $scope.booking._id },
-                { text: 'Car: ' + $scope.booking.vehicle.company + ' ' + $scope.booking.vehicle.name + ' ' + $scope.booking.vehicle.modelYear },
-                { text: 'Owner: ' + $scope.booking.owner.username },
-                { text: 'Name: ' + $scope.booking.owner.firstName + ' ' + $scope.booking.owner.lastName },
-                {  text: 'Start Date: ' + $scope.booking.startDate.toLocaleDateString() },
-                { text: 'End Date: ' + $scope.booking.endDate.toLocaleDateString() },
-                { text: 'Start Odometer Value: ' + $scope.booking.startOdometerValue },
-                { text: 'per day price: ' + $scope.booking.amount + 'per day' },
-                { text: 'End Odometer Value: ' + $scope.booking.endOdometerValue },
-                {
-                    text: 'Total Amount: ' + 
-                          ($scope.calculateBookingPrice($scope.booking.startDate, $scope.booking.endDate, $scope.booking.amount) + 
-                          ($scope.booking.endOdometerValue - $scope.booking.startOdometerValue > 300 
-                            ? (($scope.booking.endOdometerValue - $scope.booking.startOdometerValue) - 300) * 10
-                            : 0)) + '$'
-                },
-                {
-                    text: 'Fine applied on additional kms: ' + 
-                          ($scope.booking.endOdometerValue - $scope.booking.startOdometerValue > 300 
-                            ? ((($scope.booking.endOdometerValue - $scope.booking.startOdometerValue) - 300)) * 10 
-                            : 0) + ''
-                }
-            ],
-            styles: {
-                header: {
-                    fontSize: 30,
-                    bold: true,
-                    margin: [0, 10, 0, 10]
-                }
-            }
-        };
-        pdfMake.createPdf(docDefinition).print(); // create the pdf and print it using the print function
-        
-    };
+  
     // function to start the trip when the user clicks on the start trip button
     $scope.startTrip = () => {
       

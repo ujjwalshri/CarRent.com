@@ -10,8 +10,9 @@ app.controller("appCtrl", function($scope,$rootScope, ToastService,AuthService, 
             if(user.isSeller){
                 $rootScope.isSeller = true;
             }
-        }
-    )
+        }).catch((err)=>{
+            $rootScope.isLogged = false;
+        })
     };
 
     //logout function to remove the user from the session storage

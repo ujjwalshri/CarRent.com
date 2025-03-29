@@ -113,6 +113,63 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
   // Create a new chart and store its instance
   this.chartInstances[htmlElementId] = new Chart(ctx, chartConfig);
 };
+ /**
+     * Creates a line chart with customizable options
+     * @param {string} canvasId - The ID of the canvas element
+     * @param {Object} chartData - The data configuration object
+     * @param {string[]} chartData.labels - Array of labels for the x-axis
+     * @param {number[]} chartData.data - Array of data points
+     * @param {string} chartData.title - Chart title
+     * @param {Object} [chartData.colors] - Optional custom colors
+     * @param {string} [chartData.label] - Dataset label
+     * @returns {Chart} Chart instance
+     */
+ this.createLineChart = function(canvasId, chartData) {
+  // Set default colors if not provided
+  const colors = chartData.colors || {
+      backgroundColor: [
+          'rgba(255, 99, 132, 0.2)',
+          'rgba(255, 206, 86, 0.2)',
+          'rgba(54, 162, 235, 0.2)'
+      ],
+      borderColor: [
+          'rgba(255, 99, 132, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(54, 162, 235, 1)'
+      ]
+  };
+
+  // Get canvas context
+  var ctx = document.getElementById(canvasId).getContext("2d");
+
+  // Create and return chart
+  return new Chart(ctx, {
+      type: 'line',
+      data: {
+          labels: chartData.labels,
+          datasets: [{
+              label: chartData.label || 'Data',
+              data: chartData.data,
+              backgroundColor: colors.backgroundColor,
+              borderColor: colors.borderColor,
+              borderWidth: 1
+          }]
+      },
+      options: {
+          title: {
+              display: true,
+              text: chartData.title
+          },
+          scales: {
+              yAxes: [{
+                  ticks: {
+                      beginAtZero: true
+                  }
+              }]
+          }
+      }
+  });
+};
     /*
     function to get the car description
     @params params
@@ -487,4 +544,61 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
       return deffered.promise;
 
     }
+    /**
+     * Creates a line chart with customizable options
+     * @param {string} canvasId - The ID of the canvas element
+     * @param {Object} chartData - The data configuration object
+     * @param {string[]} chartData.labels - Array of labels for the x-axis
+     * @param {number[]} chartData.data - Array of data points
+     * @param {string} chartData.title - Chart title
+     * @param {Object} [chartData.colors] - Optional custom colors
+     * @param {string} [chartData.label] - Dataset label
+     * @returns {Chart} Chart instance
+     */
+    this.createLineChart = function(canvasId, chartData) {
+        // Set default colors if not provided
+        const colors = chartData.colors || {
+            backgroundColor: [
+                'rgba(255, 99, 132, 0.2)',
+                'rgba(255, 206, 86, 0.2)',
+                'rgba(54, 162, 235, 0.2)'
+            ],
+            borderColor: [
+                'rgba(255, 99, 132, 1)',
+                'rgba(255, 206, 86, 1)',
+                'rgba(54, 162, 235, 1)'
+            ]
+        };
+
+        // Get canvas context
+        var ctx = document.getElementById(canvasId).getContext("2d");
+
+        // Create and return chart
+        return new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: chartData.label || 'Data',
+                    data: chartData.data,
+                    backgroundColor: colors.backgroundColor,
+                    borderColor: colors.borderColor,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                title: {
+                    display: true,
+                    text: chartData.title
+                },
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        });
+    };
 })

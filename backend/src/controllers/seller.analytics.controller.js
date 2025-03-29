@@ -36,21 +36,9 @@ export const getCarDescriptionController = async (req, res) => {
         if (startDate && endDate) {
             aggregationPipeline.unshift({
                 $match: {
-                    $expr: {
-                        $and: [
-                            {
-                                $gte: [
-                                    { $dateFromParts: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" }, day: { $dayOfMonth: "$createdAt" } } },
-                                    new Date(startDate)
-                                ]
-                            },
-                            {
-                                $lte: [
-                                    { $dateFromParts: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" }, day: { $dayOfMonth: "$createdAt" } } },
-                                    new Date(endDate)
-                                ]
-                            }
-                        ]
+                    createdAt: {
+                        $gte: new Date(startDate),
+                        $lte: new Date(endDate)
                     }
                 }
             });
@@ -100,21 +88,9 @@ export const getTop3MostPopularCarsController = async (req, res) => {
         if (startDate && endDate) {
             aggregationPipeline.unshift({
                 $match: {
-                    $expr: {
-                        $and: [
-                            {
-                                $gte: [
-                                    { $dateFromParts: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" }, day: { $dayOfMonth: "$createdAt" } } },
-                                    new Date(startDate)
-                                ]
-                            },
-                            {
-                                $lte: [
-                                    { $dateFromParts: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" }, day: { $dayOfMonth: "$createdAt" } } },
-                                    new Date(endDate)
-                                ]
-                            }
-                        ]
+                    createdAt: {
+                        $gte: new Date(startDate),
+                        $lte: new Date(endDate)
                     }
                 }
             });
@@ -158,21 +134,9 @@ export const numberOfBiddingsPerLocationController = async (req, res) => {
         if (startDate && endDate) {
             aggregationPipeline.unshift({
                 $match: {
-                    $expr: {
-                        $and: [
-                            {
-                                $gte: [
-                                    { $dateFromParts: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" }, day: { $dayOfMonth: "$createdAt" } } },
-                                    new Date(startDate)
-                                ]
-                            },
-                            {
-                                $lte: [
-                                    { $dateFromParts: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" }, day: { $dayOfMonth: "$createdAt" } } },
-                                    new Date(endDate)
-                                ]
-                            }
-                        ]
+                    createdAt: {
+                        $gte: new Date(startDate),
+                        $lte: new Date(endDate)
                     }
                 }
             });
@@ -219,21 +183,9 @@ export const getTotalCarsAddedController = async (req, res) => {
         if (startDate && endDate) {
             aggregationPipeline.unshift({
                 $match: {
-                    $expr: {
-                        $and: [
-                            {
-                                $gte: [
-                                    { $dateFromParts: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" }, day: { $dayOfMonth: "$createdAt" } } },
-                                    new Date(startDate)
-                                ]
-                            },
-                            {
-                                $lte: [
-                                    { $dateFromParts: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" }, day: { $dayOfMonth: "$createdAt" } } },
-                                    new Date(endDate)
-                                ]
-                            }
-                        ]
+                    createdAt: {
+                        $gte: new Date(startDate),
+                        $lte: new Date(endDate)
                     }
                 }
             });
@@ -278,21 +230,9 @@ export const numberOfBidsOnMyCarsController = async (req, res) => {
         if (startDate && endDate) {
             aggregationPipeline.unshift({
                 $match: {
-                    $expr: {
-                        $and: [
-                            {
-                                $gte: [
-                                    { $dateFromParts: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" }, day: { $dayOfMonth: "$createdAt" } } },
-                                    new Date(startDate)
-                                ]
-                            },
-                            {
-                                $lte: [
-                                    { $dateFromParts: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" }, day: { $dayOfMonth: "$createdAt" } } },
-                                    new Date(endDate)
-                                ]
-                            }
-                        ]
+                    createdAt: {
+                        $gte: new Date(startDate),
+                        $lte: new Date(endDate)
                     }
                 }
             });
@@ -334,21 +274,9 @@ export const getCarCountByFuelTypeController = async (req, res) => {
         if (startDate && endDate) {
             aggregationPipeline.unshift({
                 $match: {
-                    $expr: {
-                        $and: [
-                            {
-                                $gte: [
-                                    { $dateFromParts: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" }, day: { $dayOfMonth: "$createdAt" } } },
-                                    new Date(startDate)
-                                ]
-                            },
-                            {
-                                $lte: [
-                                    { $dateFromParts: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" }, day: { $dayOfMonth: "$createdAt" } } },
-                                    new Date(endDate)
-                                ]
-                            }
-                        ]
+                    createdAt: {
+                        $gte: new Date(startDate),
+                        $lte: new Date(endDate)
                     }
                 }
             });

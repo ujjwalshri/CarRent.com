@@ -47,30 +47,16 @@ angular
           RouteProtection.getLoggedinUser(), 
         ])
           .then((results) => {
-            console.log(results);
+            $scope.blockedDates = BiddingFactory.calculateBlockedDates(results);
+            $scope.car = results[0].data; // set the car to the first of result
             $scope.LoggedinUser = results[2];
-            helper(results); // function to calculate the average rating and blocked dates of the car
             initializeFlatpickr(); // initialize the flatpickr date range picker
           })
           .catch((error) => {
             ToastService.error(`error fetching the car data ${error}`); // error toast
           });
       }
-      /*
-          Helper function to calculate the average rating and blocked dates of the car
-      */
-      function helper(results) {
-        $scope.car = results[0].data; // set the car to the first of result
-        // function to get the dates between the start and end date to block the dates
-        $scope.blockedDates = results[1]
-          .filter(
-            (bid) => bid.status === "approved" || bid.status === "reviewed"
-          )
-          .flatMap((bid) =>
-            getDatesBetween(new Date(bid.startDate), new Date(bid.endDate))
-          );
-      }
-
+   
       // initialize the flatpickr date range picker
       function initializeFlatpickr() {
         // using timeout to make sure the angular updates the views after we have the blocked dates
@@ -139,11 +125,11 @@ angular
 
           let bidding = {};
           console.log($scope.amount);
-          const bid = BiddingFactory.createBid($scope.amount, $scope.startDate, $scope.endDate, ownerObj);
+          const bid = BiddingFactory.createBid({amount: $scope.amount, startDate:$scope.startDate, endDate:$scope.endDate, owner:ownerObj});
           console.log("bidding factory's");
           console.log(bid);
           if(bid.error){
-            ToastService.error(bid.message);
+            ToastService.error(bid.error);
             $scope.isLoading = false;
             return;
           }else{
@@ -173,16 +159,5 @@ angular
           ToastService.error(`Error creating the conversation ${err}`);
         })
       };
-
-      // function to get dates between a start and end date
-      function getDatesBetween(startDate, endDate) {
-        let dates = [];
-        let currentDate = new Date(startDate);
-        while (currentDate <= endDate) {
-          dates.push(new Date(currentDate));
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
-        return dates;
-      }
     }
   );

@@ -1,0 +1,53 @@
+<!-- Bookings Modal Content -->
+<div class="modal-header">
+  <h3 class="modal-title">Bookings for {{ selectedCar.name }}</h3>
+  <button type="button" class="close" ng-click="dismiss()">&times;</button>
+</div>
+<div class="modal-body">
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Booking ID</th>
+          <th>User</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Status</th>
+          <th>Total Payable Price</th>
+
+          <th>amount per day</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="booking in carBookings">
+          <td>{{ booking._id }}</td>
+          <td>{{ booking.from.firstName }} {{ booking.from.lastName }}</td>
+          <td>{{ booking.startDate | date:'MMM d, yyyy' }}</td>
+          <td>{{ booking.endDate | date:'MMM d, yyyy' }}</td>
+          <td>
+            <span class="label" 
+                  ng-class="{
+                      'label-warning': booking.status === 'pending',
+                      'label-success': booking.status === 'approved',
+                      'label-info': booking.status === 'started',
+                      'label-primary': booking.status === 'ended',
+                      'label-default': booking.status === 'reviewed'
+                  }">
+              {{ booking.status }}
+            </span>
+          </td>
+          <td>${{ booking.calculate() }}</td>
+        
+          <td ng-if="!booking.endOdometerValue">-</td>
+          <td>${{ booking.amount }}</td>
+        </tr>
+        <tr ng-if="carBookings.length === 0">
+          <td colspan="7" class="text-center">No bookings found for this car</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-default" ng-click="dismiss()">Close</button>
+</div>

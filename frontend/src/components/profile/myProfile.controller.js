@@ -1,5 +1,4 @@
-
-angular.module("myApp").controller("myProfileCtrl", function($scope, $state, IDB, ToastService, $uibModal, BackButton, UserService, CarService) {
+angular.module("myApp").controller("myProfileCtrl", function($scope, $state, IDB, ToastService, $uibModal, BackButton, UserService, CarService, BiddingService) {
 
     $scope.back = BackButton.back; // back function to go back to the previous page
     $scope.isSeller = true; // setting the isSeller to true
@@ -7,10 +6,10 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, IDB
     $scope.deleted = false; // deleted false intially
     $scope.activeButton = 'all'; // setting the active button to all
     $scope.selectedCarPrice = { price: 0 }; // setting the selected car price to 0
-    $scope.skip = 0;
-    $scope.limit = 5;
-    $scope.hasMoreCars = true;
-    $scope.status;
+    $scope.skip = 0; // setting the skip to 0
+    $scope.limit = 5; // setting the limit to 5
+    $scope.hasMoreCars = true; // setting the hasMoreCars to true
+    $scope.status; // setting the status to undefined
 
     
     /*
@@ -100,6 +99,8 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, IDB
             scope: $scope
         });
     };
+
+    
    // function to update the price of the car
     $scope.updatePrice = () => {
         const carId = $scope.selectedCarId;
@@ -167,11 +168,19 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, IDB
         fetchCars('all');
     };
 
-
-   
-   
-
     $scope.redirectToCarPage = (carID) => {
         $state.go("singleCar", { id: carID });
+    };
+
+    $scope.viewCarBookings = function(car) {
+        var modalInstance = $uibModal.open({
+            templateUrl: 'components/profile/bookingsModal.html',
+            controller: 'BookingsModalCtrl',
+            resolve: {
+                selectedCar: function() {
+                    return car;
+                }
+            }
+        });
     };
 });

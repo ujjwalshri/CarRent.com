@@ -35,11 +35,11 @@
                     <td>{{ booking.vehicle.name }}</td>
                     <td>{{ booking.vehicle.modelYear }}</td>
                     <td>{{ booking.vehicle.fuelType }}</td>
-                    <td>${{ booking.vehicle.price }}</td>
+                    <td>${{ booking.amount }}</td>
                     <td>{{ booking.startDate | date: 'yyyy-MM-dd' }}</td>
                     <td>{{ booking.endDate | date: 'yyyy-MM-dd' }}</td>
                     <td class="font-weight-bold text-success">
-                        ${{ calculateBookingPrice(booking.startDate, booking.endDate, booking.amount) }}
+                        ${{ booking.calculate() }}
                     </td>
                     <td>{{ booking.owner.username }}</td>
                     <td>{{ booking.owner.email }}</td>

@@ -1,7 +1,5 @@
-angular.module('myApp').controller('myBiddingsCtrl', function($scope, $state, IDB, Booking, BackButton, BiddingService, ToastService) {
+angular.module('myApp').controller('myBiddingsCtrl', function($scope, $state, IDB, BiddingFactory, BackButton, BiddingService, ToastService) {
     $scope.back = BackButton.back; // back function to go back to the previous page
-    $scope.calculateBookingPrice = Booking.calculate; // function to calculate the booking price from the booking factory
-    const loggedInUser = JSON.parse(sessionStorage.getItem('user')); // retrieving the logged in user from the session storage
     $scope.biddingStatus = 'pending'; // setting the bidding status to an empty string
     $scope.currentPage = 1; // setting the current page to 1
     $scope.itemsPerPage = 6; // setting the items per page to 2
@@ -23,6 +21,10 @@ angular.module('myApp').controller('myBiddingsCtrl', function($scope, $state, ID
         BiddingService.getBiddingsForUser(params)
             .then((biddings) => {
                 $scope.bookings = biddings.bids || [];
+                $scope.bookings = biddings.bids.map((bid) => {
+                   return BiddingFactory.createBid(bid, false);
+                })
+                console.log($scope.bookings);
                 $scope.totalItems = biddings.totalDocs || 0; 
                 
             })

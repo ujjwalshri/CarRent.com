@@ -228,8 +228,22 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
         });
         return deferred.promise;
       }
-    this.validateCar = (car)=>{
-        
-
+      
+    /*
+    function to get car recommendations for user
+    @params none
+    @returns promise
+    */
+    this.getCarRecommendationsForUser = ()=>{
+        let deferred = $q.defer();
+        $http.get(`${ApiService.baseURL}/api/bidding/getCarRecommendation`, { withCredentials: true })
+        .then((res)=>{
+            deferred.resolve(res.data);
+        })
+        .catch((error)=>{
+            deferred.reject(error);
+        });
+        return deferred.promise;
     }
+    
 });

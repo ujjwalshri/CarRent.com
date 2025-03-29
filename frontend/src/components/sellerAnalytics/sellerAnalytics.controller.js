@@ -100,7 +100,24 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope,$q, ID
     @params none
     @returns none
     */
+    // const chartData = {
+    //     labels: ['You', 'Other Sellers'],
+    //     data: [$scope.myBids, $scope.otherSellersAvgBids],
+    //     title: "Your biddings in the last 7 days vs other sellers average",
+    //     label: "Number of bids"
+    // };
+    
+    
+
+
+
     function createMyBiddingsVsOtherSellersAvgChart(){
+        const chartData = {
+            labels: ['You', 'Other Sellers'],
+            data: [$scope.myBids, $scope.otherSellersAvgBids],
+            title: "Your biddings in the last 7 days vs other sellers average",
+            label: "Number of bids"
+        };
         // create a line chart with two lines one for the user and the other for the average of other sellers
         const labels = ['You', 'Other Sellers'];
         const data = [$scope.myBids, $scope.otherSellersAvgBids];

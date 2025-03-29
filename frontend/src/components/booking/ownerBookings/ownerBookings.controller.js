@@ -2,12 +2,12 @@ angular
   .module("myApp")
   .controller(
     "ownerBookingsCtrl",
-    function ($scope, $state, IDB, Booking, ToastService, BackButton, BiddingService) {
+    function ($scope, $state, IDB, BiddingFactory, ToastService, BackButton, BiddingService) {
       $scope.back = BackButton.back;  // back function to go back to the previous page
       $scope.bookings = [];   // array to hold the bookings of the logged in user
       $scope.bookingsType = { type: "pending" };  // variable to hold the booking type
       $scope.searchCarName = "";  // variable to hold the search car name
-      $scope.calculateBookingPrice = Booking.calculate; // function to calculate the booking price from the booking factory
+      $scope.calculateBookingPrice = BiddingFactory.calculate; // function to calculate the booking price from the booking factory
       $scope.sortBy=""; // variable to hold the sort by value
       $scope.currentPage = 1; // setting the current page to 1
       $scope.itemsPerPage = 6; // setting the items per page to 6

@@ -1,9 +1,9 @@
 angular
   .module("myApp")
-  .controller("userBookingsCtrl", function ($scope, IDB, Booking, ToastService, Review, BackButton, BiddingService, CarService,$state) {
+  .controller("userBookingsCtrl", function ($scope, IDB, BiddingFactory, ToastService, Review, BackButton, BiddingService, CarService,$state) {
     $scope.back = BackButton.back; // back function to go back to the previous page
     $scope.bookings = []; // array to hold the bookings of the logged in user
-    $scope.calculateBookingPrice = Booking.calculate; // function to calculate the booking price from the booking factory
+    $scope.calculateBookingPrice = BiddingFactory.calculate; // function to calculate the booking price from the booking factory
     $scope.currentPage = 1; // setting the current page to 1
     $scope.itemsPerPage = 6; // setting the items per page to 5
     $scope.isLoading = false;
@@ -52,7 +52,9 @@ angular
       $scope.isLoading = true;
       BiddingService.getBookingsForUser(params).then((biddings) => {
         console.log(biddings); 
-        $scope.bookings = $scope.bookings.concat(biddings.bookings);
+        $scope.bookings = $scope.bookings.concat(biddings.bookings.map((booking)=>{
+          return BiddingFactory.createBid(booking, false);
+        }));
         $scope.hasMoreData = biddings.totalDocs > $scope.bookings.length;
         console.log(biddings.totalDocs);
         $scope.totalPages = Math.ceil(biddings.totalDocs/$scope.itemsPerPage);

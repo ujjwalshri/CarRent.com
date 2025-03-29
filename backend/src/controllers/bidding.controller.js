@@ -155,7 +155,7 @@ export const getBidForOwnerController = async (req, res) => {
     const {  page = 1, limit = 10, sort={}} = req.query;
     console.log(sort, page, limit);
     const status = req.query.status || 'pending';
-    console.log(status, page, limit);
+    
     const pageNumber = parseInt(page);
     const limitNumber = parseInt(limit);
     let finalSort = {...sort, createdAt: -1};
@@ -239,6 +239,7 @@ export const getBookingsAtCarIdController = async (req, res)=>{
     const objectIdCarId = new mongoose.Types.ObjectId(String(carId)); 
     try{
         const bookings = await Bidding.aggregate([
+            {$match : { 'owner._id': req.user._id}},
             {$match: {'vehicle._id': objectIdCarId}},
             { $match: { 'status': { $in: ['approved', 'started'] } } }
         ]);
@@ -520,4 +521,57 @@ export const reviewBookingController = async(req, res)=>{
         return res.status(500).json({error: `error in the reviewBookingController ${err.message}`});
     }
 
+}
+
+export const bookingRecommendationController = async (req, res) => {
+    const userCity = req.user.city;
+    try {
+        const recommendations = await Bidding.aggregate([
+            {
+                $match: {
+                    status: {$in : ['approved', 'started', 'ended', 'reviewed']},
+                    'vehicle.city': userCity
+                }
+            },
+            {
+                $group: {
+                    _id: "$vehicle._id", // Group by vehicle ID
+                    count: { $sum: 1 },
+                    vehicleBasic: { $first: "$vehicle" } // Basic vehicle info from bidding
+                }
+            },
+            {
+                $sort: { count: -1 }
+            },
+            {
+                $limit: 3
+            },
+            {
+                // Lookup complete vehicle details from Vehicle collection
+                $lookup: {
+                    from: "vehicles", // MongoDB collection name (likely lowercase)
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "vehicleComplete"
+                }
+            },
+            {
+                $unwind: "$vehicleComplete" // Flatten the lookup array
+            },
+            {
+                $project: {
+                    _id: 1,
+                    vehicleId: "$_id",
+                    vehicle: "$vehicleComplete", // Use the complete vehicle document
+                    vehicleImages: "$vehicleComplete.vehicleImages", // Get images specifically
+                    count: 1
+                }
+            }
+        ]);
+     
+        return res.status(200).json({ recommendations });
+    } catch(err) {
+        console.log(`error in the bookingRecommendationController ${err.message}`);
+        return res.status(500).json({error: `error in the bookingRecommendationController ${err.message}`});
+    }
 }

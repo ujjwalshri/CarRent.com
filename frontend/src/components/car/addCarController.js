@@ -6,6 +6,7 @@ angular
     $scope.images = []; // This will store the selected images
     $scope.isLoading = false;
     // Function to handle image preview and Base64 conversion
+
     $scope.previewImages = function (input) {
       if (input.files) {
         let files = Array.from(input.files); // Convert FileList to an array
@@ -28,13 +29,13 @@ angular
       }
       
       $scope.isLoading = true;
-      const formData = new FormData();
+      // const formData = new FormData();
      console.log($scope.carName, $scope.company, $scope.carModel, $scope.category, $scope.location, $scope.carPrice, $scope.mileage, $scope.color, $scope.fuelType, $scope.city);
 
-     console.log("lund");
+     console.log("lund")
 
-      const car = CarFactory.createCar($scope.carName, $scope.company, $scope.carModel, $scope.category, $scope.carPrice, $scope.mileage, $scope.color, $scope.fuelType, $scope.city, $scope.images);
-      console.log(car);
+      const car = CarFactory.createCar({name: $scope.carName, company: $scope.company, modelYear: $scope.carModel, category: $scope.category, price: $scope.carPrice, mileage:  $scope.mileage, color: $scope.color,fuelType:  $scope.fuelType,city: $scope.city,vehicleImages: $scope.images});
+      
       if(car instanceof Object){
         console.log("Car is valid");
       }else{
@@ -44,35 +45,7 @@ angular
         return;
       }
 
-      formData.append('name', $scope.carName);
-      formData.append('company', $scope.company);
-      formData.append('modelYear', $scope.carModel);
-      formData.append('category', $scope.category);
-      formData.append('location', $scope.location);
-      formData.append('price', $scope.carPrice);
-      formData.append('mileage', $scope.mileage);
-      formData.append('color', $scope.color);
-      formData.append('fuelType', $scope.fuelType);
-      formData.append('city', $scope.city);
-  
-      if($scope.images.length === 0 || $scope.images.length > 5){
-        ToastService.error("Please select between 1 and 5 images");
-        $scope.isLoading = false;
-        return;
-      }
-      if ($scope.images && $scope.images.length > 0) {
-          $scope.images.forEach((image, index) => {
-            formData.append(`images`, image); 
-          });
-      }
-  
-  
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
-     
-
-      
+      let formData = car.toFormData();
   
       // Call the CarService to add the car
       CarService.addCar(formData)

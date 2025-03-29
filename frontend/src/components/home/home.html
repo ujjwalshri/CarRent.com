@@ -91,6 +91,63 @@
         </div>
     </div>
 </div>
+<!-- Recommended Cars Carousel - Only visible to buyers -->
+<div class="panel panel-default"  ng-if=" user && !user.isSeller">
+>
+    <div class="panel-heading">
+      <h3 class="panel-title text-center">
+        <span class="glyphicon glyphicon-thumbs-up"></span>Top Car Recommendations in {{user.city}}
+      </h3>
+    </div>
+    <div class="panel-body">
+
+      <div uib-carousel active="active" interval="5000" no-wrap="false">
+
+        <div uib-slide ng-repeat="slideGroup in recommendedCarsGroups" index="$index">
+          <div class="row">
+            <div class="col-xs-12 col-sm-4" ng-repeat="car in slideGroup">
+
+              <div class="thumbnail" ng-click="redirectCarPage(car._id)" style="cursor: pointer;">
+                <div class="caption">
+                  <span class="label label-danger pull-right" ng-if="car.isPopular">Popular</span>
+                </div>
+                <img ng-src="{{car.vehicleImages[0].url}}" alt="{{car.name}}" class="img-responsive">
+                <h4>{{car.vehicle.company}} {{car.vehicle.name}} {{car.vehicle.modelYear}}</h4>
+
+                  
+                  <p class="text-danger"><strong>${{car.vehicle.price}}</strong> per day</p>
+                  <p>
+                    <span class="text-muted"><span class="glyphicon glyphicon-map-marker"></span> {{car.vehicle.city}}</span>
+                    <span class="text-muted "><span class="glyphicon glyphicon-tag"></span> {{car.vehicle.category}}</span>
+                    <span class="text-muted"><span class="glyphicon glyphicon-dashboard"></span> {{car.vehicle.mileage}} kmpl</span>
+                    <span class="text-muted "><span class="glyphicon glyphicon-tint"></span> {{car.vehicle.fuelType}}</span>
+                  </p>
+                  <p>
+                    
+                  </p>
+                  <p class="text-center">
+                    <button class="btn btn-primary">View Details</button>
+                  </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+
+      <div class="text-center">
+        <div class="btn-group">
+          <button type="button" class="btn btn-default" ng-click="prevSlide()">
+            <span class="glyphicon glyphicon-chevron-left"></span>
+          </button>
+          <button type="button" class="btn btn-default" ng-click="nextSlide()">
+            <span class="glyphicon glyphicon-chevron-right"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
 
 <div id="cars-listing" ng-init="init()" class="container mt-4">
     <div class="row">
@@ -133,3 +190,4 @@
 </div>
 
 </div>
+

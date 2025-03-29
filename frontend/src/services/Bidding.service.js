@@ -1,4 +1,4 @@
-angular.module('myApp').service('BiddingService', function($q, ApiService, $http) {
+angular.module('myApp').service('BiddingService', function($q,BiddingFactory, ApiService, $http) {
     /*
     function to add a bid
     @params carId, bid
@@ -92,6 +92,7 @@ angular.module('myApp').service('BiddingService', function($q, ApiService, $http
     @returns promise
     */
     this.getBiddingsForUser = function (params) {
+
         console.log(params);
         let deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/bidding/getBids/user`, {
@@ -99,7 +100,9 @@ angular.module('myApp').service('BiddingService', function($q, ApiService, $http
             withCredentials: true 
         })
         .then((res) => {
+            
             deferred.resolve(res.data);
+
         })
         .catch((err) => {
             deferred.reject(`Error fetching bookings: ${err}`);

@@ -36,12 +36,18 @@ angular
     */
       $scope.init = () => {
         socket = io("http://localhost:8000"); // initialize the socket connection
-        
+
+       
         socket.on("newMessage", (message) => {
             console.log(message);
             $scope.messages.push(message);
             $scope.scrollToBottom();
             $timeout();
+        });
+
+        socket.on("onlineUsers", (users) => {
+          console.log(users);
+          $scope.onlineUsers = users;
         });
 
         socket.on("newConversation", (conversation) => {
@@ -61,6 +67,7 @@ angular
             : ChatService.getConversationsAtCarId($stateParams.id),
         ])
           .then(([user, conversations]) => {
+            socket.emit('userOnline', user.username);
             $scope.loggedInUser = user;
             $scope.myConversations = conversations.conversations;
             console.log($scope.myConversations);
@@ -71,10 +78,12 @@ angular
             $scope.isLoading = false;
           });
 
+         
         $scope.$on("$destroy", function () {
-          if (socket) {
-            socket.disconnect();
-          }
+          
+            
+            socket.emit('userOffline', $scope.loggedInUser.username);
+          
         });
       };
      /*
@@ -162,6 +171,24 @@ angular
           .catch((error) => {
             ToastService.error(`Error adding message ${error}`); // Show error message if there is an error
           });
+      };
+
+      /*
+      * Helper function to check if a user in the conversation is online
+      * @param {Object} conversation - The conversation object
+      * @returns {Boolean} - Whether the other user in the conversation is online
+      */
+      $scope.isUserOnline = function(conversation) {
+        if (!conversation || !$scope.onlineUsers || !$scope.loggedInUser) {
+          return false;
+        }
+        
+        // Determine which user we need to check (the one that's not the logged-in user)
+        const otherUserName = conversation.reciever.username === $scope.loggedInUser.username ? 
+          conversation.sender.username : conversation.reciever.username;
+          
+        // Check if the other user is in the onlineUsers array
+        return $scope.onlineUsers.includes(otherUserName);
       };
     }
   );

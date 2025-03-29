@@ -49,12 +49,19 @@
             <div class="caption">
               <p><strong>Price:</strong> ${{ car.price }} per day</p>
               <p><strong>Car Name:</strong> {{ car.name }}</p>
-
               <p><strong>Category:</strong> {{ car.category }}</p>
               <p><strong>Status:</strong> {{ car.status }}</p>
-              <button class="btn btn-warning" ng-click="openPriceModal(car)">
-                <span class="glyphicon glyphicon-pencil"></span> Edit Price
-              </button>
+              <div class="btn-group">
+                <button class="btn btn-warning" ng-click="openPriceModal(car)">
+                  <span class="glyphicon glyphicon-pencil"></span> Edit Price
+                </button>
+                <button class="btn btn-info" 
+                        ng-if="car.status === 'approved'"
+                        ng-click="viewCarBookings(car)"
+                        type="button">
+                    <span class="glyphicon glyphicon-list"></span> View Bookings
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -118,4 +125,6 @@
       <button class="btn btn-primary" ng-click="updateUser()">Save</button>
     </div>
   </script>
+
+  
 </div>

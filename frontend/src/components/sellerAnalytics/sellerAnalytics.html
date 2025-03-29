@@ -6,7 +6,7 @@
     <div class="row g-3 p-3 border rounded shadow-sm bg-light">
         <div class="col-md-6">
             <label for="startDate" class="form-label fw-bold">Start Date:</label>
-            <input type="date" id="startDate" class="form-control" ng-model="startDate" ng-init="minDate = new Date().toISOString().split('T')[0]" min="{{minDate}}">
+            <input type="date" id="startDate" class="form-control" ng-model="startDate">
         </div>
         <div class="col-md-6">
             <label for="endDate" class="form-label fw-bold">End Date:</label>
@@ -19,12 +19,19 @@
         </div>   
     </div>
     
-
-   
-
-    <!-- Graphs Dependent on Date -->
+    <!-- Date-Dependent Graphs Section -->
     <div class="row mt-4">
         <h3 class="text-center">Date-Dependent Analytics</h3>
+        
+        <!-- Add Date Range Display -->
+        <div class="text-center mb-3" ng-if="startDate && endDate">
+            <div class="alert alert-info d-inline-block">
+                <strong>Showing data for:</strong> 
+                {{startDate | date:'MMM d, yyyy'}} - {{endDate | date:'MMM d, yyyy'}}
+            </div>
+        </div>
+
+        <!-- Your existing graph containers -->
         <div class="col-md-4">
             <div class="panel panel-primary">
                 <div class="panel-body">

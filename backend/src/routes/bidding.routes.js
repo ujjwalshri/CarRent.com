@@ -1,6 +1,6 @@
 import express from "express";
 import protectRoute from "../middlewares/protectRoute.js";
-import {addBidController, updateBidStatusController, getBidForOwnerController, getBidForUserController,getAllBids, getBookingsAtCarIdController, getAllBookingsAtOwnerIdController ,getAllBookingsAtUserIdController, getUserBookingHistory, getBookingAtBookingIdController, startBookingController, endBookingController , reviewBookingController} from "../controllers/bidding.controller.js";
+import {addBidController, updateBidStatusController, getBidForOwnerController, getBidForUserController,getAllBids, getBookingsAtCarIdController, getAllBookingsAtOwnerIdController ,getAllBookingsAtUserIdController, getUserBookingHistory, getBookingAtBookingIdController, startBookingController, endBookingController , reviewBookingController, bookingRecommendationController} from "../controllers/bidding.controller.js";
 import protectFromAdmin from "../middlewares/authenticateAdminRole.js";
 import protectFromSeller from "../middlewares/authenticateSeller.js";
 import protectFromUser from "../middlewares/authenticateUser.js";
@@ -18,4 +18,5 @@ router.get('/getBid/:bookingId', protectRoute, protectFromUser, protectFromAdmin
 router.patch('/startBooking/:bookingId', protectRoute, protectFromUser, protectFromAdmin, startBookingController); // start the booking
 router.patch('/endBooking/:bookingId', protectRoute, protectFromUser, protectFromAdmin, endBookingController); // end the booking
 router.patch('/reviewBooking/:bookingId',   reviewBookingController)
+router.get('/getCarRecommendation', protectRoute, bookingRecommendationController)
 export default router;
