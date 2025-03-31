@@ -1,5 +1,4 @@
-
-<button style="margin-left: 20px;" ng-click="back()"><<<</button>
+<back-button></back-button>
 <div class="outer-div" ng-init="init()">
     <div class="car-booking-container"></div>
     
@@ -16,8 +15,20 @@
                 <p class="text-warning"><strong>Note:</strong> $10 per kms Extra charges apply after 300km</p>
                 <p><strong>Category:</strong> {{ car.category }}</p>
                 <p><strong>Mileage:</strong> {{ car.mileage }} kmpl</p>
+                <p>
+                    <strong>Color:</strong> 
+                    <span ng-attr-style="display: inline-block; width: 20px; height: 20px; border-radius: 50%; border: 1px solid #ccc; vertical-align: middle; margin-left: 5px; background-color: {{car.color}}" title="{{car.color}}"></span>
+                </p>
                 <p><strong>fuel type:</strong> {{ car.fuelType }}</p>
                 <p><strong>Location:</strong> {{ car.city }}</p>
+                <p>
+                    <strong>Rating:</strong>
+                    <span class="rating-stars">
+                        <i class="fa" ng-class="{'fa-star': $index+1 < averageRating, 'fa-star-half-o': $index + 0.5 == averageRating, 'fa-star-o': $index >= averageRating}" ng-style="{'color': $index < averageRating ? '#ffd700' : '#ccc'}" ng-repeat="_ in [0,1,2,3,4]"></i>
+                        <span class="rating-text">({{averageRating | number:1}})</span>
+                    </span>
+                </p>
+                
             </div>
             
             <div class="panel panel-info owner-info">

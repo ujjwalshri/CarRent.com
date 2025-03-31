@@ -1,6 +1,6 @@
 
 // this file contains the service that will be used to interact with the IndexedDB database.
-angular.module('myApp').service("IDB", function ($q, hashPassword) {
+angular.module('myApp').service("IDB", function ($q) {
   let db = null;
   let DB_NAME = "vehicalRental";
   let DB_VERSION = 6;

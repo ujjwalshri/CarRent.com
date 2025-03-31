@@ -193,6 +193,12 @@ angular.module('myApp').factory('BiddingFactory', function() {
         // Generate and print the PDF
         pdfMake.createPdf(docDefinition).print();
     };
+    Bid.prototype.todayBookingCalculator = function(){
+        const bookingStartDate = new Date(this.startDate).setHours(0, 0, 0, 0);
+        const bookingEndDate = new Date(this.endDate).setHours(23, 59, 59, 999);
+        const today = new Date();
+        return today >= bookingStartDate && today <= bookingEndDate;
+    }
     
    
     /**

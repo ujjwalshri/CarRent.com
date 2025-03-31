@@ -1,8 +1,5 @@
 <!-- Back Button -->
-<button class="btn btn-light mb-3" ng-click="back()">
-    <i class="fa fa-arrow-left"></i> Back
-</button>
-
+<back-button></back-button>
 <div ng-controller="confirmedBookingsCtrl" class="confirmed-Bookings container-fluid">
     <h1 class="text-center text-primary" ng-if="allBookings.length > 0">Confirmed Bookings</h1>
     <h3 class="text-center text-muted" ng-if="allBookings.length === 0">No bookings available</h3>
@@ -43,7 +40,7 @@
             <tbody>
                 <tr ng-repeat="booking in allBookings | orderBy: '-createdAt'">
                     <td>{{ booking._id }}</td>
-                    <td>${{ calculateBookingPrice(booking.startDate, booking.endDate, booking.amount) }}</td>
+                    <td>{{booking.calculate()}}</td>
                     <td>{{ booking.startDate | date: 'yyyy-MM-dd' }}</td>
                     <td>{{ booking.endDate | date: 'yyyy-MM-dd' }}</td>
                     <td>
@@ -62,7 +59,7 @@
                     </td>
                     <td class="text-center">
                         <button ng-click="openManageBooking(booking)" 
-                                ng-if="todayBooking(booking)"
+                                ng-if="booking.todayBookingCalculator()"
                                 ng-hide="booking.status === 'ended' || booking.status === 'started' || booking.status === 'reviewed'" 
                                 class="btn btn-primary btn-sm">
                             <i class="fa fa-play"></i> Start Booking

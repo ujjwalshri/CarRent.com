@@ -2,7 +2,7 @@ import User from '../models/user.model.js';
 import bcrypt from 'bcryptjs';
 import validateUser from '../validation/user.validate.js';
 import {generateTokenAndSetCookie} from '../utils/gen.token.js';
-import generateAndSendMail from '../utils/gen.mail.js';
+import { generateWelcomeMail} from '../utils/gen.mail.js';
 
 /*
 @description function to signup a user
@@ -45,7 +45,7 @@ export const signupController = async (req, res) => {
         if(user){
             await generateTokenAndSetCookie(user, res); // Generate token and set cookie
 
-            generateAndSendMail({ subject:"Singed up to carRental" ,text: "Welcome to the CarBazaar family. We are glad to have you with us. We are here to provide you the best car buying experience. We hope you find the car of your dreams here. Thank you for joining us."});
+            generateWelcomeMail(user);
             
             return  res.status(201).json({ 
                 _id: user._id,

@@ -10,7 +10,7 @@ export const createCarValidation = joi.object({
     color: joi.string().min(3).max(20).required(),
     mileage: joi.number().min(0).required(),
     fuelType: joi.string().valid("petrol", "diesel", "electric").required(),
-    category: joi.string().valid("SUV", "Sedan").required(),
+    category: joi.string().required(),
     deleted: joi.boolean().default(false),
     status: joi.string().valid("pending", "approved", "rejected").default("pending"),
     city: joi.string().min(2).max(50).required(),

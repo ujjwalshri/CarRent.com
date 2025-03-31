@@ -1,5 +1,5 @@
-<button class="btn btn-outline-primary m-3" ng-click="back()">&#x25C0; Back</button>
-<div class="container mt-4 p-4 shadow bg-white rounded" ng-app="carApp" ng-controller="addCarCtrl">
+<back-button></back-button>
+<div class="container mt-4 p-4 shadow bg-white rounded" ng-app="carApp" ng-controller="addCarCtrl" ng-init="init()">
     <h2 class="text-center text-primary mb-4">Add a New Car</h2>
     <form id="addCarForm" class="form-horizontal" name="addCarForm" novalidate ng-submit="submitCarForm(addCarForm)">
 
@@ -60,8 +60,7 @@
             <div class="col-sm-9">
                 <select class="form-control" ng-model="category" name="category" required>
                     <option value="" disabled selected>Select Category</option>
-                    <option value="SUV">SUV</option>
-                    <option value="Sedan">Sedan</option>
+                    <option ng-repeat="cat in carCategories" value="{{cat.name}}">{{cat.name}}</option>
                 </select>
                 <div class="text-danger" ng-show="addCarForm.category.$touched && addCarForm.category.$error.required">
                     Category is required.
@@ -151,13 +150,7 @@
             <div class="col-sm-9">
                 <select class="form-control" ng-model="city" name="city" required>
                     <option value="" disabled selected>Select City</option>
-                    <option value="Delhi">Delhi</option>
-                    <option value="Mumbai">Mumbai</option>
-                    <option value="Gwalior">Gwalior</option>
-                    <option value="Bhind">Bhind</option>
-                    <option value="Gurugram">Gurugram</option>
-                    <option value="Agra">Agra</option>
-                    <option value="Shiv puri">Shiv Puri</option>
+                    <option ng-repeat="city in cities" value="{{city}}">{{city}}</option>
                 </select>
                 <div class="text-danger" ng-show="addCarForm.city.$touched && addCarForm.city.$error.required">
                     City is required.

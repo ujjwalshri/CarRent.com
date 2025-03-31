@@ -12,14 +12,14 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
     $scope.limit = 5; // variable to hold the limit of the cars to be fetched
     
     let searchTimeout; // variable to hold the search timeout
-    
+  
     // Recommended cars data
     $scope.recommendedCars = [];
     $scope.recommendedCarsGroups = [];
     $scope.active = 0;
    
-    // init function to run when the page mounts
-    $scope.init = function() {
+     // init function to run when the page mounts
+     $scope.init = function() {
         $scope.isLoading = true;
         
         // Create an array of promises to run in parallel
@@ -30,14 +30,16 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
             console.log("not logged in");
             // Not logged in - only get cars
             promises = [
-                CarService.getAllApprovedCars($scope.search, $scope.priceFilter, $scope.city, $scope.category, $scope.skip)
+                CarService.getAllApprovedCars($scope.search, $scope.priceFilter, $scope.city, $scope.category, $scope.skip),
+                CarService.getAllCarCategoriesForAdmin()
             ];
         } else {
             // Logged in - get user, cars, and recommendations
             promises = [
                 UserService.getUserProfile(),
                 CarService.getAllApprovedCars($scope.search, $scope.priceFilter, $scope.city, $scope.category, $scope.skip),
-                CarService.getCarRecommendationsForUser()
+                CarService.getCarRecommendationsForUser(),
+                CarService.getAllCarCategoriesForAdmin()
             ];
         }
         
@@ -52,6 +54,9 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
                     if (responses[0] && responses[0].data) {
                         $scope.allCars = responses[0].data;
                         $scope.hasMoreCars = responses[0].data.length > $scope.limit;
+                    }
+                    if (responses[1] && responses[1]) {
+                        $scope.carCategories = responses[1];
                     }
                 } else {
                     // Logged in - handle all three responses
@@ -82,6 +87,10 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
                         }
                         console.log("recommendedCarsGroups", $scope.recommendedCarsGroups);
                     }
+                    console.log("carCategories", responses[3]);
+                    if (responses[3] && responses[3]) {
+                        $scope.carCategories = responses[3];
+                    }
                 }
             })
             .catch(function(errors) {
@@ -106,6 +115,11 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
         }).catch(err=>{
             ToastService.error(err);
         });
+    }
+
+    $scope.setCategory = (category) => {
+        console.log("category", category);
+        $scope.category = category;
     }
 
     // function to filter the cars
@@ -158,10 +172,7 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
         $scope.search = ''; 
         $scope.category = '';
         $scope.carLocation = '';
-        
-        // Use $scope.user instead of loggedInUser
-        $scope.city = ($scope.user && $scope.user.city) ? $scope.user.city : '';
-        
+    
         fetchAllCars(0);
     };
 

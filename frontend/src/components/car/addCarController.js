@@ -1,11 +1,19 @@
 angular
   .module("myApp")
-  .controller("addCarCtrl", function ($scope, $state, IDB, $timeout,CarFactory, ToastService, BackButton, CarService ) {
+  .controller("addCarCtrl", function ($scope, $state, IDB, $timeout,CarFactory, ToastService, BackButton, CarService, City ) {
     $scope.back = BackButton.back; // back function to go back to the previous page
     const loggedInUser = JSON.parse(sessionStorage.getItem("user")); // getting the loggedInUser
     $scope.images = []; // This will store the selected images
     $scope.isLoading = false;
+    $scope.cities = City.getCities(); // Fetch all the cities
     // Function to handle image preview and Base64 conversion
+
+    $scope.init = function(){
+      CarService.getAllCarCategoriesForAdmin().then((res)=>{
+        console.log("Car categories", res);
+        $scope.carCategories = res;
+      })
+    }
 
     $scope.previewImages = function (input) {
       if (input.files) {
@@ -29,14 +37,12 @@ angular
       }
       
       $scope.isLoading = true;
-      // const formData = new FormData();
      console.log($scope.carName, $scope.company, $scope.carModel, $scope.category, $scope.location, $scope.carPrice, $scope.mileage, $scope.color, $scope.fuelType, $scope.city);
-
-     console.log("lund")
-
+     
       const car = CarFactory.createCar({name: $scope.carName, company: $scope.company, modelYear: $scope.carModel, category: $scope.category, price: $scope.carPrice, mileage:  $scope.mileage, color: $scope.color,fuelType:  $scope.fuelType,city: $scope.city,vehicleImages: $scope.images});
       
       if(car instanceof Object){
+        console.log(car);
         console.log("Car is valid");
       }else{
         console.log("Car is invalid", car);
@@ -45,15 +51,16 @@ angular
         return;
       }
 
-      let formData = car.toFormData();
+    
+
+      const formData = car.toFormData();
+       
   
       // Call the CarService to add the car
       CarService.addCar(formData)
           .then((res) => {
               console.log("Car added successfully", res);
-              
               ToastService.success("Car added successfully");
-              $state.go("profile");
           })
           .catch((err) => {
               console.log("Error in addCarCtrl", err);

@@ -8,45 +8,82 @@ angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, IDB, 
     $scope.hasMoreData = true; // setting the hasMoreData to true
     $scope.startDate = ''; // setting the startDate to empty string
 
-     //  init to initialize the page data 
+    // Initialize sorting
+    $scope.selectedSort = {
+        field: 'createdAt',
+        order: -1,
+        label: 'Latest First'
+    };
+
+    //  init to initialize the page data 
     $scope.init = ()=>{
         fetchBookingHistory();
     }
+
+    $scope.applySorting = function(field, order, label) {
+        $scope.selectedSort = {
+            field: field,
+            order: order,
+            label: label
+        };
+        // Reset pagination and reload data
+        $scope.bookings = [];
+        $scope.currentPage = 1;
+        $scope.hasMoreData = true;
+        fetchBookingHistory();
+    };
+
     /** 
     function to fetch all the bookings
     @{params} none
     @{returns} none
     */
     function fetchBookingHistory() {
-        console.log('search' , $scope.search);
+        if ($scope.isLoading) return;
+        
         $scope.isLoading = true;
+        console.log('Fetching with sort:', $scope.selectedSort);
+        
+        // Create sort object
+        const sortObj = {};
+        sortObj[$scope.selectedSort.field] = $scope.selectedSort.order;
+        
         const params = {
             page: $scope.currentPage,
             limit: $scope.itemsPerPage,
             startDate: $scope.startDate || undefined,
-        }
-        BiddingService.getUserBookingsHistory(params).then((bookings)=>{
-            $scope.bookings = $scope.bookings.concat(bookings.bookings.map((booking)=>{
-                return BiddingFactory.createBid(booking, false);
-            }));
-            console.log($scope.bookings);
-            console.log(bookings.totalDocs);
-            $scope.hasMoreData = bookings.totalDocs > $scope.bookings.length;
-            $scope.totalItems = Math.ceil(bookings.totalDocs/$scope.itemsPerPage);
-            console.log($scope.totalItems);
-        }).catch((err)=>{
-            ToastService.error(`Error fetching bookings ${err}`);
-        }).finally(()=>{
-            $scope.isLoading = false;
-        })
+            sort: sortObj
+        };
+
+        BiddingService.getUserBookingsHistory(params)
+            .then((response) => {
+                if ($scope.currentPage === 1) {
+                    $scope.bookings = response.bookings.map(booking => BiddingFactory.createBid(booking, false));
+                } else {
+                    $scope.bookings = $scope.bookings.concat(
+                        response.bookings.map(booking => BiddingFactory.createBid(booking, false))
+                    );
+                }
+                
+                $scope.hasMoreData = response.totalDocs > $scope.bookings.length;
+                console.log('Bookings loaded:', $scope.bookings.length, 'Total:', response.totalDocs);
+            })
+            .catch((err) => {
+                ToastService.error(`Error fetching bookings: ${err}`);
+            })
+            .finally(() => {
+                $scope.isLoading = false;
+            });
     }
     // function to change the page
     $scope.pageChanged = function() {
-        $scope.currentPage = $scope.currentPage + 1;
-        fetchBookingHistory();
+        if (!$scope.isLoading && $scope.hasMoreData) {
+            $scope.currentPage++;
+            fetchBookingHistory();
+        }
     };
 
-  
-    
-
+    $scope.navigateToSingleCarPage = function(carId){
+        $state.go('singleCar', {id: carId});
+    }
 });

@@ -1,7 +1,7 @@
 import AWS from 'aws-sdk';
 import dotenv from 'dotenv';
 import Bidding from '../models/bidding.model.js';
-import generateAndSendMail from '../utils/gen.mail.js';
+import {generateAndSendMail} from '../utils/gen.mail.js';
 
 
 dotenv.config();

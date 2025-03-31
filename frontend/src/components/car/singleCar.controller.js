@@ -47,7 +47,9 @@ angular
           RouteProtection.getLoggedinUser(), 
         ])
           .then((results) => {
+            console.log(results[1]);
             $scope.blockedDates = BiddingFactory.calculateBlockedDates(results);
+            console.log($scope.blockedDates);
             $scope.car = results[0].data; // set the car to the first of result
             $scope.LoggedinUser = results[2];
             initializeFlatpickr(); // initialize the flatpickr date range picker

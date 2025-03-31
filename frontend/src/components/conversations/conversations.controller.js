@@ -81,7 +81,9 @@ angular
          
         $scope.$on("$destroy", function () {
           
-            
+            $timeout(()=>{
+              $scope.onlineUsers = $scope.onlineUsers.filter(user => user !== $scope.loggedInUser.username);
+            },1000);
             socket.emit('userOffline', $scope.loggedInUser.username);
           
         });

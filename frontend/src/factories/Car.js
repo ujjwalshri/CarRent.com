@@ -89,17 +89,19 @@ angular.module('myApp').factory('CarFactory', function() {
 
     Car.prototype.toFormData = function(){
         const formData = new FormData();
-        formData.append('name', this.name);
-        formData.append('company', this.company);
-        formData.append('modelYear', this.modelYear);
-        formData.append('category', this.category);
-        formData.append('price', this.price);
-        formData.append('mileage', this.mileage);
-        formData.append('location', this.location);
-        formData.append('color', this.color);
-        formData.append('fuelType', this.fuelType);
-        formData.append('city', this.city);
-        formData.append('images', this.images);
+      formData.append('name', this.name);
+      formData.append('company', this.company);
+      formData.append('modelYear', this.modelYear);
+      formData.append('category', this.category);
+      formData.append('price', this.price);
+      formData.append('mileage', this.mileage);
+      formData.append('location', this.location);
+      formData.append('color', this.color);
+      formData.append('fuelType', this.fuelType);
+      formData.append('city', this.city);
+      for(let image of this.images){
+        formData.append('images', image);
+      }
         return formData;
     }
 

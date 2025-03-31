@@ -75,10 +75,12 @@
                     <button class="btn btn-default dropdown-toggle form-control" uib-dropdown-toggle >
                         {{ category || 'Select Category' }} <span class="caret"></span>
                     </button>
-                    <ul class="dropdown-menu" uib-dropdown-menu >
-                        <li ng-click="category='SUV'"><a href="#">SUV</a></li>
-                        <li ng-click="category='Sedan'"><a href="#">Sedan</a></li>
+                    <ul class="dropdown-menu" uib-dropdown-menu>
+                        <li ng-repeat="cat in carCategories" ng-click="setCategory(cat.name)">
+                            <a href="#">{{cat.name}}</a>
+                        </li>
                     </ul>
+                  
                 </uib-dropdown>
             </div>
 
@@ -94,11 +96,16 @@
 <!-- Recommended Cars Carousel - Only visible to buyers -->
 <div class="panel panel-default"  ng-if=" user && !user.isSeller">
 >
-    <div class="panel-heading">
+    <div class="panel-heading" ng-if="recommendedCarsGroups.length>0">
       <h3 class="panel-title text-center">
         <span class="glyphicon glyphicon-thumbs-up"></span>Top Car Recommendations in {{user.city}}
       </h3>
     </div>
+    <div class="col-12 text-center" ng-if="recommendedCarsGroups.length === 0">
+      <div class="alert alert-warning mt-4">
+          <strong>Unable to find Recommendations within your city</strong>
+      </div>
+  </div>
     <div class="panel-body">
 
       <div uib-carousel active="active" interval="5000" no-wrap="false">
@@ -135,7 +142,7 @@
       </div>
   
 
-      <div class="text-center">
+      <div class="text-center" ng-if="recommendedCarsGroups.length>0">
         <div class="btn-group">
           <button type="button" class="btn btn-default" ng-click="prevSlide()">
             <span class="glyphicon glyphicon-chevron-left"></span>
@@ -158,7 +165,10 @@
                     <div class="car-details text-center">
                         <h4 class="text-primary">{{car.company}} {{ car.name }} ({{ car.modelYear }})</h4>
                         <p class="price-tag"><strong>$ {{ car.price }}</strong> per day</p>
-                        <p><i class="fa fa-tag"></i> <strong>Category:</strong> {{ car.category }}</p>
+                        <p>
+                          <strong>Color:</strong> 
+                          <span ng-attr-style="display: inline-block; width: 20px; height: 20px; border-radius: 50%; border: 1px solid #ccc; vertical-align: middle; margin-left: 5px; background-color: {{car.color}}" title="{{car.color}}"></span>
+                      </p>
                         <p><i class="fa fa-tachometer"></i> <strong>Mileage:</strong> {{ car.mileage }} kmpl</p>
 
                         <div class="owner well well-sm text-center">
@@ -190,4 +200,3 @@
 </div>
 
 </div>
-

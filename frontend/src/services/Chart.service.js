@@ -34,6 +34,10 @@ angular.module('myApp').service('ChartService', function($http, $q, ApiService) 
     var ctx = document.getElementById(htmlElementId).getContext('2d');
     new Chart(ctx, chartConfig);
 };
+
+
+
+
 /*
 function to createABarChart for the given data
 @params type, labels, data, label, text, htmlElementId
@@ -383,6 +387,28 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
       });
       return deffered.promise;
     }
+    this.getUserGrowthForAdmin = async (params) => {  
+      let deffered = $q.defer();
+      $http.get(`${ApiService.baseURL}/api/admin/getUserGrowth`, {params:params, withCredentials:true})
+      .then((response)=>{
+        deffered.resolve(response.data);
+      })
+      .catch((error)=>{
+        deffered.reject(error);
+      });
+      return deffered.promise;
+    }
+    this.getUserEngagementPercentageForAdmin = async (params) => {
+      let deffered = $q.defer();
+      $http.get(`${ApiService.baseURL}/api/admin/getUserEngagementPercentage`, {params:params, withCredentials:true})
+      .then((response)=>{
+        deffered.resolve(response.data);
+      })
+      .catch((error)=>{
+        deffered.reject(error);
+      });
+      return deffered.promise;
+    }
     /*
     function to get the top 3 owners with most cars added for admin
     @params params
@@ -544,6 +570,85 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
       return deffered.promise;
 
     }
+    this.getTop10SellersWithMostEarningsForAdmin = async (params) => {
+      let deffered = $q.defer();
+      $http.get(`${ApiService.baseURL}/api/admin/top10SellersWithMostEarnings`, {params:params, withCredentials:true})
+      .then((response)=>{
+        deffered.resolve(response.data);
+      })
+      .catch((error)=>{
+        deffered.reject(error);
+      });
+      return deffered.promise;
+    }
+    this.topBuyersWithMostBookingsForAdmin = async (params) => {
+      let deffered = $q.defer();
+      $http.get(`${ApiService.baseURL}/api/admin/topBuyersWithMostBookings`, {params:params, withCredentials:true})
+      .then((response)=>{
+        deffered.resolve(response.data);
+      })
+      .catch((error)=>{
+        deffered.reject(error);
+      });
+      return deffered.promise;
+    }
+    this.top3CarsWithMostEarning = async (params) => {
+      let deffered = $q.defer();
+      $http.get(`${ApiService.baseURL}/api/seller/top3CarsWithMostEarning`, {params:params, withCredentials:true})
+      .then((response)=>{
+        deffered.resolve(response.data);
+      })
+      .catch((error)=>{
+        deffered.reject(error);
+      });
+      return deffered.promise;
+    }
+    this.top3CostumersWithMostBookings = async (params) => {
+      let deffered = $q.defer();
+      $http.get(`${ApiService.baseURL}/api/seller/top3CostumersWithMostBookings`, {params:params, withCredentials:true})
+      .then((response)=>{
+        deffered.resolve(response.data);
+      })
+      .catch((error)=>{
+        deffered.reject(error);
+      });
+      return deffered.promise;
+    }
+    this.peakBiddingHours = async (params) => {
+      let deffered = $q.defer();
+      $http.get(`${ApiService.baseURL}/api/seller/peakBiddingHours`, {params:params, withCredentials:true})
+      .then((response)=>{
+        deffered.resolve(response.data);
+      })
+      .catch((error)=>{
+        deffered.reject(error);
+      });
+      return deffered.promise;
+    }
+    this.sendCongratulationMail = async (data) => {
+      console.log(data);
+      let deffered = $q.defer();
+      $http.post(`${ApiService.baseURL}/api/admin/sendCongratulationMail`, data, { withCredentials:true})
+      .then((response)=>{
+        deffered.resolve(response.data);
+      })
+      .catch((error)=>{
+        deffered.reject(error);
+      });
+      return deffered.promise;
+    }
+    this.getNegativeReviewsPercentage = async (params) => {
+      let deffered = $q.defer();
+      $http.get(`${ApiService.baseURL}/api/seller/getNegativeReviewsPercentage`, {params:params, withCredentials:true})
+      .then((response)=>{
+        deffered.resolve(response.data);
+      })
+      .catch((error)=>{
+        deffered.reject(error);
+      });
+      return deffered.promise;
+    }
+
     /**
      * Creates a line chart with customizable options
      * @param {string} canvasId - The ID of the canvas element

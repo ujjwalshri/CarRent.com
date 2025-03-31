@@ -2,7 +2,7 @@ import express from 'express';
 import protectRoute from "../middlewares/protectRoute.js";
 import protectFromSeller from '../middlewares/authenticateSeller.js';
 import protectFromUser from '../middlewares/authenticateUser.js';
-import { getSuvVsSedanCarsController, top10PopularCarModelsController, getTop3MostReviewedCarsController, top3OwnersWithMostCarsAddedController, getOngoingBookingsController , getAverageBookingDurationController, getBiddingConversionRateController, getAllBlockedUsersController, numberOfBiddingsPerCityController, numberOfOwnersPerCityController, getUserDescriptionController,numberOfBuyersPerCityController, getNewUsersInLast30DaysController} from '../controllers/admin.controller.js';
+import { getSuvVsSedanCarsController, top10PopularCarModelsController, getTop3MostReviewedCarsController, top3OwnersWithMostCarsAddedController, getOngoingBookingsController , getAverageBookingDurationController, getBiddingConversionRateController, getAllBlockedUsersController, numberOfBiddingsPerCityController, numberOfOwnersPerCityController, getUserDescriptionController,numberOfBuyersPerCityController, getNewUsersInLast30DaysController, addCarCategoryController, getAllCarCategoriesController, deleteCarCategoryController, getUserGrowthController, getUserEngagementPercentageController, top10SellersWithMostEarningsController, sendCongratulationMailController, topBuyersWithMostBookingsController} from '../controllers/admin.controller.js';
 const router = express.Router();
 
 
@@ -19,5 +19,14 @@ router.get('/numberOfOwnersPerCity', protectRoute, numberOfOwnersPerCityControll
 router.get('/getUserDescription', protectRoute, getUserDescriptionController);
 router.get('/getnumberOfBuyersPerCity', protectRoute, numberOfBuyersPerCityController);
 router.get('/newUsersInLast30Days', protectRoute, getNewUsersInLast30DaysController);
+router.post('/addCarCategory', protectRoute,protectFromUser, protectFromSeller, addCarCategoryController);
+router.get('/getAllCarCategories', getAllCarCategoriesController);
+router.delete('/deleteCarCategory/:categoryID', protectRoute, protectFromUser, protectFromSeller, deleteCarCategoryController);
+router.get('/getUserGrowth', protectRoute,getUserGrowthController );
+router.get('/getUserEngagementPercentage', protectRoute, getUserEngagementPercentageController);
+router.get('/top10SellersWithMostEarnings', protectRoute, top10SellersWithMostEarningsController);
+router.get('/topBuyersWithMostBookings', protectRoute, topBuyersWithMostBookingsController);
+router.post('/sendCongratulationMail', protectRoute, protectFromUser, protectFromSeller, sendCongratulationMailController);
+
 
 export default router;

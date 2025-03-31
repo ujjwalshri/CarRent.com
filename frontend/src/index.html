@@ -7,13 +7,16 @@
 
     <!-- angular -->
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+
+    <script async
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB438DF3pwmDK9oh_5ULpO504fYhfOKQ0o&loading=async&libraries=visualization&callback=initMap">
+</script>
    
     <!-- ui Router -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/1.0.29/angular-ui-router.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.5.6/ui-bootstrap-tpls.min.js"></script>
-
-    <!--importing the socket.io cdn link-->
-
+     
+    
     <!-- Flatpickr CSS -->
     <link
       rel="stylesheet"
@@ -21,6 +24,8 @@
     />
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
+
+  
     <!--importing the socket.io client -->
     <script src="/frontend/node_modules/socket.io-client/dist/socket.io.js"></script>
     <!--importing the async library -->
@@ -41,6 +46,8 @@
     ></script>
     <!--importing the chart js library-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <!--importing the heatmap.js library-->
+   <script src="/frontend/node_modules/heatmap.js/build/heatmap.min.js"></script>
     <!--importing the css for the toastify library-->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <!--importing the js for the toastify library-->
@@ -55,6 +62,8 @@ https://cdn.jsdelivr.net/npm/nodemailer@6.10.0/lib/nodemailer.min.js
 
     <!-- importing the app.js which has the main Controller for whole application -->
     <script src="/frontend/src/app.controller.js"></script>
+     <!--importing the back button component-->
+   <script src="/frontend/src/angularComponents/backButton.js"></script>
     <!--importing the admin controller-->
     <script src="/frontend/src/components/admin/admin.controller.js"></script>
 
@@ -118,12 +127,13 @@ https://cdn.jsdelivr.net/npm/nodemailer@6.10.0/lib/nodemailer.min.js
     <script src="/frontend/src/services/User.service.js"></script>
     <!--importing the chat service -->
     <script src="/frontend/src/services/Chat.service.js"></script>
+    <!--importing the city service-->
+    <script src="/frontend/src/services/City.service.js"></script>
 
 
 
     
-    <!--factory for hashing the password-->
-    <script src="/frontend/src/factories/hashPassword.js"></script>
+
     <!--importing the factory for calculating the booking price-->
     <script src="/frontend/src/factories/Booking.js"></script>
     <!--importing the factory for getting the isValid bidding details-->
@@ -159,6 +169,7 @@ https://cdn.jsdelivr.net/npm/nodemailer@6.10.0/lib/nodemailer.min.js
      <!--mera hai mera hai -->
       <!--mera hai mera hai -->
     <script src="https://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-2.5.0.js"></script>
+   
     
 
   </head>

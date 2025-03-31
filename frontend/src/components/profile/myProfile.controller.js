@@ -1,4 +1,4 @@
-angular.module("myApp").controller("myProfileCtrl", function($scope, $state, IDB, ToastService, $uibModal, BackButton, UserService, CarService, BiddingService) {
+angular.module("myApp").controller("myProfileCtrl", function($scope, $state, IDB, ToastService, $uibModal, BackButton, UserService, CarService, BiddingService, City) {
 
     $scope.back = BackButton.back; // back function to go back to the previous page
     $scope.isSeller = true; // setting the isSeller to true
@@ -10,6 +10,7 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, IDB
     $scope.limit = 5; // setting the limit to 5
     $scope.hasMoreCars = true; // setting the hasMoreCars to true
     $scope.status; // setting the status to undefined
+    $scope.cities = City.getCities(); // Fetch all the cities
 
     
     /*
@@ -131,6 +132,7 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, IDB
     $scope.updateUser = () => {
         if (new Date() - new Date($scope.user.updatedAt) <= 3 * 24 * 60 * 60 * 1000) {
             ToastService.error("You can only update your profile once every 3 days");
+            fetchUserProfile();
             return;
         }
         const { firstName, lastName, city } = $scope.updatedUser;

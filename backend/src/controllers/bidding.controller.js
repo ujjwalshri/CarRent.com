@@ -1,6 +1,6 @@
 import Bidding from '../models/bidding.model.js';
 import Vehicle from '../models/vehicle.model.js';
-import generateAndSendMail from '../utils/gen.mail.js';
+import {generateAndSendMail} from '../utils/gen.mail.js';
 import { processBids } from '../config/SQS.js';
 import validateBiddingData from '../validation/bid.validation.js';
 import dotenv from 'dotenv';
@@ -239,7 +239,6 @@ export const getBookingsAtCarIdController = async (req, res)=>{
     const objectIdCarId = new mongoose.Types.ObjectId(String(carId)); 
     try{
         const bookings = await Bidding.aggregate([
-            {$match : { 'owner._id': req.user._id}},
             {$match: {'vehicle._id': objectIdCarId}},
             { $match: { 'status': { $in: ['approved', 'started'] } } }
         ]);
@@ -335,15 +334,16 @@ export const getAllBookingsAtOwnerIdController = async (req, res) => {
         return res.status(500).json({ error: `Error in the getAllBookingsAtOwnerIdController: ${err.message}` });
     }
 };
-
+/*
+    @description function to get the bookings by the car id
+    uses req.query for the query parameters and applies pagination and sorting to the results
+    return all the booking with status approved, started, ended at a particular car id
+*/  
 export const getAllBookingsAtUserIdController = async (req, res)=>{
-    console.log(req.query);
-
     let { page = 1, limit = 10, sort = {} } = req.query;
      if(req.query.sort !== undefined){
         let parsedSort;
         try {
-          
             parsedSort = JSON.parse(sort);
         } catch (err) {
             console.log(`Error parsing sort parameter: ${err.message}`);
@@ -377,10 +377,14 @@ export const getAllBookingsAtUserIdController = async (req, res)=>{
         return res.status(500).json({error: `error in the getAllBookingsAtUserIdController ${err.message}`});
     }
 }
-
+/*
+    @description function to get the bookings history for the logged in user
+    uses req.query for the query parameters and applies pagination and sorting to the results
+    return all the booking history for the particular user
+*/  
 export const getUserBookingHistory = async (req, res) => {
     const { page = 1, limit = 10, sort = {}, startDate = '', search = '' } = req.query;
-    console.log(sort, page, limit, startDate);
+    console.log('Received sort:', sort);
     const userId = req.user._id;
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
@@ -394,7 +398,17 @@ export const getUserBookingHistory = async (req, res) => {
     }
 
     const skip = (pageNumber - 1) * limitNumber;
-    const finalSort = { ...sort, createdAt: -1 };
+
+    // Parse sort if it's a string
+    let sortObj = sort;
+    if (typeof sort === 'string') {
+        try {
+            sortObj = JSON.parse(sort);
+        } catch (err) {
+            console.error('Error parsing sort:', err);
+            sortObj = { createdAt: -1 }; // default sort
+        }
+    }
 
     try {
         let aggregationPipeline = [];
@@ -412,16 +426,16 @@ export const getUserBookingHistory = async (req, res) => {
         };
         aggregationPipeline.push(matchStage);
 
+        // Add sort stage
+        aggregationPipeline.push({ $sort: sortObj });
 
-        // Add pagination and sorting stages
+        // Add pagination stages
         aggregationPipeline.push(
-            { $sort: finalSort },
             { $skip: skip },
             { $limit: limitNumber }
         );
 
-        console.log(aggregationPipeline);
-
+        console.log('Aggregation Pipeline:', JSON.stringify(aggregationPipeline, null, 2));
 
         // Execute aggregation pipeline
         const bookings = await Bidding.aggregate(aggregationPipeline);
@@ -433,6 +447,10 @@ export const getUserBookingHistory = async (req, res) => {
         return res.status(500).json({ error: `Error in getUserBookingHistory: ${err.message}` });
     }
 };
+
+/*
+    @description function to get a booking by the booking id
+*/
 export const getBookingAtBookingIdController = async (req, res)=>{
     const bookingId = req.params.bookingId;
     console.log(bookingId);
@@ -447,7 +465,11 @@ export const getBookingAtBookingIdController = async (req, res)=>{
         return res.status(500).json({error: `error in the getBookingAtBookingIdController ${err.message}`});
     }
 }
-
+/*
+    @description function to startBooking at particular booking id
+    takes bookingId and startOdometerValue in the request body 
+    returns the updated booking
+*/
 export const startBookingController = async (req, res)=>{
 
     const bookingId = req.params.bookingId;
@@ -477,7 +499,11 @@ export const startBookingController = async (req, res)=>{
         return res.status(500).json({error: `error in the startBookingController ${err.message}`});
     }
 }
-
+/*
+    @description function to endBooking at particular booking id
+    takes bookingId and endOdometerValue in the request body 
+    returns the updated booking
+*/
 export const endBookingController = async (req, res)=>{
     const bookingId = req.params.bookingId;
     const { endOdometerValue } = req.body;
@@ -502,7 +528,11 @@ export const endBookingController = async (req, res)=>{
     }
 
 }
-
+/*
+    @description function to reviewBooking at particular booking id
+    takes bookingId in the request params
+    returns the updated booking
+*/
 export const reviewBookingController = async(req, res)=>{
     const bookingId = req.params.bookingId;
     try{
@@ -522,7 +552,10 @@ export const reviewBookingController = async(req, res)=>{
     }
 
 }
-
+/*
+    @description function to get the booking recommendations for the user
+    returns the top 3 vehicle recommendations for the user
+*/
 export const bookingRecommendationController = async (req, res) => {
     const userCity = req.user.city;
     try {

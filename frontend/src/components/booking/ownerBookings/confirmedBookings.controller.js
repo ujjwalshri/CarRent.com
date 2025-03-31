@@ -32,7 +32,7 @@ angular
         $scope.isLoading = true;
         BiddingService.getBookingsForOwner(params).then((bookings)=>{
           console.log(bookings);
-          $scope.allBookings = bookings.bookings;
+          $scope.allBookings = bookings.bookings.map(booking => BiddingFactory.createBid(booking, false));
           $scope.totalPages = Math.ceil(bookings.totalDocs/$scope.itemsPerPage);
           console.log($scope.allBookings);
         }).catch((err)=>{

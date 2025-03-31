@@ -74,21 +74,15 @@
                   </div>
 
                   <div class="form-group">
-                      <label for="city">City:</label>
-                      <select class="form-control" id="city" name="city" ng-model="city" required>
-                          <option value="" disabled selected>Select your city</option>
-                          <option value="Delhi">Delhi</option>
-                          <option value="Mumbai">Mumbai</option>
-                          <option value="Gwalior">Gwalior</option>
-                          <option value="Bhind">Bhind</option>
-                          <option value="Gurugram">Gurugram</option>
-                          <option value="Agra">Agra</option>
-                          <option value="Shiv puri">Shiv Puri</option>
-                      </select>
-                      <span class="text-danger" ng-show="userForm.city.$error.required && userForm.city.$touched">
-                          Please select a city.
-                      </span>
-                  </div>
+                    <label for="city">City:</label>
+                    <select class="form-control" id="city" name="city" ng-model="city" required>
+                        <option value="" disabled selected>Select your city</option>
+                        <option ng-repeat="city in cities" value="{{city}}">{{city}}</option>
+                    </select>
+                    <span class="text-danger" ng-show="userForm.city.$error.required && userForm.city.$touched">
+                        Please select a city.
+                    </span>
+                </div>
 
                   <div class="form-group">
                       <label for="adhaar">Aadhaar Number:</label>

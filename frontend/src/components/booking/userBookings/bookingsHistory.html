@@ -1,8 +1,30 @@
-<button style="margin-left: 20px;" ng-click="back()"><<<</button>
+<back-button></back-button>
 
 <div ng-init="init()" class="container">
-    <h2 class="text-center" ng-show="bookings.length > 0">Booking History</h2>
-   
+    <div class="row">
+        <div class="col-md-8">
+            <h2 class="text-center" ng-show="bookings.length > 0">Booking History</h2>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-btn" uib-dropdown dropdown-append-to-body>
+                            <button type="button" class="btn btn-default" uib-dropdown-toggle>
+                                <span class="glyphicon glyphicon-sort"></span> Sort By: {{selectedSort.label}} <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-right" uib-dropdown-menu>
+                                <li><a href ng-click="applySorting('createdAt', -1, 'Latest First')">Latest First</a></li>
+                                <li><a href ng-click="applySorting('createdAt', 1, 'Oldest First')">Oldest First</a></li>
+                                <li class="divider"></li>
+                                <li><a href ng-click="applySorting('amount', -1, 'Amount High to Low')">Amount High to Low</a></li>
+                                <li><a href ng-click="applySorting('amount', 1, 'Amount Low to High')">Amount Low to High</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+       
 
     <div class="container-fluid text-center" style="height: 100vh; background-color: #f8f9fa; display: flex; justify-content: center; align-items: center;" 
          ng-hide="bookings.length > 0">
@@ -11,11 +33,6 @@
             <h2 class="text-muted">No Booking History</h2>
         </div>
     </div>
-   
-    
-    <br>
-   
-    <br>
 
     <div class="table-responsive" ng-show="bookings.length > 0">
         <table class="table table-hover table-bordered table-striped">
@@ -29,7 +46,8 @@
                     <th>Owner Username</th>
                     <th>Car Name</th>
                     <th>Car Type</th>
-                    <th>downloadBillAsPDF</th>
+                    <th>Download Invoice</th>
+                    <th>Book again ?</th>
                 </tr>
             </thead>
             <tbody>
@@ -43,7 +61,14 @@
                     <td>{{booking.vehicle.company}} {{booking.vehicle.name}}</td>
                     <td>{{booking.vehicle.fuelType}}</td>
                     <td>
-                        <button class="btn btn-primary" ng-click="booking.generatePDF()">Download Invoice</button>
+                        <button class="btn btn-primary btn-sm" ng-click="booking.generatePDF()">
+                            <span class="glyphicon glyphicon-download-alt"></span> Download Invoice
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" ng-click="navigateToSingleCarPage(booking.vehicle._id)">
+                            <span class="glyphicon glyphicon-book"></span> Book Again
+                        </button>
                     </td>
                 </tr>
             </tbody>
@@ -56,3 +81,5 @@
         </button>
     </div>
 </div>
+
+    

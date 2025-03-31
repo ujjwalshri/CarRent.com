@@ -162,6 +162,9 @@ export const updateUserProfileController = async (req, res) => {
     if (!firstName || !lastName || !city) {
         return res.status(400).json({ message: 'All fields (firstName, lastName, city) are required' });
     }
+    if(req.user.updatedAt && new Date() - new Date(req.user.updatedAt) <= 3 * 24 * 60 * 60 * 1000){
+        return res.status(400).json({ message: 'You can only update your profile once every 3 days' });
+    }
 
     try {
         const updatedUser = await User.findByIdAndUpdate(

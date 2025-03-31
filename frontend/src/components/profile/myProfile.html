@@ -1,4 +1,4 @@
-<button style="margin-left: 20px;" ng-click="back()"><<<</button>
+<back-button></back-button>
 <div ng-init="init()" class="container">
   <div class="panel panel-default user-card">
     <div class="panel-heading text-center">
@@ -108,16 +108,10 @@
       <div class="form-group">
         <label>City</label>
         <select class="form-control" ng-model="updatedUser.city">
-          <option value="" disabled>Please select your city</option>
-          <option value="Delhi">Delhi</option>
-          <option value="Mumbai">Mumbai</option>
-          <option value="Gwalior">Gwalior</option>
-          <option value="Bhind">Bhind</option>
-          <option value="Gurugram">Gurugram</option>
-          <option value="Agra">Agra</option>
-          <option value="Shiv puri">Shiv Puri</option>
+            <option value="" disabled>Please select your city</option>
+            <option ng-repeat="city in cities" value="{{city}}">{{city}}</option>
         </select>
-      </div>
+    </div>
       
     </div>
     

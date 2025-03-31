@@ -1,5 +1,7 @@
 import Vehicle from "../models/vehicle.model.js";
 import Bidding from "../models/bidding.model.js";
+import Review from "../models/review.model.js";
+
 
 
 /*
@@ -38,7 +40,7 @@ export const getCarDescriptionController = async (req, res) => {
                 $match: {
                     createdAt: {
                         $gte: new Date(startDate),
-                        $lte: new Date(endDate)
+                        $lte: new Date(endDate).setHours(23, 59, 59, 999)
                     }
                 }
             });
@@ -293,79 +295,132 @@ export const getCarCountByFuelTypeController = async (req, res) => {
 
 export const getTotalRevenueController = async (req, res) => {
     const userId = req.user._id;
+    const { startDate, endDate } = req.query;
+    console.log(startDate, endDate);
 
     try {
-        const aggregationPipeline = [
-         
+        if (startDate && !endDate) {
+            return res.status(400).json({ 
+                error: "If start date is provided, end date is required" 
+            });
+        }
+
+        if (startDate && endDate && (isNaN(Date.parse(startDate)) || isNaN(Date.parse(endDate)))) {
+            return res.status(400).json({ 
+                error: "Invalid date format. Use a valid ISO date string." 
+            });
+        }
+
+        // Base pipeline for revenue calculation
+        const basePipeline = [
             {
                 $match: {
                     "owner._id": userId,
                     status: { $in: ["ended", "reviewed"] }
                 }
             },
-
-          
             {
-                $project: {
-                    amount: "$amount",
-                    distanceTraveled: { 
-                        $subtract: ["$endOdometerValue", "$startOdometerValue"] 
-                    },
-                    extraDistance: {
-                        $max: [{ $subtract: [{ $subtract: ["$endOdometerValue", "$startOdometerValue"] }, 300] }, 0]
-                    },
-                    fine: {
-                        $multiply: [
-                            { $max: [{ $subtract: [{ $subtract: ["$endOdometerValue", "$startOdometerValue"] }, 300] }, 0] },
-                            10
-                        ]
-                    },
+                $addFields: {
                     numberOfDays: {
-                        $add: [
-                            { $subtract: [{ $toDate: "$endDate" }, { $toDate: "$startDate" }] },
-                            1 * 24 * 60 * 60 * 1000 
-                        ]
+                        $ceil: {
+                            $divide: [
+                                { $subtract: ["$endDate", "$startDate"] },
+                                1000 * 60 * 60 * 24 
+                            ]
+                        }
                     },
-                    totalPayablePrice: {
-                        $add: [
-                            "$amount",
-                            {
-                                $multiply: [
-                                    { $max: [{ $subtract: [{ $subtract: ["$endOdometerValue", "$startOdometerValue"] }, 300] }, 0] },
-                                    10
-                                ]
-                            }
+                    kilometersDriven: {
+                        $subtract: ["$endOdometerValue", "$startOdometerValue"]
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    baseAmount: { $multiply: ["$amount", { $add: ["$numberOfDays", 1] }] } ,
+                    excessKilometers: {
+                        $max: [
+                            { $subtract: ["$kilometersDriven", 300] },
+                            0
                         ]
                     }
                 }
             },
-
-         
+            {
+                $addFields: {
+                    fine: {
+                        $multiply: ["$excessKilometers", 10]
+                    },
+                    totalBookingRevenue: {
+                        $add: [
+                            "$baseAmount",
+                            { $multiply: [
+                                { $max: [
+                                    { $subtract: ["$kilometersDriven", 300] },
+                                    0
+                                ]},
+                                10
+                            ]}
+                        ]
+                    }
+                }
+            },
             {
                 $group: {
                     _id: null,
-                    totalRevenue: { $sum: "$totalPayablePrice" },
-                    totalFineCollected: { $sum: "$fine" }
-                }
-            },
-
-          
-            {
-                $project: {
-                    _id: 0,
-                    totalRevenue: 1,
-                    totalFineCollected: 1
+                    totalRevenue: { $sum: "$totalBookingRevenue" },
+                    totalFineCollected: { $sum: "$fine" },
+                    totalBookings: { $sum: 1 },
+                    averageRevenue: { $avg: "$totalBookingRevenue" }
                 }
             }
         ];
 
-        const result = await Bidding.aggregate(aggregationPipeline);
+        // Execute pipeline for total revenue (all time)
+        const totalResult = await Bidding.aggregate(basePipeline);
 
-        if (!result || result.length === 0) {
-            return res.status(404).json({ message: "No revenue data found." });
+        let response = {};
+
+        if (totalResult && totalResult.length > 0) {
+            response.allTimeRevenue = totalResult[0];
         }
 
-        return res.status(200).json({ totalRevenueData: result[0] });
+
+        if (startDate && endDate) {
+            const dateFilteredPipeline = [
+                {
+                    $match: {
+                        "owner._id": userId,
+                        status: { $in: ["ended", "reviewed"] },
+                        updatedAt: {
+                            $gte: new Date(startDate),
+                            $lte: new Date(endDate)
+                        }
+                    }
+                },
+                ...basePipeline.slice(1) // Use the rest of the base pipeline
+            ];
+
+            const filteredResult = await Bidding.aggregate(dateFilteredPipeline);
+            
+            if (filteredResult && filteredResult.length > 0) {
+                response.dateFilteredRevenue = filteredResult[0];
+            } else {
+                response.dateFilteredRevenue = {
+                    totalRevenue: 0,
+                    totalFineCollected: 0,
+                    totalBookings: 0,
+                    averageRevenue: 0
+                };
+            }
+        }
+
+        if (Object.keys(response).length === 0) {
+            return res.status(404).json({ 
+                message: "No revenue data found." 
+            });
+        }
+
+        return res.status(200).json(response);
 
     } catch (err) {
         console.error(`Error in getTotalRevenueController: ${err}`);
@@ -543,6 +598,7 @@ export const getMonthWiseBookingsController = async (req, res) => {
 
 export const monthWiseCarTripsController = async (req, res) => {
     const userId = req.user._id;
+
     try{
         const aggregationPipeline = [
             {
@@ -570,3 +626,215 @@ export const monthWiseCarTripsController = async (req, res) => {
         return res.status(400).json({ error: err.message });
     }
 }
+
+export const top3CarsWithMostEarningController = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { startDate, endDate } = req.query;
+
+        const start = startDate ? new Date(startDate) : null;
+        const end = endDate ? new Date(endDate) : null;
+
+        const aggregationPipeline = [
+            {
+                $match: {
+                    'owner._id': userId,
+                    status: { $in: ["ended", "reviewed"] },
+                    ...(start && end && {
+                        updatedAt: { $gte: start, $lte: end }
+                    })
+                }
+            },
+            {
+                $addFields: {
+                    bookingDays: {
+                        $divide: [
+                            { $subtract: ["$endDate", "$startDate"] },
+                            1000 * 60 * 60 * 24 // Convert milliseconds to days
+                        ]
+                    },
+                    exceededKm: {
+                        $max: [
+                            0,
+                            { $subtract: ["$endOdometerValue", "$startOdometerValue"] } // Subtract only two values
+                        ]
+                    },
+                    exceededKmCharge: {
+                        $multiply: [
+                            {
+                                $max: [
+                                    0,
+                                    { $subtract: [{ $subtract: ["$endOdometerValue", "$startOdometerValue"] }, 300] }
+                                ]
+                            },
+                            10
+                        ]
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        $concat: [
+                            "$vehicle.company",
+                            " ",
+                            "$vehicle.name",
+                            " ",
+                            { "$toString": { "$ifNull": ["$vehicle.modelYear", ""] } }
+                        ]
+                    },
+                    totalRevenue: {
+                        $sum: {
+                            $add: [
+                                {
+                                    "$multiply": [
+                                      { "$add": ["$bookingDays", 1] }, 
+                                      "$amount"
+                                    ]
+                                  }
+,                                  
+                                "$exceededKmCharge"
+                            ]
+                        }
+                    }
+                }
+            },
+            { $sort: { totalRevenue: -1 } },
+            { $limit: 3 }
+        ];
+
+        const result = await Bidding.aggregate(aggregationPipeline);
+        return res.status(200).json({ top3CarsWithMostEarning: result });
+    } catch (err) {
+        console.error(`Error in top3CarsWithMostEarning: ${err}`);
+        return res.status(400).json({ error: err.message });
+    }
+};
+
+export const top3CostumersWithMostBookingsController = async (req, res) => {
+    const userId = req.user._id;
+    try{
+            const aggregationPipeline = [
+                {
+                    $match: {
+                        'owner._id': userId,
+                        status: {$in: ["approved", "started", "ended", "reviewed"]}
+                    }
+                },
+                {
+                    $group: {
+                        _id: "$from.username" , 
+                        count: { $sum: 1 }
+                    }
+                },
+                {
+                    $sort: { count: -1 }
+                },
+                {
+                    $limit: 3
+                }
+            ]
+            const result = await Bidding.aggregate(aggregationPipeline);
+            return res.status(200).json({ top3CostumersWithMostBookings: result });
+    }catch(err){
+        console.log(`error in the top3CostumersWithMostBookingsController ${err}`);
+        return res.status(400).json({ error: err.message });
+    }
+}
+
+export const peakBiddingHoursController = async (req, res) => {
+    const userId = req.user._id;
+    const {startDate, endDate} = req.query;
+    try{
+        const aggregationPipeline = [
+            {
+                $match: {
+                    'owner._id': userId,
+                    ...(startDate && endDate && {
+                        createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
+                    })  
+                }
+            },
+            {
+                $group: {
+                    _id: { $hour: "$createdAt" },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { _id: 1 }
+            }
+
+        ]
+        const result = await Bidding.aggregate(aggregationPipeline);
+        return res.status(200).json({ peakBiddingHours: result });
+    }catch(err){
+        console.log(`error in the peakBiddingHoursController ${err}`);
+    }
+}
+
+export const getNegativeReviewsPercentageController = async (req, res) => {
+    const userId = req.user._id;
+    const { startDate, endDate } = req.query;
+    console.log(startDate, endDate);
+    try {
+
+        const matchFilter = {
+            ...(startDate && endDate && {
+                createdAt: { 
+                    $gte: new Date(startDate),
+                    $lte: new Date(endDate)
+                }
+            })
+        };
+
+
+        const negativeReviewsResult = await Review.aggregate([
+            {
+                $lookup: {
+                    from: "vehicles", 
+                    localField: "vehicle._id",  
+                    foreignField: "_id", 
+                    as: "vehicleData"
+                }
+            },
+            { $unwind: "$vehicleData" },
+            { $match: { "vehicleData.owner._id": userId, rating: { $lt: 3 }, ...matchFilter } },
+            { $count: "negativeCount" }
+        ]);
+
+
+
+        const totalReviewsResult = await Review.aggregate([
+            {
+                $lookup: {
+                    from: "vehicles",
+                    localField: "vehicle._id",
+                    foreignField: "_id",
+                    as: "vehicleData"
+                }
+            },
+            { $unwind: "$vehicleData" },
+            { $match: { "vehicleData.owner._id": userId, ...matchFilter } },
+            { $count: "totalCount" }
+        ]);
+
+
+
+        const negativeCount = negativeReviewsResult.length ? negativeReviewsResult[0].negativeCount : 0;
+        const totalCount = totalReviewsResult.length ? totalReviewsResult[0].totalCount : 0;
+
+
+        const negativeReviewsPercentage = totalCount > 0 ? ((negativeCount / totalCount) * 100).toFixed(2) : 0;
+
+        return res.status(200).json({
+            negativeReviewsPercentage,
+            totalReviews: totalCount,
+            negativeReviews: negativeCount
+        });
+
+    } catch (err) {
+        console.log(`Error in getNegativeReviewsPercentageController: ${err}`);
+        return res.status(400).json({ error: err.message });
+    }
+};

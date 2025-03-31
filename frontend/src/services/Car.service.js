@@ -53,7 +53,7 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
         })
         return deferred.promise;
     }
-    /*
+    /*fetchBookingsAtCarId
     function to get bookings at car id
     @params carId
     @returns promise
@@ -237,6 +237,40 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
     this.getCarRecommendationsForUser = ()=>{
         let deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/bidding/getCarRecommendation`, { withCredentials: true })
+        .then((res)=>{
+            deferred.resolve(res.data);
+        })
+        .catch((error)=>{
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+    this.addCarCategory = (carCategory)=>{
+        console.log("carCategory", carCategory);    
+        let deferred = $q.defer();
+        $http.post(`${ApiService.baseURL}/api/admin/addCarCategory`, {name : carCategory}, { withCredentials: true })
+        .then((res)=>{
+            deferred.resolve(res.data);
+        })
+        .catch((error)=>{
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+    this.getAllCarCategoriesForAdmin = ()=>{
+        let deferred = $q.defer();
+        $http.get(`${ApiService.baseURL}/api/admin/getAllCarCategories`, { withCredentials: true })
+        .then((res)=>{
+            deferred.resolve(res.data);
+        })
+        .catch((error)=>{
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+    this.deleteCarCategory = (categoryID)=>{
+        let deferred = $q.defer();
+        $http.delete(`${ApiService.baseURL}/api/admin/deleteCarCategory/${categoryID}`, { withCredentials: true })
         .then((res)=>{
             deferred.resolve(res.data);
         })

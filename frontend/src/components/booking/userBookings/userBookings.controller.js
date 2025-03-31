@@ -56,10 +56,8 @@ angular
           return BiddingFactory.createBid(booking, false);
         }));
         $scope.hasMoreData = biddings.totalDocs > $scope.bookings.length;
-        console.log(biddings.totalDocs);
         $scope.totalPages = Math.ceil(biddings.totalDocs/$scope.itemsPerPage);
-        console.log($scope.totalPages);
-        console.log($scope.bookings);
+
       }).catch((err) => {
         ToastService.error(`Error fetching bookings ${err}`);
       }).finally(()=>{
@@ -78,14 +76,15 @@ angular
         review: $scope.review.newReview
       };
       
-      //check if the review is a valid review or not
-      const isValidReview = Review.isValidReview(review);
-      if(isValidReview.status === false){
-        ToastService.error(isValidReview.message);
+      const reviewData = Review.createValidatedReview(review);
+      console.log(reviewData);
+      if(reviewData instanceof Error){
+        ToastService.error(reviewData.message);
         return;
       }
+
       // if the review is valid then add the review to the database
-      CarService.addReview(carId, review, bookingId)
+      CarService.addReview(carId, reviewData, bookingId)
         .then((res) => {
           console.log("hi");
           // call the IDB service addReview function to add the review to the database
