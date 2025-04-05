@@ -1,24 +1,28 @@
 import express from 'express';
 import protectRoute from '../middlewares/protectRoute.js';
-import protectFromUser from '../middlewares/authenticateUser.js';
-import protectFromAdmin from '../middlewares/authenticateAdminRole.js';
-import {getCarDescriptionController, getTop3MostPopularCarsController, numberOfBiddingsPerLocationController,getTotalCarsAddedController, numberOfBidsOnMyCarsController, getCarCountByFuelTypeController, getTotalRevenueController,getOngoingBookingsController, getMyBidsInLast7DaysVsOtherSellerAvgBidsController, carWiseBookingsController, getMonthWiseBookingsController, top3CarsWithMostEarningController, top3CostumersWithMostBookingsController, peakBiddingHoursController, getNegativeReviewsPercentageController} from '../controllers/seller.analytics.controller.js';
+import allowSeller from '../middlewares/authenticateSeller.js';
+import {getCarDescriptionController, getTop3MostPopularCarsController, numberOfBiddingsPerLocationController,getTotalCarsAddedController, numberOfBidsOnMyCarsController, getCarCountByFuelTypeController, getTotalRevenueController,getOngoingBookingsController, getMyBidsVsOtherSellerAvgBidsController, carWiseBookingsController, getMonthWiseBookingsController, top3CarsWithMostEarningController, top3CostumersWithMostBookingsController, peakBiddingHoursController, getNegativeReviewsPercentageController, getAverageRentalDurationController, getRepeatingCustomerPercentageController, numberOfBookingsController, getCarWiseNegativeReviewsController} from '../controllers/seller.analytics.controller.js';
 
 const router = express.Router();
 
-router.get('/carDescription',protectRoute,protectFromUser,protectFromAdmin,getCarDescriptionController );
-router.get('/top3MostPopularCars', protectRoute, protectFromUser, protectFromAdmin, getTop3MostPopularCarsController);
-router.get('/numberOfBiddingsPerCarLocation',protectRoute, protectFromUser, protectFromAdmin, numberOfBiddingsPerLocationController);
-router.get('/getTotalCarsAdded' , protectRoute, protectFromUser, protectFromAdmin, getTotalCarsAddedController);
-router.get('/numberOfBidsOnMyCars', protectRoute, protectFromUser, protectFromAdmin,numberOfBidsOnMyCarsController );
-router.get('/getBidsPerLocationType', protectRoute, protectFromUser, protectFromAdmin, getCarCountByFuelTypeController);
-router.get('/getTotalBookingRevenue', protectRoute, protectFromUser, protectFromAdmin, getTotalRevenueController);
-router.get('/onGoingBookings', protectRoute, protectFromUser, protectFromAdmin,getOngoingBookingsController );
-router.get('/myBidsAndOtherSellersAvgBids', protectRoute, protectFromUser, protectFromAdmin, getMyBidsInLast7DaysVsOtherSellerAvgBidsController);
-router.get('/getcarWiseBookings', protectRoute, protectFromUser, protectFromAdmin, carWiseBookingsController);
-router.get('/getMonthWiseBookings',protectRoute, protectFromUser, protectFromAdmin,  getMonthWiseBookingsController);
-router.get('/top3CarsWithMostEarning', protectRoute, protectFromUser, protectFromAdmin, top3CarsWithMostEarningController);
-router.get('/top3CostumersWithMostBookings', protectRoute, protectFromUser, protectFromAdmin, top3CostumersWithMostBookingsController);
-router.get('/peakBiddingHours', protectRoute, protectFromUser, protectFromAdmin, peakBiddingHoursController);
-router.get('/getNegativeReviewsPercentage', protectRoute, protectFromUser, protectFromAdmin, getNegativeReviewsPercentageController);
-export default router;
+router.get('/carDescription',protectRoute,allowSeller,getCarDescriptionController ); // get the car description
+router.get('/top3MostPopularCars', protectRoute, allowSeller, getTop3MostPopularCarsController); // get the top 3 most popular cars
+router.get('/numberOfBiddingsPerCarLocation',protectRoute, allowSeller, numberOfBiddingsPerLocationController); // get the number of biddings per car location
+router.get('/getTotalCarsAdded' , protectRoute, allowSeller, getTotalCarsAddedController); // get the total cars added
+router.get('/numberOfBidsOnMyCars', protectRoute, allowSeller,numberOfBidsOnMyCarsController );// get the number of bids on my cars
+router.get('/getBidsPerLocationType', protectRoute, allowSeller, getCarCountByFuelTypeController); // get the car count by fuel type
+router.get('/getTotalBookingRevenue', protectRoute, allowSeller, getTotalRevenueController); // get the total booking revenue
+router.get('/onGoingBookings', protectRoute,allowSeller,getOngoingBookingsController ); // get the ongoing bookings
+router.get('/myBidsAndOtherSellersAvgBids', protectRoute,allowSeller, getMyBidsVsOtherSellerAvgBidsController); // get the my bids and other sellers avg bids
+router.get('/getcarWiseBookings', protectRoute,allowSeller, carWiseBookingsController); // get the car wise bookings 
+router.get('/getMonthWiseBookings',protectRoute, allowSeller, getMonthWiseBookingsController); // get the month wise bookings
+router.get('/top3CarsWithMostEarning', protectRoute, allowSeller, top3CarsWithMostEarningController); // get the top 3 cars with most earning
+router.get('/top3CostumersWithMostBookings', protectRoute, allowSeller, top3CostumersWithMostBookingsController); // get the top 3 costumers with most bookings
+router.get('/peakBiddingHours', protectRoute, allowSeller, peakBiddingHoursController); // get the peak bidding hours
+router.get('/getNegativeReviewsPercentage', protectRoute,allowSeller, getNegativeReviewsPercentageController); // get the negative reviews percentage
+router.get('/getAverageRentalDuration', protectRoute, allowSeller, getAverageRentalDurationController); // get the average rental duration
+router.get('/getRepeatingCustomersPercentage', protectRoute, allowSeller, getRepeatingCustomerPercentageController) // get the repeating customer percentage
+router.get('/numberOfBookings', protectRoute, allowSeller, numberOfBookingsController); // get the number of bookings
+router.get('/getCarWiseNegativeReviews', protectRoute, allowSeller, getCarWiseNegativeReviewsController); // get the car wise negative reviews
+
+export default router; // export the router

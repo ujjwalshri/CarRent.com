@@ -5,6 +5,16 @@ angular.module('myApp').service('ChartService', function($http, $q, ApiService) 
     @returns creates pie chart
     */
   this.createPieChart = (labels, data, label, htmlElementId) => {
+    // Store chart instances in a map to manage multiple charts
+    if (!this.chartInstances) {
+        this.chartInstances = {};
+    }
+
+    // Check if a chart already exists for the given element ID and destroy it
+    if (this.chartInstances[htmlElementId]) {
+        this.chartInstances[htmlElementId].destroy();
+    }
+
     var chartConfig = {
         type: "pie",
         data: {
@@ -32,7 +42,8 @@ angular.module('myApp').service('ChartService', function($http, $q, ApiService) 
         }
     };
     var ctx = document.getElementById(htmlElementId).getContext('2d');
-    new Chart(ctx, chartConfig);
+    // Create a new chart and store its instance
+    this.chartInstances[htmlElementId] = new Chart(ctx, chartConfig);
 };
 
 
@@ -54,6 +65,9 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
   if (this.chartInstances[htmlElementId]) {
       this.chartInstances[htmlElementId].destroy();
   }
+
+  // Check if this is the earnings chart
+  const isEarningsChart = htmlElementId === 'topHighestEarningCities';
 
   var chartConfig = {
       type: type,
@@ -98,7 +112,13 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
                       ticks: {
                           beginAtZero: true,
                           fontColor: "#555",
-                          fontSize: 14
+                          fontSize: 14,
+                          callback: function(value) {
+                              if (isEarningsChart) {
+                                  return '$' + value.toLocaleString('en-US');
+                              }
+                              return value;
+                          }
                       },
                       gridLines: { color: "rgba(200, 200, 200, 0.3)" }
                   },
@@ -110,6 +130,19 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
                   },
               ],
           },
+          tooltips: {
+              callbacks: {
+                  label: function(tooltipItem, chartData) {
+                      if (isEarningsChart) {
+                          return new Intl.NumberFormat('en-US', { 
+                              style: 'currency', 
+                              currency: 'USD' 
+                          }).format(tooltipItem.value);
+                      }
+                      return tooltipItem.value;
+                  }
+              }
+          }
       }
   };
 
@@ -179,7 +212,7 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
     @params params
     @returns car description
     */
-    this.getCarDescription = async (params) => {
+    this.getCarDescriptionForSeller = async (params) => {
       console.log("params", params);
       let deffered = $q.defer();
       $http.get(`${ApiService.baseURL}/api/seller/carDescription`, {params:params, withCredentials:true})
@@ -340,13 +373,14 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
       return deffered.promise;
     }
     /*
-    function to get the car description for admin
+    function to get the average rental duration for seller
     @params params
-    @returns car description for admin
+    @returns average rental duration for seller
     */
-    this.getTop10MostPopularCarsForAdmin = async (params) => {
+    this.getAverageRentalDurationForSeller = async (params) => {
+      console.log(params);
       let deffered = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/admin/getTop10MostPopularCars`, {params:params, withCredentials:true})
+      $http.get(`${ApiService.baseURL}/api/seller/getAverageRentalDuration`, {params:params, withCredentials:true})
       .then((response)=>{
         deffered.resolve(response.data);
       })
@@ -355,14 +389,34 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
       });
       return deffered.promise;
     }
+    /*
+    function to get the repeating customer percetage for a user 
+    @params params
+    @returns repeating customer percentage
+    */
+
+    this.getRepeatingCustomersPercentageForSeller = async(params)=>{
+      let deffered = $q.defer();
+      $http.get(`${ApiService.baseURL}/api/seller/getRepeatingCustomersPercentage`, {params:params, withCredentials:true})
+      .then((response)=>{
+        deffered.resolve(response.data);
+      })
+      .catch((error)=>{
+        deffered.reject(error);
+      });
+      return deffered.promise;
+    }
+
+    
+
     /*
     function to get the suv vs sedan for admin
     @params params
     @returns suv vs sedan for admin
     */
-    this.getSuvVsSedanForAdmin = async (params) => {
+    this.getChartsData = async (params) => {
       let deffered = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/admin/getSuvVsSedan`, {params:params, withCredentials:true})
+      $http.get(`${ApiService.baseURL}/api/admin/charts`, {params:params, withCredentials:true})
       .then((response)=>{
         deffered.resolve(response.data);
       })
@@ -371,84 +425,16 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
       });
       return deffered.promise;
     }
-    /*
-    function to get the top 3 most reviewed cars for admin
-    @params params
-    @returns top 3 most reviewed cars for admin
-    */
-    this.top3MostReviewedCarsForAdmin = async (params) => {
-      let deffered = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/admin/top3MostReviewedCars`, {params:params, withCredentials:true})
-      .then((response)=>{
-        deffered.resolve(response.data);
-      })
-      .catch((error)=>{
-        deffered.reject(error);
-      });
-      return deffered.promise;
-    }
-    this.getUserGrowthForAdmin = async (params) => {  
-      let deffered = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/admin/getUserGrowth`, {params:params, withCredentials:true})
-      .then((response)=>{
-        deffered.resolve(response.data);
-      })
-      .catch((error)=>{
-        deffered.reject(error);
-      });
-      return deffered.promise;
-    }
-    this.getUserEngagementPercentageForAdmin = async (params) => {
-      let deffered = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/admin/getUserEngagementPercentage`, {params:params, withCredentials:true})
-      .then((response)=>{
-        deffered.resolve(response.data);
-      })
-      .catch((error)=>{
-        deffered.reject(error);
-      });
-      return deffered.promise;
-    }
-    /*
-    function to get the top 3 owners with most cars added for admin
-    @params params
-    @returns top 3 owners with most cars added for admin
-    */
-    this.top3OwnersWithMostCarsAddedForAdmin = async (params) => {
-      let deffered = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/admin/getTop3OwnersWithMostCars`, {params:params, withCredentials:true})
-      .then((response)=>{
-        deffered.resolve(response.data);
-      })
-      .catch((error)=>{
-        deffered.reject(error);
-      });
-      return deffered.promise;
-    }
-    /*
-    function to get the ongoing bookings for admin
-    @params params
-    @returns ongoing bookings for admin
-    */
-    this.getOngoingBookingsForAdmin = async (params) => {
-      let deffered = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/admin/getOngoingBookings`, {params:params, withCredentials:true})
-      .then((response)=>{
-        deffered.resolve(response.data);
-      })
-      .catch((error)=>{
-        deffered.reject(error);
-      });
-      return deffered.promise;
-    }
+
+    
     /*
     function to get the average booking duration for admin
     @params params
     @returns average booking duration for admin
     */
-    this.getAverageBookingDurationForAdmin = async (params) => {
+    this.getGeneralAnalyticsForAdmin = async (params) => {
       let deffered = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/admin/getAverageBookingDuration`, {params:params, withCredentials:true})
+      $http.get(`${ApiService.baseURL}/api/admin/getGeneralAnalytics`, {params:params, withCredentials:true})
       .then((response)=>{
         deffered.resolve(response.data);
       })
@@ -462,9 +448,9 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
     @params params
     @returns bidding conversion rate for admin
     */
-    this.getBiddingConversionRateForAdmin = async (params) => {
+    this.getOverviewStatsForAdmin = async (params) => {
       let deffered = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/admin/getBiddingConversionRate`, {params:params, withCredentials:true})
+      $http.get(`${ApiService.baseURL}/api/admin/getOverviewStats`, {params:params, withCredentials:true})
       .then((response)=>{
         deffered.resolve(response.data);
       })
@@ -473,46 +459,16 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
       });
       return deffered.promise;
     }
-    /*
-    function to get all blocked users for admin
-    @params params
-    @returns all blocked users for admin
-    */
-    this.getNumberOfBlockedUsersForAdmin = async () => {
-      let deffered = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/admin/getNumberOfBlockedUsers`, { withCredentials:true})
-      .then((response)=>{
-        deffered.resolve(response.data);
-      })
-      .catch((error)=>{
-        deffered.reject(error);
-      });
-      return deffered.promise;
-    }
-    /*
-    function to get the number of bidding per car city for admin
-    @params params
-    @returns number of bidding per car city for admin
-    */
-    this.numberOfBiddingPerCarCityForAdmin = async () => {
-      let deffered = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/admin/numberOfBiddingPerCarCity`, { withCredentials:true})
-      .then((response)=>{
-        deffered.resolve(response.data);
-      })
-      .catch((error)=>{
-        deffered.reject(error);
-      });
-      return deffered.promise;
-    }
+    
+
     /*
     function to get the number of owners per city for admin
     @params params
     @returns number of owners per city for admin
     */
-    this.numberOfOwnersPerCityForAdmin = async () => {
+    this.numberOfUsersPerCityForAdmin = async () => {
       let deffered = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/admin/numberOfOwnersPerCity`, { withCredentials:true})
+      $http.get(`${ApiService.baseURL}/api/admin/numberOfUsersPerCity`, { withCredentials:true})
       .then((response)=>{
         deffered.resolve(response.data);
       })
@@ -521,58 +477,10 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
       });
       return deffered.promise;
     }
-    /*
-    function to get the user description for admin
-    @params params
-    @returns user description for admin
-    */
-    this.getUserDescriptionForAdmin = async (params) => {
-      let deffered = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/admin/getUserDescription`, {params:params, withCredentials:true})
-      .then((response)=>{
-        deffered.resolve(response.data);
-      })
-      .catch((error)=>{
-        deffered.reject(error);
-      });
-      return deffered.promise;
-    }
-    /*
-    function to get the number of buyers per city for admin
-    @params params
-    @returns number of buyers per city for admin
-    */
-    this.getnumberOfBuyersPerCityForAdmin = async (params) => {
-      let deffered = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/admin/getnumberOfBuyersPerCity`, {params:params, withCredentials:true})
-      .then((response)=>{
-        deffered.resolve(response.data);
-      })
-      .catch((error)=>{
-        deffered.reject(error);
-      });
-      return deffered.promise;
-    }
-    /*
-    function to get the new users in last 30 days for admin
-    @params params
-    @returns new users in last 30 days for admin
-    */
-    this.newUsersInLast30DaysForAdmin = async () => { 
-      let deffered = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/admin/newUsersInLast30Days`, { withCredentials:true})
-      .then((response)=>{
-        deffered.resolve(response.data);
-      })
-      .catch((error)=>{
-        deffered.reject(error);
-      });
-      return deffered.promise;
 
-    }
-    this.getTop10SellersWithMostEarningsForAdmin = async (params) => {
+    this.topHighestEarningCitiesForAdmin = async (params) => {
       let deffered = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/admin/top10SellersWithMostEarnings`, {params:params, withCredentials:true})
+      $http.get(`${ApiService.baseURL}/api/admin/topHighestEarningCities`, {params:params, withCredentials:true})
       .then((response)=>{
         deffered.resolve(response.data);
       })
@@ -581,9 +489,9 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
       });
       return deffered.promise;
     }
-    this.topBuyersWithMostBookingsForAdmin = async (params) => {
+    this.getTopPerformersForAdmin = async (params) => {
       let deffered = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/admin/topBuyersWithMostBookings`, {params:params, withCredentials:true})
+      $http.get(`${ApiService.baseURL}/api/admin/topPerformers`, {params:params, withCredentials:true})
       .then((response)=>{
         deffered.resolve(response.data);
       })
@@ -592,6 +500,7 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
       });
       return deffered.promise;
     }
+
     this.top3CarsWithMostEarning = async (params) => {
       let deffered = $q.defer();
       $http.get(`${ApiService.baseURL}/api/seller/top3CarsWithMostEarning`, {params:params, withCredentials:true})
@@ -615,8 +524,31 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
       return deffered.promise;
     }
     this.peakBiddingHours = async (params) => {
+      console.log(params);
       let deffered = $q.defer();
       $http.get(`${ApiService.baseURL}/api/seller/peakBiddingHours`, {params:params, withCredentials:true})
+      .then((response)=>{
+        deffered.resolve(response.data);
+      })
+      .catch((error)=>{
+        deffered.reject(error);
+      });
+      return deffered.promise;
+    }
+    this.getNumberOfBookingsForSeller = async (params) => {
+      let deffered = $q.defer();
+      $http.get(`${ApiService.baseURL}/api/seller/numberOfBookings`, {params:params, withCredentials:true})
+      .then((response)=>{
+        deffered.resolve(response.data);
+      })
+      .catch((error)=>{
+        deffered.reject(error);
+      });
+      return deffered.promise;
+    }
+    this.getCarWiseNegativeReviews = async (params) => {
+      let deffered = $q.defer();
+      $http.get(`${ApiService.baseURL}/api/seller/getCarWiseNegativeReviews`, {params:params, withCredentials:true})
       .then((response)=>{
         deffered.resolve(response.data);
       })

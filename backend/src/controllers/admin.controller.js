@@ -6,25 +6,31 @@ import City from "../models/city.model.js";
 import CarCategory from "../models/car.category.model.js";
 import { generateCongratulationMail,generateCongratulationMailToBuyer } from "../utils/gen.mail.js";
 
+
+const getValue = (result, fallback = 0) =>
+    result.status === "fulfilled" ? result.value : fallback;
 /*
-@description: function to get suv and sedan cars numbers from the database createdAt between the given dates
-takes startDate and endDate as query params
-returns suv and sedan cars count
+@description: function to get charts data by running all the pipelines in parallel using Promise.allSettled 
+@params startDate and endDate
+returns the charts data
 */
-export const getSuvVsSedanCarsController = async (req, res) => {
+export const getChartsDataController = async (req, res) => {
     try {
         const { startDate, endDate } = req.query; //2025-03-25T00:00:00.000Z example date format
 
+       if(!startDate || !endDate){
+        return res.status(400).json({message: "startDate and endDate are required"});
+       }
 
-        if ((startDate && isNaN(Date.parse(startDate))) || (endDate && isNaN(Date.parse(endDate)))) {
-            return res.status(400).json({ error: "Invalid date format. Use a valid ISO date string." });
-        }
-
-        const aggregationPipeline = [
+        const carDescriptionPipeline = [
             {
                 $match: {
                     status: 'approved',
                     deleted: false,
+                    createdAt: {
+                        $gte: new Date(startDate),
+                        $lte: new Date(endDate)
+                    }
                 }
             },
             {
@@ -35,87 +41,40 @@ export const getSuvVsSedanCarsController = async (req, res) => {
             }
         ];
 
-       
-        if (startDate && endDate) {
-            aggregationPipeline.unshift({
+        const top10PopularCarModelsPipeline = [
+            {
                 $match: {
-                  createdAt: {
-                    $gte: new Date(startDate),
-                    $lte: new Date(endDate)
-                  }
+                    startDate: {
+                        $gte: new Date(startDate),
+                        $lte: new Date(endDate)
+                    }
                 }
-            });
-        }
-
-
-        const result = await Vehicle.aggregate(aggregationPipeline);
-
-
-        if (!result || result.length === 0) {
-            return res.status(404).json({ message: "No data found for the given filters." });
-        }
-
-        return res.status(200).json({ suvVsSedan: result });
-    } catch (err) {
-        console.error(`Error in getSuvVsSedanCarsController: ${err.message}`);
-        return res.status(500).json({ error: "An internal server error occurred." });
-    }
-};
-
-/*
-@description: function to get the top 10 popular car models from the database
-takes startDate and endDate as query params
-returns top 10 popular car models
-*/
-export const top10PopularCarModelsController = async (req, res) => {
- const {startDate, endDate} = req.query;
- try{
-    const aggregationPipeline = [
-        {
-            $group: {
-                _id: { $concat: ["$vehicle.company", " ", "$vehicle.name", " ", { "$toString": "$vehicle.modelYear" }] },
-                count: { $sum: 1 }
+            },
+            {
+                $group: {
+                    _id: { $concat: ["$vehicle.company", " ", "$vehicle.name", " ", { "$toString": "$vehicle.modelYear" }] },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: {count: -1}
+            },
+            {
+                $limit: 10
             }
-        },
-        {
-            $sort: {count: -1}
-        },
-        {
-            $limit: 10
-        }
-    ];
+        ];
 
-        if (startDate && endDate) {
-            aggregationPipeline.unshift({
+
+         // applying aggregation pipeline on the reviews
+         const top3MostReviewedCarsPipeline = [
+            {
                 $match: {
-                  createdAt: {
-                    $gte: new Date(startDate),
-                    $lte: new Date(endDate)
-                  }
+                    createdAt: {
+                        $gte: new Date(startDate),
+                        $lte: new Date(endDate)
+                    }
                 }
-            });
-        }
-
-
-    const result = await Bidding.aggregate(aggregationPipeline);
-    return res.status(200).json({ result});
-
- }catch(err){
-        console.log(`error in the top10PopularCarModelsController ${err}`);
-        return res.status(500).json({message: "Internal server error"});
- }
-}
-
-/*
-function to get the top 3 most reviewed cars
-takes startDate and endDate as query params
-returns top 3 most reviewed cars
-*/
-export const getTop3MostReviewedCarsController = async (req, res) => {
-    const {startDate, endDate } =  req.query;
-    try {
-        // applying aggregation pipeline on the reviews
-        const aggregationPipeline = [
+            },
             {
                 $group: {
                     _id: { $concat: ["$vehicle.company", " ", "$vehicle.name", " ", { "$toString": "$vehicle.modelYear" }] },
@@ -129,39 +88,16 @@ export const getTop3MostReviewedCarsController = async (req, res) => {
                 $limit: 3
             },
         ];
-        if (startDate && endDate) {
-            aggregationPipeline.unshift({
-                $match: {
-                  createdAt: {
-                    $gte: new Date(startDate),
-                    $lte: new Date(endDate)
-                  }
-                }
-            });
-        }
 
-
-        const result = await Review.aggregate(aggregationPipeline);
-        return res.status(200).json({ result });
-
-    } catch (err) {
-        console.log(`error in the getTop3MostReviewedCarsController ${err}`);
-        return res.status(500).json({ message: "Internal server error" });
-    }
-}
-/*
-function to get the top 3 owners with most cars added
-takes startDate and endDate as query params
-returns top 3 owners with most cars added
-*/
-export const top3OwnersWithMostCarsAddedController = async (req, res) => {
-    const {startDate, endDate} = req.query;
-    try{
-        const aggregationPipeline = [
+        const top3OwnersWithMostCarsAddedPipeline = [
             {
                 $match: {
                     status: 'approved',
                     deleted: false,
+                    createdAt: {
+                        $gte: new Date(startDate),
+                        $lte: new Date(endDate)
+                    }
                 }
             },
             {
@@ -177,104 +113,246 @@ export const top3OwnersWithMostCarsAddedController = async (req, res) => {
                 $limit: 3
             }
         ]
-
-        if (startDate && endDate) {
-            aggregationPipeline.unshift({
-                $match: {
-                  createdAt: {
-                    $gte: new Date(startDate),
-                    $lte: new Date(endDate)
-                  }
-                }
-            });
-        }
-        const result = await Vehicle.aggregate(aggregationPipeline);
-        return res.status(200).json({result});
-    }catch(err){
-        console.log(`error in the top3OwnersWithMostCarsAddedController ${err}`);
-        return res.status(500).json({message: "Internal server error"});
-    }
-}
-/*
-function to get the ongoingBookings
-takes startDate and endDate as query params
-returns onGoingBookings count
-*/
-export const getOngoingBookingsController = async (req, res) => {
-    try{
-        const aggregationPipeline = [
+        
+        const numberOfBiddingPerCityPipeline = [
             {
                 $match: {
-                    status: 'started',
-                }
-            },
-            {
-              $group: {
-                _id: null,
-                count: { $sum: 1 }
-              }
-            }
-        ]
-
-        const result = await Bidding.aggregate(aggregationPipeline);
-        return res.status(200).json(result);
-    }catch(err){
-        console.log(`error in the getOngoingBookingsController ${err}`);
-        return res.status(500).json({message: "Internal server error"});
-    }
-}
-/*
-@description: function to get the average booking duration from the database
-return overall average booking duration
-*/
-export const getAverageBookingDurationController = async (req, res) => {
-    try {
-        const aggregationPipeline = [
-            {
-                $match: {
-                    status: { $in: ['approved', 'started', 'ended', 'reviewed'] },
-                }
-            },
-            {
-                $project: {
-                    durationInDays: { 
-                        $max: [
-                            1,
-                            { 
-                                $dateDiff: { 
-                                    startDate: "$startDate", 
-                                    endDate: "$endDate", 
-                                    unit: "day" 
-                                }
-                            }
-                        ]
+                    createdAt: {
+                        $gte: new Date(startDate),
+                        $lte: new Date(endDate)
                     }
                 }
             },
             {
                 $group: {
-                    _id: null,
-                    avgDuration: { $avg: "$durationInDays" }
+                    _id: "$vehicle.city",
+                    count: { $sum: 1 }
                 }
             }
         ];
 
-        const result = await Bidding.aggregate(aggregationPipeline);
+        const userGrowthPipeline = [
+            { $match: {
+                createdAt: {
+                    $gte: new Date(startDate),
+                    $lte: new Date(endDate)
+                }
+            }}, // Filter users based on date range if provided
+            {
+             $group : {
+                _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                count: { $sum: 1 }
+             }
+            }, 
+            { $sort: { _id: 1 } } // Sort by date in ascending order
+        ]
         
-        return res.status(200).json(result.length ? result[0] : { avgDuration: 0 });
+
+        const highestEarningCitiesPipeline =  [
+            { $match:  {
+                status: { $in: ["ended", "reviewed"] },
+                endDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
+            } },
+            {
+                $addFields: {
+                    numberOfDays: {
+                        $ceil: {
+                            $divide: [
+                                { $subtract: ["$endDate", "$startDate"] },
+                                1000 * 60 * 60 * 24
+                            ]
+                        }
+                    },
+                    kilometersDriven: {
+                        $subtract: ["$endOdometerValue", "$startOdometerValue"]
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    baseAmount: { $multiply: ["$amount", { $add: ["$numberOfDays", 1] }] },
+                    excessKilometers: {
+                        $max: [{ $subtract: ["$kilometersDriven", 300] }, 0]
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    fine: { $multiply: ["$excessKilometers", 10] },
+                    totalBookingRevenue: {
+                        $add: ["$baseAmount", { $multiply: ["$excessKilometers", 10] }]
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: "$vehicle.city",
+                    totalEarnings: { $sum: "$totalBookingRevenue" }
+                }
+            },
+            { $sort: { totalEarnings: -1 } },
+            { $limit: 5 }
+        ];
+
+
+        // running all the pipelines in parallel using the Promise.allSettled
+
+        const [ carDescriptionResult, top10PopularCarModelsResult, top3MostReviewedCarsResult, top3OwnersWithMostCarsAddedResult, numberOfBiddingsPerCityResult, userGrowthResult, highestEarningCitiesResult] = await Promise.allSettled([
+            Vehicle.aggregate(carDescriptionPipeline),
+            Bidding.aggregate(top10PopularCarModelsPipeline),
+            Review.aggregate(top3MostReviewedCarsPipeline),
+            Vehicle.aggregate(top3OwnersWithMostCarsAddedPipeline),
+            Bidding.aggregate(numberOfBiddingPerCityPipeline),
+            User.aggregate(userGrowthPipeline),
+            Bidding.aggregate(highestEarningCitiesPipeline)
+        ]);
+
+        // Safe access helpers
+        const carDescription = getValue(carDescriptionResult, []);
+        const top10PopularCarModels = getValue(top10PopularCarModelsResult, []);
+        const top3MostReviewedCars = getValue(top3MostReviewedCarsResult, []);
+        const top3OwnersWithMostCarsAdded = getValue(top3OwnersWithMostCarsAddedResult, []);
+        const numberOfBiddingsPerCity = getValue(numberOfBiddingsPerCityResult, []);
+        const userGrowth = getValue(userGrowthResult, []);
+        const highestEarningCities = getValue(highestEarningCitiesResult, []);
+
+
+
+        return res.status(200).json({ carDescription, top10PopularCarModels, top3MostReviewedCars, top3OwnersWithMostCarsAdded, numberOfBiddingsPerCity, userGrowth, highestEarningCities });
+        
     } catch (err) {
-        console.error(`Error in getAverageBookingDurationController: ${err}`);
-        return res.status(500).json({ message: "Internal server error" });
+        console.error(`Error in getSuvVsSedanCarsController: ${err.message}`);
+        return res.status(500).json({ error: "An internal server error occurred." });
     }
 };
 
 /*
-@description: function to get the bidding conversion rate from the database
-return bidding conversion rate
+@description: function to get the gneral analytics from the database
+return overall general analytics for the admin
 */
-export const getBiddingConversionRateController = async (req, res) => {
+export const getGeneralAnalyticsController = async (req, res) => {
     try {
-        const aggregationPipeline = [
+      const { startDate, endDate } = req.query;
+  
+      if (!startDate || !endDate) {
+        return res.status(400).json({ error: "startDate and endDate are required" });
+      }
+  
+      const totalNumberOfBlockedUsersPromise = User.countDocuments({ isBlocked: true });
+  
+      const ongoingBookingsPromise = Bidding.aggregate([
+        { $match: { status: "started" } },
+        { $group: { _id: null, count: { $sum: 1 } } },
+      ]);
+  
+      const averageBookingDurationPromise = Bidding.aggregate([
+        {
+          $match: {
+            status: { $in: ["approved", "started", "ended", "reviewed"] },
+            startDate: {
+              $gte: new Date(startDate),
+              $lte: new Date(endDate),
+            },
+          },
+        },
+        {
+          $project: {
+            durationInDays: {
+              $max: [
+                1,
+                {
+                  $dateDiff: {
+                    startDate: "$startDate",
+                    endDate: "$endDate",
+                    unit: "day",
+                  },
+                },
+              ],
+            },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            avgDuration: { $avg: "$durationInDays" },
+          },
+        },
+      ]);
+  
+      const totalNumberOfUsersPromise = User.countDocuments();
+  
+      const userEngagementPromise = User.aggregate([
+        {
+          $group: {
+            _id: "$from.username",
+            count: { $sum: 1 },
+          },
+        },
+      ]);
+  
+      const [
+        blockedUsersResult,
+        ongoingBookingsResult,
+        avgDurationResult,
+        totalUsersResult,
+        userEngagementResult,
+      ] = await Promise.allSettled([
+        totalNumberOfBlockedUsersPromise,
+        ongoingBookingsPromise,
+        averageBookingDurationPromise,
+        totalNumberOfUsersPromise,
+        userEngagementPromise,
+      ]);
+  
+      // Safe access helpers
+     
+  
+      const totalNumberOfBlockedUsers = getValue(blockedUsersResult);
+      const ongoingBookings = getValue(ongoingBookingsResult);
+      const avgDurationData = getValue(avgDurationResult);
+      const totalNumberOfUsers = getValue(totalUsersResult);
+      const userEngagementData = getValue(userEngagementResult);
+  
+      const avgDuration =
+        avgDurationData.length > 0 ? avgDurationData[0].avgDuration : 0;
+  
+      const numberOfEngagedUsers = userEngagementData.length;
+      const engagementPercentage =
+        totalNumberOfUsers !== 0
+          ? (numberOfEngagedUsers / totalNumberOfUsers) * 100
+          : 0;
+  
+      return res.status(200).json({
+        avgDuration,
+        engagementPercentage,
+        totalNumberOfUsers,
+        numberOfEngagedUsers,
+        totalNumberOfBlockedUsers,
+        ongoingBookings: ongoingBookings.length ? ongoingBookings[0].count : 0,
+      });
+    } catch (err) {
+      console.error(`Error in getGeneralAnalyticsController: ${err}`);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
+  
+/*
+@description: function to get the overview stats from the database for the super admin
+return all the overview stats
+*/
+export const getOverviewStatsController = async (req, res) => {
+    const {startDate, endDate} = req.query;
+    try {
+        let matchStage =   {
+            $match: {
+                startDate: {
+                    $gte: new Date(startDate),
+                    $lte: new Date(endDate)
+                }
+            }
+        };
+        const biddingConversionRatePipeline = [
+          matchStage,
             {
                 $group: {
                     _id: null,
@@ -308,76 +386,66 @@ export const getBiddingConversionRateController = async (req, res) => {
             }
         ];
 
-        const result = await Bidding.aggregate(aggregationPipeline);
+        const newUsersPipeline = [
+           {
+            $match: {
+                createdAt: {
+                    $gte: new Date(startDate),
+                    $lte: new Date(endDate)
+                }
+            }
+           },
+           {
+            $project: {
+                _id: 0,
+                sum: 1
+            }
+           },
+           {
+            $group: {
+                _id: null,
+                count: { $sum: 1 }
+            }
+           }
+        ]
 
-        return res.status(200).json(result.length ? result[0] : { conversionRate: 0 });
+        const [biddingConversionRateResult, newUsersResult] = await Promise.allSettled([
+            Bidding.aggregate(biddingConversionRatePipeline),
+            User.aggregate(newUsersPipeline)
+        ]);
+
+        const biddingConversionRate = getValue(biddingConversionRateResult);
+        const newUsers = getValue(newUsersResult);
+
+        return res.status(200).json({ biddingConversionRate, newUsers });
     } catch (err) {
         console.error(`Error in getBiddingConversionRateController: ${err}`);
         return res.status(500).json({ message: "Internal server error" });
     }
 };
-/*
-@description: function to get the total number of blocked users from the database
-return the count of all the blocked Users on the platform
-*/
-export const getAllBlockedUsersController = async (req, res) => {
-    try {
-       // reutrn all the blocked users count
-        const blockedUsers = await User.find({ isBlocked: true }).countDocuments();
-        return res.status(200).json( blockedUsers );
-    } catch (err) {
-        console.error(`Error in getAllBlockedUsersController: ${err}`);
-        return res.status(500).json({ message: "Internal server error" });
-    }
-}
-/*
-@description: function to get the number of biddings per city from the database
-takes startDate and endDate as query params
-returns the cout of biddings per city
-*/
-export const numberOfBiddingsPerCityController = async (req, res) => {
-    const {startDate, endDate} = req.query;
-    try {
-        const aggregationPipeline = [
-            {
-                $group: {
-                    _id: "$vehicle.city",
-                    count: { $sum: 1 }
-                }
-            }
-        ];
-        if (startDate && endDate) {
-            aggregationPipeline.unshift({
-                $match: {
-                  createdAt: {
-                    $gte: new Date(startDate),
-                    $lte: new Date(endDate)
-                  }
-                }
-            });
-        }
 
-        const result = await Vehicle.aggregate(aggregationPipeline);
-        return res.status(200).json(result);
-    } catch (err) {
-        console.error(`Error in numberOfBookingsPerCityController: ${err}`);
-        return res.status(500).json({ message: "Internal server error" });
-    }
-}
+
+
 /*
 @description: function to get the number of owners per city from the database
 returns the count of owners per city
 */
-export const numberOfOwnersPerCityController = async (req, res) => {
-
+export const usersPerCityController = async (req, res) => {
+   let matchStageForSellers = {
+    $match: {
+        isSeller: true,
+        isBlocked: false
+    }
+   }
+let matchStageForBuyers = {
+    $match: {
+        isSeller: false,
+        isBlocked: false
+    }
+}
     try {
-        const aggregationPipeline = [
-            {
-                $match: {
-                    isSeller: true,
-                    isBlocked: false
-                }
-            },
+        const aggregationPipelineForSellers = [
+           matchStageForSellers,
             {
                 $group: {
                     _id: "$city",
@@ -385,103 +453,30 @@ export const numberOfOwnersPerCityController = async (req, res) => {
                 }
             }
         ];
-        
-        const result = await User.aggregate(aggregationPipeline);
-        return res.status(200).json(result);
+        const aggregationPipelineForBuyers = [
+            matchStageForBuyers,
+            {
+                $group: {
+                    _id: "$city",
+                    count: { $sum: 1 }
+                }
+            }
+        ]
+        const [sellersResult, buyersResult] = await Promise.allSettled([    
+            User.aggregate(aggregationPipelineForSellers),
+            User.aggregate(aggregationPipelineForBuyers)
+        ]);
+        const sellers = getValue(sellersResult);
+        const buyers = getValue(buyersResult);
+        return res.status(200).json({ sellers, buyers });
     } catch (err) {
         console.error(`Error in numberOfOwnersPerCityController: ${err}`);
         return res.status(500).json({ message: "Internal server error" });
     }
     
 }
-/*
-@description: function to get user description data
-return the count of sellers and buyers
-*/
-export const getUserDescriptionController = async (req, res) => {
-    try {
-        const aggregationPipeline = [
-            {
-                $match : {
-                    isBlocked: false
-                }
-            },
-            {
-                $group: {
-                    _id: "$isSeller",
-                    count: { $sum: 1 }
-                }
-            }
-        ];
-        const result = await User.aggregate(aggregationPipeline);
-        return res.status(200).json(result);
-    } catch (err) {
-        console.error(`Error in getUserDescriptionController: ${err}`);
-        return res.status(500).json({ message: "Internal server error" });
-    }
-}
-/*
-@description: function to get the number of buyers per city from the database
-return the count of buyers per city
-*/
-export const numberOfBuyersPerCityController = async(req, res)=>{
-    const {startDate, endDate} = req.query;
-    try{
-        const aggregationPipeline = [
-            {
-                $match: {
-                    isSeller: false,
-                    isBlocked: false
-                }
-            },
-            {
-                $group: {
-                    _id: "$city",
-                    count: { $sum: 1 }
-                }
-            }
-        ];
-      if (startDate && endDate) {
-            aggregationPipeline.unshift({
-                $match: {
-                  createdAt: {
-                    $gte: new Date(startDate),
-                    $lte: new Date(endDate)
-                  }
-                }
-            });
-        }
-        const result = await User.aggregate(aggregationPipeline);
-        return res.status(200).json(result);
-    }catch(err){
-        console.log(`error in the numberOfBuyersPerCityController ${err}`);
-        return res.status(500).json({message: "Internal server error"});
-    }
-}
-/*
-@description: function to get the number of new users in the last 30 days
-returns the count of new users in the last 30 days
-*/
-export const getNewUsersInLast30DaysController = async(req, res)=>{
-    
-    try{
-       const aggregationPipeline = [
-              {
-                $match: {
-                    isSeller:false,
-                    createdAt: {
-                          $gte: new Date(new Date().setDate(new Date().getDate() - 30))
-                     }
-                }
-              }
-       ]
-        const result = await User.aggregate(aggregationPipeline);
-        return res.status(200).json(result.length);
-    }catch(err){
-        console.log(`error in the getNewUsersController ${err}`);
-        return res.status(500).json({message: "Internal server error"});
-    }
-}
+
+
 /*
 @description: function to add a car cateogory by the admin
 takes name as the request body
@@ -498,6 +493,13 @@ export const addCarCategoryController = async(req, res)=>{
     }
 }
 
+/**
+ * Retrieves all car categories from the database
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Array} - Array of car categories
+ */
 export const getAllCarCategoriesController = async(req, res)=>{
     try{
         const carCategories = await CarCategory.find();
@@ -507,6 +509,14 @@ export const getAllCarCategoriesController = async(req, res)=>{
         return res.status(500).json({message: "Internal server error"});
     }   
 }
+
+/**
+ * Deletes a car category from the database by its ID
+ * 
+ * @param {Object} req - Express request object containing categoryID in params
+ * @param {Object} res - Express response object
+ * @returns {Object} - Returns deleted car category information or error message
+ */
 export const deleteCarCategoryController = async(req, res)=>{
     const {categoryID} = req.params;
     try{
@@ -518,107 +528,42 @@ export const deleteCarCategoryController = async(req, res)=>{
     }
 }
 
-export const getUserGrowthController = async (req, res) => {
-    try {
-        let matchStage = {}; 
 
 
-        if (req.query.startDate && req.query.endDate) {
-            const start = new Date(req.query.startDate);
-            const end = new Date(req.query.endDate);
-            end.setHours(23, 59, 59, 999);
 
-            matchStage = { createdAt: { $gte: start, $lte: end } };
-        }
-
-
-        const userGrowth = await User.aggregate([
-            { $match: matchStage }, 
-            {
-                $group: {
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-                    count: { $sum: 1 }
-                }
-            },
-            { $sort: { _id: 1 } } 
-        ]);
-
-        res.status(200).json(userGrowth);
-    } catch (err) {
-        console.error("Error fetching user growth:", err);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
-};
-
-export const getUserEngagementPercentageController = async (req, res) => { 
-    try {
-        const { startDate, endDate } = req.query;
-        const totalNumberOfUsers = await User.countDocuments();
-        console.log("Total Users:", totalNumberOfUsers);
-
-        let matchStage = {};
-
-
-        if (startDate && endDate) {
-            matchStage.createdAt = {
-                $gte: new Date(startDate),
-                $lte: new Date(endDate)
-            };
-        }
-
-        const aggregationPipeline = [
-            { $match: matchStage }, 
-            {
-                $group: {
-                    _id: "$from.username",
-                    count: { $sum: 1 }
-                }
-            }
-        ];
-
-        const result = await User.aggregate(aggregationPipeline);
-        const numberOfEngagedUsers = result.length;
-
-        return res.status(200).json({
-            engagementPercentage: totalNumberOfUsers !== 0 
-                ? (numberOfEngagedUsers / totalNumberOfUsers) * 100 
-                : 0
-        });
-
-    } catch (err) {
-        console.error("Error fetching user engagement percentage:", err);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
-};
-
-export const top10SellersWithMostEarningsController = async (req, res) => {
+/**
+ * Retrieves top 10 sellers with highest earnings
+ * Calculates total earnings including base amounts and fines
+ * Can be filtered by date range through query parameters
+ * 
+ * @param {Object} req - Express request object with optional startDate and endDate query params
+ * @param {Object} res - Express response object
+ * @returns {Object} - Object containing array of top sellers with earnings details
+ */
+export const topPerformersController = async (req, res) => {
     const { startDate, endDate } = req.query;
+    if(!startDate || !endDate){
+        return res.status(400).json({message: "startDate and endDate are required"});
+    }
 
     try {
-        let matchStage = {
+        // Initialize match stage with completed booking statuses
+        let sellersMatchStage = {
             status: { $in: ["ended", "reviewed"] }
         };
 
+        // Apply date filter if startDate and endDate are provided
+            sellersMatchStage.endDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
+        
 
-        if (startDate && endDate) {
-            const parsedStartDate = new Date(startDate);
-            const parsedEndDate = new Date(endDate);
-
-            if (isNaN(parsedStartDate) || isNaN(parsedEndDate)) {
-                return res.status(400).json({
-                    error: "Invalid date format. Use a valid ISO date string."
-                });
-            }
-
-            matchStage.updatedAt = { $gte: parsedStartDate, $lte: parsedEndDate };
-        }
-
-        const aggregationPipeline = [
+        // Complex aggregation pipeline to calculate earnings
+        const topSellersPipeline = [
             {
-                $match: matchStage
+                $match: sellersMatchStage // Filter bookings by status and date range
             },
             {
                 $addFields: {
+                    // Calculate number of days for each booking
                     numberOfDays: {
                         $ceil: {
                             $divide: [
@@ -627,6 +572,7 @@ export const top10SellersWithMostEarningsController = async (req, res) => {
                             ]
                         }
                     },
+                    // Calculate kilometers driven
                     kilometersDriven: {
                         $subtract: ["$endOdometerValue", "$startOdometerValue"]
                     }
@@ -634,7 +580,9 @@ export const top10SellersWithMostEarningsController = async (req, res) => {
             },
             {
                 $addFields: {
+                    // Calculate base amount (price per day * number of days)
                     baseAmount: { $multiply: ["$amount", { $add: ["$numberOfDays", 1] }] },
+                    // Calculate excess kilometers (above 300km limit)
                     excessKilometers: {
                         $max: [
                             { $subtract: ["$kilometersDriven", 300] },
@@ -645,7 +593,9 @@ export const top10SellersWithMostEarningsController = async (req, res) => {
             },
             {
                 $addFields: {
+                    // Calculate fine for excess kilometers ($10 per km)
                     fine: { $multiply: ["$excessKilometers", 10] },
+                    // Calculate total revenue (base amount + fines)
                     totalBookingRevenue: {
                         $add: [
                             "$baseAmount",
@@ -661,6 +611,7 @@ export const top10SellersWithMostEarningsController = async (req, res) => {
                 }
             },
             {
+                // Group by owner to calculate total earnings per seller
                 $group: {
                     _id: "$owner._id",
                     ownerUsername: { $first: "$owner.username" },
@@ -672,66 +623,26 @@ export const top10SellersWithMostEarningsController = async (req, res) => {
                 }
             },
             {
-                $sort: { totalEarnings: -1 }
+                $sort: { totalEarnings: -1 } // Sort by earnings in descending order
             },
             {
-                $limit: 10
+                $limit: 10 // Limit to top 10 sellers
             }
         ];
 
-        const topSellers = await Bidding.aggregate(aggregationPipeline);
-
-        return res.status(200).json({ topSellers });
-
-    } catch (err) {
-        console.error(`Error in top10SellersWithMostEarningsController: ${err}`);
-        return res.status(500).json({ message: "Internal server error" });
-    }
-};
-
-export const sendCongratulationMailController = async (req, res) => {
-    const { email , amount, startDate, endDate, totalBookings} = req.body;
-    if(totalBookings){
-        try{
-            generateCongratulationMailToBuyer(email,totalBookings,startDate? new Date(startDate).toLocaleDateString() : 'start of the platform', endDate? new Date(endDate).toLocaleDateString() : 'till now');
-            return res.status(200).json({message: "Congratulation mail sent successfully"});
-        }catch(err){
-            console.log(`error in the sendCongratulationMailController ${err}`);
-            return res.status(500).json({message: "Internal server error"});
-        }
-    }
-    try{
-         generateCongratulationMail(email, new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount),startDate? new Date(startDate).toLocaleDateString() : 'start of the platform', endDate? new Date(endDate).toLocaleDateString() : 'till now');
-        return res.status(200).json({message: "Congratulation mail sent successfully"});
-    }catch(err){
-        console.log(`error in the sendCongratulationMailController ${err}`);
-        return res.status(500).json({message: "Internal server error"});
-    }
-}
-
-export const topBuyersWithMostBookingsController = async (req, res) => {
-    const {startDate, endDate} = req.query;
-    try{
-        let matchStage = {
+        let buyersMatchStage = {
             status: { $in: ["approved", "started", "ended", "reviewed"] }
         };
 
+        // Apply date filter if startDate and endDate are provided
+            buyersMatchStage.startDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
 
-        if (startDate && endDate) {
-            const parsedStartDate = new Date(startDate);
-            const parsedEndDate = new Date(endDate);
-
-            if (isNaN(parsedStartDate) || isNaN(parsedEndDate)) {
-                return res.status(400).json({
-                    error: "Invalid date format. Use a valid ISO date string."
-                });
-            }
-
-            matchStage.updatedAt = { $gte: parsedStartDate, $lte: parsedEndDate };
-        }
-        const topBuyers = await Bidding.aggregate([
-            { $match: matchStage },
+        
+        // Aggregation pipeline to find and rank top buyers
+        const topBuyersPipeline = [
+            { $match: buyersMatchStage }, // Filter bookings by status and date range
             {
+                // Group by buyer to count bookings per person
                 $group: {
                     _id: "$from._id",
                     buyerUsername: { $first: "$from.username" },
@@ -739,19 +650,87 @@ export const topBuyersWithMostBookingsController = async (req, res) => {
                     buyerFirstName: { $first: "$from.firstName" },
                     buyerLastName: { $first: "$from.lastName" },
                     buyerCity: { $first: "$from.city" },
-                    count: { $sum: 1 }
+                    count: { $sum: 1 } // Count bookings per buyer
                 }
             },
             {
-                $sort: { count: -1 }
+                $sort: { count: -1 } // Sort by booking count in descending order
             },
             {
-                $limit: 10
+                $limit: 10 // Limit to top 10 buyers
             }
+        ];
+
+        const [topSellersResult, topBuyersResult] = await Promise.allSettled([
+            Bidding.aggregate(topSellersPipeline),
+            Bidding.aggregate(topBuyersPipeline)
         ]);
-        return res.status(200).json(topBuyers);
+
+        const topSellers = getValue(topSellersResult);
+        const topBuyers = getValue(topBuyersResult);
+
+        return res.status(200).json({ topSellers, topBuyers });
+
+    } catch (err) {
+        console.error(`Error in top10SellersWithMostEarningsController: ${err}`);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+/**
+ * Sends congratulation emails to top-performing users (sellers and buyers)
+ * Handles different email templates based on user type
+ * 
+ * @param {Object} req - Express request object containing email recipient details
+ * @param {Object} res - Express response object
+ * @returns {Object} - Success or error message
+ */
+export const sendCongratulationMailController = async (req, res) => {
+    const { email, amount, startDate, endDate, totalBookings} = req.body;
+    
+    // Handle buyer congratulation emails (identified by totalBookings field)
+    if(totalBookings){
+        try{
+            // Format dates for email display
+            const formattedStartDate = startDate ? new Date(startDate).toLocaleDateString() : 'start of the platform';
+            const formattedEndDate = endDate ? new Date(endDate).toLocaleDateString() : 'till now';
+            
+            // Send congratulation email to buyer
+            generateCongratulationMailToBuyer(
+                email,
+                totalBookings,
+                formattedStartDate, 
+                formattedEndDate
+            );
+            
+            return res.status(200).json({message: "Congratulation mail sent successfully"});
+        }catch(err){
+            console.log(`error in the sendCongratulationMailController ${err}`);
+            return res.status(500).json({message: "Internal server error"});
+        }
+    }
+    
+    // Handle seller congratulation emails
+    try{
+        // Format amount as currency and dates for email display
+        const formattedAmount = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+        const formattedStartDate = startDate ? new Date(startDate).toLocaleDateString() : 'start of the platform';
+        const formattedEndDate = endDate ? new Date(endDate).toLocaleDateString() : 'till now';
+        
+        // Send congratulation email to seller
+        generateCongratulationMail(
+            email, 
+            formattedAmount,
+            formattedStartDate, 
+            formattedEndDate
+        );
+        
+        return res.status(200).json({message: "Congratulation mail sent successfully"});
     }catch(err){
-        console.log(`error in the topBuyersWithMostBookingsController ${err}`);
+        console.log(`error in the sendCongratulationMailController ${err}`);
         return res.status(500).json({message: "Internal server error"});
     }
 }
+
+
+

@@ -1,13 +1,22 @@
 angular.module("myApp").controller("carCtrl", function ($scope, $state, IDB, ToastService, CarService) {
-  $scope.carCategories  = [];
-  $scope.carCategory = "";
+  $scope.carCategories  = []; // array to store the car categories
+  $scope.carCategory = ""; // string to store the car category
   
-
+   /*
+    function to initialize the car controller
+    @params none
+    @returns none
+   */
   $scope.init = () => {
     fetchPendingCars(); // initial fetch of pending cars
     $scope.fetchCarCategories();
   };
-
+  
+  /*
+    function to fetch the car categories
+    @params none
+    @returns none
+  */
   $scope.fetchCarCategories = () => {
     CarService.getAllCarCategoriesForAdmin().then((categories) => {
       console.log(categories);
@@ -16,15 +25,17 @@ angular.module("myApp").controller("carCtrl", function ($scope, $state, IDB, Toa
       ToastService.error("Error fetching car categories");
     })
   }
+
+  /*
+    function to add a car category
+    @params none
+    @returns none
+  */
   $scope.addCarCategory = () => {
     if($scope.carCategory.trim() === "" || $scope.carCategory.trim().length < 3){
       ToastService.error("Car category cannot be empty or less than 3 characters");
       return;
     }
-    
-
-  
-   
     console.log($scope.carCategory);
     CarService.addCarCategory($scope.carCategory).then((category) => {
       $scope.fetchCarCategories();
@@ -36,6 +47,11 @@ angular.module("myApp").controller("carCtrl", function ($scope, $state, IDB, Toa
     })
   }
 
+  /*
+    function to delete a car category
+    @params categoryID
+    @returns none
+  */      
   $scope.deleteCarCategory = (categoryID) => {
     console.log(categoryID);
     CarService.deleteCarCategory(categoryID).then(()=>{

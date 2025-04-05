@@ -1,7 +1,5 @@
 angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, IDB, BiddingFactory, ToastService, Review, BackButton, BiddingService, $state) {
-    $scope.back = BackButton.back; // back function to go back to the previous page
     $scope.bookings = []; // array to hold all the boooking histories
-    
     $scope.currentPage = 1; // setting the current page to 1
     $scope.itemsPerPage = 6; // setting the items per page to 5
     $scope.isLoading = false; // setting the isLoading to false
@@ -19,7 +17,13 @@ angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, IDB, 
     $scope.init = ()=>{
         fetchBookingHistory();
     }
-
+   /**
+    * 
+    * @param {*} field 
+    * @param {*} order 
+    * @param {*} label 
+    * @description function to apply sorting to the page
+    */
     $scope.applySorting = function(field, order, label) {
         $scope.selectedSort = {
             field: field,
@@ -82,7 +86,11 @@ angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, IDB, 
             fetchBookingHistory();
         }
     };
-
+    /*
+    function to navigate to the single car page
+    @params carId
+    @returns none
+    */
     $scope.navigateToSingleCarPage = function(carId){
         $state.go('singleCar', {id: carId});
     }

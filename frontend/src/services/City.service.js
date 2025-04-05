@@ -27,7 +27,7 @@ angular.module("myApp").service("City", function($http) {
             "Ambattur", "Tirunelveli", "Malegaon", "Gaya", "Udaipur", 
             "Kakinada", "Davangere", "Kozhikode", "Maheshtala", "Rajpur Sonarpur", 
             "Bokaro", "South Dumdum", "Bellary", "Patiala", "Gopalpur"
-        ];
+        ].sort();
     };
     this.getIndianCitiesAndLongitudeMap = function(){
         return  {
@@ -113,7 +113,9 @@ angular.module("myApp").service("City", function($http) {
             "Shiv puri": { lat: 25.4021, lng: 77.7210 },
             "Bhind": { lat: 26.5752, lng: 78.5391 },
             "bhind": { lat: 26.5752, lng: 78.5391 },
-            "Gurugram": { lat: 28.4595, lng: 77.0266 }
+            "Gurugram": { lat: 28.4595, lng: 77.0266 },
+            "Aligarh": { lat: 27.8974, lng: 78.0880 },
+
         };
         
     }

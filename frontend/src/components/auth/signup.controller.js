@@ -5,7 +5,14 @@ app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService
     @params none
     @returns none
    */
-  $scope.cities = City.getCities(); // Fetch all the cities
+  $scope.init = function(){
+    $scope.cities = City.getCities(); // Fetch all the cities
+  }
+  /*
+  function to signup the user
+  @params none
+  @returns none
+  */
   $scope.signup = function () {
     // creating the user object using the UserFactory template
     let user  = UserFactory.create({firstName: $scope.firstName,lastName: $scope.lastName,email: $scope.email,username: $scope.username,password: $scope.password,confirmPassword: $scope.confirmPassword,city: $scope.city,adhaar: $scope.adhaar});
@@ -20,7 +27,7 @@ app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService
         $state.go("login"); 
       })
       .catch(function(error) {
-        ToastService.error(`error ${error}`);
+        ToastService.error(`${error}`);
       });
   };
 });

@@ -1,12 +1,12 @@
 import express from 'express'; // import express
 import protectRoute from '../middlewares/protectRoute.js';
-import {addMessageController, getMessagesController} from '../controllers/message.controller.js'; // import the addMessageController function from the message.controller.js file
-import { uploadchat } from '../config/s3.connection.js';
-import upload from '../config/s3.connection.js';
+import {addMessageController, getMessagesController, getAllAttachmentsController} from '../controllers/message.controller.js'; // import the addMessageController function from the message.controller.js file
+import {uploadSingleImage} from '../middlewares/S3.middleware.js';
+import {addAttachment} from '../middlewares/addAttachment.js';
+
 const router = express.Router(); // create a new router object
 
-router.post('/addMessage/:conversationId', protectRoute, uploadchat.single('image'),  addMessageController);
-router.get('/getMessages/:conversationId', protectRoute, getMessagesController)
-
-
+router.post('/addMessage/:conversationId', protectRoute, uploadSingleImage, addAttachment, addMessageController); // add the message
+router.get('/getMessages/:conversationId', protectRoute, getMessagesController) // get the messages
+router.get('/getAttachments/:conversationId', protectRoute, getAllAttachmentsController) // get the attachments
 export default router; // export the router object

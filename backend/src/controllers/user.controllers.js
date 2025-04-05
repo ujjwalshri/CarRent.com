@@ -6,7 +6,7 @@ import Vehicle from "../models/vehicle.model.js";
 @description:  function to get all the users from the database implemented filtering using the search query
 */
 export const getAllUsers = async (req, res) => {
-    const { city, search } = req.query;
+    const { city, search, skip=0, limit=10 } = req.query;
 
 
     try {
@@ -36,6 +36,14 @@ export const getAllUsers = async (req, res) => {
 
         pipeline.push({
             $match: { username: { $ne: 'ujjwal@123' } }
+        });
+
+        pipeline.push({
+            $skip: parseInt(skip)
+        });
+
+        pipeline.push({
+            $limit: parseInt(limit)
         });
 
         const users = await User.aggregate(pipeline);
@@ -159,12 +167,11 @@ export const updateUserProfileController = async (req, res) => {
    
     const { firstName, lastName, city } = req.body;
 
+
     if (!firstName || !lastName || !city) {
         return res.status(400).json({ message: 'All fields (firstName, lastName, city) are required' });
     }
-    if(req.user.updatedAt && new Date() - new Date(req.user.updatedAt) <= 3 * 24 * 60 * 60 * 1000){
-        return res.status(400).json({ message: 'You can only update your profile once every 3 days' });
-    }
+
 
     try {
         const updatedUser = await User.findByIdAndUpdate(

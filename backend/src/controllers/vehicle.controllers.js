@@ -1,11 +1,38 @@
+/**
+ * Vehicle Controllers
+ * Handles all operations related to vehicle management
+ * @module controllers/vehicle
+ */
 import User from "../models/user.model.js";
 import Vehicle from "../models/vehicle.model.js"; 
 import { createCarValidation } from "../validation/car.validation.js";
+import { generateCongratulationMailToSeller } from "../utils/gen.mail.js";
 import {Types} from 'mongoose';
 
-/*
-@description: Add a new car to the database
-*/
+/**
+ * Adds a new car to the database
+ * 
+ * @async
+ * @function addCarController
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Car details submitted by user
+ * @param {string} req.body.name - Name of the car
+ * @param {string} req.body.company - Manufacturer of the car
+ * @param {string} req.body.modelYear - Year the car was manufactured
+ * @param {number} req.body.price - Rental price per day
+ * @param {string} req.body.color - Color of the car
+ * @param {string} req.body.mileage - Fuel efficiency
+ * @param {string} req.body.fuelType - Type of fuel used
+ * @param {string} req.body.category - Vehicle category
+ * @param {string} req.body.city - City where the car is available
+ * @param {string} req.body.location - Specific location within the city
+ * @param {Array} req.files - Uploaded images of the vehicle
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message or error
+ * @description
+ * Validates and adds a new car to the database. Sets the vehicle status
+ * to 'approved' if the user is already a seller, otherwise defaults to 'pending'.
+ */
 export const addCarController = async (req, res) => {
     const {
         name, company, modelYear, price, color, mileage, fuelType, category, city, location
@@ -72,9 +99,26 @@ export const addCarController = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-/*
-@description: function to get all the approved cars from the database
-*/
+
+/**
+ * Retrieves all approved vehicles with optional filtering
+ * 
+ * @async
+ * @function getAllCarController
+ * @param {Object} req - Express request object
+ * @param {Object} req.query - Query parameters for filtering
+ * @param {string} [req.query.search] - Search term for vehicle name, company, or model year
+ * @param {string} [req.query.priceRange] - Price range in format 'min-max'
+ * @param {string} [req.query.city] - City filter
+ * @param {string} [req.query.category] - Vehicle category filter
+ * @param {number} [req.query.limit=6] - Number of results to return
+ * @param {number} [req.query.skip=0] - Number of results to skip (pagination)
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with filtered vehicles or error
+ * @description
+ * Retrieves approved vehicles using aggregation pipeline with text search,
+ * filtering by price range, city, category, and pagination support.
+ */
 export const getAllCarController = async (req, res) => {
     let { search = '', priceRange, city, category, limit = 6, skip = 0 } = req.query;
     skip = parseInt(skip);
@@ -86,7 +130,7 @@ export const getAllCarController = async (req, res) => {
     try {
         const aggregationPipeline = [];
 
-       
+        // Add text search stage if search term is provided
         if (search.trim()) {
             aggregationPipeline.push({
                 $search: {
@@ -102,7 +146,7 @@ export const getAllCarController = async (req, res) => {
             });
         }
 
-       
+        // Match only approved, non-deleted vehicles
         aggregationPipeline.push({
             $match: {
                 status: 'approved',
@@ -110,7 +154,7 @@ export const getAllCarController = async (req, res) => {
             },
         });
 
-       
+        // Filter by price range if provided
         if (priceRange) {
             const [minPrice, maxPrice] = priceRange.split('-').map(Number);
             aggregationPipeline.push({
@@ -120,7 +164,7 @@ export const getAllCarController = async (req, res) => {
             });
         }
 
-       
+        // Filter by city if provided
         if (city) {
             aggregationPipeline.push({
                 $match: {
@@ -129,7 +173,7 @@ export const getAllCarController = async (req, res) => {
             });
         }
 
-       
+        // Filter by category if provided
         if (category) {
             aggregationPipeline.push({
                 $match: {
@@ -138,25 +182,36 @@ export const getAllCarController = async (req, res) => {
             });
         }
 
-        
+        // Pagination
         aggregationPipeline.push(
             { $skip: parseInt(skip) },
             { $limit: parseInt(limit) }
         );
 
-       
+        // Execute the aggregation pipeline
         const cars = await Vehicle.aggregate(aggregationPipeline);
 
-       
+        // Return the results
         res.status(200).json(cars);
     } catch (err) {
         console.error(`Error in the getAllCarController: ${err.message}`);
         res.status(500).json({ message: `Error in the getAllCarController: ${err.message}` });
     }
 };
-/*
-@description: function to get all the cars from the database
-*/
+
+/**
+ * Retrieves vehicles filtered by status
+ * 
+ * @async
+ * @function getVehicleByStatus
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.statusValue - Status to filter vehicles by (e.g., 'approved', 'pending', 'rejected')
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with filtered vehicles or error
+ * @description
+ * Fetches all vehicles matching the provided status value.
+ */
 export const getVehicleByStatus = async(req, res)=>{
     const {statusValue} = req.body;
     if(!statusValue){
@@ -170,43 +225,82 @@ export const getVehicleByStatus = async(req, res)=>{
          res.status(500).json({message: `error in the getVehicleByStatus ${err.message}`});
     }
 }
-/*
-@description: function to change vehicle status
-*/
+
+/**
+ * Changes a vehicle's status and updates owner's seller status if required
+ * 
+ * @async
+ * @function toggleVehicleStatusController
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.vehicleStatus - New status for the vehicle
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Vehicle ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message or error
+ * @description
+ * Updates a vehicle's status. If the status is changed to 'approved',
+ * also updates the vehicle owner's status to 'seller'.
+ */
 export const toggleVehicleStatusController = async (req, res) => {
     const { vehicleStatus } = req.body;
     try {
-       if(!Types.ObjectId.isValid(req.params.id)){
-           return res.status(404).json({message: 'Invalid vehicle id'});
-         }
         const vehicle = await Vehicle.findById(req.params.id);
-        const ownerId = vehicle.owner._id;
-
-        const car = await Vehicle.updateOne({'_id': req.params.id}, { status: vehicleStatus });
-        if(vehicleStatus === 'approved' ){
-            // then make user a seller on the platform
-           const user = await User.updateOne( { _id: ownerId }, { isSeller: true });
+        if (!vehicle) {
+            return res.status(404).json({message: 'Vehicle not found'});
         }
+        
+        const ownerId = vehicle.owner._id;
+        
+        // Update vehicle status
+        await Vehicle.updateOne({'_id': req.params.id}, { status: vehicleStatus });
+        
+        if(vehicleStatus === 'approved') {
+            // Get user data first
+            const user = await User.findById(ownerId);
+            if (!user) {
+                return res.status(404).json({message: 'Vehicle owner not found'});
+            }
+            
+            // Update user to be a seller
+            await User.updateOne({ _id: ownerId }, { isSeller: true });
+            
+            // Send congratulation email to the seller for becoming a seller
+            generateCongratulationMailToSeller(user.email, vehicle.company, vehicle.name, vehicle.modelYear);
+        }
+        
         res.status(200).json({
-            message: 'Car approved successfully',
+            message: vehicleStatus === 'approved' ? 'Car approved successfully' : 'Car status updated successfully',
         });
-
     } catch (err) {
-        console.log(`error in the approveVehicle ${err.message}`);
-        res.status(500).json({ message: `error in the approveVehicle Controller ${err.message}` });
+        console.error(`Error in toggleVehicleStatus: ${err.message}`);
+        res.status(500).json({ message: `Error in toggleVehicleStatus: ${err.message}` });
     }
 }
-/*
-@description: function to update a car from the database
-*/
+
+/**
+ * Updates a vehicle's price
+ * 
+ * @async
+ * @function updateVehicleController
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Vehicle ID
+ * @param {Object} req.body - Request body
+ * @param {number} req.body.price - New price for the vehicle
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message or error
+ * @description
+ * Updates a vehicle's price after validating the price range.
+ * Price must be between 500 and 10000.
+ */
 export const updateVehicleController = async (req, res)=>{
      const{ id }= req.params;
-     console.log(id);
      const {price} = req.body;
-     if(price<0 || price<500 || price>10000){
+     if(price<500 || price>10000){
             return res.status(400).json({message: 'Invalid price range'});
      }
-     console.log(req.body);
+
         try{
             if(!Types.ObjectId.isValid(id)){
                 return res.status(404).json({message: 'Invalid vehicle id'});
@@ -221,9 +315,20 @@ export const updateVehicleController = async (req, res)=>{
             res.status(500).json({message: `error in the updateCarController ${err.message}`});
         }
 }
-/*
-@description: function to get a car at particular carId
-*/
+
+/**
+ * Retrieves a specific vehicle by ID
+ * 
+ * @async
+ * @function getVehicleByIdController
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.id - Vehicle ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with vehicle data or error
+ * @description
+ * Fetches a single vehicle by its ID after validating the ID format.
+ */
 export const getVehicleByIdController = async (req, res) => {
     const {id} = req.params;
     try{
@@ -239,15 +344,30 @@ export const getVehicleByIdController = async (req, res) => {
     }
 }
 
-/*
-@description: function to getAllCarsByUser from the database
-*/
+/**
+ * Retrieves all vehicles belonging to a user with optional status filtering
+ * 
+ * @async
+ * @function getAllCarsByUser
+ * @param {Object} req - Express request object
+ * @param {Object} req.query - Query parameters
+ * @param {string} [req.query.carStatus='all'] - Status filter for vehicles
+ * @param {number} [req.query.skip=0] - Number of results to skip (pagination)
+ * @param {number} [req.query.limit=5] - Number of results to return
+ * @param {Object} req.user - Authenticated user object
+ * @param {string} req.user._id - User ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with user's vehicles or error
+ * @description
+ * Retrieves vehicles owned by the authenticated user with optional
+ * filtering by status and pagination support.
+ */
 export const getAllCarsByUser = async (req, res) => {
     const { carStatus, skip=0, limit=5 } = req.query;
     console.log(typeof(carStatus));
     
     try {
-
+        // Build the query based on owner ID and optional status filter
         const query = { 'owner._id': req.user._id };
 
         if (carStatus !== 'all') {
@@ -255,29 +375,29 @@ export const getAllCarsByUser = async (req, res) => {
         }
         
         const cars = await Vehicle.aggregate([
-           
+            // Match stage - filter by query
             {
                 $match: query
             },
-          
+            // Skip stage - for pagination
             {
                 $skip: parseInt(skip)
             },
-
+            // Limit stage - number of documents to return
             {
                 $limit: parseInt(limit)
             }
         ]);
         console.log([
-           
+            // Match stage - filter by query
             {
                 $match: query
             },
-          
+            // Skip stage - for pagination
             {
                 $skip: parseInt(skip)
             },
-
+            // Limit stage - number of documents to return
             {
                 $limit: parseInt(limit)
             }
@@ -290,9 +410,22 @@ export const getAllCarsByUser = async (req, res) => {
     }
 };
 
-/*
-@description: function to get pending cars from the database
-*/
+/**
+ * Retrieves vehicles with 'pending' status
+ * 
+ * @async
+ * @function getPendingCars
+ * @param {Object} req - Express request object
+ * @param {Object} req.query - Query parameters
+ * @param {number} [req.query.page=1] - Page number for pagination
+ * @param {number} [req.query.limit=10] - Number of results per page
+ * @param {Object} [req.query.sort={createdAt: -1}] - Sort criteria
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with pending vehicles or error
+ * @description
+ * Fetches all vehicles with 'pending' status, sorted and paginated
+ * according to the provided parameters.
+ */
 export const getPendingCars = async (req, res) => {
    const  {page=1, limit=10, sort={createdAt: -1}}  = req.query;
     try {
@@ -311,6 +444,21 @@ export const getPendingCars = async (req, res) => {
     }
 };
 
+/**
+ * Toggles a vehicle's listing status (deleted flag)
+ * 
+ * @async
+ * @function listUnlistCarController
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.vehicleId - Vehicle ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message and updated vehicle or error
+ * @description
+ * Toggles the 'deleted' flag of a vehicle to list or unlist it.
+ * This is a soft delete mechanism that maintains the record but
+ * removes it from public search results.
+ */
 export const listUnlistCarController = async (req, res)=>{
     const {vehicleId} = req.params;
     console.log(vehicleId);
@@ -321,5 +469,4 @@ export const listUnlistCarController = async (req, res)=>{
         console.log(`error in the listUnlistCarController ${err.message}`);
         res.status(500).json({message: `error in the listUnlistCarController ${err.message}`});
     }
-
 }

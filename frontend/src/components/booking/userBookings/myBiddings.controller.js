@@ -6,25 +6,32 @@ angular.module('myApp').controller('myBiddingsCtrl', function($scope, $state, ID
     $scope.totalItems = 0; /// total number of items for pagination
     $scope.isLoading = false; // loading state
 
-    fetchAllBiddings(); // fetch all biddings initially
 
-    // Fetch all biddings with pagination
+    $scope.init = function(){
+        fetchAllBiddings();
+    }
+
+    /*
+    function to fetch all biddings with pagination
+    @params none
+    @returns none
+    */
     function fetchAllBiddings() {
         $scope.isLoading = true;
 
-        const params = {
+        const params = { // params for the getBiddingsForUser function used for filtering and pagination
             page: $scope.currentPage,
             limit: $scope.itemsPerPage,
             status: $scope.biddingStatus || undefined, 
         };
 
-        BiddingService.getBiddingsForUser(params)
+        BiddingService.getBiddingsForUser(params) // fetching the biddings for the user
             .then((biddings) => {
                 $scope.bookings = biddings.bids || [];
                 $scope.bookings = biddings.bids.map((bid) => {
                    return BiddingFactory.createBid(bid, false);
                 })
-                console.log($scope.bookings);
+
                 $scope.totalItems = biddings.totalDocs || 0; 
                 
             })
@@ -38,7 +45,9 @@ angular.module('myApp').controller('myBiddingsCtrl', function($scope, $state, ID
     }
 
     /*
-    function to handle the pagination when user clicks on the previous button
+    function to handle the pageChanged event
+    @params none
+    @returns none
     */
     $scope.pageChanged = function () {
         fetchAllBiddings();

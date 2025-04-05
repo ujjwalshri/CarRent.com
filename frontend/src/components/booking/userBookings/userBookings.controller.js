@@ -1,105 +1,139 @@
 angular
   .module("myApp")
-  .controller("userBookingsCtrl", function ($scope, IDB, BiddingFactory, ToastService, Review, BackButton, BiddingService, CarService,$state) {
-    $scope.back = BackButton.back; // back function to go back to the previous page
-    $scope.bookings = []; // array to hold the bookings of the logged in user
-    $scope.calculateBookingPrice = BiddingFactory.calculate; // function to calculate the booking price from the booking factory
-    $scope.currentPage = 1; // setting the current page to 1
-    $scope.itemsPerPage = 6; // setting the items per page to 5
+  .controller("userBookingsCtrl", function ($scope, IDB, BiddingFactory, ToastService, Review, BackButton, BiddingService, CarService, $state, $uibModal) {
+    $scope.back = BackButton.back;
+    $scope.bookings = [];
+    $scope.calculateBookingPrice = BiddingFactory.calculate;
+    $scope.currentPage = 1;
+    $scope.itemsPerPage = 6;
     $scope.isLoading = false;
     $scope.hasMoreData = true;
-    $scope.bookings = [];
     $scope.sortBy = '';
-    // $scope.variables to store all the variables
+    
     $scope.review = {
-      rating:"",
-      newReview:""
-    }
+      rating: "",
+      newReview: ""
+    };
 
-     // function to handle pagination
+    // Initialize the controller
+    $scope.init = function() {
+      getAllBookings();
+    };
+
     $scope.pageChanged = function() {
       $scope.currentPage = $scope.currentPage + 1;
       getAllBookings();
     };
 
-    
-    // function to handle the open of the modal
-    $scope.openModal =(booking)=>{
-      $scope.selectedBooking = booking; 
-      $scope.isModalOpen = true;
-      console.log($scope.isModalOpen);
-    }
-    //  function to handle the close of the modal
-    $scope.closeModal = ()=>{
-      $scope.isModalOpen = false;
-    }
+    $scope.openModal = (booking) => {
+      const modalInstance = $uibModal.open({
+        templateUrl: 'reviewModal.html',
+        controller: 'ReviewModalCtrl',
+        resolve: {
+          booking: function() {
+            return booking;
+          }
+        }
+      });
 
-    $scope.handleSorting = ()=>{
+      modalInstance.result.then(function() {
+        // Modal was closed with success (review submitted)
+        $scope.currentPage = 1;
+        getAllBookings();
+      }, function() {
+        // Modal was dismissed
+        console.log('Modal dismissed');
+      });
+    };
+
+    $scope.handleSorting = () => {
       $scope.currentPage = 1;
       $scope.bookings = [];
       getAllBookings();
-    }
+    };
 
+    function getAllBookings() {
+      if ($scope.isLoading) return;
 
-   // function to get all the bookings of the logged in user
-  function getAllBookings() {
-     console.log($scope.sortBy);
       const params = {
         page: $scope.currentPage,
         limit: $scope.itemsPerPage,
         sort: $scope.sortBy ? { [$scope.sortBy]: 1 } : undefined
-      }
-      $scope.isLoading = true;
-      BiddingService.getBookingsForUser(params).then((biddings) => {
-        console.log(biddings); 
-        $scope.bookings = $scope.bookings.concat(biddings.bookings.map((booking)=>{
-          return BiddingFactory.createBid(booking, false);
-        }));
-        $scope.hasMoreData = biddings.totalDocs > $scope.bookings.length;
-        $scope.totalPages = Math.ceil(biddings.totalDocs/$scope.itemsPerPage);
-
-      }).catch((err) => {
-        ToastService.error(`Error fetching bookings ${err}`);
-      }).finally(()=>{
-        $scope.isLoading = false;
-      })
-    }
-
-    /*
-    function to add a review to the booking
-    */
-    $scope.addReview = function () {
-      const carId = $scope.selectedBooking.vehicle._id; // get the car from the booking
-      const bookingId = $scope.selectedBooking._id;
-      const review = {
-        rating: parseInt($scope.review.rating),
-        review: $scope.review.newReview
       };
+
+      $scope.isLoading = true;
       
-      const reviewData = Review.createValidatedReview(review);
-      console.log(reviewData);
-      if(reviewData instanceof Error){
-        ToastService.error(reviewData.message);
+      BiddingService.getBookingsForUser(params)
+        .then((biddings) => {
+          if ($scope.currentPage === 1) {
+            $scope.bookings = [];
+          }
+          
+          const newBookings = biddings.bookings.map((booking) => {
+            return BiddingFactory.createBid(booking, false);
+          });
+          
+          $scope.bookings = $scope.bookings.concat(newBookings);
+          $scope.hasMoreData = biddings.totalDocs > $scope.bookings.length;
+          $scope.totalPages = Math.ceil(biddings.totalDocs / $scope.itemsPerPage);
+        })
+        .catch((err) => {
+          ToastService.error(`Error fetching bookings: ${err}`);
+        })
+        .finally(() => {
+          $scope.isLoading = false;
+        });
+    }
+  })
+  .controller('ReviewModalCtrl', function($scope, $uibModalInstance, booking, CarService, Review, ToastService) {
+    $scope.booking = booking;
+    $scope.isLoading = false;
+    $scope.review = {
+      rating: "",
+      newReview: ""
+    };
+
+    $scope.close = function() {
+      $uibModalInstance.dismiss('cancel');
+    };
+
+    $scope.addReview = function() {
+      if (!$scope.booking) {
+        ToastService.error("No booking selected for review");
         return;
       }
 
-      // if the review is valid then add the review to the database
+      if (!$scope.review.rating || !$scope.review.newReview) {
+        ToastService.error("Please provide both rating and review");
+        return;
+      }
+
+      const carId = $scope.booking.vehicle._id;
+      const bookingId = $scope.booking._id;
+      const review = {
+        rating: parseInt($scope.review.rating),
+        review: $scope.review.newReview.trim()
+      };
+
+      const reviewData = Review.createValidatedReview(review);
+      
+      if (reviewData instanceof Error) {
+        ToastService.error(reviewData.message || "Invalid review data");
+        return;
+      }
+
+      $scope.isLoading = true;
+      
       CarService.addReview(carId, reviewData, bookingId)
-        .then((res) => {
-          console.log("hi");
-          // call the IDB service addReview function to add the review to the database
+        .then(() => {
           ToastService.success("Review added successfully");
-          $scope.isModalOpen = false;
-          $scope.reviewed = true;
-          $state.reload();
+          $uibModalInstance.close();
         })
         .catch((err) => {
-         ToastService.error(`Error adding review ${err}`);  // show error message if there is an error
+          ToastService.error(err.message || "Error adding review");
         })
         .finally(() => {
-          // finally mark the review and rating as empty
-          $scope.review = "";
-          $scope.rating = "";
+          $scope.isLoading = false;
         });
     };
   });

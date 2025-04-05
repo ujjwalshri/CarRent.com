@@ -7,13 +7,17 @@
         <div class="form-group row">
             <label class="col-sm-3 col-form-label">Car Name:</label>
             <div class="col-sm-9">
-                <input type="text" class="form-control" ng-model="carName" name="carName" placeholder="Enter car name" required ng-minlength="3">
+                <input type="text" class="form-control" ng-model="carName" name="carName" placeholder="Enter car name" required ng-minlength="3" ng-maxlength="30">
                 <div class="text-danger" ng-show="addCarForm.carName.$touched && addCarForm.carName.$error.required">
                     Car name is required.
                 </div>
                 <div class="text-danger" ng-show="addCarForm.carName.$touched && addCarForm.carName.$error.minlength">
                     Car name must be at least 3 characters long.
                 </div>
+                    <div class="text-danger" ng-show="addCarForm.carName.$touched && addCarForm.carName.$error.maxlength">
+                        Car name cannot be more than 30 characters long.
+                    </div>
+                
             </div>
         </div>
 
@@ -44,12 +48,15 @@
         <div class="form-group row">
             <label class="col-sm-3 col-form-label">Model Year:</label>
             <div class="col-sm-9">
-                <input type="number" class="form-control" ng-model="carModel" name="carModel" placeholder="Enter model year" required ng-max="{{currentYear}}">
+                <input type="number" class="form-control" ng-model="carModel" name="carModel" placeholder="Enter model year" required ng-min="1900" ng-max="{{currentYear}}">
                 <div class="text-danger" ng-show="addCarForm.carModel.$touched && addCarForm.carModel.$error.required">
                     Model year is required.
                 </div>
                 <div class="text-danger" ng-show="addCarForm.carModel.$touched && addCarForm.carModel.$error.max">
                     Model year cannot be in the future.
+                </div>
+                <div class="text-danger" ng-show="addCarForm.carModel.$touched && addCarForm.carModel.$error.min">
+                   Model year cannot be less than 1900.
                 </div>
             </div>
         </div>
@@ -129,10 +136,16 @@
         <div class="form-group row">
             <label class="col-sm-3 col-form-label">Mileage (km):</label>
             <div class="col-sm-9">
-                <input type="number" class="form-control" ng-model="mileage" name="mileage" placeholder="Enter mileage" required>
+                <input type="number" class="form-control" ng-model="mileage" name="mileage" placeholder="Enter mileage" required ng-min="5" ng-max="1000">
                 <div class="text-danger" ng-show="addCarForm.mileage.$touched && addCarForm.mileage.$error.required">
                     Mileage is required.
                 </div>
+                <div
+                class="text-danger"
+                ng-show="addCarForm.mileage.$touched && (addCarForm.mileage.$error.min || addCarForm.mileage.$error.max)"
+            >
+                Mileage must be between 5 and 1000.
+            </div>
             </div>
         </div>
 
@@ -140,7 +153,14 @@
         <div class="form-group row">
             <label class="col-sm-3 col-form-label">Car Images:</label>
             <div class="col-sm-9">
-                <input type="file" class="form-control" accept=".jpg, .jpeg, .png" multiple onchange="angular.element(this).scope().previewImages(this)">
+                <input type="file" 
+                       class="form-control" 
+                       accept=".jpg, .jpeg, .png" 
+                       multiple 
+                       onchange="angular.element(this).scope().previewImages(this)"
+                       id="imageInput">
+                <small class="text-muted">Select up to 5 images (JPG, JPEG, PNG)</small>
+                <div class="text-danger" ng-if="imageError">{{ imageError }}</div>
             </div>
         </div>
 
@@ -159,7 +179,7 @@
         </div>
 
 
-        <div class="form-group row">
+        <div class="form-group row" ng-if="!isLoading">
             <div class="col-sm-offset-3 col-sm-9">
                 <button type="submit" class="btn btn-success btn-block" ng-disabled="addCarForm.$invalid">Add Car</button>
             </div>

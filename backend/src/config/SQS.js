@@ -50,7 +50,8 @@ export const processBids = async () => {
                 const newBid = new Bidding(bidData);
                 await newBid.save();
 
-                 generateAndSendMail({ subject: "Bidding Sent", text: `Congrats You have successfully placed a bid on vehicle ${bidData.vehicle.name} the owner of the vehicle is ${bidData.owner.username}, the bid amount is ${bidData.amount}, startDate is ${new Date(bidData.startDate).toLocaleDateString()}, endDate is ${new Date(bidData.endDate).toLocaleDateString()}` });
+                 generateAndSendMail({ subject: "Bidding Sent", text: `Congrats You have successfully placed a bid on vehicle ${bidData.vehicle.name} the owner of the vehicle is ${bidData.owner.username}, the bid amount is ${bidData.amount}, startDate is ${new Date(bidData.startDate).toLocaleDateString()}, endDate is ${new Date(bidData.endDate).toLocaleDateString()}`, to: bidData.from.email });
+                 generateAndSendMail({ subject: "Bidding Sent", text: `Congrats bid placed on your vehicle ${bidData.vehicle.name} the bid amount is ${bidData.amount}, startDate is ${new Date(bidData.startDate).toLocaleDateString()}, endDate is ${new Date(bidData.endDate).toLocaleDateString()} placed by ${bidData.from.username}`, to: bidData.owner.email });
                 await sqs.deleteMessage({ // delete the message from the SQS queue
                     QueueUrl: queueUrl,
                     ReceiptHandle: message.ReceiptHandle
@@ -68,6 +69,28 @@ export const processBids = async () => {
 
 
 export const startSQSBidProcessing = async() => {
-     const res = await processBids()
-     console.log(res)
+    try {
+        console.log("Starting SQS bid processing loop...");
+        // Define a function to process bids and schedule itself to run again
+        const processAndReschedule = async () => {
+            try {
+                // Process bids
+                const res = await processBids();
+                console.log("Processed batch of bids:", res);
+            } catch (error) {
+                console.error("Error processing bids:", error);
+            }
+            
+            setTimeout(processAndReschedule, 5000);
+        };
+        
+        // Start the processing loop
+        processAndReschedule();
+        
+        console.log("SQS bid processing loop initiated successfully");
+    } catch (err) {
+        console.error("Failed to start SQS bid processing:", err);
+        // Attempt to restart if there was an error initializing
+        setTimeout(startSQSBidProcessing, 10000);
+    }
 }

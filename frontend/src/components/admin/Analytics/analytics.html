@@ -1,260 +1,270 @@
 <div ng-init="init()" class="container-fluid">
     <div class="page-header">
-        <h1 class="text-center"><span class="glyphicon glyphicon-stats"></span> Analytics Dashboard</h1>
+        <h1 class="text-center"><i class="fas fa-chart-line"></i> Analytics Dashboard</h1>
     </div>
-    <!-- Summary Statistics Cards -->
-    <div class="row">
-        <div class="col-md-3">
-            <div class="panel panel-info">
-                <div class="panel-heading">
-                    <h3 class="panel-title text-center">
-                        <span class="glyphicon glyphicon-time"></span> Ongoing Bookings
-                    </h3>
-                </div>
-                <div class="panel-body">
-                    <h2 class="text-center text-info">{{ongoingBookings}}</h2>
-                </div>
+    <div class="col-md-4">
+        <div class="panel panel-success">
+            <div class="panel-heading">
+                <i class="fas fa-users"></i> User Engagement
+            </div>
+            <div class="panel-body text-center">
+                <h3>{{userEngagementPercentage}}%</h3>
+                <small>users with at least 1 bid are engaged users</small>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="panel panel-warning">
-                <div class="panel-heading">
-                    <h3 class="panel-title text-center">
-                        <span class="glyphicon glyphicon-ban-circle"></span> Blocked Users 
-                    </h3>
-                </div>
-                <div class="panel-body">
-                    <h2 class="text-center text-warning">{{blockedUsers}}</h2>
-                </div>
+    </div>
+    <div class="col-md-4">
+        <div class="panel panel-warning">
+            <div class="panel-heading">
+                <i class="fas fa-ban"></i> Blocked Users
+            </div>
+            <div class="panel-body text-center">
+                <h3>{{blockedUsers}}</h3>
+            </div>
+            <div class="panel-body text-center">
+                <small>users blocked by the admin</small>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="panel panel-primary">
-                <div class="panel-heading">
-                    <h3 class="panel-title text-center">
-                        <span class="glyphicon glyphicon-signal"></span> Bidding Conversion ( approved bids / total bids )
-                    </h3>
-                </div>
-                <div class="panel-body">
-                    <h2 class="text-center">{{biddingConversionRate}}%</h2>
-                </div>
+    </div>
+    <div class="col-md-4">
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <i class="fas fa-clock"></i> Ongoing Bookings
             </div>
-        </div>
-        <div class="col-md-3">
-            <div class="panel panel-primary">
-                <div class="panel-heading">
-                    
-                    <h3 class="panel-title text-center">
-                        <span class="glyphicon glyphicon-signal"></span> User Engagement percentage (user with at least 1 bid is engaged user)
-                        <br>
-                       
-                        
-                    </h3>
-                </div>
-                <div class="panel-body">
-                    <h2 class="text-center">{{userEngagementPercentage}}%</h2>
-                </div>
+            <div class="panel-body text-center">
+                <h3>{{ongoingBookings}}</h3>
+            </div>
+            <div class="panel-body text-center">
+                <small>ongoing bookings on the platform</small>
             </div>
         </div>
     </div>
 
     <!-- Date Filter Section -->
-    <div class="panel panel-primary">
-        <div class="panel-heading">
-            <h3 class="panel-title"><span class="glyphicon glyphicon-calendar"></span> Date Range Filter</h3>
-        </div>
-        <div class="panel-body">
-            <form class="form-horizontal">
-                <div class="row">
-                    <div class="col-md-5">
-                        <div class="form-group">
-                            <label for="startDate" class="col-sm-4 control-label">Start Date:</label>
-                            <div class="col-sm-8">
-                                <input type="date" id="startDate" class="form-control input-sm" ng-model="startDate">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="form-group">
-                            <label for="endDate" class="col-sm-4 control-label">End Date:</label>
-                            <div class="col-sm-8">
-                                <input type="date" id="endDate" class="form-control input-sm" ng-model="endDate">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <button class="btn btn-primary btn-block" ng-click="filterByDate()">
-                            <span class="glyphicon glyphicon-refresh"></span> Update Analytics
+    <uib-alert type="info" class="mb-3">
+        <div class="row">
+            <div class="col-md-5">
+                <div class="form-group">
+                    <label class="control-label">
+                        <i class="fas fa-calendar-alt"></i> Start Date
+                    </label>
+                    <input type="date" 
+                           class="form-control" 
+                           ng-model="startDate"
+                           placeholder="Select start date">
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="form-group">
+                    <label class="control-label">
+                        <i class="fas fa-calendar-alt"></i> End Date
+                    </label>
+                    <input type="date" 
+                           class="form-control" 
+                           ng-model="endDate"
+                           placeholder="Select end date">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="form-group">
+                    <label class="control-label">&nbsp;</label>
+                    <div class="btn-group btn-block">
+                        <button class="btn btn-primary" ng-click="filter()">
+                            <i class="fas fa-sync"></i> Apply
+                        </button>
+                        <button class="btn btn-default" ng-click="resetAnalytics()">
+                            <i class="fas fa-undo"></i> Reset
                         </button>
                     </div>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    
-
-   <!-- Top Sellers Table -->
-   <div class="panel panel-success shadow">
-    <div class="panel-heading text-center">
-        <h3 class="panel-title"><span class="glyphicon glyphicon-user"></span> Top 10 Sellers with Most Earnings</h3>
-    </div>
-    <div class="panel-body">
-        <div class="table-responsive">
-            <table class="table table-hover table-striped table-bordered text-center">
-                <thead class="bg-success text-white">
-                    <tr>
-                        <th>Seller Username</th>
-                        <th>Seller Name</th>
-                        <th>Seller Email</th>
-                        <th>Total Earnings</th>
-                        <th>Congratulation Mail</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr ng-repeat="seller in top10SellersWithMostEarnings">
-                        <td>{{seller.ownerUsername}}</td>
-                        <td>{{seller.ownerFirstName}} {{seller.ownerLastName}}</td>
-                        <td class="text-primary">{{seller.ownerEmail}}</td>
-                        <td class="text-success">${{seller.totalEarnings + seller.totalFine | number:2}}</td>
-                        <td>
-                            <button class="btn btn-success btn-sm" ng-click="sendCongratulationMail(seller)">Send</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- Top Buyers Table -->
-<div class="panel panel-success shadow">
-    <div class="panel-heading text-center">
-        <h3 class="panel-title"><span class="glyphicon glyphicon-user"></span> Top 10 Buyers with Most Bookings</h3>
-    </div>
-    <div class="panel-body">
-        <div class="table-responsive">
-            <table class="table table-hover table-striped table-bordered text-center">
-                <thead class="bg-success text-white">
-                    <tr>
-                        <th>Buyer Username</th>
-                        <th>Buyer Name</th>
-                        <th>Buyer Email</th>
-                        <th>Total Bookings</th>
-                        <th>Buyer City</th>
-                        <th>Send ThankYou Mail</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr ng-repeat="buyer in top10BuyersWithMostBookings">
-                        <td>{{buyer.buyerUsername}}</td>
-                        <td>{{buyer.buyerFirstName}} {{buyer.buyerLastName}}</td>
-                        <td class="text-primary">{{buyer.buyerEmail}}</td>
-                        <td class="text-success">{{buyer.count}}</td>
-                        <td class="text-info">{{buyer.buyerCity}}</td>
-                        <td>
-                            <button class="btn btn-success btn-sm" ng-click="sendCongratulationMail(buyer)">Send</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-
-        <div class="col-md-4 col-md-offset-4">
-            <div class="panel panel-danger">
-                <div class="panel-heading">
-                    <h3 class="panel-title text-center">
-                        <span class="glyphicon glyphicon-user"></span> New Users (Last 30 Days)
-                    </h3>
-                </div>
-                <div class="panel-body">
-                    <h2 class="text-center text-danger">{{newUsers}}</h2>
-                </div>
             </div>
         </div>
-        <div class="col-md-4 col-md-offset-4">
-            
-        </div>
-    </div>
+    </uib-alert>
 
-    <!-- Date-Dependent Charts Section -->
-    <div class="panel panel-primary">
-        <div class="panel-heading">
-            <h3 class="panel-title"><span class="glyphicon glyphicon-dashboard"></span> Time-Based Analytics</h3>
-        </div>
-        <div class="panel-body">
+    <uib-tabset>
+        <!-- Overview Tab -->
+        <uib-tab heading="Overview" active="true">
             <div class="row">
-                <div class="col-md-6" ng-repeat="chartId in ['top10Cars','userGrowth', 'top3Sellers', 'suvVsSedan','top5MostReviewedCars']">
+               
+               
+                <div class="col-md-6">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <i class="fas fa-chart-line"></i> Bidding Conversion
+                        </div>
+                        <div class="panel-body text-center">
+                            <h3>{{biddingConversionRate}}%</h3>
+                            <small>approved bids / total bids</small>
+                        </div>
+                    </div>
+                   
+                </div>
+                <div class="col-md-6">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <i class="fas fa-chart-line"></i> New Users 
+                        </div>
+                        <div class="panel-body text-center">
+                            <h3>{{newUsers}} people</h3>
+                            <small>users added within date range</small>
+                        </div>
+                    </div>
+                   
+                </div>
+               
+               
+            </div>
+        </uib-tab>
+
+        <!-- Top Performers Tab -->
+        <uib-tab heading="Top Performers">
+            <uib-accordion>
+                <!-- Top Sellers -->
+                <uib-accordion-group heading="Top 10 Sellers with Most Earnings" is-open="true">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Seller Username</th>
+                                    <th>Seller Name</th>
+                                    <th>Total Earnings</th>
+                                    <th>Send Acknowledgement</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="seller in top10SellersWithMostEarnings">
+                                    <td>{{seller.ownerUsername}}</td>
+                                    <td>{{seller.ownerFirstName}} {{seller.ownerLastName}}</td>
+                                    <td>${{seller.totalEarnings + seller.totalFine | number:2}}</td>
+                                    <td>
+                                        <button class="btn btn-success btn-sm" ng-click="sendCongratulationMail(seller)">
+                                            <i class="fas fa-envelope"></i> Send
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </uib-accordion-group>
+
+                <!-- Top Buyers -->
+                <uib-accordion-group heading="Top 10 Buyers with Most Bookings">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Buyer Username</th>
+                                    <th>Buyer Name</th>
+
+                                    <th>Total Bookings</th>
+                                    <th>Buyer City</th>
+                                    <th>Send Acknowledgement</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="buyer in top10BuyersWithMostBookings">
+                                    <td>{{buyer.buyerUsername}}</td>
+                                    <td>{{buyer.buyerFirstName}} {{buyer.buyerLastName}}</td>
+                                    <td>{{buyer.count}}</td>
+                                    <td>{{buyer.buyerCity}}</td>
+                                    <td>
+                                        <button class="btn btn-success btn-sm" ng-click="sendCongratulationMail(buyer)">
+                                            <i class="fas fa-envelope"></i> Send
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </uib-accordion-group>
+            </uib-accordion>
+        </uib-tab>
+
+        <!-- Charts Tab -->
+        <uib-tab heading="Charts">
+            <uib-accordion>
+                <!-- Time-Based Analytics -->
+                <uib-accordion-group heading="Time-Based Analytics" is-open="true">
+                    <div class="col-md-6">
+                        <!--filter by city for dates-->
+                            <label for="cars">Choose filter:</label>
+                            <select name="cars" id="cars" ng-model="userGrowthFilter" ng-change="filterByUserGrowth(value)">
+                              <option value="city">city</option>
+                              <option value="date">dates</option>
+                            </select>
+
+                        <div class="panel panel-default">
+                            <div class="panel-heading">user Growth</div>
+                            <div class="panel-body">
+                                <canvas id="userGrowth" width="400" height="400"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6" ng-repeat="chartId in ['top10Cars','topHighestEarningCities', 'top3Sellers', 'carDescription','top5MostReviewedCars']">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                </div>
+                                <div class="panel-body">
+                                    <canvas id="{{chartId}}" width="400" height="400"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </uib-accordion-group>
+
+                <!-- General Statistics -->
+                <uib-accordion-group heading="General Statistics">
+                    <div class="row">
+                        <div class="col-md-6" ng-repeat="chartId in ['ownersPerCity', 'buyersPerCity']">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title text-center">{{chartId | uppercase}}</h4>
+                                </div>
+                                <div class="panel-body">
+                                    <canvas id="{{chartId}}" width="400" height="400"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </uib-accordion-group>
+            </uib-accordion>
+        </uib-tab>
+
+        <!-- Maps Tab -->
+        <uib-tab heading="Maps">
+            <div class="row">
+                <div class="col-md-6">
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h4 class="panel-title text-center">{{chartId | uppercase}}</h4>
+                            <h4 class="panel-title text-center">Owner HeatMap</h4>
                         </div>
                         <div class="panel-body">
-                            <canvas id="{{chartId}}" width="400" height="400"></canvas>
+                            <div id="map" style="width: 100%; height: 400px;"></div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-       <!-- New Section for Map and Heatmap -->
-<div class="panel panel-primary">
-    <div class="panel-heading">
-        <h3 class="panel-title"><span class="glyphicon glyphicon-map-marker"></span> Maps and Heatmaps</h3>
-    </div>
-    <div class="panel-body">
-        <!-- Start Row for Map and Heatmap -->
-        <div class="row">
-            <!-- First Column for Map -->
-            <div class="col-xs-12 col-sm-6 col-md-6">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4 class="panel-title text-center"> Owner HeatMap</h4>
-                    </div>
-                    <div class="panel-body">
-                        <div id="map" style="width: 100%; height: 400px;"></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Second Column for Buyer Heatmap -->
-            <div class="col-xs-12 col-sm-6 col-md-6">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h4 class="panel-title text-center">Buyer Heatmap</h4>
-                    </div>
-                    <div class="panel-body">
-                        <div id="buyerHeatMap" style="width: 100%; height: 400px;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <!-- End Row for Map and Heatmap -->
-    </div>
-</div>
-
-        
-    </div>
-
-    <!-- Non-Date-Dependent Charts Section -->
-    <div class="panel panel-success">
-        <div class="panel-heading">
-            <h3 class="panel-title"><span class="glyphicon glyphicon-stats"></span> General Statistics</h3>
-        </div>
-        <div class="panel-body">
-            <div class="row">
-                <div class="col-md-6" ng-repeat="chartId in ['userDescriptionChart','ownersPerCity', 'buyersPerCity']">
+                <div class="col-md-6">
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h4 class="panel-title text-center">{{chartId | uppercase}}</h4>
+                            <h4 class="panel-title text-center">Buyer Heatmap</h4>
                         </div>
                         <div class="panel-body">
-                            <canvas id="{{chartId}}" width="400" height="400"></canvas>
+                            <div id="buyerHeatMap" style="width: 100%; height: 400px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title text-center">city wise biddings heatmap</h4>
+                        </div>
+                        <div class="panel-body">
+                            <div id="cityWiseBookings" style="width: 100%; height: 400px;"></div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
+        </uib-tab>
+    </uib-tabset>
 </div>

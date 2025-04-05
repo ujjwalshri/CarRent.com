@@ -40,12 +40,14 @@ angular.module('myApp').service('UserService', function($http, ApiService, $q) {
     @params city, search
     @returns all users
     */
-    this.getAllUsers = (city, search)=>{
+    this.getAllUsers = (city, search, skip, limit)=>{
         console.log(city);
         let deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/user/getAllUsers`, { params: {
             city: city, 
-            search: search
+            search: search, 
+            skip: skip, 
+            limit: limit
         } , withCredentials: true })
         .then((res)=>{
             deferred.resolve(res.data);

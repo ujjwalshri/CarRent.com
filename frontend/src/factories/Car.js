@@ -48,43 +48,44 @@ angular.module('myApp').factory('CarFactory', function() {
      */
     Car.prototype.validate = function() {
         console.log(this);
-        var errors = [];
+
 
         // Validate each property with specific rules
         if (!this.name || typeof this.name !== 'string') {
-            errors.push("Car name is required and must be a string.");
+            return  "Car name is required and must be a string.";
         }
-        if (!this.company || typeof this.company !== 'string') {
-            errors.push("Company name is required and must be a string.");
+        if (!this.company || typeof this.company !== 'string' || this.company.length < 3 || this.company.length > 20) {
+            return  "Company name is required and must be a string. and must be between 3 and 20 characters";
         }
         // 1886 is the year when the first car was invented
-        if (!this.modelYear || isNaN(this.modelYear) || this.modelYear < 1886) {
-            errors.push("Car model year is required and must be a valid number (>=1886).");
+        if (!this.modelYear || isNaN(this.modelYear) || this.modelYear < 1900 || this.modelYear > new Date().getFullYear()+1) {
+            return  "Car model year is required and must be a valid number (>=1900).";
         }
         if (!this.category || typeof this.category !== 'string') {
-            errors.push("Car category is required and must be a string.");
+            return  "Car category is required and must be a string.";
         }
         if (isNaN(this.price) || this.price <= 0) {
-            errors.push("Car price must be a positive number.");
+            return  "Car price must be a positive number.";
         }
         if (isNaN(this.mileage) || this.mileage <= 0) {
-            errors.push("Mileage must be a positive number.");
+            return  "Mileage must be a positive number.";
         }
         if (!this.color || typeof this.color !== 'string') {
-            errors.push("Color is required and must be a string.");
+            return  "Color is required and must be a string.";
         }
         if (!this.fuelType || typeof this.fuelType !== 'string') {
-            errors.push("Fuel type is required and must be a string.");
+            return  "Fuel type is required and must be a string.";
         }
         if (!this.city || typeof this.city !== 'string') {
-            errors.push("City is required and must be a string.");
+            return  "City is required and must be a string.";
         }
-        if (!Array.isArray(this.images) || this.images.length === 0) {
-            errors.push("At least one image URL is required.");
+        if (!Array.isArray(this.images) || this.images.length === 0 || this.images.length>5) {
+            return  "Images can be in 1 to 5 range";
         }
 
+
         // Return errors if any, otherwise return the car object
-        return errors.length ? { error: errors } : this;
+        return this;
     };
 
     Car.prototype.toFormData = function(){

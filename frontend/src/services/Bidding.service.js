@@ -171,7 +171,8 @@ angular.module('myApp').service('BiddingService', function($q,BiddingFactory, Ap
             startOdometerValue: startOdometerValue
         }, { withCredentials: true })
         .then((res)=>{
-            deferred.resolve(res.data);
+            console.log(res);
+            deferred.resolve(res.data.booking);
         })
         .catch(err=>{
             

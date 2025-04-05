@@ -1,4 +1,4 @@
-angular.module('myApp').factory('BiddingFactory', function() {
+angular.module('myApp').factory('BiddingFactory', function($timeout) {
     /**
      * Bid Constructor Function
      * @param {string} _id - Unique identifier for the bid.
@@ -33,6 +33,7 @@ angular.module('myApp').factory('BiddingFactory', function() {
             );
         }
 
+
         this._id = _id;
         this.amount = amount;
         this.startDate = startDate ? new Date(startDate) : null;
@@ -40,8 +41,8 @@ angular.module('myApp').factory('BiddingFactory', function() {
         this.from = from || null;
         this.vehicle = vehicle || null;
         this.owner = owner || null;
-        this.startOdometerValue = startOdometerValue ? startOdometerValue : -1;
-        this.endOdometerValue = endOdometerValue ? endOdometerValue : -1;
+        this.startOdometerValue = startOdometerValue !== null ? startOdometerValue : -1;
+        this.endOdometerValue = endOdometerValue !== null ? endOdometerValue : -1;
         this.status = status;
     }
 
@@ -125,6 +126,7 @@ angular.module('myApp').factory('BiddingFactory', function() {
             currentDate.setDate(currentDate.getDate() + 1);
         }
         return dates;
+
     }
     /**
      * calculate the booking price
@@ -158,34 +160,249 @@ angular.module('myApp').factory('BiddingFactory', function() {
 
         // Define the PDF document structure
         var docDefinition = {
+            pageSize: 'A4',
+            pageMargins: [40, 40, 40, 40],
             content: [
-                { text: 'Booking Details', style: 'header' },
-                { text: 'Booking ID: ' + this._id },
-                { text: 'Car: ' + this.vehicle.company + ' ' + this.vehicle.name + ' ' + this.vehicle.modelYear },
-                { text: 'Owner: ' + this.owner.username },
-                { text: 'Name: ' + this.owner.firstName + ' ' + this.owner.lastName },
-                { text: 'Start Date: ' + new Date(this.startDate).toLocaleDateString() },
-                { text: 'End Date: ' + new Date(this.endDate).toLocaleDateString() },
-                { text: 'Start Odometer Value: ' + this.startOdometerValue + ' km' },
-                { text: 'End Odometer Value: ' + this.endOdometerValue + ' km' },
-                { text: 'Daily Rate: $' + this.amount },
-                { text: 'Base Price: $' + basePrice },
-                { 
-                    text: 'Extra Distance Fee: $' + extraDistanceFee + 
-                          (extraDistanceFee > 0 ? ' (' + (totalDistance - 300) + ' km over limit)' : '')
+                // Header Section
+                {
+                    columns: [
+                        {
+                            width: '*',
+                            text: 'CAR RENTAL INVOICE',
+                            style: 'header',
+                            alignment: 'left'
+                        },
+                        {
+                            width: 'auto',
+                            text: new Date().toLocaleDateString(),
+                            style: 'date',
+                            alignment: 'right'
+                        }
+                    ]
                 },
-                { text: 'Total Amount: $' + totalAmount, style: 'total' }
+                {
+                    canvas: [{ type: 'line', x1: 0, y1: 5, x2: 515, y2: 5, lineWidth: 1, lineColor: '#aaa' }]
+                },
+                { text: '\n' },
+                
+                // Company Info
+                {
+                    columns: [
+                        {
+                            width: '*',
+                            stack: [
+                                { text: 'CAR RENTAL COMPANY', style: 'companyName' },
+                                { text: '123 Rental Street', style: 'companyAddress' },
+                                { text: 'City, State 12345', style: 'companyAddress' },
+                                { text: 'Phone: (123) 456-7890', style: 'companyAddress' },
+                                { text: 'Email: info@carrental.com', style: 'companyAddress' }
+                            ]
+                        },
+                        {
+                            width: 'auto',
+                            stack: [
+                                { text: 'Invoice #: ' + this._id, style: 'invoiceNumber' },
+                                { text: 'Date: ' + new Date().toLocaleDateString(), style: 'invoiceDate' }
+                            ]
+                        }
+                    ]
+                },
+                { text: '\n\n' },
+
+                // Booking Details Section
+                {
+                    stack: [
+                        { text: 'Booking Details', style: 'sectionHeader' },
+                        {
+                            table: {
+                                headerRows: 1,
+                                widths: ['*', '*'],
+                                body: [
+                                    [
+                                        { text: 'Car Details', style: 'tableHeader' },
+                                        { text: 'Customer Details', style: 'tableHeader' }
+                                    ],
+                                    [
+                                        {
+                                            stack: [
+                                                { text: this.vehicle.company + ' ' + this.vehicle.name + ' ' + this.vehicle.modelYear, style: 'tableContent' },
+                                                { text: 'Model Year: ' + this.vehicle.modelYear, style: 'tableContent' }
+                                            ]
+                                        },
+                                        {
+                                            stack: [
+                                                { text: this.owner.firstName + ' ' + this.owner.lastName, style: 'tableContent' },
+                                                { text: this.owner.username, style: 'tableContent' }
+                                            ]
+                                        }
+                                    ]
+                                ]
+                            }
+                        }
+                    ]
+                },
+                { text: '\n' },
+
+                // Rental Period Section
+                {
+                    stack: [
+                        { text: 'Rental Period', style: 'sectionHeader' },
+                        {
+                            table: {
+                                headerRows: 1,
+                                widths: ['*', '*'],
+                                body: [
+                                    [
+                                        { text: 'Start Date', style: 'tableHeader' },
+                                        { text: 'End Date', style: 'tableHeader' }
+                                    ],
+                                    [
+                                        { text: new Date(this.startDate).toLocaleDateString(), style: 'tableContent' },
+                                        { text: new Date(this.endDate).toLocaleDateString(), style: 'tableContent' }
+                                    ]
+                                ]
+                            }
+                        }
+                    ]
+                },
+                { text: '\n' },
+
+                // Odometer Readings Section
+                {
+                    stack: [
+                        { text: 'Odometer Readings', style: 'sectionHeader' },
+                        {
+                            table: {
+                                headerRows: 1,
+                                widths: ['*', '*'],
+                                body: [
+                                    [
+                                        { text: 'Start Reading', style: 'tableHeader' },
+                                        { text: 'End Reading', style: 'tableHeader' }
+                                    ],
+                                    [
+                                        { text: this.startOdometerValue + ' km', style: 'tableContent' },
+                                        { text: this.endOdometerValue + ' km', style: 'tableContent' }
+                                    ]
+                                ]
+                            }
+                        }
+                    ]
+                },
+                { text: '\n' },
+
+                // Cost Breakdown Section
+                {
+                    stack: [
+                        { text: 'Cost Breakdown', style: 'sectionHeader' },
+                        {
+                            table: {
+                                headerRows: 1,
+                                widths: ['*', 'auto'],
+                                body: [
+                                    [
+                                        { text: 'Description', style: 'tableHeader' },
+                                        { text: 'Amount', style: 'tableHeader' }
+                                    ],
+                                    [
+                                        { text: 'Daily Rate', style: 'tableContent' },
+                                        { text: '$' + this.amount, style: 'tableContent' }
+                                    ],
+                                    [
+                                        { text: 'Base Price', style: 'tableContent' },
+                                        { text: '$' + basePrice, style: 'tableContent' }
+                                    ],
+                                    [
+                                        { 
+                                            text: 'Extra Distance Fee' + 
+                                                  (extraDistanceFee > 0 ? ' (' + (totalDistance - 300) + ' km over limit)' : ''),
+                                            style: 'tableContent'
+                                        },
+                                        { text: '$' + extraDistanceFee, style: 'tableContent' }
+                                    ],
+                                    [
+                                        { text: 'Total Amount', style: 'totalLabel' },
+                                        { text: '$' + totalAmount, style: 'totalAmount' }
+                                    ]
+                                ]
+                            }
+                        }
+                    ]
+                },
+                { text: '\n\n' },
+
+                // Footer
+                {
+                    columns: [
+                        {
+                            width: '*',
+                            text: 'Thank you for choosing our service!',
+                            style: 'footer'
+                        }
+                    ]
+                }
             ],
             styles: {
                 header: {
-                    fontSize: 30,
+                    fontSize: 24,
                     bold: true,
-                    margin: [0, 10, 0, 10]
+                    color: '#2c3e50',
+                    margin: [0, 0, 0, 10]
                 },
-                total: {
-                    fontSize: 20,
+                date: {
+                    fontSize: 12,
+                    color: '#7f8c8d'
+                },
+                companyName: {
+                    fontSize: 18,
                     bold: true,
-                    margin: [0, 10, 0, 0]
+                    color: '#2c3e50',
+                    margin: [0, 0, 0, 5]
+                },
+                companyAddress: {
+                    fontSize: 10,
+                    color: '#7f8c8d',
+                    margin: [0, 0, 0, 2]
+                },
+                invoiceNumber: {
+                    fontSize: 14,
+                    bold: true,
+                    color: '#2c3e50'
+                },
+                invoiceDate: {
+                    fontSize: 12,
+                    color: '#7f8c8d'
+                },
+                sectionHeader: {
+                    fontSize: 16,
+                    bold: true,
+                    color: '#2c3e50',
+                    margin: [0, 10, 0, 5]
+                },
+                tableHeader: {
+                    fontSize: 12,
+                    bold: true,
+                    color: '#2c3e50',
+                    fillColor: '#f8f9fa'
+                },
+                tableContent: {
+                    fontSize: 11,
+                    color: '#34495e'
+                },
+                totalLabel: {
+                    fontSize: 14,
+                    bold: true,
+                    color: '#2c3e50'
+                },
+                totalAmount: {
+                    fontSize: 14,
+                    bold: true,
+                    color: '#27ae60'
+                },
+                footer: {
+                    fontSize: 10,
+                    color: '#7f8c8d',
+                    italics: true
                 }
             }
         };
@@ -199,6 +416,7 @@ angular.module('myApp').factory('BiddingFactory', function() {
         const today = new Date();
         return today >= bookingStartDate && today <= bookingEndDate;
     }
+
     
    
     /**
@@ -211,6 +429,8 @@ angular.module('myApp').factory('BiddingFactory', function() {
          * @returns {Object|Bid} - Returns either the validated bid object or an error object.
          */
         createBid: function(data = {}, toValidate=true) {
+
+            
             var bid = new Bid(
                 data._id,
                 data.amount,
@@ -226,6 +446,7 @@ angular.module('myApp').factory('BiddingFactory', function() {
             if(toValidate) {
                 return bid.validate();
             }
+            console.log("Bid Object:", bid);
             return bid;
         },
          /**
@@ -260,6 +481,21 @@ angular.module('myApp').factory('BiddingFactory', function() {
             var diffTime = endDate - startDate;
             var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             return (diffDays+1) * amount;
+        },
+        initializeFlatpickr: function(blockedDates, htmlElementId, $scope){
+            flatpickr(htmlElementId, {
+                mode: "range",
+                dateFormat: "Y-m-d",
+                disable: blockedDates,
+                minDate: "today",
+                onClose: function(selectedDates){
+                    if(selectedDates.length === 2){
+                        $scope.startDate = selectedDates[0].toISOString();
+                        $scope.endDate = selectedDates[1].toISOString();
+                        $timeout();
+                    }
+                }
+            });
         }
     };
     return factory;

@@ -1,15 +1,13 @@
 import express from 'express';
 import protectRoute from "../middlewares/protectRoute.js";
-import protectFromUser from '../middlewares/authenticateUser.js';
-import protectFromSeller from '../middlewares/authenticateSeller.js';
 import {getAllUsers, makeUserSeller, updateUserProfileController, blockUser, unblockUser} from '../controllers/user.controllers.js';
-import protectFromAdmin from '../middlewares/authenticateAdminRole.js';
+import allowAdmin from '../middlewares/authenticateAdminRole.js';
 const router = express.Router();
 
-router.get('/getAllUsers', protectRoute,protectFromUser,protectFromSeller, getAllUsers)
-router.patch('/blockUser/:userId', blockUser);
-router.patch('/unblockUser/:userId', unblockUser)
-router.patch('/makeUserSeller/:userId', protectRoute,protectFromUser,protectFromSeller, makeUserSeller);
-router.patch('/updateUserProfile', protectRoute,protectFromAdmin,updateUserProfileController);
+router.get('/getAllUsers', protectRoute,allowAdmin, getAllUsers) // get all the users
+router.patch('/blockUser/:userId', blockUser); // block the user
+router.patch('/unblockUser/:userId', unblockUser) // unblock the user
+router.patch('/makeUserSeller/:userId', protectRoute,allowAdmin, makeUserSeller); // make the user a seller
+router.patch('/updateUserProfile', protectRoute,updateUserProfileController); // update the user profile
 
 export default router;

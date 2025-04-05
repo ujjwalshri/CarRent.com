@@ -1,10 +1,12 @@
 import Bidding from '../models/bidding.model.js';
 import Vehicle from '../models/vehicle.model.js';
-import {generateAndSendMail} from '../utils/gen.mail.js';
-import { processBids } from '../config/SQS.js';
+import {sendInvoiceEmail} from '../utils/email.service.js';
 import validateBiddingData from '../validation/bid.validation.js';
+import {generateAndSendMail} from '../utils/gen.mail.js';
 import dotenv from 'dotenv';
 import AWS from 'aws-sdk';
+import mongoose from 'mongoose';
+import sqsProducerService from '../services/SQS.producer.service.js';
 
 dotenv.config();
 AWS.config.update({
@@ -15,12 +17,30 @@ AWS.config.update({
 
 const sqs = new AWS.SQS();
 
-import mongoose from 'mongoose';
+/**
+ * Add a Bid Controller
+ * 
+ * Creates a new bid in the system for a vehicle rental request.
+ * Validates bid data, retrieves vehicle details, and processes the bid through SQS.
+ * 
+ * @async
+ * @function addBidController
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.carId - ID of the vehicle being bid on
+ * @param {Object} req.body - Request body containing bid details
+ * @param {number} req.body.amount - Bid amount
+ * @param {Date} req.body.startDate - Rental start date
+ * @param {Date} req.body.endDate - Rental end date
+ * @param {number} req.body.startOdometerValue - Starting odometer reading
+ * @param {number} req.body.endOdometerValue - Ending odometer reading
+ * @param {Object} req.body.owner - Vehicle owner details
+ * @param {string} req.body.status - Bid status
+ * @param {Object} req.user - Authenticated user making the bid
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success/error message
+ */
 
-
-/*
- @description function to Add a bid to the database
-*/
 export const addBidController = async (req, res) => {
     
     const {carId} = req.params;
@@ -69,15 +89,9 @@ export const addBidController = async (req, res) => {
             return res.status(400).json({error: validateBiddingData(biddingData).error.details[0].message});
         }
 
-        // use the SQS to send the bidding to the SQS queue 
-        const params = {
-            MessageBody: JSON.stringify(biddingData),
-            QueueUrl: process.env.QUEUE_LINK
-        };
-      const result =   await sqs.sendMessage(params).promise();
-        processBids();
-        console.log(result);
-        return res.status(201).json({ message:  `message bidding added successfully` });
+        // Send the bidding data to SQS queue using the producer service
+        await sqsProducerService.sendBidMessage(biddingData);
+        return res.status(201).json({ message: 'Bidding added successfully' });
     } catch (error) {
         console.log(`error in the addBidController ${error.message}`);
         return res.status(500).json({ error : `error in the addBidController ${error.message}` });
@@ -131,7 +145,7 @@ export const updateBidStatusController = async (req, res) => {
                 { $set: { status: "rejected" } },
                 { session }
             );
-            generateAndSendMail({ subject: "Bidding Approved", text: `Congrats Your bid on vehicle ${bidding.vehicle.name} has been approved by the owner ${bidding.owner.username}, the bid amount is ${bidding.amount}, startDate is ${new Date(bidding.startDate).toLocaleDateString()}, endDate is ${new Date(bidding.endDate).toLocaleDateString()}` });
+            generateAndSendMail({ subject: "Bidding Approved", text: `Congrats Your bid on vehicle ${bidding.vehicle.name} has been approved by the owner ${bidding.owner.username}, the bid amount is ${bidding.amount}, startDate is ${new Date(bidding.startDate).toLocaleDateString()}, endDate is ${new Date(bidding.endDate).toLocaleDateString()}`, to: bidding.from.email });
         }
 
         await session.commitTransaction();
@@ -183,7 +197,7 @@ export const getBidForOwnerController = async (req, res) => {
 }
 
 /*
- @description function to get the bids according to the search query from the request.query
+ @description function to get the  bids for the user according to the search query from the request.query
 */
 export const getBidForUserController = async (req, res) => {
     console.log("req.query" ,req.query);
@@ -473,11 +487,10 @@ export const getBookingAtBookingIdController = async (req, res)=>{
 export const startBookingController = async (req, res)=>{
 
     const bookingId = req.params.bookingId;
+    
     const { startOdometerValue } = req.body;
-    console.log(startOdometerValue);
-    if(startOdometerValue<0 ){
-       return res.status(400).json({error : "startOdometer value canno be less than 0 and cannot be empty" });
-    }
+    console.log("startOdometerValue at backend" + startOdometerValue);
+   
     console.log(bookingId, startOdometerValue);
     if(!bookingId){
         return res.status(400).json({error: 'bookingId is required'});
@@ -492,7 +505,7 @@ export const startBookingController = async (req, res)=>{
             { new: true }
           );
           console.log(booking);
-          generateAndSendMail({ subject: "Bidding Started", text: `Congrats Your booking on vehicle ${booking.vehicle.name} has been started by the owner ${booking.owner.username} at odometer value ${startOdometerValue} kms, the bid amount is ${booking.amount}, startDate is ${new Date(booking.startDate).toLocaleDateString()}, endDate is ${new Date(booking.endDate).toLocaleDateString()}` });
+
           return res.status(200).json({ booking });
     }catch(err){
         console.log(`error in the startBookingController ${err.message}`);
@@ -520,7 +533,7 @@ export const endBookingController = async (req, res)=>{
             { new: true }
           );
           console.log(booking);
-          generateAndSendMail({ subject: "Bidding Ended", text: `Congrats Your booking on vehicle ${booking.vehicle.name} has been ended by the owner ${booking.owner.username} at odometer value ${endOdometerValue} kms, the bid amount is ${booking.amount}, startDate is ${new Date(booking.startDate).toLocaleDateString()}, endDate is ${new Date(booking.endDate).toLocaleDateString()}` });
+          sendInvoiceEmail({email: booking.from.email, booking: booking});
           return res.status(200).json({ booking });
     }catch(err){
         console.log(`error in the endBookingController ${err.message}`);
@@ -558,6 +571,7 @@ export const reviewBookingController = async(req, res)=>{
 */
 export const bookingRecommendationController = async (req, res) => {
     const userCity = req.user.city;
+   
     try {
         const recommendations = await Bidding.aggregate([
             {
@@ -577,26 +591,13 @@ export const bookingRecommendationController = async (req, res) => {
                 $sort: { count: -1 }
             },
             {
-                $limit: 3
-            },
-            {
-                // Lookup complete vehicle details from Vehicle collection
-                $lookup: {
-                    from: "vehicles", // MongoDB collection name (likely lowercase)
-                    localField: "_id",
-                    foreignField: "_id",
-                    as: "vehicleComplete"
-                }
-            },
-            {
-                $unwind: "$vehicleComplete" // Flatten the lookup array
+                $limit: 3  
             },
             {
                 $project: {
                     _id: 1,
                     vehicleId: "$_id",
-                    vehicle: "$vehicleComplete", // Use the complete vehicle document
-                    vehicleImages: "$vehicleComplete.vehicleImages", // Get images specifically
+                    vehicle: "$vehicleBasic",
                     count: 1
                 }
             }

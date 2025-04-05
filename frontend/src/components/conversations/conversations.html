@@ -1,20 +1,34 @@
 <back-button></back-button>
-<div
-  ng-init="init()"
-  class="container-fluid"
-  style="background-color: #f0f2f5; height: 100vh; padding: 10px"
->
+
+<style>
+  @media (max-width: 768px) {
+    .chat-list-col {
+      display: block !important;
+      width: 100% !important;
+    }
+
+    .chat-msg-col {
+      display: none !important;
+      width: 100% !important;
+    }
+
+    .chat-msg-col.active {
+      display: flex !important;
+    }
+
+    .chat-list-col.hide-on-mobile {
+      display: none !important;
+    }
+  }
+</style>
+
+<div ng-init="init()" class="container-fluid" style="background-color: #f0f2f5; height: 100vh; padding: 10px">
   <div class="row">
     <!-- Chat List -->
     <div
-      class="col-md-4 panel panel-default"
-      style="
-        height: 90vh;
-        overflow-y: auto;
-        background-color: #ffffff;
-        border-right: 2px solid #ddd;
-        border-radius: 10px;
-      "
+      class="col-md-4 panel panel-default chat-list-col"
+      ng-class="{'hide-on-mobile': selectedConversation}"
+      style="height: 90vh; overflow-y: auto; background-color: #ffffff; border-right: 2px solid #ddd; border-radius: 10px;"
     >
       <div class="panel-heading text-white" style="background-color: #007bff; padding: 15px">
         <h3 class="panel-title">Chats</h3>
@@ -36,36 +50,17 @@
           ng-style="{'background-color': hover ? '#e9f5ff' : '#ffffff'}"
         >
           <h4 class="list-group-item-heading" style="color: #007bff">
-            {{conversation.vehicle.company}} {{conversation.vehicle.name}}
-            ({{conversation.vehicle.modelYear}})
+            {{conversation.vehicle.company}} {{conversation.vehicle.name}} ({{conversation.vehicle.modelYear}})
           </h4>
-          <!-- Last message with improved styling -->
-          <p class="list-group-item-text" 
-             style="color: #6c757d; 
-                    font-size: 13px; 
-                    margin: 5px 0; 
-                    white-space: nowrap; 
-                    overflow: hidden; 
-                    text-overflow: ellipsis; 
-                    max-width: 100%; 
-                    font-weight: 400;
-                    line-height: 1.4;
-                    height: 18px;">
+          <p class="list-group-item-text" style="color: #6c757d; font-size: 13px; margin: 5px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-weight: 400; line-height: 1.4; height: 18px;">
             <span style="color: #343a40; font-weight: 500;" ng-if="conversation.lastMessage">Last message: </span>
             {{conversation.lastMessage || 'No messages yet'}}
           </p>
           <p class="list-group-item-text text-muted">{{conversation.car.fuelType}}</p>
           <small class="text-secondary">
-            {{conversation.reciever.username === loggedInUser.username ?
-            conversation.sender.username :
-            conversation.reciever.username}}
-            <!-- Show online status with a colored circle -->
+            {{conversation.reciever.username === loggedInUser.username ? conversation.sender.username : conversation.reciever.username}}
             <span style="display: inline-block; margin-left: 5px;">
-              <span 
-                style="display: inline-block; width: 8px; height: 8px; border-radius: 50%;" 
-                ng-style="{'background-color': isUserOnline(conversation) ? '#2ecc71' : '#e74c3c'}"
-                title="{{isUserOnline(conversation) ? 'Online' : 'Offline'}}">
-              </span>
+              <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%;" ng-style="{'background-color': isUserOnline(conversation) ? '#2ecc71' : '#e74c3c'}" title="{{isUserOnline(conversation) ? 'Online' : 'Offline'}}"></span>
             </span>
           </small>
         </a>
@@ -74,32 +69,22 @@
 
     <!-- Chat Messages -->
     <div
-      class="col-md-8 panel panel-default"
-      style="
-        height: 90vh;
-        display: flex;
-        flex-direction: column;
-        background-color: #e9ecef;
-        border-radius: 10px;
-      "
+      class="col-md-8 panel panel-default chat-msg-col"
+      ng-class="{'active': selectedConversation}"
+      style="height: 90vh; display: flex; flex-direction: column; padding: 10px; background-color: #e9ecef; border-radius: 10px;"
     >
       <div class="panel-heading text-white" style="background-color: #007bff; padding: 15px">
-        <h3 class="panel-title" ng-show="selectedConversation">
-          {{selectedConversation.reciever.username === loggedInUser.username ?
-          selectedConversation.sender.username :
-          selectedConversation.reciever.username}}
-          <!-- Add online status indicator to header -->
+        <button class="btn btn-xs btn-default visible-xs-inline" ng-click="selectedConversation = null" style="margin-right: 10px">← Back</button>
+        <h3 class="panel-title" style="display: inline" ng-show="selectedConversation">
+          {{selectedConversation.reciever.username === loggedInUser.username ? selectedConversation.sender.username : selectedConversation.reciever.username}}
           <span style="display: inline-block; margin-left: 5px; vertical-align: middle;">
-            <span 
-              style="display: inline-block; width: 10px; height: 10px; border-radius: 50%;" 
-              ng-style="{'background-color': isUserOnline(selectedConversation) ? '#2ecc71' : '#e74c3c'}"
-              title="{{isUserOnline(selectedConversation) ? 'Online' : 'Offline'}}">
-            </span>
+            <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%;" ng-style="{'background-color': isUserOnline(selectedConversation) ? '#2ecc71' : '#e74c3c'}" title="{{isUserOnline(selectedConversation) ? 'Online' : 'Offline'}}"></span>
           </span>
         </h3>
-        <p ng-hide="selectedConversation">
-          Click on a conversation to view messages
-        </p>
+        <button ng-show="selectedConversation" class="btn btn-info btn-sm pull-right" ng-click="openImagesModal()">
+          <i class="glyphicon glyphicon-picture"></i> View Images
+        </button>
+        <p ng-hide="selectedConversation">Click on a conversation to view messages</p>
       </div>
 
       <div class="text-center" ng-show="messageLoading">
@@ -107,11 +92,7 @@
         <span>Loading...</span>
       </div>
 
-      <div
-        class="panel-body"
-        id="chatBox"
-        style="flex-grow: 1; overflow-y: auto; padding: 10px"
-      >
+      <div class="panel-body" id="chatBox" style="flex-grow: 1; overflow-y: auto; padding: 10px">
         <div
           class="media"
           ng-repeat="message in messages | orderBy: 'createdAt'"
@@ -120,18 +101,10 @@
         >
           <div
             class="media-body"
-            style="
-              padding: 12px;
-              border-radius: 12px;
-              box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-              max-width: 70%;
-              display: inline-block;
-            "
+            style="padding: 12px; border-radius: 12px; box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); max-width: 70%; display: inline-block;"
             ng-style="{'background-color': message.sender.username === loggedInUser.username ? '#007bff' : '#ffffff', 'color': message.sender.username === loggedInUser.username ? 'white' : 'black'}"
           >
-            <h5 class="media-heading">
-              <strong>{{ message.sender.username }}</strong>
-            </h5>
+            <h5 class="media-heading"><strong>{{ message.sender.username }}</strong></h5>
             <p>{{message.message}}</p>
             <div>
               <img
@@ -143,37 +116,84 @@
               />
             </div>
           </div>
-          <p class="text-muted" style="font-size: 12px; margin-top: 5px">
-            {{message.createdAt | date:'shortTime'}}
-          </p>
+          <p class="text-muted" style="font-size: 12px; margin-top: 5px">{{message.createdAt | date:'shortTime'}}</p>
         </div>
       </div>
 
-      <!-- Chat Input -->
-      <div
-        class="panel-footer"
-        ng-show="selectedConversation"
-        style="
-          background-color: #ffffff;
-          border-top: 2px solid #ddd;
-          display: flex;
-          align-items: center;
-          padding: 10px;
-        "
-      >
-        <div class="input-group">
-          <input
-            type="text"
-            class="form-control"
-            placeholder="Type a message..."
-            ng-model="inputMessage"
-            ng-keypress="$event.keyCode===13 ? sendMessage(): ''"
-            style="border-radius: 20px"
-          />     
-          <input type="file" id="file" accept="image/*" ng-model="image" onchange="angular.element(this).scope().previewImages(this)" class="btn btn-default"> <button class="btn btn-primary" ng-click="sendMessage()">Send</button>
-          </span>
+     <!-- Chat Input -->
+<div class="panel-footer" ng-show="selectedConversation" style="background-color: #ffffff; border-top: 2px solid #ddd; padding-right: 100px;">
+  <div class="input-group" style="display: flex; align-items: center;">
+    <!-- Message Input -->
+    <span ng-show="!image">Add Image</span>
+    <span ng-show="image" style="color: #5cb85c;">Image Selected</span>
+    <input type="text" 
+           class="form-control" 
+           placeholder="Type a message..." 
+           ng-model="inputMessage" 
+           ng-keypress="$event.keyCode===13 ? sendMessage(): ''" 
+           style="border-radius: 20px 0 0 20px; height: 38px;">
+
+    <!-- Image Upload and Send Button -->
+    <div class="input-group-btn" style="display: flex; align-items: center;">
+      
+      <!-- Image Upload -->
+      <label for="file" 
+             class="btn btn-default" 
+             style="border-radius: 0; margin: 0; display: flex; align-items: center; height: 38px; border-left: none;">
+        <i class="glyphicon glyphicon-picture" style="margin-right: 5px;"></i>
+        
+        <input type="file" 
+               id="file" 
+               accept="image/*" 
+               ng-model="image" 
+               onchange="angular.element(this).scope().previewImages(this)" 
+               style="display: none;">
+      </label>
+
+      <!-- Send Button -->
+      <button class="btn btn-primary" 
+              ng-click="sendMessage()" 
+              style="border-radius: 0 20px 20px 0; height: 38px; margin-left: 5px;">
+        <i class="glyphicon glyphicon-send"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+      <!-- Images Modal Template -->
+      <script type="text/ng-template" id="imagesModal.html">
+        <div class="modal-header">
+          <button type="button" class="close" ng-click="close()" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          <h4 class="modal-title">Conversation Images</h4>
         </div>
-      </div>
+        <div class="modal-body">
+          <div class="text-center" ng-show="isLoading">
+            <i class="fa fa-spinner fa-spin fa-2x"></i>
+            <p class="text-muted">Loading images...</p>
+          </div>
+          
+          <div ng-show="!isLoading && images.length === 0" class="alert alert-info">
+            No images in this conversation yet.
+          </div>
+
+          <div class="row" ng-show="!isLoading && images.length > 0">
+            <div class="col-xs-6 col-md-4" ng-repeat="image in images">
+              <div class="thumbnail">
+                <img ng-src="{{image.url}}" alt="Chat Image" style="height: 200px; width: 100%; object-fit: cover;">
+                <div class="caption">
+                  <p class="text-muted"><small>{{image.createdAt | date:'medium'}}</small></p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-default" ng-click="close()">Close</button>
+        </div>
+      </script>
     </div>
   </div>
 </div>

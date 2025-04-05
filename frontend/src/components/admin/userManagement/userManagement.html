@@ -3,21 +3,20 @@
 <div class="container-fluid" ng-init="init()">
     <div class="row">
         <div class="col-xs-12 col-md-10 col-md-offset-1">
-            <!-- City Filter Dropdown -->
-            <div class="dropdown" uib-dropdown on-toggle="filterUsers()" style="margin-bottom: 20px;">
-                <button id="cityFilter" type="button" class="btn btn-primary dropdown-toggle" uib-dropdown-toggle>
-                    <i class="glyphicon glyphicon-map-marker"></i> Select City {{city}} <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu text-center" uib-dropdown-menu style="min-width: 150px;">
-                    <li ng-click="city = 'Delhi'"><a><strong>Delhi</strong></a></li>
-                    <li ng-click="city = 'Mumbai'"><a><strong>Mumbai</strong></a></li>
-                    <li ng-click="city = 'Gwalior'"><a><strong>Gwalior</strong></a></li>
-                    <li ng-click="city = 'Bhind'"><a><strong>Bhind</strong></a></li>
-                    <li ng-click="city = 'Gurugram'"><a><strong>Gurugram</strong></a></li>
-                    <li ng-click="city = 'Agra'"><a><strong>Agra</strong></a></li>
-                    <li ng-click="city = 'Shiv puri'"><a><strong>Shiv Puri</strong></a></li>
-                </ul>
-                <button class="btn btn-default" ng-click="resetFilter()">Reset Filter</button>
+            <!-- City Filter Select -->
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="cityFilter"><i class="glyphicon glyphicon-map-marker"></i> Select City:</label>
+                <div class="row">
+                    <div class="col-md-4">
+                        <select id="cityFilter" class="form-control" ng-model="city" ng-change="filterUsers()">
+                            <option value="">All Cities</option>
+                            <option ng-repeat="cityOption in cities" value="{{cityOption}}">{{cityOption}}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-default" ng-click="resetFilter()">Reset Filter</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Search Input -->
@@ -25,7 +24,6 @@
                 <label>Search:</label>
                 <input type="text" ng-model="search" placeholder="Search for user by username/name" 
                     class="form-control" 
-                    uib-typeahead="car for car in carList | filter:$viewValue | limitTo:8"
                     ng-change="filterUsersWithDelay()">
             </div>
 
@@ -61,5 +59,11 @@
             </div>
 
         </div>
+    </div>
+    <!--more button to load more users-->
+    <div class="text-center" ng-click="loadMore()" ng-if="hasMoreUsers" style="margin-bottom: 20px;">
+        <button id="load-more-btn" class="btn btn-primary mt-3">
+            Load More <span class="glyphicon glyphicon-chevron-down"></span>
+          </button>
     </div>
 </div>

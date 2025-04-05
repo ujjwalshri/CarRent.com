@@ -2,7 +2,7 @@ angular
   .module("myApp")
   .controller(
     "ownerBookingsCtrl",
-    function ($scope, $state, IDB, BiddingFactory, ToastService, BackButton, BiddingService) {
+    function ($scope, BiddingFactory, ToastService, BackButton, BiddingService, $window) {
       $scope.back = BackButton.back;  // back function to go back to the previous page
       $scope.bookings = [];   // array to hold the bookings of the logged in user
       $scope.bookingsType = { type: "pending" };  // variable to hold the booking type
@@ -13,6 +13,11 @@ angular
       $scope.itemsPerPage = 6; // setting the items per page to 6
       $scope.totalPages = 0; // setting the total pages to 0
       $scope.isLoading = false; // setting the isLoading to false
+ 
+      
+      $scope.init = function () { 
+        $scope.fetchBookings(); 
+      } 
 
      /* 
      function to fetch the bookings for logged in owner
@@ -29,7 +34,6 @@ angular
         BiddingService.getOwnerBids(params) // get the bookings for the owner
           .then((response) => {
             $scope.bookings = response.result || [];
-            console.log(response.result.length);
             $scope.totalPages = Math.ceil(response.totalDocs / $scope.itemsPerPage);
            
           })
@@ -76,37 +80,40 @@ angular
         $scope.fetchBookings();
       };
 
-      /*
-      function to approve bidding
-      @params bidID
-      */
-      $scope.approveBidding = function (bidID) {
-        BiddingService.approveBid(bidID)
-          .then(() => {
-            ToastService.success("Bidding approved successfully");
-            $scope.fetchBookings();
-          })
-          .catch((err) => {
-            ToastService.error(`Error approving bidding: ${err}`);
-          });
-      };
+     /*
+  Function to approve bidding with confirmation
+  @params bidID
+*/
+$scope.approveBidding = function (bidID) {
+  if ($window.confirm("Are you sure you want to approve this bid? approving this bid will reject all the overlapping bids on this car")) {
+    BiddingService.approveBid(bidID)
+      .then(() => {
+        ToastService.success("Bidding approved successfully");
+        $scope.fetchBookings();
+      })
+      .catch((err) => {
+        ToastService.error(`Error approving bidding: ${err}`);
+      });
+  }
+};
 
-       /*
-      function to reject bidding
-      @params bidID
-      */
-      $scope.rejectBidding = function (bidID) {
-        BiddingService.rejectBid(bidID)
-          .then(() => {
-            ToastService.success("Bidding rejected successfully");
-            $scope.fetchBookings();
-          })
-          .catch((err) => {
-            ToastService.error(`Error rejecting bidding: ${err}`);
-          });
-      };
-
+/*
+  Function to reject bidding with confirmation
+  @params bidID
+*/
+$scope.rejectBidding = function (bidID) {
+  if ($window.confirm("Are you sure you want to reject this bid?")) {
+    BiddingService.rejectBid(bidID)
+      .then(() => {
+        ToastService.success("Bidding rejected successfully");
+        $scope.fetchBookings();
+      })
+      .catch((err) => {
+        ToastService.error(`Error rejecting bidding: ${err}`);
+      });
+  }
+};
       
-      $scope.fetchBookings();
+
     }
   );

@@ -1,13 +1,12 @@
 import express from 'express'; // import express
 import protectRoute from "../middlewares/protectRoute.js"; // import the protectRoute middleware
 import {getAllReviewsAtCarIdController, addReviewController} from '../controllers/review.controllers.js'; // import the getAllReviewsAtCarIdController function from the review.controllers.js file
-import protectFromAdmin from '../middlewares/authenticateAdminRole.js';
-import protectFromSeller from '../middlewares/authenticateSeller.js';
+import allowUser from '../middlewares/authenticateUser.js';
 
 const router = express.Router(); // create a new router object
 
-router.get('/getAllReviews/car/:id',protectRoute, getAllReviewsAtCarIdController);
-router.post('/addReview/car/:id',protectRoute,protectFromAdmin,protectFromSeller,addReviewController);
+router.get('/getAllReviews/car/:id',protectRoute, getAllReviewsAtCarIdController); // get all the reviews at car id
+router.post('/addReview/car/:id',protectRoute,allowUser,addReviewController); // add the review
 
 export default router; // export the router object
 

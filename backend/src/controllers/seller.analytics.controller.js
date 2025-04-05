@@ -1,58 +1,60 @@
+/**
+ * Seller Analytics Controller
+ * This controller handles all analytics-related operations for sellers including revenue calculations,
+ * booking statistics, and performance metrics.
+ */
+
 import Vehicle from "../models/vehicle.model.js";
 import Bidding from "../models/bidding.model.js";
 import Review from "../models/review.model.js";
 
+const timePeriods = {
+    last7days: 7,
+    last30days: 30,
+    last90days: 90,
+    last365days: 365,
+};
 
-
-/*
-@description: function to get the car description for the seller for the given date range 
-*/
+/**
+ * Get Car Description Controller
+ * Retrieves the distribution of car categories (SUV vs Sedan) for a seller's approved vehicles
+ * 
+ * @param {Object} req - Express request object containing query parameters
+ * @param {string} req.query.startDate - Optional start date for filtering (ISO format)
+ * @param {string} req.query.endDate - Optional end date for filtering (ISO format)
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing category distribution
+ */
 export const getCarDescriptionController = async (req, res) => {
     const userId = req.user._id;
 
-
     try {
-        const { startDate, endDate } = req.query; //2025-03-25T00:00:00.000Z example date format
-
-
-        if ((startDate && isNaN(Date.parse(startDate))) || (endDate && isNaN(Date.parse(endDate)))) {
-            return res.status(400).json({ error: "Invalid date format. Use a valid ISO date string." });
-        }
-
+        const { startDate, endDate } = req.query;
+         if(!startDate || !endDate){
+            return res.status(400).json({ error: "startDate and endDate are required" });
+         }
+      
+        // Base aggregation pipeline to count vehicles by category
         const aggregationPipeline = [
             {
                 $match: {
-                    'owner._id' : userId,
-                    status: "approved"
+                    'owner._id': userId,
+                    status: "approved",
+                    createdAt : {
+                        $gte: new Date(startDate),
+                        $lte: new Date(endDate)
+                    }
                 }
             },
             {
                 $group: {
-                    _id: "$category", 
+                    _id: "$category",
                     count: { $sum: 1 }
                 }
             }
         ];
 
-       
-        if (startDate && endDate) {
-            aggregationPipeline.unshift({
-                $match: {
-                    createdAt: {
-                        $gte: new Date(startDate),
-                        $lte: new Date(endDate).setHours(23, 59, 59, 999)
-                    }
-                }
-            });
-        }
-
-
         const result = await Vehicle.aggregate(aggregationPipeline);
-
-
-        if (!result || result.length === 0) {
-            return res.status(404).json({ message: "No data found for the given filters." });
-        }
 
         return res.status(200).json({ suvVsSedan: result });
     } catch (error) {
@@ -60,17 +62,34 @@ export const getCarDescriptionController = async (req, res) => {
         return res.status(400).json({ error: error.message });
     }
 }
-/*
-@description: function to get the top 3 most popular cars for the seller for the given date range
-*/
+
+/**
+ * Get Top 3 Most Popular Cars Controller
+ * Retrieves the top 3 most booked cars for a seller based on booking count
+ * 
+ * @param {Object} req - Express request object containing query parameters
+ * @param {string} req.query.startDate - Optional start date for filtering
+ * @param {string} req.query.endDate - Optional end date for filtering
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing top 3 cars with booking counts
+ */
 export const getTop3MostPopularCarsController = async (req, res) => {
-    const{startDate, endDate} = req.query;
+    const { startDate, endDate } = req.query;
     const userId = req.user._id;
-    try{
+    if(!startDate || !endDate){
+        return res.status(400).json({ error: "startDate and endDate are required" });
+    }
+    
+    try {
+        // Base pipeline to count bookings per car
         const aggregationPipeline = [
             {
                 $match: {
-                    'owner._id' : userId,
+                    'owner._id': userId,
+                    createdAt : {
+                        $gte: new Date(startDate),
+                        $lte: new Date(endDate)
+                    }
                 }
             },
             {
@@ -80,33 +99,21 @@ export const getTop3MostPopularCarsController = async (req, res) => {
                 }
             },
             {
-                $sort: {count: -1}
+                $sort: { count: -1 }
             },
             {
                 $limit: 3
             }
         ];
 
-        if (startDate && endDate) {
-            aggregationPipeline.unshift({
-                $match: {
-                    createdAt: {
-                        $gte: new Date(startDate),
-                        $lte: new Date(endDate)
-                    }
-                }
-            });
-        }
-
+     
         const result = await Bidding.aggregate(aggregationPipeline);
 
-        if (!result || result.length === 0) {
-            return res.status(404).json({ message: "No data found for the given filters." });
-        }
+       
 
         return res.status(200).json({ top3MostPopularCars: result });
 
-    }catch(err){
+    } catch (err) {
         console.log(`error in the top3MostPopularCarsController ${err}`);
         return res.status(400).json({ error: err.message });
     }
@@ -118,11 +125,18 @@ export const getTop3MostPopularCarsController = async (req, res) => {
 export const numberOfBiddingsPerLocationController = async (req, res) => {
     const userId = req.user._id;
     const{startDate, endDate} = req.query;
+    if(!startDate || !endDate){
+        return res.status(400).json({ error: "startDate and endDate are required" });
+    }
     try{
         const aggregationPipeline = [
             {
                 $match: {
                     'owner._id' : userId,
+                    createdAt : {
+                        $gte: new Date(startDate),
+                        $lte: new Date(endDate)
+                    }
                 }
             },
             {
@@ -133,24 +147,9 @@ export const numberOfBiddingsPerLocationController = async (req, res) => {
             }
         ];
 
-        if (startDate && endDate) {
-            aggregationPipeline.unshift({
-                $match: {
-                    createdAt: {
-                        $gte: new Date(startDate),
-                        $lte: new Date(endDate)
-                    }
-                }
-            });
-        }
-
-
 
         const result = await Bidding.aggregate(aggregationPipeline);
 
-        if (!result || result.length === 0) {
-            return res.status(404).json({ message: "No data found for the given filters." });
-        }
 
         return res.status(200).json({ numberOfBidsPerLocation: result });
 
@@ -195,9 +194,7 @@ export const getTotalCarsAddedController = async (req, res) => {
 
         const result = await Vehicle.aggregate(aggregationPipeline);
 
-        if (!result || result.length === 0) {
-            return res.status(404).json({ message: "No data found for the given filters." });
-        }
+       
 
         return res.status(200).json({ totalCarsAdded: result });
 
@@ -292,13 +289,25 @@ export const getCarCountByFuelTypeController = async (req, res) => {
     }
 }
 
-
+/**
+ * Get Total Revenue Controller
+ * Calculates total revenue for a seller including base booking amount and excess kilometer charges
+ * Revenue calculation includes:
+ * 1. Base amount = daily rate * number of days
+ * 2. Excess kilometer charge = (kilometers driven - 300) * 10 per km
+ * 
+ * @param {Object} req - Express request object containing query parameters
+ * @param {string} req.query.startDate - Optional start date for filtering
+ * @param {string} req.query.endDate - Optional end date for filtering
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing revenue metrics
+ */
 export const getTotalRevenueController = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
-    console.log(startDate, endDate);
 
     try {
+        // Validate date parameters
         if (startDate && !endDate) {
             return res.status(400).json({ 
                 error: "If start date is provided, end date is required" 
@@ -321,6 +330,7 @@ export const getTotalRevenueController = async (req, res) => {
             },
             {
                 $addFields: {
+                    // Calculate number of days between start and end date
                     numberOfDays: {
                         $ceil: {
                             $divide: [
@@ -329,6 +339,7 @@ export const getTotalRevenueController = async (req, res) => {
                             ]
                         }
                     },
+                    // Calculate total kilometers driven
                     kilometersDriven: {
                         $subtract: ["$endOdometerValue", "$startOdometerValue"]
                     }
@@ -336,7 +347,9 @@ export const getTotalRevenueController = async (req, res) => {
             },
             {
                 $addFields: {
-                    baseAmount: { $multiply: ["$amount", { $add: ["$numberOfDays", 1] }] } ,
+                    // Calculate base amount (daily rate * number of days)
+                    baseAmount: { $multiply: ["$amount", { $add: ["$numberOfDays", 1] }] },
+                    // Calculate excess kilometers beyond 300km limit
                     excessKilometers: {
                         $max: [
                             { $subtract: ["$kilometersDriven", 300] },
@@ -347,9 +360,11 @@ export const getTotalRevenueController = async (req, res) => {
             },
             {
                 $addFields: {
+                    // Calculate fine for excess kilometers (10 per km)
                     fine: {
                         $multiply: ["$excessKilometers", 10]
                     },
+                    // Calculate total revenue (base amount + fine)
                     totalBookingRevenue: {
                         $add: [
                             "$baseAmount",
@@ -384,14 +399,14 @@ export const getTotalRevenueController = async (req, res) => {
             response.allTimeRevenue = totalResult[0];
         }
 
-
+        // If date range is provided, calculate filtered revenue
         if (startDate && endDate) {
             const dateFilteredPipeline = [
                 {
                     $match: {
                         "owner._id": userId,
                         status: { $in: ["ended", "reviewed"] },
-                        updatedAt: {
+                        endDate: {
                             $gte: new Date(startDate),
                             $lte: new Date(endDate)
                         }
@@ -414,11 +429,6 @@ export const getTotalRevenueController = async (req, res) => {
             }
         }
 
-        if (Object.keys(response).length === 0) {
-            return res.status(404).json({ 
-                message: "No revenue data found." 
-            });
-        }
 
         return res.status(200).json(response);
 
@@ -428,14 +438,22 @@ export const getTotalRevenueController = async (req, res) => {
     }
 };
 
+/**
+ * Get Ongoing Bookings Controller
+ * Retrieves the count of currently active bookings for a seller
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing count of ongoing bookings
+ */
 export const getOngoingBookingsController = async (req, res) => {
     const userId = req.user._id;
 
-    try{
+    try {
         const aggregationPipeline = [
             {
                 $match: {
-                    'owner._id' : userId,
+                    'owner._id': userId,
                     status: "started"
                 }
             },
@@ -448,87 +466,121 @@ export const getOngoingBookingsController = async (req, res) => {
         ]
         const result = await Bidding.aggregate(aggregationPipeline);
         return res.status(200).json({ result });
-    }catch(err){
+    } catch (err) {
         console.log(`error in the getOngoingBookingsController ${err}`);
         return res.status(400).json({ error: err.message });
     }
 }
 
+/**
+ * Get My Bids vs Other Sellers Average Controller
+ * Compares the number of bids received by a seller in the last 7 days
+ * against the average bids received by other sellers
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing bid comparison metrics
+ */
+export const getMyBidsVsOtherSellerAvgBidsController = async (req, res) => {
+    const userId = req.user._id;
 
+    const {startDate, endDate} = req.query;
 
-
-
-export const getMyBidsInLast7DaysVsOtherSellerAvgBidsController = async (req, res) => {
-    const userId =req.user._id; 
+    if(!startDate || !endDate){
+        return res.status(400).json({ error: "startDate and endDate are required" });
+    }
 
     try {
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        const aggregationPipeline = [
-            
+        const sellerBidsPipeline = [
             {
                 $match: {
-                    startDate: { $gte: sevenDaysAgo },
-                    'owner._id': userId
-                }
+                    createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
+                    'owner._id': userId,
+                },
             },
-          
             {
                 $group: {
                     _id: null,
-                    totalBids: { $sum: 1 }
-                }
+                    totalBids: { $sum: 1 },
+                },
             },
         ];
-        const aggregationPipeline2 = [
+
+
+        const otherSellersBidsPipeline = [
             {
                 $match: {
-                    startDate: { $gte: sevenDaysAgo },
-                    'owner._id': { $ne: userId } 
-                }
+                    createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
+                    'owner._id': { $ne: userId },
+                },
             },
             {
                 $group: {
-                    _id: "$owner._id", 
-                    totalBids: { $sum: 1 } 
-                }
+                    _id: "$owner._id",
+                    totalBids: { $sum: 1 },
+                },
             },
             {
                 $group: {
                     _id: null,
-                    avgBids: { $avg: "$totalBids" } // Compute the average number of bids per seller
-                }
+                    avgBids: { $avg: "$totalBids" },
+                },
             },
             {
                 $project: {
                     _id: 0,
-                    avgBids: 1
-                }
-            }
+                    avgBids: 1,
+                },
+            },
         ];
-2        
-        
 
-       const res1 = await Bidding.aggregate(aggregationPipeline2);
-    
-        const result = await Bidding.aggregate(aggregationPipeline);
-        return res.status(200).json({ result, res1 });
 
+        const [sellerBids, otherSellersAvgBids] = await Promise.all([
+            Bidding.aggregate(sellerBidsPipeline),
+            Bidding.aggregate(otherSellersBidsPipeline),
+        ]);
+
+
+        const result = {
+            sellerBids: sellerBids[0]?.totalBids || 0,
+            otherSellersAvgBids: otherSellersAvgBids[0]?.avgBids || 0,
+        };
+
+        return res.status(200).json(result);
     } catch (err) {
-        console.error(`Error in getMyBidsInLast7DaysVsOtherSellerAvgBidsController:`, err);
-        return res.status(500).json({ error: "An error occurred while processing the request." });
+        console.error(
+            `Error in getMyBidsInLast7DaysVsOtherSellerAvgBidsController:`,
+            err
+        );
+        return res
+            .status(500)
+            .json({ error: "An error occurred while processing the request." });
     }
 };
 
+/**
+ * Get Car-wise Bookings Controller
+ * Retrieves the number of bookings for each car owned by the seller
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing booking counts per car
+ */
 export const carWiseBookingsController = async (req, res) => {
     const userId = req.user._id;
-    try{
-        const aggregationPipeline = [
-            {
+    const { startDate, endDate } = req.query;
+    if(!startDate && !endDate){
+        return res.status(400).json({ error: "startDate and endDate are required" });
+    }
+
+        try {
+            const aggregationPipeline = [
+                {
                 $match: {
-                    'owner._id' : userId,
-                    status: {$in: ["approved","started", "ended", "reviewed"]}
+                    'owner._id': userId,
+                    status: { $in: ["approved", "started", "ended", "reviewed"] },
+                        startDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
                 }
             },
             {
@@ -540,53 +592,50 @@ export const carWiseBookingsController = async (req, res) => {
         ]
         const result = await Bidding.aggregate(aggregationPipeline);
         return res.status(200).json({ carWiseBookings: result });
-    }catch(err){
+    } catch (err) {
         console.log(`error in the carWiseBookingsController ${err}`);
         return res.status(400).json({ error: err.message });
     }
 }
 
+/**
+ * Get Month-wise Bookings Controller
+ * Retrieves the number of bookings per month for a seller
+ * Can filter by current year or last year
+ * 
+ * @param {Object} req - Express request object containing year parameter
+ * @param {string} req.query.year - 'thisYear' or 'lastYear' to filter bookings
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing monthly booking counts
+ */
 export const getMonthWiseBookingsController = async (req, res) => {
-    const { year } = req.query;
+
     const userId = req.user._id;
+    const { startDate, endDate } = req.query;
     try {
         const aggregationPipeline = [
             {
                 $match: {
                     'owner._id': userId,
-                    status: { $in: ["approved"] }
+                    status: { $in: ["approved", "started", "ended", "reviewed"] },
+                    ...(startDate && endDate && {
+                        startDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
+                    })
                 }
             },
             {
                 $group: {
                     _id: {
-                        $dateToString: { format: "%B", date: "$startDate" } 
+                        $dateToString: { format: "%B", date: "$startDate" }
                     },
                     count: { $sum: 1 }
                 }
             },
             {
-                $sort: { _id: 1 } 
+                $sort: { _id: 1 }
             }
         ];
 
-        if (year === 'thisYear') {
-            aggregationPipeline.unshift({
-                $match: {
-                    $expr: {
-                        $eq: [{ $year: "$startDate" }, new Date().getFullYear()],
-                    } 
-                }
-            });
-        } else if (year === 'lastYear') {
-            aggregationPipeline.unshift({
-                $match: {
-                    $expr: {
-                        $eq: [{ $year: "$startDate" }, new Date().getFullYear() - 1]
-                    }
-                }
-            });
-        }
 
         const result = await Bidding.aggregate(aggregationPipeline);
         return res.status(200).json({ monthWiseBookings: result });
@@ -596,21 +645,29 @@ export const getMonthWiseBookingsController = async (req, res) => {
     }
 };
 
+/**
+ * Get Month-wise Car Trips Controller
+ * Calculates the total distance covered by cars in each month
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing monthly distance metrics
+ */
 export const monthWiseCarTripsController = async (req, res) => {
     const userId = req.user._id;
 
-    try{
+    try {
         const aggregationPipeline = [
             {
                 $match: {
-                    'owner._id' : userId,
+                    'owner._id': userId,
                     status: "ended"
                 }
             },
             {
                 $group: {
                     _id: {
-                        $dateToString: { format: "%B", date: "$startDate" } 
+                        $dateToString: { format: "%B", date: "$startDate" }
                     },
                     totalDistance: { $sum: { $subtract: ["$endOdometerValue", "$startOdometerValue"] } }
                 }
@@ -621,12 +678,23 @@ export const monthWiseCarTripsController = async (req, res) => {
         ]
         const result = await Bidding.aggregate(aggregationPipeline);
         return res.status(200).json({ monthWiseCarTrips: result ? result : [] });
-    }catch(err){
+    } catch (err) {
         console.log(`error in the monthWiseCarTripsController ${err}`);
         return res.status(400).json({ error: err.message });
     }
 }
 
+/**
+ * Get Top 3 Cars with Most Earnings Controller
+ * Retrieves the top 3 cars that have generated the highest revenue
+ * Revenue calculation includes base amount and excess kilometer charges
+ * 
+ * @param {Object} req - Express request object containing date range
+ * @param {string} req.query.startDate - Optional start date for filtering
+ * @param {string} req.query.endDate - Optional end date for filtering
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing top 3 cars by revenue
+ */
 export const top3CarsWithMostEarningController = async (req, res) => {
     try {
         const userId = req.user._id;
@@ -647,18 +715,21 @@ export const top3CarsWithMostEarningController = async (req, res) => {
             },
             {
                 $addFields: {
+                    // Calculate booking duration in days
                     bookingDays: {
                         $divide: [
                             { $subtract: ["$endDate", "$startDate"] },
-                            1000 * 60 * 60 * 24 // Convert milliseconds to days
+                            1000 * 60 * 60 * 24
                         ]
                     },
+                    // Calculate kilometers driven
                     exceededKm: {
                         $max: [
                             0,
-                            { $subtract: ["$endOdometerValue", "$startOdometerValue"] } // Subtract only two values
+                            { $subtract: ["$endOdometerValue", "$startOdometerValue"] }
                         ]
                     },
+                    // Calculate excess kilometer charges
                     exceededKmCharge: {
                         $multiply: [
                             {
@@ -688,11 +759,10 @@ export const top3CarsWithMostEarningController = async (req, res) => {
                             $add: [
                                 {
                                     "$multiply": [
-                                      { "$add": ["$bookingDays", 1] }, 
-                                      "$amount"
+                                        { "$add": ["$bookingDays", 1] },
+                                        "$amount"
                                     ]
-                                  }
-,                                  
+                                },
                                 "$exceededKmCharge"
                             ]
                         }
@@ -711,90 +781,155 @@ export const top3CarsWithMostEarningController = async (req, res) => {
     }
 };
 
+/**
+ * Get Top 3 Customers with Most Bookings Controller
+ * Retrieves the top 3 customers who have made the most bookings with the seller
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing top 3 customers by booking count
+ */
 export const top3CostumersWithMostBookingsController = async (req, res) => {
     const userId = req.user._id;
-    try{
-            const aggregationPipeline = [
-                {
-                    $match: {
-                        'owner._id': userId,
-                        status: {$in: ["approved", "started", "ended", "reviewed"]}
-                    }
-                },
-                {
-                    $group: {
-                        _id: "$from.username" , 
-                        count: { $sum: 1 }
-                    }
-                },
-                {
-                    $sort: { count: -1 }
-                },
-                {
-                    $limit: 3
+    const {startDate, endDate} = req.query;
+    if(!startDate || !endDate){
+        return res.status(400).json({ error: "startDate and endDate are required" });
+    }
+
+    try {
+        const aggregationPipeline = [
+            {
+                $match: {
+                    'owner._id': userId,
+                    status: { $in: ["approved", "started", "ended", "reviewed"] },
+                    startDate: { $gte: new Date(startDate), $lte: new Date(endDate)}
                 }
-            ]
-            const result = await Bidding.aggregate(aggregationPipeline);
-            return res.status(200).json({ top3CostumersWithMostBookings: result });
-    }catch(err){
+            },
+            {
+                $group: {
+                    _id: "$from.username",
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { count: -1 }
+            },
+            {
+                $limit: 3
+            }
+        ]
+        const result = await Bidding.aggregate(aggregationPipeline);
+        return res.status(200).json({ top3CostumersWithMostBookings: result });
+    } catch (err) {
         console.log(`error in the top3CostumersWithMostBookingsController ${err}`);
         return res.status(400).json({ error: err.message });
     }
 }
 
+/**
+ * Get Peak Bidding Hours Controller
+ * Analyzes the distribution of bid creation times to identify peak bidding hours
+ * 
+ * @param {Object} req - Express request object containing date range
+ * @param {string} req.query.startDate - Optional start date for filtering
+ * @param {string} req.query.endDate - Optional end date for filtering
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing bid counts per hour
+ */
 export const peakBiddingHoursController = async (req, res) => {
     const userId = req.user._id;
-    const {startDate, endDate} = req.query;
-    try{
+    const { startDate, endDate } = req.query;
+    console.log(startDate, endDate);
+    
+    try {
+        
         const aggregationPipeline = [
             {
                 $match: {
                     'owner._id': userId,
+                    status: { $in: ["pending", "approved", "started", "ended", "reviewed"] } ,// Include all relevant statuses
                     ...(startDate && endDate && {
                         createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
-                    })  
+                    })
                 }
             },
             {
                 $group: {
-                    _id: { $hour: "$createdAt" },
+                    _id: { 
+                        $hour: { 
+                            date: "$createdAt",
+                            timezone: "Asia/Kolkata"
+                        }
+                    },
                     count: { $sum: 1 }
                 }
             },
             {
                 $sort: { _id: 1 }
+            },
+            {
+                $project: {
+                    hour: "$_id",
+                    count: 1,
+                    _id: 0
+                }
             }
-
-        ]
+        ];
+        
         const result = await Bidding.aggregate(aggregationPipeline);
-        return res.status(200).json({ peakBiddingHours: result });
-    }catch(err){
-        console.log(`error in the peakBiddingHoursController ${err}`);
+        
+        
+        
+
+        const allHours = Array.from({ length: 24 }, (_, i) => i);
+        const completeResult = allHours.map(hour => {
+            const existingHour = result.find(r => r.hour === hour);
+            return existingHour || { hour, count: 0 };
+        });
+        
+        return res.status(200).json({ 
+            peakBiddingHours: completeResult,
+            timeZone: "Asia/Kolkata" // Indicating the timezone used
+        });
+    } catch (err) {
+        console.error(`Error in peakBiddingHoursController: ${err}`);
+        return res.status(500).json({ error: "Internal server error" });
     }
 }
 
+/**
+ * Get Negative Reviews Percentage Controller
+ * Calculates the percentage of negative reviews (rating < 3) for a seller's vehicles
+ * 
+ * @param {Object} req - Express request object containing date range
+ * @param {string} req.query.startDate - Optional start date for filtering
+ * @param {string} req.query.endDate - Optional end date for filtering
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing negative review metrics
+ */
 export const getNegativeReviewsPercentageController = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
-    console.log(startDate, endDate);
-    try {
+    if(!startDate || !endDate){
+        return res.status(400).json({ error: "startDate and endDate are required" });
+    }
 
+    try {
+        // Build date filter if dates are provided
         const matchFilter = {
-            ...(startDate && endDate && {
-                createdAt: { 
+                createdAt: {
                     $gte: new Date(startDate),
                     $lte: new Date(endDate)
                 }
-            })
         };
 
-
+        // Get count of negative reviews
         const negativeReviewsResult = await Review.aggregate([
             {
                 $lookup: {
-                    from: "vehicles", 
-                    localField: "vehicle._id",  
-                    foreignField: "_id", 
+                    from: "vehicles",
+                    localField: "vehicle._id",
+                    foreignField: "_id",
                     as: "vehicleData"
                 }
             },
@@ -803,8 +938,7 @@ export const getNegativeReviewsPercentageController = async (req, res) => {
             { $count: "negativeCount" }
         ]);
 
-
-
+        // Get total review count
         const totalReviewsResult = await Review.aggregate([
             {
                 $lookup: {
@@ -819,12 +953,10 @@ export const getNegativeReviewsPercentageController = async (req, res) => {
             { $count: "totalCount" }
         ]);
 
-
-
         const negativeCount = negativeReviewsResult.length ? negativeReviewsResult[0].negativeCount : 0;
         const totalCount = totalReviewsResult.length ? totalReviewsResult[0].totalCount : 0;
 
-
+        // Calculate percentage of negative reviews
         const negativeReviewsPercentage = totalCount > 0 ? ((negativeCount / totalCount) * 100).toFixed(2) : 0;
 
         return res.status(200).json({
@@ -835,6 +967,246 @@ export const getNegativeReviewsPercentageController = async (req, res) => {
 
     } catch (err) {
         console.log(`Error in getNegativeReviewsPercentageController: ${err}`);
+        return res.status(400).json({ error: err.message });
+    }
+};
+
+
+
+/**
+ * Get the average rental duration 
+ * Calculates the average rental duration for a seller's vehicles
+ * 
+ * @param {Object} req - Express request object containing date range
+ * @param {string} req.query.timePeriod - Optional time period for filtering
+
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing the average rental duration
+ */
+export const getAverageRentalDurationController = async (req, res) => {
+    const userId = req.user._id;
+    const { startDate, endDate } = req.query;
+    try {
+     
+        
+        const aggregationPipeline = [
+            {
+                $match: {
+                    'owner._id': userId,
+                    status : { $in: [ "ended", "reviewed"] },
+                    ...(startDate && endDate && {
+                        endDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
+                    })
+                }
+            },
+            {
+                $addFields: {
+                    bookingDays: {
+                        $add: [
+                            {
+                                $divide: [
+                                    { $subtract: ["$endDate", "$startDate"] },
+                                    1000 * 60 * 60 * 24
+                                ]
+                            },
+                            1
+                        ]
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    averageRentalDuration: { $avg: "$bookingDays" }
+                }
+            }
+        ]
+        const result = await Bidding.aggregate(aggregationPipeline);
+        return res.status(200).json({ averageRentalDuration: result });
+    }catch(err){
+        console.log(`error in the getAverageRentalDurationController ${err}`);
+        return res.status(400).json({ error: err.message });
+    }
+}
+
+/**
+ * Get Repeating Customer Percentage Controller
+ * Calculates the percentage of repeating customers (customers who have made multiple bookings)
+ * 
+ * @param {Object} req - Express request object containing date range
+ * 
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response containing the repeating customer percentage
+ */
+export const getRepeatingCustomerPercentageController = async (req, res) => {
+    const userId = req.user._id;
+    const {startDate, endDate} = req.query;
+
+    try {
+        const aggregationPipeline = [
+            {
+                $match: {
+                    'owner._id': userId,
+                    status : {$in : [ "approved", "started", "ended","reviewed"]},
+                    ...(startDate && endDate && {
+                        startDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
+                    })
+                }
+            },
+            {
+                $group : {
+                    _id: '$from.username',
+                    count: { $sum: 1 }
+                }
+            }
+        ];
+
+
+
+        // Execute the aggregation pipeline
+        const customerBookingCounts = await Bidding.aggregate(aggregationPipeline);
+        console.log(customerBookingCounts);
+
+        
+        // Count total unique customers
+        const totalUniqueCustomers = customerBookingCounts.length;
+        
+        // Count repeating customers (customers with more than 1 booking)
+        const repeatingCustomers = customerBookingCounts.filter(customer => customer.count > 1).length;
+        
+        // Calculate percentage of repeating customers
+        const repeatingCustomerPercentage = totalUniqueCustomers > 0 
+            ? (repeatingCustomers / totalUniqueCustomers) * 100 
+            : 0;
+            
+        return res.status(200).json({
+            repeatingCustomerPercentage,
+            totalUniqueCustomers,
+            repeatingCustomers,
+        });
+    } catch(err) {
+        console.log(`error in the getRepeatingCustomerPercentageController ${err}`);
+        return res.status(400).json({ error: err.message });
+    }
+}
+/**
+ * Controller to get the total number of bookings for a seller
+ * Can be filtered by date range through query parameters
+ * Only counts bookings with status approved, started, ended or reviewed
+ * 
+ * @param {Object} req - Express request object containing:
+ *   - user._id: ID of the authenticated seller
+ *   - query.startDate: Optional start date for filtering
+ *   - query.endDate: Optional end date for filtering
+ * @param {Object} res - Express response object
+ * @returns {Object} - Contains array with single result object having count of bookings
+ */
+
+export const numberOfBookingsController = async (req, res) => {
+    const userId = req.user._id;
+    const { startDate, endDate } = req.query;
+
+    try {
+        const aggregationPipeline = [
+            {
+                $match: {
+                    'owner._id': userId,
+                    status: { $in: [ "approved", "started", "ended", "reviewed"] }
+                }
+            },{
+                $group: {
+                    _id: null,
+                    count: { $sum: 1 }
+                }
+            }
+        ]
+        if (startDate && endDate) {
+           aggregationPipeline[0].$match.startDate = {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate)
+            }
+        }
+        const result = await Bidding.aggregate(aggregationPipeline);
+        return res.status(200).json({  result });
+    }catch(err){
+        console.log(`error in the numberOfBookingsController ${err}`);
+        return res.status(400).json({ error: err.message });
+    }
+}
+        
+
+/**
+ * Controller to get count of negative reviews (rating < 3) per car for a seller
+ * Can be filtered by date range through query parameters
+ * Groups reviews by car (company + name + model year)
+ * Only includes reviews for cars owned by the authenticated seller
+ * 
+ * @param {Object} req - Express request object containing:
+ *   - user._id: ID of the authenticated seller
+ *   - query.startDate: Optional start date for filtering
+ *   - query.endDate: Optional end date for filtering
+ * @param {Object} res - Express response object
+ * @returns {Object} - Contains array of car names and their negative review counts
+ */
+
+export const getCarWiseNegativeReviewsController = async (req, res) => {
+    const userId = req.user._id; // Ensure userId is an ObjectId
+    const { startDate, endDate } = req.query;
+
+    try {
+        const aggregationPipeline = [
+            {
+                $match: {
+                    rating: { $lt: 3 } // Filter for negative reviews
+                }
+            },
+            // Apply date filtering if both startDate and endDate are provided
+            ...(startDate && endDate
+                ? [{
+                    $match: {
+                        createdAt: {
+                            $gte: new Date(startDate),
+                            $lte: new Date(endDate)
+                        }
+                    }
+                }]
+                : []
+            ),
+            {
+                $lookup: {
+                    from: "vehicles",
+                    localField: "vehicle._id", 
+                    foreignField: "_id",
+                    as: "vehicleData"
+                }
+            },
+            { $unwind: "$vehicleData" },
+            {
+                $match: {
+                    "vehicleData.owner._id": userId 
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        $concat: [
+                            { "$toLower": "$vehicleData.company" },
+                            " ",
+                            { "$toLower": "$vehicleData.name" },
+                            " ",
+                            { "$toString": "$vehicleData.modelYear" }
+                        ]
+                    },
+                    count: { $sum: 1 }
+                }
+            }
+        ];
+
+        const result = await Review.aggregate(aggregationPipeline);
+        return res.status(200).json({ result });
+
+    } catch (err) {
+        console.error(`Error in getCarWiseNegativeReviewsController: ${err}`);
         return res.status(400).json({ error: err.message });
     }
 };

@@ -1,12 +1,10 @@
 /*
-This middleware is used to protect the routes from the admin.
-If the user is not an admin, then the user is allowed to access the route.
-If the user is an admin, then the user is not allowed to access the route.
+This middleware is used to allow admin to the route
 */
-const protectFromAdmin = (req, res, next) => {
+const allowAdmin = (req, res, next) => {
     
    const user = req.user;
-    if(!user.isAdmin){
+    if(user.isAdmin){
          next();
     }
     else{
@@ -14,4 +12,4 @@ const protectFromAdmin = (req, res, next) => {
     }
   }
 
-export default protectFromAdmin;
+export default allowAdmin;

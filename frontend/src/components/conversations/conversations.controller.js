@@ -5,61 +5,43 @@ angular
     function (
       $scope,
       $stateParams,
-      IDB,
       $timeout,
-      BackButton,
       RouteProtection,
       ChatService,
       $q,
       ToastService,
-      $timeout
+      $timeout,
+      $uibModal
     ) {
-      $scope.back = BackButton.back; // back function to go back to the previous page,
-      $scope.myConversations = []; //  array to hold all the conversations of the user
-      $scope.messages = []; // array to hold all the messages of a particular conversation
-      $scope.selectedConversation = null; // object to hold the selected conversation
-      $scope.isLoading = false;
-      $scope.messageLoading = false;
-
-     
-      // for handling the view logic
-
-      $scope.inputMessage = ""; // input message
-      $scope.loggedInUser = null; // logged in user
-      $scope.image; // array to hold the images
-      let socket = null;
-
-      /*
-    Function to initialize the controller and fetch all the conversations of the user
-    @params none
-    @returns none
-    */
+      // Data collections
+      $scope.myConversations = []; // List of user's active conversations
+      $scope.messages = []; // Messages for currently selected conversation
+      $scope.onlineUsers = []; // Users currently active in the system
+      
+      // UI state tracking
+      $scope.selectedConversation = null; // Currently selected/active conversation
+      $scope.isLoading = false; // Main content loading state
+      $scope.messageLoading = false; // Message loading state
+      
+      // User input handling
+      $scope.inputMessage = ""; // Current message being composed
+      $scope.loggedInUser = null; // Current user's profile
+      $scope.image; // Image attachment for current message
+      
+      // Websocket connection
+      let socket = null; // Socket.io connection for real-time messaging
+      
+      // ==========================================
+      // INITIALIZATION & SOCKET SETUP
+      // ==========================================
+      
+      // Main initialization function - called on controller load
+      // Sets up socket connections and fetches initial conversation data
       $scope.init = () => {
-        socket = io("http://localhost:8000"); // initialize the socket connection
-
-       
-        socket.on("newMessage", (message) => {
-            console.log(message);
-            $scope.messages.push(message);
-            $scope.scrollToBottom();
-            $timeout();
-        });
-
-        socket.on("onlineUsers", (users) => {
-          console.log(users);
-          $scope.onlineUsers = users;
-        });
-
-        socket.on("newConversation", (conversation) => {
-          if (
-            conversation.sender._id === $scope.loggedInUser._id ||
-            conversation.receiver._id === $scope.loggedInUser._id
-          ) {
-            $scope.myConversations.push(conversation);
-            $timeout();
-          }
-        });
+        // Begin loading sequence
         $scope.isLoading = true;
+        
+        // Execute parallel API requests first
         $q.all([
           RouteProtection.getLoggedinUser(),
           $stateParams.id == 0
@@ -67,130 +49,296 @@ angular
             : ChatService.getConversationsAtCarId($stateParams.id),
         ])
           .then(([user, conversations]) => {
-            socket.emit('userOnline', user.username);
+            // Store user data and conversation list
             $scope.loggedInUser = user;
             $scope.myConversations = conversations.conversations;
-            console.log($scope.myConversations);
+            
+            // Initialize socket connection after we have user data
+            socket = io("http://localhost:8000", {
+              reconnection: true,
+              reconnectionDelay: 1000,
+              reconnectionDelayMax: 5000,
+            });
+            
+            // Set up socket event listeners
+            socket.on("newMessage", (message) => {
+                console.log(message);
+                $scope.messages.push(message);
+                $scope.scrollToBottom();
+                $timeout();
+            });
+
+            socket.on("onlineUsers", (users) => {
+              console.log('Received online users:', users);
+              $scope.onlineUsers = users || [];
+              $timeout();
+            });
+
+            socket.on("newConversation", (conversation) => {
+              if (
+                conversation.sender._id === $scope.loggedInUser._id ||
+                conversation.receiver._id === $scope.loggedInUser._id
+              ) {
+                $scope.myConversations.push(conversation);
+                $timeout();
+              }
+            });
+
+            socket.on("connect", () => {
+              console.log('Socket connected, emitting userOnline');
+              // Request current online users list
+              socket.emit('getOnlineUsers');
+              // Then emit this user's online status
+              socket.emit('userOnline', user.username);
+              $timeout();
+            });
+
+            socket.on("disconnect", () => {
+              console.log('Socket disconnected');
+              // Clear online users on disconnect
+              $scope.onlineUsers = [];
+              $timeout();
+            });
+
+            socket.on("reconnect", () => {
+              console.log('Socket reconnected, requesting online users and emitting status');
+              // Request current online users list
+              socket.emit('getOnlineUsers');
+              // Re-emit this user's online status
+              socket.emit('userOnline', user.username);
+              $timeout();
+            });
+
+            socket.on("error", (error) => {
+              console.error('Socket error:', error);
+              $timeout(() => {
+                ToastService.error('Connection error. Please refresh the page.');
+              });
+            });
+
+            // Initial connection
+            if (socket.connected) {
+              console.log('Socket already connected, requesting initial data');
+              socket.emit('getOnlineUsers');
+              socket.emit('userOnline', user.username);
+            }
           })
           .catch((err) => {
-            ToastService.error(`Error fetching user ${err.data.message}`); // show error message if there is an error
-          }).finally(()=>{
+            ToastService.error(`Error fetching user ${err.data.message}`);
+          })
+          .finally(() => {
             $scope.isLoading = false;
           });
-
-         
-        $scope.$on("$destroy", function () {
-          
-            $timeout(()=>{
-              $scope.onlineUsers = $scope.onlineUsers.filter(user => user !== $scope.loggedInUser.username);
-            },1000);
-            socket.emit('userOffline', $scope.loggedInUser.username);
-          
-        });
       };
-     /*
-    Function to scroll to the bottom of the chat box
-    @params none
-    @returns none
-    */
+
+      // Handle controller destruction (navigation away)
+      $scope.$on("$destroy", function () {
+        if (socket && $scope.loggedInUser) {
+          // Notify socket server that user is offline
+          socket.emit('userOffline', $scope.loggedInUser.username);
+          
+          // Disconnect socket
+          socket.disconnect();
+        }
+      });
+      
+      // ==========================================
+      // UI HELPERS & MESSAGE DISPLAY
+      // ==========================================
+      
+      // Scrolls the chat box to display the most recent messages
+      // Called after new messages are added or conversation changes
       $scope.scrollToBottom = function () {
+        // Delay execution to ensure DOM has updated with new messages
         $timeout(function () {
+          // Find chat container element
           var chatBox = document.getElementById("chatBox");
           if (chatBox) {
+            // Scroll to bottom of container
             chatBox.scrollTop = chatBox.scrollHeight;
           }
-        }, 100); // Timeout ensures it runs after the DOM updates
+        }, 100); // Short delay ensures DOM has updated
       };
+      
+      // ==========================================
+      // CONVERSATION & MESSAGE MANAGEMENT
+      // ==========================================
 
-      // Fetch messages for a selected conversation
+      // Retrieves and displays messages for a selected conversation
+      // Called when user clicks on a conversation in the list
       $scope.fetchMessages = (conversationId) => {
+        // Set loading state for message area
         messageLoading = true;
+        
+        // Ensure newest messages will be visible
         $scope.scrollToBottom();
         
+        // Find the full conversation object by ID
         $scope.selectedConversation = $scope.myConversations.find(
             (conversation) => conversation._id === conversationId
         );
          
-        socket.emit("joinedConversation", $scope.selectedConversation._id); // emit the joinedConversation event with the conversation id
+        // Join the conversation's socket room for real-time updates
+        socket.emit("joinedConversation", $scope.selectedConversation._id);
+        
+        // Fetch all messages for this conversation
         ChatService.getAllMessages(conversationId)
           .then((messages) => {
             console.log(messages.messages);
-            $scope.messages = messages.messages; // set the messages to the messages fetched from the database
+            // Update message list with fetched data
+            $scope.messages = messages.messages;
           })
           .catch((err) => {
-            ToastService.error(`Error fetching messages ${err}`); // show error message if there is an error
+            // Display error notification if message fetch fails
+            ToastService.error(`Error fetching messages ${err}`);
           }).finally(()=>{
+            // Reset message loading state
             $scope.messageLoading = false;
           })
       };
+      
+      // ==========================================
+      // FILE HANDLING & MEDIA UPLOADS
+      // ==========================================
 
-      // Function to handle image preview
+      // Handles image file selection and preview
+      // Called when user selects an image file to attach
       $scope.previewImages = function (input) {
         console.log(input);
         if (input.files) {
           console.log(input.files);
           
-          $scope.image = input.files[0]; // Store the files directly
+          // Store selected image file for upload
+          $scope.image = input.files[0];
+          
+          // Trigger digest cycle to update UI with preview
           $timeout();
-         
         }
+        input.value = null;
       };
-     // Function to check if the enter key is pressed
+      
+      // ==========================================
+      // MESSAGE COMPOSITION & SENDING
+      // ==========================================
+      
+      // Monitors keyboard input for Enter key press
+      // Allows sending messages with Enter key
       $scope.checkEnter = function (event) {
-        if (event.keyCode === 13) {
-          // Enter key code
-          event.preventDefault(); // Prevent the default form submission
-          $scope.sendMessage(); // Call the sendMessage function
+        if (event.keyCode === 13) { // Enter key code
+          // Prevent default form submission behavior
+          event.preventDefault();
+          
+          // Send the current message
+          $scope.sendMessage();
         }
       };
 
-      // function to add a message into the database with a particular conversation id
+      // Sends the current message with any attachments
+      // Called when user clicks send or presses Enter
       $scope.sendMessage = () => {
-        console.log($scope.image); 
-        const conversationId = $scope.selectedConversation._id; // Get the conversation id
-        if ($scope.inputMessage.trim() === "" && $scope.image===undefined)
-          return; // Return if the message is empty and there are no images
+        console.log($scope.image);
+        
+        // Get the ID of the active conversation
+        const conversationId = $scope.selectedConversation._id;
+        
+        // Validate that message has content (text or image)
+        if ($scope.inputMessage.trim() === "" && $scope.image === undefined)
+          return; // Exit if message is empty with no attachments
+          
+        // Create message object with text content
         const message = {
-          message: $scope.inputMessage.trim(), // Trim the message
+          message: $scope.inputMessage.trim(),
         };
 
-        const formData = new FormData(); // Create a new FormData object
-        formData.append("message", message.message); // Append the message to the FormData object
+        // Create FormData object for sending mixed content (text + files)
+        const formData = new FormData();
+        
+        // Add text message to form data
+        formData.append("message", message.message);
 
+        // Add image attachment if present
         if ($scope.image) {
-           formData.append("image", $scope.image); // Append the images to the FormData object
+           formData.append("image", $scope.image);
         }
         console.log($scope.image);
 
-       
-        // Add the message to the database
+        // Send message to server
         ChatService.addMessage(formData, conversationId)
           .then((res) => {
-            $scope.inputMessage = ""; // Reset input message after sending the message
-            $scope.images = []; // Reset images after sending the message
-            $scope.scrollToBottom(); // Scroll to the bottom of the chat box
+            // Reset input fields after successful send
+            // Ensure newest message is visible
+            $scope.scrollToBottom();
           })
           .catch((error) => {
-            ToastService.error(`Error adding message ${error}`); // Show error message if there is an error
-          });
+            // Display error notification if send fails
+            ToastService.error(`Error adding message ${error}`);
+          }).finally(()=>{
+            // Clear text input
+            $scope.inputMessage = "";
+            // Clear file input
+            $scope.image = undefined;
+
+            $timeout();
+          })
       };
 
-      /*
-      * Helper function to check if a user in the conversation is online
-      * @param {Object} conversation - The conversation object
-      * @returns {Boolean} - Whether the other user in the conversation is online
-      */
+      // ==========================================
+      // USER STATUS HELPERS
+      // ==========================================
+      
+      // Determines if the other user in a conversation is currently online
+      // Used to display online status indicators in conversation list
       $scope.isUserOnline = function(conversation) {
+        // Guard against missing data
         if (!conversation || !$scope.onlineUsers || !$scope.loggedInUser) {
           return false;
         }
         
-        // Determine which user we need to check (the one that's not the logged-in user)
+        // Determine which user in the conversation isn't the current user
         const otherUserName = conversation.reciever.username === $scope.loggedInUser.username ? 
           conversation.sender.username : conversation.reciever.username;
           
-        // Check if the other user is in the onlineUsers array
+        // Check if other user is in the online users list
         return $scope.onlineUsers.includes(otherUserName);
       };
+
+      $scope.openImagesModal = () => {
+        if (!$scope.selectedConversation) {
+          ToastService.error("Please select a conversation first");
+          return;
+        }
+
+        const modalInstance = $uibModal.open({
+          templateUrl: 'imagesModal.html',
+          controller: 'ImagesModalCtrl',
+          size: 'lg',
+          resolve: {
+            conversationId: function() {
+              return $scope.selectedConversation._id;
+            }
+          }
+        });
+      };
     }
-  );
+  )
+  .controller('ImagesModalCtrl', function($scope, $uibModalInstance, conversationId, ChatService, ToastService) {
+    $scope.isLoading = true;
+    $scope.images = [];
+
+    $scope.close = function() {
+      $uibModalInstance.dismiss('cancel');
+    };
+
+    // Load images when modal opens
+    ChatService.getAllAttachments(conversationId)
+      .then((response) => {
+        console.log(response.attachments);
+        $scope.images = response.attachments;
+      })
+      .catch((err) => {
+        ToastService.error("Error loading images: " + err);
+      })
+      .finally(() => {
+        $scope.isLoading = false;
+      });
+  });

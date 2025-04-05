@@ -87,4 +87,22 @@ angular.module('myApp').service('ChatService', function($q, ApiService, $http) {
         return deferred.promise;
 
     }
+    /*
+    function to get all attachments
+    @params conversationId
+    @returns promise
+    */
+    this.getAllAttachments = (conversationId)=>{
+        console.log(conversationId);
+        const deferred = $q.defer();
+        $http.get(`${ApiService.baseURL}/api/message/getAttachments/${conversationId}`, { withCredentials: true })
+            .then((res) => {
+                console.log(res.data);
+                deferred.resolve(res.data);
+            })
+            .catch((err) => {
+                deferred.reject(`Error fetching attachments: ${err}`);
+            });
+        return deferred.promise;
+    }
 });

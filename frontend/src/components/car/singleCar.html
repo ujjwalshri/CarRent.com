@@ -1,104 +1,165 @@
 <back-button></back-button>
-<div class="outer-div" ng-init="init()">
-    <div class="car-booking-container"></div>
-    
-    <div class="single-car-container panel panel-default" ng-if="car">
-        <div class="panel-heading text-center">
-            <h1 class="panel-title">{{ car.name }} ({{ car.modelYear }})</h1>
-        </div>
-        
-        <div class="panel-body">
-            <div uib-carousel active="activeSlide" interval="5000" no-wrap="false"> <div uib-slide ng-repeat="slide in car.vehicleImages track by $index" index="$index"> <img ng-src="{{slide.url}}" style="width: 500px; height: 300px;" class="carousel-image" alt="Car Image"> </div> </div>
-            <div class="car-info">
-                <p><strong>Average Rating:</strong> {{averageRating}} ⭐</p>
-                <p><strong>Price:</strong> ${{ car.price }} per day or bid</p>
-                <p class="text-warning"><strong>Note:</strong> $10 per kms Extra charges apply after 300km</p>
-                <p><strong>Category:</strong> {{ car.category }}</p>
-                <p><strong>Mileage:</strong> {{ car.mileage }} kmpl</p>
-                <p>
-                    <strong>Color:</strong> 
-                    <span ng-attr-style="display: inline-block; width: 20px; height: 20px; border-radius: 50%; border: 1px solid #ccc; vertical-align: middle; margin-left: 5px; background-color: {{car.color}}" title="{{car.color}}"></span>
-                </p>
-                <p><strong>fuel type:</strong> {{ car.fuelType }}</p>
-                <p><strong>Location:</strong> {{ car.city }}</p>
-                <p>
-                    <strong>Rating:</strong>
-                    <span class="rating-stars">
-                        <i class="fa" ng-class="{'fa-star': $index+1 < averageRating, 'fa-star-half-o': $index + 0.5 == averageRating, 'fa-star-o': $index >= averageRating}" ng-style="{'color': $index < averageRating ? '#ffd700' : '#ccc'}" ng-repeat="_ in [0,1,2,3,4]"></i>
-                        <span class="rating-text">({{averageRating | number:1}})</span>
-                    </span>
-                </p>
-                
-            </div>
-            
-            <div class="panel panel-info owner-info">
+<div class="container-fluid" ng-init="init()">
+    <div class="row">
+        <div class="col-md-12">
+
+            <div class="panel panel-default" ng-if="car">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Owner Information</h3>
+                    <h3 class="panel-title text-center">{{ car.company }}  {{ car.name }} ({{ car.modelYear }})</h3>
+                </div>
+                
+                <div class="panel-body">
+                    <div class="row">
+
+                        <div class="col-md-6">
+                            <div uib-carousel active="activeSlide" interval="5000" no-wrap="false" >
+                                <div uib-slide ng-repeat="slide in car.vehicleImages track by $index" index="$index" >
+                                    <img ng-src="{{slide.url}}" class="img-responsive center-block" style="height: 400px; width: 500px;" alt="Car Image">
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="col-md-6">
+                            <div class="panel panel-default">
+                                <div class="panel-body">
+                                    <h4 class="text-primary">Car Details</h4>
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <p><span class="label label-warning">Rating: {{averageRating}} ⭐</span></p>
+                                            <p><strong>Price:</strong> ${{ car.price }} per day</p>
+                                            <p class="text-warning"><small>$10 per kms after 300km</small></p>
+                                            <p><strong>Category:</strong> {{ car.category }}</p>
+                                            <p><strong>Mileage:</strong> {{ car.mileage }} kmpl</p>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <p><strong>Color:</strong> 
+                                                <span class="label" ng-style="{'background-color': car.color}">{{ car.color }}</span>
+                                            </p>
+                                            <p><strong>Fuel Type:</strong> {{ car.fuelType }}</p>
+                                            <p><strong>Location:</strong> {{ car.city }}</p>
+                                            <p>
+                                                <strong>Rating:</strong>
+                                                <span>
+                                                    <i class="fa" ng-class="{'fa-star': $index+1 < averageRating, 'fa-star-half-o': $index + 0.5 == averageRating, 'fa-star-o': $index >= averageRating}" ng-style="{'color': $index < averageRating ? '#ffd700' : '#ccc'}" ng-repeat="_ in [0,1,2,3,4]"></i>
+                                                    <span class="badge">{{averageRating | number:1}}</span>
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Owner Information -->
+                            <div class="panel panel-info">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">Owner Information</h3>
+                                </div>
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div class="col-sm-6">
+                                            <p><strong>Name:</strong> {{ car.owner.firstName }} {{ car.owner.lastName }}</p>
+                                            <p><strong>Username:</strong> {{ car.owner.username }}</p>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <p><strong>Email:</strong> {{ car.owner.email }}</p>
+                                            <p ng-hide="LoggedinUser.username === car.owner.username">
+                                                <button class="btn btn-primary btn-block" ng-click="chatWithOwner(car.owner)">
+                                                    <i class="glyphicon glyphicon-comment"></i> Chat with Owner
+                                                </button>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="panel panel-success" ng-hide="isSeller">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Book This Car</h3>
                 </div>
                 <div class="panel-body">
-                    <p><strong>Name:</strong> {{ car.owner.firstName }} {{ car.owner.lastName }}</p>
-                    <p><strong>Username:</strong> {{ car.owner.username }}</p>
-                    <p><strong>Email:</strong> {{ car.owner.email }}</p>
-                    <p ng-hide="LoggedinUser.username === car.owner.username">
-                        <strong>Chat with Owner:</strong> <button class="btn btn-primary btn-sm" ng-click="chatWithOwner(car.owner)">Chat 💬</button>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="panel panel-success book-car-form" ng-hide="isSeller">
-        <div class="panel-heading">
-            <h2 class="panel-title">Book This Car</h2>
-        </div>
-        <div class="panel-body">
-            <form>
-                <div class="form-group">
-                    <label for="amount">Bid Amount - Min: ${{car.price}},Max Bid: $10000</label>
-                    <input type="number" id="amount" class="form-control" ng-model="amount" min="500" max="10000" required>
-                    <p ng-show="amount > 100000" class="text-danger">Bid amount cannot exceed $100,000.</p>
-                </div>
-                
-                <div class="form-group">
-                    <label for="dateRangePicker">Booking Dates:</label>
-                    <input type="text" id="dateRangePicker" class="form-control" placeholder="Select Start & End Date" required>
-                </div>
-                
-                <button type="submit" ng-show="calculateBookingPrice(startDate, endDate, amount) > 0" class="btn btn-success btn-block" ng-click="placeBid()">
-                    Place Bid at ${{ calculateBookingPrice(startDate, endDate, amount) === 0 ? 0: calculateBookingPrice(startDate, endDate, amount) }}
-                </button>
-                  <!-- Loading Spinner -->
-        <div class="text-center" ng-show="isLoading">
-            <i class="fa fa-spinner fa-spin fa-3x fa-fw text-primary"></i>
-            <span class="text-primary">Processing...</span>
-        </div>
+                    <form class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Bid Amount:</label>
+                            <div class="col-sm-9">
+                                <input type="number" class="form-control" ng-model="amount" min="500" max="10000" 
+                                       placeholder="Min: ${{car.price}}, Max: $10000" required>
+                                <span class="help-block text-danger" ng-show="amount > 100000">
+                                    Bid amount cannot exceed $100,000.
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">Booking Dates:</label>
+                            <div class="col-sm-9">
+                                <input type="text" id="dateRangePicker" class="form-control" 
+                                       placeholder="Select Start & End Date" required>
+                            </div>
+                        </div>
 
-            </form>
-        </div>
-    </div>
-</div>
+                        <div class="form-group">
+                            <div class="col-sm-offset-3 col-sm-9">
+                                <button type="submit" class="btn btn-success btn-lg btn-block" 
+                                        ng-show="calculateBookingPrice(startDate, endDate, amount) > 0 && !isLoading"
+                                        ng-click="placeBid()">
+                                    Place Bid at ${{ calculateBookingPrice(startDate, endDate, amount) === 0 ? 0: calculateBookingPrice(startDate, endDate, amount) }}
+                                </button>
+                                
+                                <div class="text-center" ng-show="isLoading">
+                                    <i class="fa fa-spinner fa-spin fa-2x"></i>
+                                    <p class="text-muted">Processing...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
-<div class="panel panel-default reviews-container">
-    <div class="panel-heading">
-        <h2 class="panel-title">Customer Reviews</h2>
-    </div>
-    <div class="panel-body">
-        <div class="panel panel-warning review-card" ng-repeat="review in carReviews">
-            <div class="panel-heading">
-                <strong>User:</strong> {{ review.reviewer.username || 'Anonymous' }}
-                <span class="badge badge-warning">⭐ {{ review.rating }} / 5</span>
-            </div>
-            <div class="panel-body">
-                <p class="review-text">"{{ review.review }}"</p>
-                <p class="text-muted">{{ review.createdAt | date:'medium' }}</p>
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Customer Reviews</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="panel panel-warning" ng-repeat="review in carReviews">
+                                <div class="panel-heading clearfix">
+                                    <div class="pull-left">
+                                        <strong>{{ review.reviewer.username || 'Anonymous' }}</strong>
+                                    </div>
+                                    <div class="pull-right">
+                                        <span class="label label-warning">⭐ {{ review.rating }} / 5</span>
+                                    </div>
+                                </div>
+                                <div class="panel-body">
+                                    <blockquote>
+                                        <p>{{ review.review }}</p>
+                                        <footer>Posted on <cite>{{ review.createdAt | date:'medium' }}</cite></footer>
+                                    </blockquote>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info text-center" ng-if="!carReviews.length">
+                                No reviews yet. Be the first to review!
+                            </div>
+                            
+                            <div class="text-center" ng-if="hasMoreReviews">
+                                <button class="btn btn-primary btn-lg" ng-click="loadMoreReviews()">
+                                    <i class="glyphicon glyphicon-chevron-down"></i> Load More Reviews
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <p ng-if="!carReviews.length" class="alert alert-info">No reviews yet. Be the first to review!</p>
-    </div>
-    <div class="text-center" ng-click="loadMoreReviews()" ng-if="hasMoreReviews" style="margin-bottom: 20px;">
-        <button id="load-more-btn" class="btn btn-primary mt-3">
-            Load More <span class="glyphicon glyphicon-chevron-down"></span>
-          </button>
     </div>
 </div>
 
