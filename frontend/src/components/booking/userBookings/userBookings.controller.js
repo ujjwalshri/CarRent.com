@@ -1,7 +1,6 @@
 angular
   .module("myApp")
-  .controller("userBookingsCtrl", function ($scope, IDB, BiddingFactory, ToastService, Review, BackButton, BiddingService, CarService, $state, $uibModal) {
-    $scope.back = BackButton.back;
+  .controller("userBookingsCtrl", function ($scope, BiddingFactory, ToastService, BiddingService, $uibModal, $timeout) {
     $scope.bookings = [];
     $scope.calculateBookingPrice = BiddingFactory.calculate;
     $scope.currentPage = 1;
@@ -30,16 +29,16 @@ angular
         templateUrl: 'reviewModal.html',
         controller: 'ReviewModalCtrl',
         resolve: {
-          booking: function() {
-            return booking;
-          }
+          booking: () => booking
         }
       });
 
       modalInstance.result.then(function() {
         // Modal was closed with success (review submitted)
-        $scope.currentPage = 1;
+        $scope.currentPage= 1;
+        $scope.bookings = [];
         getAllBookings();
+        $timeout();
       }, function() {
         // Modal was dismissed
         console.log('Modal dismissed');
@@ -65,15 +64,13 @@ angular
       
       BiddingService.getBookingsForUser(params)
         .then((biddings) => {
-          if ($scope.currentPage === 1) {
-            $scope.bookings = [];
-          }
+          console.log("Bookings fetched successfully");
+          console.log(biddings);
           
-          const newBookings = biddings.bookings.map((booking) => {
+          $scope.bookings = $scope.bookings.concat(biddings.bookings.map((booking) => {
             return BiddingFactory.createBid(booking, false);
-          });
+          }));
           
-          $scope.bookings = $scope.bookings.concat(newBookings);
           $scope.hasMoreData = biddings.totalDocs > $scope.bookings.length;
           $scope.totalPages = Math.ceil(biddings.totalDocs / $scope.itemsPerPage);
         })
@@ -128,6 +125,7 @@ angular
         .then(() => {
           ToastService.success("Review added successfully");
           $uibModalInstance.close();
+
         })
         .catch((err) => {
           ToastService.error(err.message || "Error adding review");

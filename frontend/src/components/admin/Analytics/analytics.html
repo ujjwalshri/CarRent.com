@@ -185,23 +185,8 @@
             <uib-accordion>
                 <!-- Time-Based Analytics -->
                 <uib-accordion-group heading="Time-Based Analytics" is-open="true">
-                    <div class="col-md-6">
-                        <!--filter by city for dates-->
-                            <label for="cars">Choose filter:</label>
-                            <select name="cars" id="cars" ng-model="userGrowthFilter" ng-change="filterByUserGrowth(value)">
-                              <option value="city">city</option>
-                              <option value="date">dates</option>
-                            </select>
-
-                        <div class="panel panel-default">
-                            <div class="panel-heading">user Growth</div>
-                            <div class="panel-body">
-                                <canvas id="userGrowth" width="400" height="400"></canvas>
-                            </div>
-                        </div>
-                    </div>
                     <div class="row">
-                        <div class="col-md-6" ng-repeat="chartId in ['top10Cars','topHighestEarningCities', 'top3Sellers', 'carDescription','top5MostReviewedCars']">
+                        <div class="col-md-6" ng-repeat="chartId in ['top10Cars','userGrowth','topHighestEarningCities', 'top3Sellers', 'carDescription','top5MostReviewedCars']">
                             <div class="panel panel-default">
                                 <div class="panel-heading">
                                 </div>
@@ -218,9 +203,6 @@
                     <div class="row">
                         <div class="col-md-6" ng-repeat="chartId in ['ownersPerCity', 'buyersPerCity']">
                             <div class="panel panel-default">
-                                <div class="panel-heading">
-                                    <h4 class="panel-title text-center">{{chartId | uppercase}}</h4>
-                                </div>
                                 <div class="panel-body">
                                     <canvas id="{{chartId}}" width="400" height="400"></canvas>
                                 </div>

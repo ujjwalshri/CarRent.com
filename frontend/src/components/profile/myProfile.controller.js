@@ -3,7 +3,7 @@
  * Handles user profile data display, editing, and car management for sellers
  * @module myProfileCtrl
  */
-angular.module("myApp").controller("myProfileCtrl", function($scope, $state, IDB, ToastService, $uibModal, BackButton, UserService, CarService, BiddingService, City, $q) {
+angular.module("myApp").controller("myProfileCtrl", function($scope, $state, ToastService, $uibModal, UserService, CarService, City, $q) {
 
     $scope.isSeller = true; 
     $scope.deleted = false;
@@ -12,6 +12,7 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, IDB
     $scope.hasMoreCars = true;
     $scope.selectedCarPrice = { price: 0 };
     
+    $scope.isLoading = false;
     $scope.activeButton = 'all';
     $scope.status;
     
@@ -33,6 +34,8 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, IDB
      * @param {string} status - Filter status for cars (approved, rejected, all)
      */
     function fetchProfileData(status){
+        $scope.isLoading = true;
+
         const params = {
             skip: $scope.skip,
             limit: $scope.limit
@@ -53,6 +56,8 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, IDB
         $scope.hasMoreCars = result[1].data.length > 0;
         }).catch((err)=>{
             ToastService.error("Error fetching the profile data" + err);
+        }).finally(()=>{
+            $scope.isLoading = false;
         })
     }
   

@@ -8,7 +8,7 @@ export const createCarValidation = joi.object({
     modelYear: joi.number().min(1886).max(new Date().getFullYear()+1).required(),
     price: joi.number().min(0).required(),
     color: joi.string().min(3).max(20).required(),
-    mileage: joi.number().min(0).required(),
+    mileage: joi.number().min(0).max(1000).required(),
     fuelType: joi.string().valid("petrol", "diesel", "electric").required(),
     category: joi.string().required(),
     deleted: joi.boolean().default(false),

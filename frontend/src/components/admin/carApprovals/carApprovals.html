@@ -1,5 +1,5 @@
 <div class="container-fluid px-3" ng-init="init()">
-    <!-- Car Category Management Section - Now positioned first -->
+
     <div class="panel panel-primary">
         <div class="panel-heading">
             <h3 class="panel-title">
@@ -7,7 +7,7 @@
             </h3>
         </div>
         <div class="panel-body">
-            <!-- Add Category Form -->
+
             <div class="row">
                 <div class="col-md-8 col-sm-12">
                     <form ng-submit="addCarCategory()" class="form-horizontal">
@@ -21,6 +21,8 @@
                                            ng-model="carCategory" 
                                            placeholder="Enter category (e.g., SUV, Sedan)"
                                            ng-change="validateCategory()"
+                                           ng-maxlength="50"
+                                           ng-minlength="3"
                                            autocomplete="off">
                                     <span class="input-group-btn">
                                         <button type="submit" 
@@ -28,6 +30,7 @@
                                                 ng-disabled="categoryError || !carCategory">
                                             <span class="glyphicon glyphicon-plus"></span> Add
                                         </button>
+                                        
                                     </span>
                                 </div>
                                 <span class="help-block" ng-if="categoryError">
@@ -46,7 +49,7 @@
                 </div>
             </div>
 
-            <!-- Categories Table -->
+
             <div class="row" style="margin-top: 20px;">
                 <div class="col-md-12">
                     <div class="table-responsive">
@@ -85,7 +88,7 @@
         </div>
     </div>
 
-    <!-- Car Approvals Section - Now positioned second -->
+
     <div class="container-fluid text-center" ng-if="cars.length === 0">
         <div class="alert alert-warning">
             <i class="fa fa-exclamation-triangle"></i> No Car Approvals

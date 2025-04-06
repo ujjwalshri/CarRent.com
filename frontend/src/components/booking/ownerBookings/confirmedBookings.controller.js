@@ -2,7 +2,7 @@ angular
   .module("myApp")
   .controller(
     "confirmedBookingsCtrl",
-    function ($scope, $state, $uibModal, IDB, BiddingFactory, BackButton, BiddingService, ToastService, Booking) {
+    function ($scope, $state, $uibModal, BiddingFactory, BiddingService, ToastService) {
 
       // Helper function to calculate booking price based on booking details
       $scope.calculateBookingPrice = BiddingFactory.calculate;

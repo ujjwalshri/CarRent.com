@@ -1,6 +1,6 @@
 angular
   .module("myApp")
-  .controller("addCarCtrl", function ($scope, $state, IDB, $timeout,CarFactory, ToastService, BackButton, CarService, City ) {
+  .controller("addCarCtrl", function ($scope, $timeout,CarFactory, ToastService, CarService, City ) {
     // Array to store the car images selected by the user
     $scope.images = []; 
     // Flag to track loading state during form submission

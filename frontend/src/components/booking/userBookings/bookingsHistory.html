@@ -75,10 +75,14 @@
         </table>
     </div>
 
-    <div class="text-center" ng-click="pageChanged()" ng-if="hasMoreData" style="margin-bottom: 20px;">
+    <div class="text-center" ng-click="pageChanged()" ng-if="hasMoreData && !isLoading" style="margin-bottom: 20px;">
         <button id="load-more-btn" class="btn btn-primary mt-3">
             Load More <span class="glyphicon glyphicon-chevron-down"></span>
         </button>
+    </div>
+    <div class="text-center" ng-show="isLoading">
+        <i class="fa fa-spinner fa-spin fa-3x fa-fw text-primary"></i>
+        <span class="text-primary">Loading...</span>
     </div>
 </div>
 

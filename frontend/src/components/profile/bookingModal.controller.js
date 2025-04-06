@@ -6,7 +6,7 @@ angular.module('myApp').controller('BookingsModalCtrl', [
     'CarService',
     'ToastService',
     'BiddingFactory',
-    function($scope, selectedCar, $uibModalInstance, BiddingService, CarService, ToastService, BiddingFactory) {
+    function($scope, selectedCar, $uibModalInstance, CarService, ToastService, BiddingFactory) {
         // Make sure all dependencies are properly injected
         if (!selectedCar) {
             ToastService.error('No car data provided');

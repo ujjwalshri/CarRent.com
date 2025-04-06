@@ -1,4 +1,4 @@
-angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, IDB, BiddingFactory, ToastService, Review, BackButton, BiddingService, $state) {
+angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, BiddingFactory, ToastService, BiddingService, $state) {
     $scope.bookings = []; // array to hold all the boooking histories
     $scope.currentPage = 1; // setting the current page to 1
     $scope.itemsPerPage = 6; // setting the items per page to 5

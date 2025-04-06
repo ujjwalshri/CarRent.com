@@ -1,5 +1,5 @@
 // auth service to interact with the database
-angular.module('myApp').service('AuthService', function($q, IDB, ApiService, $http,$state) {
+angular.module('myApp').service('AuthService', function($q, ApiService, $http,$state) {
     /* function to validate the user
     @params user
     @returns promise

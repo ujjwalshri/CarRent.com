@@ -2,8 +2,8 @@ angular
   .module("myApp")
   .controller(
     "ownerBookingsCtrl",
-    function ($scope, BiddingFactory, ToastService, BackButton, BiddingService, $window) {
-      $scope.back = BackButton.back;  // back function to go back to the previous page
+    function ($scope, BiddingFactory, ToastService, BiddingService, $window) {
+
       $scope.bookings = [];   // array to hold the bookings of the logged in user
       $scope.bookingsType = { type: "pending" };  // variable to hold the booking type
       $scope.searchCarName = "";  // variable to hold the search car name
@@ -14,7 +14,10 @@ angular
       $scope.totalPages = 0; // setting the total pages to 0
       $scope.isLoading = false; // setting the isLoading to false
  
-      
+      /*
+      function to initialize the controller 
+      @description: this function will be called when the controller is loaded, fetches the bookings initially 
+      */
       $scope.init = function () { 
         $scope.fetchBookings(); 
       } 
@@ -114,6 +117,5 @@ $scope.rejectBidding = function (bidID) {
   }
 };
       
-
     }
   );

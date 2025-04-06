@@ -13,17 +13,15 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
     // Initialize analytics data variables
     const initializeAnalyticsData = () => {
         $scope.totalRevenue = 0;
-        $scope.myBids = 0;
-        $scope.otherSellersAvgBids = 0;
-        $scope.onGoingBookings = 0;
+        $scope.averageRentalDuration = 0;
+        $scope.totalFineCollected = 0;
+        $scope.numberOfBookings = 0;
         $scope.dateFiltered = false;
         $scope.dateFilteredRevenue = 0;
-        $scope.totalFineCollected = 0;
-        $scope.averageRentalDuration = 0;
-        $scope.numberOfBookings = 0;
-        $scope.repeatingCustomerPercentage = 0;
         $scope.percentageOfTotalRevenue = 100;
+        $scope.negativeReviewsCount = 0;
         $scope.percentageOfTotalFineCollected = 100;
+        $scope.repeatingCustomersPercentage = 0;
         $scope.showDateFilter = true;
         $scope.timePeriod = 'last7days';
     };
@@ -33,12 +31,13 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
      * @returns {boolean} Whether dates are valid
      */
     const validateDateRange = () => {
-        if ($scope.startDate === undefined || $scope.endDate === undefined) {
+        if (!$scope.startDate || !$scope.endDate) {
+            ToastService.error("Please select both start and end dates.");
             return false;
         }
 
         if ($scope.startDate > $scope.endDate) {
-       ToastService.error("Start date must be earlier than end date.");
+            ToastService.error("Start date must be earlier than end date.");
             return false;
         }
 
@@ -57,147 +56,123 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
      * Creates all charts using ChartService
      */
     const createCharts = (data) => {
-        const {
-            carWiseNegativeReviews,
-            peakBiddingHours,
-            top3CostumersWithMostBookings,
-            top3CarsWithMostEarning,
-            bids,
-            monthWiseBookings,
-            topBookingsPerCarCity,
-            carWiseBookings,
-            topCars
-        } = data;
+        const { overview, performance, bookings } = data;
 
-        // Car-wise negative reviews chart
-        ChartService.createBarChart(
-            "bar",
-            carWiseNegativeReviews.result.map(car => car._id),
-            carWiseNegativeReviews.result.map(car => car.count),
-            'Number of negative reviews',
-            "Car Wise Negative Reviews",
-            "carWiseNegativeReviews"
-        );
+        // Overview Charts
+        if (overview.carDescription?.suvVsSedan) {
+            ChartService.createBarChart(
+                "bar",
+                overview.carDescription.suvVsSedan.map(item => item._id),
+                overview.carDescription.suvVsSedan.map(item => item.count),
+                'Number of Cars',
+                "Car Categories Distribution",
+                "carCategoriesChart"
+            );
+        }
 
-        // Peak bidding hours chart
-        ChartService.createBarChart(
-            "line",
-            peakBiddingHours.peakBiddingHours.map(hour => formatHour(hour.hour)),
-            peakBiddingHours.peakBiddingHours.map(hour => hour.count),
-            'Number of bids',
-            "Hourly bidding",
-            "hourlyBiddingHeatmap"
-        );
+        if (overview.popularCars?.top3MostPopularCars) {
+            ChartService.createBarChart(
+                "bar",
+                overview.popularCars.top3MostPopularCars.map(car => car._id),
+                overview.popularCars.top3MostPopularCars.map(car => car.count),
+                'Number of Bookings',
+                "Top 3 Most Popular Cars",
+                "myMostPopularCar"
+            );
+        }
 
-        // Top customers chart
-        ChartService.createBarChart(
-            "bar",
-            top3CostumersWithMostBookings.top3CostumersWithMostBookings.map(customer => customer._id),
-            top3CostumersWithMostBookings.top3CostumersWithMostBookings.map(customer => customer.count),
-            'Number of bookings',
-            "Top 3 customers with most bookings",
-            "top3CostumersWithMostBookings"
-        );
+        // Performance Charts
+        if (performance.carPerformance?.carWiseBookings) {
+            ChartService.createBarChart(
+                "bar",
+                performance.carPerformance.carWiseBookings.map(car => car._id),
+                performance.carPerformance.carWiseBookings.map(car => car.count),
+                'Number of Bookings',
+                "Car-wise Booking Performance",
+                "carAndBookingsChart"
+            );
+        }
 
-        // Top earning cars chart
-        ChartService.createBarChart(
-            "bar",
-            top3CarsWithMostEarning.top3CarsWithMostEarning.map(car => car._id),
-            top3CarsWithMostEarning.top3CarsWithMostEarning.map(car => car.totalRevenue),
-            'Number of earnings',
-            "Top 3 cars with most earnings",
-            "top3CarsWithMostEarning"
-        );
+        if (performance.negativeReviews?.result) {
+            ChartService.createBarChart(
+                "bar",
+                performance.negativeReviews.result.map(car => car._id),
+                performance.negativeReviews.result.map(car => car.count),
+                'Number of Negative Reviews',
+                "Car-wise Negative Reviews",
+                "carWiseNegativeReviews"
+            );
+        }
+        if (performance.nagativeReviewsCount?.result) {
+            // count the total number of nagative reviews
+            $scope.negativeReviewsCount = performance.negativeReviews.result.reduce((acc, curr) => acc + curr.count, 0);
+        }
+        
 
-        // Fuel type chart
-        ChartService.createBarChart(
-            "bar",
-            bids.carCountByLocalVsOutstationVsBoth.map(obj => obj._id),
-            bids.carCountByLocalVsOutstationVsBoth.map(obj => obj.count),
-            'Number of bids',
-            "Biddings on my cars by fuel type",
-            "petrolVsDeiselVsElectric"
-        );
+        if (performance.topEarningCars?.top3CarsWithMostEarning) {
+            ChartService.createBarChart(
+                "bar",
+                performance.topEarningCars.top3CarsWithMostEarning.map(car => car._id),
+                performance.topEarningCars.top3CarsWithMostEarning.map(car => car.totalRevenue),
+                'Total Revenue (₹)',
+                "Top 3 Earning Cars",
+                "top3CarsWithMostEarning"
+            );
+        }
 
-        // Monthly bookings chart
-        ChartService.createBarChart(
-            "bar",
-            monthWiseBookings.monthWiseBookings.map(booking => booking._id),
-            monthWiseBookings.monthWiseBookings.map(booking => booking.count),
-            'Number of bookings',
-            "Month wise bookings",
-            "numberOfBookingsPerMonth"
-        );
+        // Booking Charts
+        if (bookings.peakHours?.peakBiddingHours) {
+            ChartService.createBarChart(
+                "line",
+                bookings.peakHours.peakBiddingHours.map(hour => formatHour(hour.hour)),
+                bookings.peakHours.peakBiddingHours.map(hour => hour.count),
+                'Number of Bookings',
+                "Peak Booking Hours",
+                "hourlyBiddingHeatmap"
+            );
+        }
+        if(bookings.sellerBids?.sellerBids){
+            ChartService.createBarChart(
+                "line",
+                ["yourBids", "otherSellersAvgBids"],
+                [bookings.sellerBids.sellerBids[0].totalBids, bookings.otherSellersAvgBids.otherSellersAvgBids[0].avgBids],
+                'Number of Bids',
+                "your Bids vs Other Sellers Avg Bids",
+                "myBidsVsOtherSellersAvgBids"
+            )
+        }
 
-        // City-wise bookings chart
-        ChartService.createBarChart(
-            "bar",
-            topBookingsPerCarCity.numberOfBidsPerLocation.map(city => city._id),
-            topBookingsPerCarCity.numberOfBidsPerLocation.map(city => city.count),
-            'Number of bids',
-            "City Wise biddings on my cars",
-            "cityWiseBooking"
-        );
+        if (bookings.monthlyBookings?.monthWiseBookings) {
+            ChartService.createBarChart(
+                "bar",
+                bookings.monthlyBookings.monthWiseBookings.map(booking => booking._id),
+                bookings.monthlyBookings.monthWiseBookings.map(booking => booking.count),
+                'Number of Bookings',
+                "Monthly Booking Trends",
+                "numberOfBookingsPerMonth"
+            );
+        }
 
-        // Car-wise bookings chart
-        ChartService.createBarChart(
-            "bar",
-            carWiseBookings.carWiseBookings.map(car => car._id),
-            carWiseBookings.carWiseBookings.map(car => car.count),
-            'Number of Bookings',
-            "Cars",
-            "carAndBookingsChart"
-        );
-
-        // Popular cars chart
-        ChartService.createBarChart(
-            "bar",
-            topCars.top3MostPopularCars.map(car => car._id),
-            topCars.top3MostPopularCars.map(car => car.count),
-            'Number of bids',
-            "Top 3 Most Popular cars of yours",
-            "myMostPopularCar"
-        );
-
-        // Create bidding comparison chart
-        createBiddingComparisonChart();
-    };
-
-    /**
-     * Creates comparison chart between seller's bids and other sellers' average
-     */
-    const createBiddingComparisonChart = () => {
-        const ctx = document.getElementById("myBidsVsOtherSellersAvgBids").getContext("2d");
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['You', 'Other Sellers'],
-                datasets: [{
-                    label: 'Number of bids',
-                    data: [$scope.myBids, $scope.otherSellersAvgBids],
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.2)',
-                        'rgba(255, 206, 86, 0.2)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(255, 206, 86, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                title: {
-                    display: true,
-                    text: "Your biddings vs other sellers average bids"
-                },
-                scales: {
-                    yAxes: [{
-                        ticks: { beginAtZero: true }
-                    }]
-                }
-            }
-        });
+        if (bookings.topCustomers?.top3CostumersWithMostBookings) {
+            ChartService.createBarChart(
+                "bar",
+                bookings.topCustomers.top3CostumersWithMostBookings.map(customer => customer._id),
+                bookings.topCustomers.top3CostumersWithMostBookings.map(customer => customer.count),
+                'Number of Bookings',
+                "Top 3 Customers",
+                "top3CostumersWithMostBookings"
+            );
+        }
+        if(bookings.cityWiseBookings?.cityWiseBookings){
+            ChartService.createBarChart(
+                "bar",
+                bookings.cityWiseBookings.cityWiseBookings.map(city => city._id),
+                bookings.cityWiseBookings.cityWiseBookings.map(city => city.count),
+                'Number of Bookings',
+                "City-wise Bookings",
+                "cityWiseBooking"
+            )
+        }
     };
 
     /**
@@ -211,100 +186,57 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
     };
 
     /**
-     * Updates analytics data based on API response
+     * Updates analytics data based on API responses
      */
-    const updateAnalyticsData = (response) => {
-        const [
-            carDescription, 
-            topCars, 
-            topBookingsPerCarCity, 
-            totalCarsAdded, 
-            bids, 
-            totalBookingRevenue,
-            onGoingBookings, 
-            myBidsVsOtherSellerAvg, 
-            carWiseBookings, 
-            monthWiseBookings, 
-            top3CarsWithMostEarning, 
-            top3CostumersWithMostBookings, 
-            peakBiddingHours, 
-            negativeReviewsPercentage, 
-            averageRentalDuration, 
-            repeatingCustomerData, 
-            numberOfBookings, 
-            carWiseNegativeReviews
-        ] = response;
+    const updateAnalyticsData = ([overview, performance, bookings]) => {
 
-        // Update scope variables with response data
-        $scope.numberOfBookings = numberOfBookings?.result?.[0]?.count || 0;
-        $scope.averageRentalDuration = averageRentalDuration.averageRentalDuration[0]?.averageRentalDuration || 0;
-        $scope.repeatingCustomerPercentage = repeatingCustomerData.repeatingCustomerPercentage;
-        $scope.negativeReviewsPercentage = negativeReviewsPercentage.negativeReviewsPercentage;
-        $scope.totalFineCollected = totalBookingRevenue?.allTimeRevenue?.totalFineCollected || 0;
-        $scope.totalRevenue = (totalBookingRevenue?.allTimeRevenue?.totalRevenue + totalBookingRevenue?.allTimeRevenue?.totalFineCollected || 0) + 
-                             (totalBookingRevenue?.totalRevenueData?.totalFineCollected || 0);
-        $scope.numberOfCars = totalCarsAdded?.totalCarsAdded?.[0]?.count || 0;
+        console.log(overview, performance, bookings);
+        if(bookings.averageRentalDuration){
+            $scope.averageRentalDuration = bookings.averageRentalDuration.averageRentalDuration[0].averageRentalDuration;
+        }
+        if(bookings.repeatingCustomersPercentage){
 
-        if(totalBookingRevenue?.dateFilteredRevenue) {
-            $scope.dateFiltered = true;
-            $scope.dateFilteredRevenue = totalBookingRevenue.dateFilteredRevenue.totalRevenue + 
-                                       totalBookingRevenue.dateFilteredRevenue.totalFineCollected;
-            $scope.totalFineCollected = totalBookingRevenue.dateFilteredRevenue.totalFineCollected;
-            $scope.percentageOfTotalFineCollected = $scope.totalFineCollected ? 
-                ($scope.totalFineCollected / $scope.totalRevenue) * 100 : 0;
-            $scope.percentageOfTotalRevenue = $scope.totalRevenue ? 
-                ($scope.dateFilteredRevenue / $scope.totalRevenue) * 100 : 0;
+            $scope.repeatingCustomersPercentage = bookings.repeatingCustomersPercentage.repeatingCustomersPercentage[0].repeatingCustomerPercentage;
         }
 
-        $scope.myBids = myBidsVsOtherSellerAvg?.result?.[0]?.totalBids || 0;
-        $scope.otherSellersAvgBids = myBidsVsOtherSellerAvg?.res1?.[0]?.avgBids || 0;
-        $scope.onGoingBookings = onGoingBookings?.result?.length === 0 ? 
-            0 : (onGoingBookings?.result?.[0]?.count || 0);
+        // Update Overview metrics
+        if (overview.revenue) {
+            $scope.totalRevenue = overview.revenue.totalRevenue || 0;
+            $scope.totalFineCollected = overview.revenue.totalFineCollected || 0;
+            $scope.numberOfBookings = overview.revenue.totalBookings || 0;
+            $scope.averageRevenue = overview.revenue.averageRevenue || 0;
+        }
+
+        // Update Performance metrics
+        if (performance.negativeReviews) {
+            $scope.negativeReviewsCount = performance.negativeReviews.result.reduce((acc, curr) => acc + curr.count, 0);
+        }
+
+        // Update Booking metrics
+        if (bookings.monthlyBookings) {
+            $scope.totalMonthlyBookings = bookings.monthlyBookings.monthWiseBookings.reduce((acc, curr) => acc + curr.count, 0);
+        }
 
         // Create all charts with the updated data
-        createCharts({
-            carWiseNegativeReviews,
-            peakBiddingHours,
-            top3CostumersWithMostBookings,
-            top3CarsWithMostEarning,
-            bids,
-            monthWiseBookings,
-            topBookingsPerCarCity,
-            carWiseBookings,
-            topCars
-        });
+        createCharts({ overview, performance, bookings });
     };
 
     /**
-     * Fetches analytics data from the server
+     * Fetches analytics data from the server uses $q.all to make parallel API calls, updates the scope variables with the results, and handles errors
+     * @returns {Promise} Promise that resolves when all data is fetched
      */
-    const fetchChartDataForSeller = () => {
+    const fetchAnalyticsData = () => {
         if (!validateDateRange()) return;
 
         const params = {
-            startDate: $scope.startDate,
-            endDate: $scope.endDate
+            startDate: $scope.startDate.toISOString(),
+            endDate: $scope.endDate.toISOString()
         };
 
         $q.all([
-            ChartService.getCarDescriptionForSeller(params),
-            ChartService.getTop3MostPopularCars(params),
-            ChartService.getNumberOfBookingsPerCarCityForSeller(params),
-            ChartService.getTotalCarsAddedBySeller(params),
-            ChartService.getBidsPerLocationTypeForSeller(params),
-            ChartService.getTotalBookingRevenueForSeller(params),
-            ChartService.onGoingBookingsForSeller(),
-            ChartService.myBidsAndOtherSellersAvgBidsForSeller(params),
-            ChartService.getcarWiseBookingsForSeller(params),
-            ChartService.getMonthWiseBookingsForSeller(params),
-            ChartService.top3CarsWithMostEarning(params),
-            ChartService.top3CostumersWithMostBookings(params),
-            ChartService.peakBiddingHours(params),
-            ChartService.getNegativeReviewsPercentage(params),
-            ChartService.getAverageRentalDurationForSeller(params),
-            ChartService.getRepeatingCustomersPercentageForSeller(params),
-            ChartService.getNumberOfBookingsForSeller(params),
-            ChartService.getCarWiseNegativeReviews(params)
+            ChartService.getOverviewAnalytics(params),
+            ChartService.getPerformanceAnalytics(params),
+            ChartService.getBookingAnalytics(params)
         ])
         .then(updateAnalyticsData)
         .catch(error => {
@@ -317,7 +249,7 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
     $scope.init = () => {
         initializeDates();
         initializeAnalyticsData();
-        fetchChartDataForSeller();
+        fetchAnalyticsData();
     };
 
     $scope.getAnalytics = (value) => {
@@ -328,13 +260,13 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             $scope.dateFiltered = false;
             $scope.timePeriod = $scope.timePeriod || 'last7days';
         }
-        fetchChartDataForSeller();
+        fetchAnalyticsData();
     };
 
     $scope.resetDateFilter = () => {
         $scope.dateFiltered = false;
         initializeDates();
         $scope.timePeriodParams = undefined;
-        fetchChartDataForSeller();
+        fetchAnalyticsData();
     };
 });

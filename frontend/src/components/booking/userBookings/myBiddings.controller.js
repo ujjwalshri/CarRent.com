@@ -1,5 +1,5 @@
-angular.module('myApp').controller('myBiddingsCtrl', function($scope, $state, IDB, BiddingFactory, BackButton, BiddingService, ToastService) {
-    $scope.back = BackButton.back; // back function to go back to the previous page
+angular.module('myApp').controller('myBiddingsCtrl', function($scope, BiddingFactory, BiddingService, ToastService) {
+
     $scope.biddingStatus = 'pending'; // setting the bidding status to an empty string
     $scope.currentPage = 1; // setting the current page to 1
     $scope.itemsPerPage = 6; // setting the items per page to 2

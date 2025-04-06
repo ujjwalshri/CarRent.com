@@ -1,6 +1,6 @@
 angular
   .module("myApp")
-  .controller("userManagementCtrl", function ($scope, IDB, ToastService, UserService, $timeout, City, $window)  {
+  .controller("userManagementCtrl", function ($scope, ToastService, UserService, $timeout, City, $window)  {
     $scope.allUsers = []; // Collection of all loaded users
     $scope.isLoading = false; // Loading state indicator
     $scope.city = ""; // City filter

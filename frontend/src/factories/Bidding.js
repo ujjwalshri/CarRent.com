@@ -220,7 +220,7 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
                                 body: [
                                     [
                                         { text: 'Car Details', style: 'tableHeader' },
-                                        { text: 'Customer Details', style: 'tableHeader' }
+                                        { text: 'Owner Details', style: 'tableHeader' }
                                     ],
                                     [
                                         {
@@ -309,7 +309,7 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
                                         { text: '$' + this.amount, style: 'tableContent' }
                                     ],
                                     [
-                                        { text: 'Base Price', style: 'tableContent' },
+                                        { text: 'Calculated Price', style: 'tableContent' },
                                         { text: '$' + basePrice, style: 'tableContent' }
                                     ],
                                     [

@@ -1,4 +1,4 @@
-angular.module("myApp").controller("carCtrl", function ($scope, $state, IDB, ToastService, CarService) {
+angular.module("myApp").controller("carCtrl", function ($scope, ToastService, CarService) {
   $scope.carCategories  = []; // array to store the car categories
   $scope.carCategory = ""; // string to store the car category
   

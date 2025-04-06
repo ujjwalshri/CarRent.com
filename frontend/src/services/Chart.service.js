@@ -1,4 +1,6 @@
 angular.module('myApp').service('ChartService', function($http, $q, ApiService) {
+    const BASE_URL = '/api/seller/analytics';
+
     /*
     function to create a pie chart for the given data
     @params labels, data, label, htmlElementId
@@ -637,5 +639,34 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
                 }
             }
         });
+    };
+
+  
+    // New consolidated analytics endpoints
+    this.getOverviewAnalytics = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/overview`, { params , withCredentials:true})
+            .then(response => response.data)
+            .catch(error => {
+                console.error('Error fetching overview analytics:', error);
+                throw error;
+            });
+    };
+
+    this.getPerformanceAnalytics = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/performance`, { params , withCredentials:true})
+            .then(response => response.data)
+            .catch(error => {
+                console.error('Error fetching performance analytics:', error);
+                throw error;
+            });
+    };
+
+    this.getBookingAnalytics = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/bookings`, { params , withCredentials:true})
+            .then(response => response.data)
+            .catch(error => {
+                console.error('Error fetching booking analytics:', error);
+                throw error;
+            });
     };
 })

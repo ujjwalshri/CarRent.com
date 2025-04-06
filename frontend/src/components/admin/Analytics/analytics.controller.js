@@ -1,9 +1,9 @@
 angular
   .module("myApp")
-  .controller("analyticsCtrl", function ($scope, $q, IDB, Booking, ToastService, ChartService, City, $window) {
+  .controller("analyticsCtrl", function ($scope, $q, ToastService, ChartService, City, $window) {
     // Initialize date range with proper Date objects
     $scope.startDate = new Date(new Date().setDate(new Date().getDate() - 7));
-    $scope.endDate = new Date().setHours(23,59,59,999);
+    $scope.endDate = new Date();
     
     // Analytics data collections
     $scope.userEngagementPercentage;
@@ -39,44 +39,27 @@ angular
      * Validates date range
      * @returns {boolean} true if date range is valid
      */
-    function validateDateRange() {
+    const validateDateRange = () => {
       if (!$scope.startDate || !$scope.endDate) {
-        return false;
+          ToastService.error("Please select both start and end dates.");
+          return false;
       }
 
-      const start = new Date($scope.startDate);
-      const end = new Date($scope.endDate);
-
-      // Check if dates are valid
-      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-        ToastService.error('Invalid date format');
-        return false;
+      if ($scope.startDate > $scope.endDate) {
+          ToastService.error("Start date must be earlier than end date.");
+          return false;
       }
 
-      if(start > new Date().setHours(0,0,0,0)){
-        ToastService.error('Start date must be earlier than today.');
-        return false;
-      }
-      if(end > new Date().setHours(0,0,0,0)){
-        ToastService.error('End date must be earlier than today.');
-        return false;
-      }
-      
-      // Check if start date is before end date
-      if (start > end) {
-        ToastService.error('Start date must be before end date');
-        return false;
+      if ($scope.endDate.setHours(0,0,0,0) > new Date().setHours(0, 0, 0, 0)) {
+          ToastService.error("End date must be earlier or equal to today.");
+          return false;
       }
 
-      // Check if date range is not too large (e.g., more than 2 years)
-      const twoYearsInMs = 2 * 365 * 24 * 60 * 60 * 1000;
-      if (end - start > twoYearsInMs) {
-        ToastService.error('Date range cannot exceed 2 years');
-        return false;
-      }
-
+      // Set time to midnight for start date and end of day for end date
+      $scope.startDate.setHours(0, 0, 0, 0);
+      $scope.endDate.setHours(23, 59, 59, 999);
       return true;
-    }
+  };
     
     /**
      * Initializes and configures Google Maps for heatmap visualization
@@ -190,13 +173,8 @@ angular
           topPerformers, 
         ]) => {
           // Process city owner distribution data
-
-          console.log(chartsData);
-         console.log(usersPerCity);
           $scope.ownerCountsPerCity = usersPerCity.sellers;
           $scope.buyerCountsPerCity = usersPerCity.buyers;
-          console.log($scope.ownerCountsPerCity);
-          console.log($scope.indianCitiesAndLongitudeAndLatitudeMap);
           
           // Prepare heatmap data for owners per city
           let heatmapData = [];

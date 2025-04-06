@@ -218,7 +218,7 @@
     </div>
 
     <!-- Load more button -->
-    <div class="text-center" style="margin: 20px 0;" ng-if="hasMoreCars">
+    <div class="text-center" style="margin: 20px 0;" ng-if="hasMoreCars && !isLoading">
         <button id="load-more-btn" class="btn btn-primary" ng-click="loadMoreCars()">
             Show More <span class="glyphicon glyphicon-chevron-down"></span>
           </button>

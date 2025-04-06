@@ -28,6 +28,7 @@ import conversationRoutes from "./routes/conversation.routes.js";
 import passport from "./config/passport.js"
 import cors from "cors";
 import { initializeSocket } from './services/socket.service.js';
+
 import { Worker } from 'worker_threads';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -143,5 +144,6 @@ server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     connectMongoDB();
     startSQSWorker();
+   
 });
 

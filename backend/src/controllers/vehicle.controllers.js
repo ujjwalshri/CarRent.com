@@ -7,6 +7,7 @@ import User from "../models/user.model.js";
 import Vehicle from "../models/vehicle.model.js"; 
 import { createCarValidation } from "../validation/car.validation.js";
 import { generateCongratulationMailToSeller } from "../utils/gen.mail.js";
+import redisClient from "../config/redis.connection.js";
 import {Types} from 'mongoose';
 
 /**
@@ -119,18 +120,31 @@ export const addCarController = async (req, res) => {
  * Retrieves approved vehicles using aggregation pipeline with text search,
  * filtering by price range, city, category, and pagination support.
  */
+
+
 export const getAllCarController = async (req, res) => {
     let { search = '', priceRange, city, category, limit = 6, skip = 0 } = req.query;
     skip = parseInt(skip);
-    console.log('skip', skip);
+    limit = parseInt(limit);
+
     if (priceRange === 'undefined') priceRange = false;
     if (city === 'undefined') city = undefined;
     if (category === 'undefined') category = undefined;
 
+    // 🔑 Create a unique cache key based on the query params
+    const cacheKey = `cars:${search}:${priceRange}:${city}:${category}:${limit}:${skip}`;
+
     try {
+
+        const cachedData = await redisClient.get(cacheKey);
+        if (cachedData) {
+
+            return res.status(200).json(JSON.parse(cachedData));
+        }
+
+
         const aggregationPipeline = [];
 
-        // Add text search stage if search term is provided
         if (search.trim()) {
             aggregationPipeline.push({
                 $search: {
@@ -138,15 +152,12 @@ export const getAllCarController = async (req, res) => {
                     text: {
                         query: search,
                         path: ["company", "modelYear", "name"],
-                        fuzzy: {
-                           
-                        },
+                        fuzzy: {},
                     },
                 },
             });
         }
 
-        // Match only approved, non-deleted vehicles
         aggregationPipeline.push({
             $match: {
                 status: 'approved',
@@ -154,7 +165,6 @@ export const getAllCarController = async (req, res) => {
             },
         });
 
-        // Filter by price range if provided
         if (priceRange) {
             const [minPrice, maxPrice] = priceRange.split('-').map(Number);
             aggregationPipeline.push({
@@ -164,40 +174,25 @@ export const getAllCarController = async (req, res) => {
             });
         }
 
-        // Filter by city if provided
         if (city) {
-            aggregationPipeline.push({
-                $match: {
-                    city: city,
-                },
-            });
+            aggregationPipeline.push({ $match: { city } });
         }
 
-        // Filter by category if provided
         if (category) {
-            aggregationPipeline.push({
-                $match: {
-                    category: category,
-                },
-            });
+            aggregationPipeline.push({ $match: { category } });
         }
 
-        // Pagination
-        aggregationPipeline.push(
-            { $skip: parseInt(skip) },
-            { $limit: parseInt(limit) }
-        );
+        aggregationPipeline.push({$sort:{ createdAt: -1}},{ $skip: skip }, { $limit: limit });
 
-        // Execute the aggregation pipeline
         const cars = await Vehicle.aggregate(aggregationPipeline);
-
-        // Return the results
+        await redisClient.setEx(cacheKey, 60, JSON.stringify(cars));
         res.status(200).json(cars);
     } catch (err) {
         console.error(`Error in the getAllCarController: ${err.message}`);
         res.status(500).json({ message: `Error in the getAllCarController: ${err.message}` });
     }
 };
+
 
 /**
  * Retrieves vehicles filtered by status
@@ -309,6 +304,9 @@ export const updateVehicleController = async (req, res)=>{
                 { _id: id }, 
                 { price: price } 
             );
+            // Clear the cache for this vehicle
+            const cacheKey = `vehicle:${id}`;
+            await redisClient.del(cacheKey);
             res.status(200).json({ message: 'Car updated successfully' });
         }catch(err){
             console.log(`error in the updateCarController ${err.message}`);
@@ -331,11 +329,23 @@ export const updateVehicleController = async (req, res)=>{
  */
 export const getVehicleByIdController = async (req, res) => {
     const {id} = req.params;
+
+
+
+    // implementing redis caching for the vehicle 
+    const cacheKey = `vehicle:${id}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {
+        return res.status(200).json(JSON.parse(cachedData));
+    }
     try{
         if(!Types.ObjectId.isValid(id)){
             return res.status(404).json({message: 'Invalid vehicle id'});
         }
         const car = await Vehicle.findById(id);
+
+       // cache the data 
+        await redisClient.setEx(cacheKey, 60, JSON.stringify(car));
         res.status(200).json(car);
 
     }catch(err){
@@ -364,8 +374,14 @@ export const getVehicleByIdController = async (req, res) => {
  */
 export const getAllCarsByUser = async (req, res) => {
     const { carStatus, skip=0, limit=5 } = req.query;
-    console.log(typeof(carStatus));
-    
+
+    // implementing redis caching 
+    const cacheKey = `userCars:${req.user._id}:${carStatus}:${skip}:${limit}`;
+    const cachedData = await redisClient.get(cacheKey);
+    if (cachedData) {   
+
+        return res.status(200).json(JSON.parse(cachedData));
+    }
     try {
         // Build the query based on owner ID and optional status filter
         const query = { 'owner._id': req.user._id };
@@ -402,7 +418,8 @@ export const getAllCarsByUser = async (req, res) => {
                 $limit: parseInt(limit)
             }
         ]);
-     
+        // Cache the result for 60 seconds
+        await redisClient.setEx(cacheKey, 60, JSON.stringify(cars));
         return res.status(200).json(cars);
     } catch (error) {
         console.error('Get all cars by user error:', error);
