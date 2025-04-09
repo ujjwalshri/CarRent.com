@@ -81,11 +81,32 @@
                 </table>
             </div>
 
-            <!-- Load More Button -->
-            <div class="text-center" ng-show="hasMoreData && !isLoading">
-                <button class="btn btn-primary btn-lg" ng-click="pageChanged()">
-                    <i class="glyphicon glyphicon-refresh"></i> Load More Bookings
-                </button>
+            <!-- Loading Spinner -->
+            <div class="text-center" ng-show="isLoading">
+                <i class="fa fa-spinner fa-spin fa-3x"></i>
+                <p>Loading bookings...</p>
+            </div>
+
+            <!-- No Bookings Message -->
+            <div class="text-center" ng-show="!isLoading && bookings.length === 0">
+                <h3 class="text-muted">No bookings found</h3>
+            </div>
+
+            <!-- Pagination -->
+            <div class="text-center" ng-show="totalItems > 0">
+                <ul uib-pagination
+                    total-items="totalItems"
+                    ng-model="currentPage"
+                    max-size="maxSize"
+                    class="pagination-sm"
+                    boundary-links="true"
+                    force-ellipses="true"
+                    items-per-page="itemsPerPage"
+                    ng-change="pageChanged()">
+                </ul>
+                <div class="text-muted">
+                    <small>Page {{currentPage}} of {{Math.ceil(totalItems/itemsPerPage)}}</small>
+                </div>
             </div>
             
         </div>
@@ -117,6 +138,7 @@
               required
             >
               <option value="" disabled selected>Select Rating</option>
+              <option value="1">1 - Poor</option>
               <option value="2">2 - Fair</option>
               <option value="3">3 - Good</option>
               <option value="4">4 - Very Good</option>

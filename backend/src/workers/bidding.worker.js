@@ -22,7 +22,6 @@ const queueUrl = process.env.QUEUE_LINK;
 async function processBidMessage(message) {
     try {
         const bidData = JSON.parse(message.Body);
-        console.log('Processing bid data:', bidData);
 
         if (!bidData.vehicle || !bidData.from || !bidData.owner || !bidData.amount) {
             throw new Error('Invalid bid data structure');
@@ -30,19 +29,38 @@ async function processBidMessage(message) {
 
         // Save the bid to database
         const newBid = new Bidding(bidData);
-        await newBid.save();
-
-        // Send confirmation emails
-        await generateAndSendMail({
-            subject: "Bidding Sent",
-            text: `Congrats You have successfully placed a bid on vehicle ${bidData.vehicle.name} the owner of the vehicle is ${bidData.owner.username}, the bid amount is ${bidData.amount}, startDate is ${new Date(bidData.startDate).toLocaleDateString()}, endDate is ${new Date(bidData.endDate).toLocaleDateString()}`,
-            to: bidData.from.email
+        const savedBid = await newBid.save();
+        
+        // Send notification data back to main thread to emit socket event
+        parentPort.postMessage({
+            type: 'bidSuccess',
+            data: {
+                username: bidData.from.username,
+                bidData: {
+                    bidId: savedBid._id,
+                    carName: bidData.vehicle.name,
+                    amount: bidData.amount,
+                    startDate: bidData.startDate,
+                    endDate: bidData.endDate
+                }
+            }
         });
 
-        await generateAndSendMail({
+        // Send confirmation emails
+        generateAndSendMail({
             subject: "Bidding Sent",
-            text: `Congrats bid placed on your vehicle ${bidData.vehicle.name} the bid amount is ${bidData.amount}, startDate is ${new Date(bidData.startDate).toLocaleDateString()}, endDate is ${new Date(bidData.endDate).toLocaleDateString()} placed by ${bidData.from.username}`,
+            text: `Congrats You have successfully placed a bid on vehicle ${bidData.vehicle.name} the owner of the vehicle is ${bidData.owner.username}, the bid amount is $ ${bidData.amount}, startDate is ${new Date(bidData.startDate).toLocaleDateString()}, endDate is ${new Date(bidData.endDate).toLocaleDateString()}`,
+            to: bidData.from.email
+        }).catch((err) => {
+            console.error(`Error sending bidding email: ${err.message}`);
+        });
+
+        generateAndSendMail({
+            subject: "Bidding Sent",
+            text: `Congrats bid placed on your vehicle ${bidData.vehicle.name} the bid amount is $ ${bidData.amount}, startDate is ${new Date(bidData.startDate).toLocaleDateString()}, endDate is ${new Date(bidData.endDate).toLocaleDateString()} placed by ${bidData.from.username}`,
             to: bidData.owner.email
+        }).catch((err) => {
+            console.error(`Error sending bidding email: ${err.message}`);
         });
 
         // Delete the processed message
@@ -63,32 +81,35 @@ async function processBidMessage(message) {
  */
 async function startProcessing() {
     try {
-        // Connect to MongoDB when the worker starts
         await connectMongoDB();
-        
-        while (true) {
+
+        setInterval(async () => {
             try {
                 const { Messages } = await sqs.receiveMessage({
                     QueueUrl: queueUrl,
                     MaxNumberOfMessages: 10,
-                    WaitTimeSeconds: 5,
+                    WaitTimeSeconds: 0, 
                     VisibilityTimeout: 60
                 }).promise();
 
                 if (!Messages || Messages.length === 0) {
-                    continue;
+                    console.log('No messages to process.');
+                    return;
                 }
+
+                console.log(`Processing ${Messages.length} messages`);
 
                 for (const message of Messages) {
                     await processBidMessage(message);
                 }
+
             } catch (error) {
-                console.error('Error in message processing loop:', error);
-                // Continue the loop even if there's an error
+                console.error('Error during message polling:', error);
             }
-        }
+        }, 5000);
+
     } catch (error) {
-        console.error('Fatal error in worker:', error);
+        console.error('Fatal error in worker startup:', error);
         process.exit(1);
     }
 }

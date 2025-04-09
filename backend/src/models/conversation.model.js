@@ -9,19 +9,7 @@ const conversationSchema = new mongoose.Schema(
             username:{
                 type:String,
                 required:[true, "Username is required"],
-            },
-            firstName: {
-                type: String,
-                required: [true, "First name is required"],
-            },
-            lastName: {
-                type: String,
-                required: [true, "Last name is required"],
-            },
-            email: {
-                type: String,
-                required: [true, "Email is required"],
-            },
+            }
         },
         lastMessage: {
            type: String,
@@ -35,18 +23,6 @@ const conversationSchema = new mongoose.Schema(
             username:{
                 type:String,
                 required:[true, "Username is required"],
-            },
-            firstName: {
-                type: String,
-                required: [true, "First name is required"],
-            },
-            lastName: {
-                type: String,
-                required: [true, "Last name is required"],
-            },
-            email: {
-                type: String,
-                required: [true, "Email is required"],
             },
         },
         vehicle:{

@@ -7,8 +7,16 @@ angular
     $scope.isLoading = false;
     // Get available cities from the City service
     $scope.cities = City.getCities(); 
+
+    $scope.companies = CarFactory.companies;
+    $scope.fuelTypes = CarFactory.fuelTypes;
+    $scope.locations = CarFactory.locationTypes;
+
+
     // Get current year for model year validation
     $scope.currentYear = new Date().getFullYear();
+
+
 
     /**
      * Initialize the controller by fetching car categories
@@ -20,61 +28,115 @@ angular
     }
 
     /**
-     * Handle image file selection and prepare for upload
-     * @param {Object} input - The file input DOM element
+     * Handle image file selection and prepare for upload creates the dominant color of the car from the car images to use in the car card
+     * @param {Object} input - The file input DOM element 
      */
     $scope.previewImages = function (input) {
       if (input.files) {
-        let files = Array.from(input.files); // Convert FileList to an array
-        
-        // Check if more than 5 files are selected
-        if (files.length > 5) {
-          $scope.imageError = 'You can only upload up to 5 images';
-          input.value = ''; // Clear the file input
-          $scope.images = []; // Clear any previously selected images
-          $timeout(); // Trigger Angular digest cycle
+        let files = Array.from(input.files);
+      
+
+        // Validation: Max 5 files
+        if (files.length > 5 ) {
+          $scope.imageError = 'You can only upload 1 to 5 images';
+          input.value = '';
+          $scope.images = [];
+          $scope.imagePreviews = [];
+          $scope.imageColor = null;
+          $timeout();
           return;
         }
-
-        // Define allowed file types
+    
+        // Validation: Allowed types
         const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
-        
-        // Check each file's type
         const invalidFiles = files.filter(file => !allowedTypes.includes(file.type));
-        
+    
         if (invalidFiles.length > 0) {
           $scope.imageError = 'Only JPG, JPEG, PNG and WebP images are allowed';
-          input.value = ''; // Clear the file input
-          $scope.images = []; // Clear any previously selected images
-          $timeout(); // Trigger Angular digest cycle
+          input.value = '';
+          $scope.images = [];
+          $scope.imagePreviews = [];
+          $scope.imageColor = null;
+          $timeout();
           return;
         }
-
-        // Check file size (max 5MB per file)
-        const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    
+        // Validation: File size < 5MB
+        const maxSize = 5 * 1024 * 1024;
         const oversizedFiles = files.filter(file => file.size > maxSize);
-
+    
         if (oversizedFiles.length > 0) {
           $scope.imageError = 'Each image must be less than 5MB';
-          input.value = ''; // Clear the file input
-          $scope.images = []; // Clear any previously selected images
-          $timeout(); // Trigger Angular digest cycle
+          input.value = '';
+          $scope.images = [];
+          $scope.imagePreviews = [];
+          $scope.imageColor = null;
+          $timeout();
           return;
         }
-        
-        // Clear any previous error
+    
+        // Clear errors and initialize
         $scope.imageError = null;
         $scope.images = files;
-        console.log("Selected images:", $scope.images);
-        $timeout(); // Trigger Angular digest cycle
+        $scope.imagePreviews = [];
+        $scope.imageColor = null;
+    
+        // Handle image previews
+        files.forEach((file, index) => {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+              $scope.imagePreviews[index] = e.target.result;
+              
+            // calculating the color from the first image
+            if (index === 0) {
+              const img = new Image();
+              img.crossOrigin = 'anonymous';
+              img.src = e.target.result;
+    
+              img.onload = function () {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+    
+                canvas.width = img.naturalWidth;  // Set the width of the canvas to the natural width of the image
+                canvas.height = img.naturalHeight; // Set the height of the canvas to the natural height of the image
+    
+                ctx.drawImage(img, 0, 0); // Draw the image on the canvas
+                const centerX = Math.floor(canvas.width / 2); // Calculate the center of the canvas
+                const centerY = Math.floor(canvas.height / 2); // Calculate the center of the canvas
+                const pixelData = ctx.getImageData(centerX, centerY, 1, 1).data; // Get the pixel data of the center of the image
+                $scope.color = rgbToHex(pixelData[0], pixelData[1], pixelData[2]); // Convert the pixel data to a hex color
+                $timeout();
+              };
+            }
+          };
+    
+          reader.readAsDataURL(file);
+        });
+    
+        $timeout(); // Trigger digest
       }
     };
+    
+    // Utility: RGB to HEX
+    function rgbToHex(r, g, b) {
+      return "#" + [r, g, b].map(x => {
+        const hex = x.toString(16);
+        return hex.length === 1 ? "0" + hex : hex;
+      }).join('');
+    }
+    
     
     /**
      * Submit the car form and create a new car listing
      * Validates inputs, creates a car object, and sends to server
      */
     $scope.submitCarForm = function () {
+
+     if($scope.images.length < 1) {
+        ToastService.error('Please select at least one image');
+        return;
+      }
+     
       $scope.isLoading = true;
      console.log($scope.carName, $scope.company, $scope.carModel, $scope.category, $scope.location, $scope.carPrice, $scope.mileage, $scope.color, $scope.fuelType, $scope.city);
      
@@ -88,6 +150,7 @@ angular
         mileage: $scope.mileage, 
         color: $scope.color,
         fuelType: $scope.fuelType,
+        location: $scope.location,
         city: $scope.city,
         vehicleImages: $scope.images
       });

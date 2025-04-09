@@ -7,7 +7,9 @@ import {
     sendWelcomeEmail,
     sendTopSellerEmail,
     sendTopBuyerEmail,
-    sendCongratulationEmail
+    sendCongratulationEmail, 
+    sendInvoiceEmail,
+    sendCarRejectionEmail
 } from './email.service.js';
 
 /**
@@ -79,5 +81,13 @@ export const generateInvoiceMail = async (email, booking) => {
     return sendInvoiceEmail({
         email,
         booking
+    });
+};
+
+export const generateCarRejectionMail = async (data) => {
+    return sendCarRejectionEmail({
+        email: data.email,
+        seller: data.seller,
+        vehicle: data.vehicle
     });
 };

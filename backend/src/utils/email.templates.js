@@ -212,3 +212,27 @@ export const invoiceTemplate = (data) => {
     </div>
     `;
 };
+
+export const carRejectionMailTemplate = (data) => {
+    // Safely access properties with fallbacks
+    const sellerFirstName = data.seller?.firstName || 'Seller';
+    const sellerLastName = data.seller?.lastName || '';
+    const vehicleCompany = data.vehicle?.company || '';
+    const vehicleName = data.vehicle?.name || '';
+    const vehicleModelYear = data.vehicle?.modelYear || '';
+    
+    return `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <h2 style="color: #4CAF50;">Car Rejection Notification</h2>
+        <p>Dear ${sellerFirstName} ${sellerLastName},</p>
+        <p>We regret to inform you that your car ${vehicleCompany} ${vehicleName} ${vehicleModelYear} has been rejected for one of the following reasons:</p>
+        <ul>
+            <li>The car details are not correct</li>
+            <li>We dont allow cars from your country</li>
+            <li>The owner details are not correct</li>
+        </ul>
+        <p>Please review the feedback and make the necessary changes to your car listing.</p>
+        <p>Thank you for your understanding.</p>
+    </div>
+    `
+}

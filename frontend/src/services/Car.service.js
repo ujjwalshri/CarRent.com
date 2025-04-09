@@ -88,11 +88,8 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
         })
         return deferred.promise;
     }
-    /*fetchBookingsAtCarId
-    function to get bookings at car id
-    @params carId
-    @returns promise
-    */
+  
+    
     /**
      * Fetch Bookings For Car
      * Retrieves all bookings/rentals associated with a specific vehicle

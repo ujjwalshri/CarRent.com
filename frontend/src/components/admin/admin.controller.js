@@ -1,5 +1,4 @@
-angular.module("myApp").controller("adminCtrl", function($scope, $state, $rootScope, AuthService) {
-    // Initialize with explicit $scope variables
+angular.module("myApp").controller("adminCtrl", function($scope, $state, $rootScope, AuthService, ToastService) {
 
     // Initialize the collapsed state
     $scope.isNavCollapsed = true;
@@ -13,10 +12,8 @@ angular.module("myApp").controller("adminCtrl", function($scope, $state, $rootSc
                 $rootScope.adminLogged = false;
             })
             .catch(function(err) {
-                console.error("Logout error:", err);
+              ToastService.error("Logout error:", err);
             });
     };
-    
-
 
 });

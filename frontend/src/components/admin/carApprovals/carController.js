@@ -1,4 +1,4 @@
-angular.module("myApp").controller("carCtrl", function ($scope, ToastService, CarService) {
+angular.module("myApp").controller("carCtrl", function ($scope, ToastService, CarService, $q) {
   $scope.carCategories  = []; // array to store the car categories
   $scope.carCategory = ""; // string to store the car category
   
@@ -8,38 +8,39 @@ angular.module("myApp").controller("carCtrl", function ($scope, ToastService, Ca
     @returns none
    */
   $scope.init = () => {
-    fetchPendingCars(); // initial fetch of pending cars
-    $scope.fetchCarCategories();
+    fetchCarManagementData();
   };
   
-  /*
-    function to fetch the car categories
-    @params none
-    @returns none
-  */
-  $scope.fetchCarCategories = () => {
-    CarService.getAllCarCategoriesForAdmin().then((categories) => {
-      console.log(categories);
-      $scope.carCategories = categories;
+  /**
+   * Fetches car management data from the database
+   * @returns {void}
+   */
+  function fetchCarManagementData(){
+    $q.all([  
+      CarService.getCars(),
+      CarService.getAllCarCategoriesForAdmin()
+    ]).then(([cars, carCategories]) => {
+      $scope.cars = cars;
+      $scope.carCategories =carCategories;
     }).catch((err)=>{
-      ToastService.error("Error fetching car categories");
+      ToastService.error("Error fetching car management data");
     })
   }
+  
 
-  /*
-    function to add a car category
-    @params none
-    @returns none
-  */
+  /**
+   * Adds a car category to the database
+   * @returns {void}
+   */
   $scope.addCarCategory = () => {
     if($scope.carCategory.trim() === "" || $scope.carCategory.trim().length < 3){
       ToastService.error("Car category cannot be empty or less than 3 characters");
       return;
     }
-    console.log($scope.carCategory);
+
     CarService.addCarCategory($scope.carCategory).then((category) => {
-      $scope.fetchCarCategories();
-      
+      ToastService.success("Car category added successfully");
+      fetchCarManagementData();
     }).catch((err)=>{
       ToastService.error("Error adding car category");
     }).finally(()=>{
@@ -47,59 +48,46 @@ angular.module("myApp").controller("carCtrl", function ($scope, ToastService, Ca
     })
   }
 
-  /*
-    function to delete a car category
-    @params categoryID
-    @returns none
-  */      
+  /**
+   * Deletes a car category from the database
+   * @param {string} categoryID - ID of the car category to delete
+   * @returns {void}
+   */
+       
   $scope.deleteCarCategory = (categoryID) => {
     console.log(categoryID);
     CarService.deleteCarCategory(categoryID).then(()=>{
-      $scope.fetchCarCategories();
+      ToastService.success("Car category deleted successfully");
+      fetchCarManagementData();
     }).catch((err)=>{
       ToastService.error("Error deleting car category");
     })
   }
 
-   /*
-   function to get the pending cars from the database
-    @params none
-    @returns none
+  /**
+   * Approves a car from the database
+   * @param {string} carID - ID of the car to approve
+   * @returns {void}
    */
-  function fetchPendingCars() {
-    CarService.getCars().then((cars) => {
-      $scope.cars = cars; 
-      console.log($scope.cars);
-    }).catch((err)=>{
-      ToastService.error("Error fetching pending cars");
-    })
-  }
-
-
-/*
-   function to approve car from the database
-    @params carID
-    @returns none
-   */  
   $scope.approveCar = (carID) => {
     CarService.approveCar(carID).then(()=>{
       ToastService.success("Car approved successfully");
-      fetchPendingCars();
+      fetchCarManagementData();
     }).catch((err)=>{
       ToastService.error(`Error approving car ${err}`);
       });
   };
 
 
-/*
-   function to reject car from the database
-    @params carID
-    @returns none
+  /**
+   * Rejects a car from the database
+   * @param {string} carID - ID of the car to reject
+   * @returns {void}
    */  
   $scope.rejectCar = (carID) => {
     CarService.rejectCar(carID).then(()=>{
       ToastService.success("Car rejected successfully");
-      fetchPendingCars();
+      fetchCarManagementData();
     }).catch((err)=>{
       ToastService.error(`Error rejecting car ${err}`);
       });

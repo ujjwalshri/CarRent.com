@@ -27,7 +27,7 @@ import sellerAnalyticsRoutes from "./routes/seller.analytics.routes.js";
 import conversationRoutes from "./routes/conversation.routes.js";
 import passport from "./config/passport.js"
 import cors from "cors";
-import { initializeSocket } from './services/socket.service.js';
+import { initializeSocket, emitBidSuccess } from './services/socket.service.js';
 
 import { Worker } from 'worker_threads';
 import { fileURLToPath } from 'url';
@@ -112,7 +112,11 @@ function startSQSWorker() {
     const worker = new Worker(workerPath);
 
     worker.on('message', (message) => {
-        if (message.status === 'success') {
+        // Handle bid success messages from worker
+        if (message.type === 'bidSuccess') {
+            const { username, bidData } = message.data;
+            emitBidSuccess(username, bidData);
+        } else if (message.status === 'success') {
             console.log(`Successfully processed message: ${message.messageId}`);
         } else {
             console.error(`Error processing message ${message.messageId}:`, message.error);
@@ -144,6 +148,5 @@ server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
     connectMongoDB();
     startSQSWorker();
-   
 });
 

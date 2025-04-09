@@ -21,7 +21,6 @@ export const initializeSocket = (server) => {
             methods: ['GET', 'POST']
         }
     });
-
     setupSocketEvents();
     return io;
 };
@@ -38,12 +37,33 @@ const setupSocketEvents = () => {
  * @param {Object} socket - Socket instance
  */
 const handleConnection = (socket) => {
-    console.log('A user connected:', socket.id)
+    console.log('A user connected:', socket.id);
+    
+    // Get username from connection query
+    const username = socket.handshake.query.username;
+    if (username) {
+        handleUserOnline(socket, username);
+    }
+    
     socket.on('userOnline', (username) => handleUserOnline(socket, username));
     socket.on('userOffline', (username) => handleUserOffline(socket, username));
     socket.on('joinedConversation', (conversationId) => handleJoinConversation(socket, conversationId));
+    socket.on('joinedBidding', (biddingId) => handleJoinedBidding(socket, biddingId));
+    socket.on('joinUserRoom', (username) => handleJoinUserRoom(socket, username));
     socket.on('disconnect', () => handleDisconnect(socket));
     socket.on('getOnlineUsers', () => handleGetOnlineUsers(socket));
+};
+
+/**
+ * Handle user joining their personal room
+ * @param {Object} socket - Socket instance
+ * @param {string} username - Username of the user
+ */
+const handleJoinUserRoom = (socket, username) => {
+    if (username) {
+        socket.join(username);
+        console.log(`User ${username} joined their personal room`);
+    }
 };
 
 /**
@@ -64,8 +84,10 @@ const handleUserOnline = (socket, username) => {
     if (!onlineUsers.includes(username)) {
         onlineUsers.push(username);
         console.log(`User ${username} is online`);
-        io.emit('onlineUsers', onlineUsers); // Broadcast to all connected clients
+        io.emit('onlineUsers', onlineUsers);
+        io.emit('userOnline', username);
     }
+    handleJoinUserRoom(socket, username);
 };
 
 /**
@@ -76,7 +98,8 @@ const handleUserOnline = (socket, username) => {
 const handleUserOffline = (socket, username) => {
     onlineUsers = onlineUsers.filter(user => user !== username);
     console.log(`User ${username} went offline`);
-    io.emit('onlineUsers', onlineUsers); // Broadcast to all connected clients
+    io.emit('onlineUsers', onlineUsers);
+    io.emit('userOffline', username);
 };
 
 /**
@@ -89,14 +112,21 @@ const handleJoinConversation = (socket, conversationId) => {
     console.log(`User joined chat: ${conversationId}`);
 };
 
+const handleJoinedBidding = (socket, biddingId) => {
+    socket.join(biddingId);
+    console.log(`User joined bidding: ${biddingId}`);
+};
+
 /**
  * Handle socket disconnection
  * @param {Object} socket - Socket instance
  */
 const handleDisconnect = (socket) => {
     console.log('User disconnected:', socket.id);
-    // We don't remove the user from onlineUsers here because they might be refreshing
-    // The userOffline event will handle that when explicitly called
+    const username = socket.handshake.query.username;
+    if (username) {
+        handleUserOffline(socket, username);
+    }
 };
 
 /**
@@ -135,4 +165,16 @@ export const emitToRoom = (room, event, data) => {
  */
 export const emitToAll = (event, data) => {
     io.emit(event, data);
+};
+
+/**
+ * Emit bid success notification to specific user
+ * @param {string} username - Username to send notification to
+ * @param {Object} bidData - Bid information including car details
+ */
+export const emitBidSuccess = (username, bidData) => {
+    if (io) {
+        io.to(username).emit('bidSuccess', bidData);
+        console.log(`Emitted bid success to user ${username}`);
+    }
 }; 

@@ -1,9 +1,9 @@
 angular.module('myApp').service('UserService', function($http, ApiService, $q) {
-    /* 
-    function to get user profile
-    @params none
-    @returns user profile
-    */
+    
+    /**
+     * Get the user profile
+     * @returns user profile
+     */
     this.getUserProfile = ()=>{
         let deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/auth/me`, { withCredentials: true })
@@ -17,10 +17,10 @@ angular.module('myApp').service('UserService', function($http, ApiService, $q) {
         return deferred.promise;
     }
 
-    /* 
-    function to update user profile 
-    @params data
-    @returns updated user profile
+   /**
+    * Function to update user profile
+    * @param {*} data 
+    * @returns 
     */
     this.updateUserProfile = (data)=>{
         let deferred = $q.defer();
@@ -35,11 +35,14 @@ angular.module('myApp').service('UserService', function($http, ApiService, $q) {
         return deferred.promise;
 
     }
-    /*
-    function to get all users
-    @params city, search
-    @returns all users
-    */
+    /**
+     * Function to get all users
+     * @param {*} city 
+     * @param {*} search 
+     * @param {*} skip 
+     * @param {*} limit 
+     * @returns all users
+     */
     this.getAllUsers = (city, search, skip, limit)=>{
         console.log(city);
         let deferred = $q.defer();
@@ -57,11 +60,11 @@ angular.module('myApp').service('UserService', function($http, ApiService, $q) {
         })
         return deferred.promise;
     }
-    /*
-    function to block a user and then delete all its cars
-    @params userId
-    @returns blocked user
-    */
+    /**
+     * Function to block a user and then delete all its cars
+     * @param {*} userId 
+     * @returns blocked user
+     */
     this.blockUser = (userId)=>{
         let deferred = $q.defer();
         $http.patch(`${ApiService.baseURL}/api/user/blockUser/${userId}`, { withCredentials: true })
@@ -73,11 +76,11 @@ angular.module('myApp').service('UserService', function($http, ApiService, $q) {
         })
         return deferred.promise
     }
-    /*
-    function to unblock a user and bring back all its cars
-    @params userId
-    @returns unblocked user
-    */
+    /**
+     * Function to unblock a user and bring back all its cars
+     * @param {*} userId 
+     * @returns unblocked user
+     */
     this.unblockUser = (userId)=>{
         let deferred = $q.defer();
         $http.patch(`${ApiService.baseURL}/api/user/unblockUser/${userId}`, { withCredentials: true })

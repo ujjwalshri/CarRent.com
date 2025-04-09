@@ -39,7 +39,7 @@ angular
       $scope.isLoading = false;        // Loading state for async operations
 
       /**
-       * Initialize the car details page
+       * Function to initialize the car details page
        * Fetches car data, reviews, and sets up date picker
        */
       $scope.init = () => {
@@ -173,7 +173,7 @@ angular
         // Submit bid to the server
         BiddingService.addBid($stateParams.id, bidding)
           .then((res) => {
-            ToastService.success("Bid placed successfully");
+            ToastService.info("Bid processing started wait for the bid to get saved");
           })
           .catch((err) => {
             ToastService.error(`Error placing the bid ${err}`);
@@ -185,7 +185,6 @@ angular
             $scope.startDate = "";
             $scope.endDate = "";
             $scope.initializeFlatpickr($scope.blockedDates, "#dateRangePicker", $scope);
-
           });
       };
 
@@ -196,8 +195,6 @@ angular
        * @param {Object} owner - The car owner's user information
        */
       $scope.chatWithOwner = (owner) => {
-        console.log(owner);
-        
         // Create or get conversation with the owner
         ChatService.createConversation(owner, $scope.car._id)
           .then((conversation) => {

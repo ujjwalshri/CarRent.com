@@ -10,7 +10,8 @@ import {
     topSellerTemplate,
     topBuyerTemplate,
     congratulateBecomingSeller, 
-    invoiceTemplate
+    invoiceTemplate,
+    carRejectionMailTemplate
 } from './email.templates.js';
 
 dotenv.config();
@@ -43,7 +44,8 @@ const sendEmail = async (options) => {
         topSeller: topSellerTemplate,
         topBuyer: topBuyerTemplate,
         congratulateBecomingSeller: congratulateBecomingSeller,
-        invoice: invoiceTemplate
+        invoice: invoiceTemplate,
+        carRejection: carRejectionMailTemplate
     };
 
     const template = templates[options.template];
@@ -173,6 +175,15 @@ export const sendInvoiceEmail = async (data) => {
         to: data.email,
         subject: 'Invoice for your carRental.com booking',
         template: 'invoice',
+        data: data
+    });
+}
+
+export const sendCarRejectionEmail = async (data) => {
+    return sendEmail({
+        to: data.email,
+        subject: 'Car Rejection Notification',
+        template: 'carRejection',
         data: data
     });
 }

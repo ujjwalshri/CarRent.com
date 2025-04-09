@@ -19,4 +19,4 @@ router.get('/getAllCarsByUser', protectRoute, getAllCarsByUser ); // get all veh
 router.get('/getPendingCars', protectRoute,  getPendingCars) // get all pending vehicles
 router.patch('/listUnlistCar/:vehicleId', protectRoute,allowSeller,listUnlistCarController ) // list or unlist a vehicle
 
-export default router; // export the router object
+export default router; // export the router object        

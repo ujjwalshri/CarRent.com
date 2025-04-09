@@ -53,7 +53,6 @@ export const signupController = async (req, res) => {
        // validate the user before proceeding
        const validUser = validateUser(userData);
        if(validUser.error){
-           console.log("validate to hua");
            return res.status(400).json({ err: `error ${validUser.error}` });
        }
        // Check for existing username
@@ -82,8 +81,11 @@ export const signupController = async (req, res) => {
 
         if(user){
             await generateTokenAndSetCookie(user, res); // Generate token and set cookie
-
-            generateWelcomeMail(user);
+            
+            // generate the welcome email
+            generateWelcomeMail(user).catch((err) => {
+                console.error(`Error sending welcome email: ${err.message}`);
+            });
             
             return  res.status(201).json({ 
                 _id: user._id,
@@ -184,10 +186,15 @@ export const loginController = async (req, res) => {
  * @returns {Object} JSON response with current user details or error message
  */
 export const meController = async (req, res) => {
+    // check if the user is already cached in redis
+    const userId = req.user;
+   
     try{
         const userId = req.user;
         const user = await User.findById(userId);
         if(user){
+          
+
             return res.status(200).json({
                 username: user.username,
                 firstName: user.firstName,
@@ -201,6 +208,7 @@ export const meController = async (req, res) => {
                 updatedAt: user.updatedAt,
             });
         }else{
+
             return res.status(404).json({ err: "User not found" });
         }
 

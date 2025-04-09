@@ -32,9 +32,6 @@ export const addConversationController = async(req,res)=>{
     const sender = {
         _id : req.user._id,
         username: req.user.username,
-        firstName: req.user.firstName,
-        lastName: req.user.lastName,
-        email: req.user.email
     };
 
     const vehicleId = req.params.vehicleId;
@@ -60,7 +57,10 @@ export const addConversationController = async(req,res)=>{
         const conversation = new Conversation({
             sender,
             vehicle: vehicle,
-            reciever: owner
+            reciever: {
+                _id: owner._id,
+                username: owner.username,
+            }
         });
 
         
@@ -91,7 +91,6 @@ export const addConversationController = async(req,res)=>{
  */
 export const getAllConversationsController = async(req, res)=>{
     const userId = req.user._id;
-    console.log(userId);
     try{
         const conversations = await Conversation.find({$or: [{ 'sender._id': userId }, { 'reciever._id': userId }]});
         return res.status(200).json({conversations});
@@ -132,7 +131,7 @@ export const getAllConversationsAtCarIdController = async(req, res)=>{
         return res.status(200).json({conversations});
     }catch(err){
         return res.status(500).json({message: "Internal server error"});
-    } 
+    }
 }
 
 

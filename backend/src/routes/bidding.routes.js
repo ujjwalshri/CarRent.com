@@ -1,6 +1,6 @@
 import express from "express";
 import protectRoute from "../middlewares/protectRoute.js";
-import {addBidController, updateBidStatusController, getBidForOwnerController, getBidForUserController,getAllBids, getBookingsAtCarIdController, getAllBookingsAtOwnerIdController ,getAllBookingsAtUserIdController, getUserBookingHistory, getBookingAtBookingIdController, startBookingController, endBookingController , reviewBookingController, bookingRecommendationController} from "../controllers/bidding.controller.js";
+import {addBidController, updateBidStatusController, getBidForOwnerController, getBidForUserController, getBookingsAtCarIdController, getAllBookingsAtOwnerIdController ,getAllBookingsAtUserIdController, getUserBookingHistory, getBookingAtBookingIdController, startBookingController, endBookingController , reviewBookingController, bookingRecommendationController} from "../controllers/bidding.controller.js";
 import allowUser from "../middlewares/authenticateUser.js";
 import allowSeller from "../middlewares/authenticateSeller.js";
 const router = express.Router();
@@ -16,6 +16,6 @@ router.get('/getBookingsHistory/user', protectRoute ,getUserBookingHistory ); //
 router.get('/getBid/:bookingId', protectRoute, allowSeller, getBookingAtBookingIdController); // get all bids at bidding id
 router.patch('/startBooking/:bookingId', protectRoute, allowSeller, startBookingController); // start the booking
 router.patch('/endBooking/:bookingId', protectRoute, allowSeller, endBookingController); // end the booking
-router.patch('/reviewBooking/:bookingId',   reviewBookingController) // review the booking  
+router.patch('/reviewBooking/:bookingId',reviewBookingController) // review the booking  
 router.get('/getCarRecommendation', protectRoute, bookingRecommendationController) // get the car recommendation
 export default router;

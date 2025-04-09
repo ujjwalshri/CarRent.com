@@ -257,8 +257,8 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
                                         { text: 'End Date', style: 'tableHeader' }
                                     ],
                                     [
-                                        { text: new Date(this.startDate).toLocaleDateString(), style: 'tableContent' },
-                                        { text: new Date(this.endDate).toLocaleDateString(), style: 'tableContent' }
+                                        { text: new Date(this.startDate).toLocaleString(), style: 'tableContent' },
+                                        { text: new Date(this.endDate).toLocaleString(), style: 'tableContent' }
                                     ]
                                 ]
                             }
@@ -410,6 +410,10 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
         // Generate and print the PDF
         pdfMake.createPdf(docDefinition).print();
     };
+    /**
+     * Checks if the current date is between the booking start and end dates.
+     * @returns {boolean} - Returns true if the current date is between the booking start and end dates, false otherwise.
+     */
     Bid.prototype.todayBookingCalculator = function(){
         const bookingStartDate = new Date(this.startDate).setHours(0, 0, 0, 0);
         const bookingEndDate = new Date(this.endDate).setHours(23, 59, 59, 999);
@@ -418,7 +422,6 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
     }
 
     
-   
     /**
      * Factory Object for Bid Creation
      */
@@ -458,6 +461,11 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
             var bid = new Bid();
             return bid.calculateBlockedDates(results);
         },
+        /**
+         * Converts a response array to an array of Bid objects.
+         * @param {Array} responseArray - The response array to convert.
+         * @returns {Array} - Returns an array of Bid objects.
+         */
         convertResponceToBidObject: function(responseArray) {
             var bids = responseArray.map(function(response) {
                 return new Bid(
@@ -475,6 +483,13 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
             });
             return bids;
         },
+        /**
+         * Calculates the booking price.
+         * @param {Date} startDate - The start date of the booking.
+         * @param {Date} endDate - The end date of the booking.
+         * @param {number} amount - The amount of the booking.
+         * @returns {number} - Returns the booking price.
+         */
         calculate : function(startDate, endDate, amount){
             startDate = new Date(startDate).setHours(0, 0, 0, 0);
             endDate = new Date(endDate).setHours(0, 0, 0, 0);
@@ -482,6 +497,12 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
             var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             return (diffDays+1) * amount;
         },
+        /**
+         * Initializes the flatpickr date picker.
+         * @param {Array} blockedDates - The dates to disable in the date picker.
+         * @param {string} htmlElementId - The ID of the HTML element to initialize the date picker on.
+         * @param {Object} $scope - The scope of the controller.
+         */
         initializeFlatpickr: function(blockedDates, htmlElementId, $scope){
             flatpickr(htmlElementId, {
                 mode: "range",

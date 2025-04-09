@@ -2,7 +2,7 @@
  * Home Controller - Main controller for the application landing page
  * Manages car listings, filtering, search, recommendations, and user interactions
  */
-angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastService, CarService, $timeout, UserService, UserFactory, $q, $rootScope, City) {
+angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastService, CarService, $timeout, UserService, UserFactory, $q, $rootScope, City, CarFactory) {
 
     // Initialize scope variables
     $scope.allCars = [];
@@ -16,6 +16,8 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
     $scope.isLoading = false;
     $scope.limit = 5;
     $scope.filteringStarted = false;
+    $scope.minPriceRange = CarFactory.minPriceRange;
+    $scope.maxPriceRange = CarFactory.maxPriceRange;
     
     // Debounce mechanism for search input
     let searchTimeout;

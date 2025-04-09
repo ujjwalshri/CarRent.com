@@ -1,7 +1,7 @@
 angular
   .module("myApp")
   .controller(
-    "ownerBookingsCtrl",
+    "ownerBiddingsCtrl",
     function ($scope, BiddingFactory, ToastService, BiddingService, $window) {
 
       $scope.bookings = [];   // array to hold the bookings of the logged in user

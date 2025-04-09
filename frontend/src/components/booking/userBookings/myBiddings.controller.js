@@ -5,17 +5,21 @@ angular.module('myApp').controller('myBiddingsCtrl', function($scope, BiddingFac
     $scope.itemsPerPage = 6; // setting the items per page to 2
     $scope.totalItems = 0; /// total number of items for pagination
     $scope.isLoading = false; // loading state
+ 
 
-
+    /**
+     * Function to initialize the page
+     * Fetches all biddings for the user
+     * @returns none
+     */
     $scope.init = function(){
         fetchAllBiddings();
     }
 
-    /*
-    function to fetch all biddings with pagination
-    @params none
-    @returns none
-    */
+    /**
+     * Function to fetch all biddings for the user
+     * @returns none
+     */
     function fetchAllBiddings() {
         $scope.isLoading = true;
 
@@ -44,11 +48,11 @@ angular.module('myApp').controller('myBiddingsCtrl', function($scope, BiddingFac
             });
     }
 
-    /*
-    function to handle the pageChanged event
-    @params none
-    @returns none
-    */
+    /**
+     * Function to handle the pageChanged event
+     * Fetches all biddings for the user
+     * @returns none
+     */
     $scope.pageChanged = function () {
         fetchAllBiddings();
     };

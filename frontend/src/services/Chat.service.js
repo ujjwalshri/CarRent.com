@@ -7,7 +7,7 @@ angular.module('myApp').service('ChatService', function($q, ApiService, $http) {
     @returns promise
     */
     this.createConversation = function(owner, vehicleId){
-        console.log(owner, vehicleId);
+
         const deferred = $q.defer();
         $http.post(`${ApiService.baseURL}/api/conversation/addConversation/${vehicleId}`, owner, { withCredentials: true })
             .then((res) => {

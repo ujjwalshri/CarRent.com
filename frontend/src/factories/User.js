@@ -85,6 +85,7 @@ angular.module('myApp').factory('UserFactory', function () {
         return this;
     };
 
+
     return {
         /*
         function to create a user object
@@ -113,6 +114,21 @@ angular.module('myApp').factory('UserFactory', function () {
                 return user.validate();
             }
             return user;
+        },
+        // function to validate the update user data before sending to the server
+        validateUpdateUserData : function (data) {  
+            const nameRegex = /^[A-Za-z]{2,50}$/;
+            if (!data.firstName || !nameRegex.test(data.firstName)) {
+                return "invalid first name";
+            }
+            if (!data.lastName || !nameRegex.test(data.lastName)) {
+                return "invalid last name";
+            }
+            if(data.firstName.trim().length<3 || data.firstName.trim().length>50 || data.lastName.trim().length<3 || data.lastName.trim().length>50){
+                return "first name and last name must be atleast 3 to 50 characters long";
+            }
+          
+            return true;
         }
     };
 });

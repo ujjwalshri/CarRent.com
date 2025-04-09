@@ -1,6 +1,9 @@
 
 angular.module('myApp').service('ToastService', function (){
-    // function to show the toast message
+    /**
+     * Default options for the toast message
+     * @type {Object}
+     */
     const defaultOptions = { // default options for the toast message
         duration : 3000,
         close: true,
@@ -8,7 +11,10 @@ angular.module('myApp').service('ToastService', function (){
         position: 'right',
         stopOnFocus: true
     }
-    // function to show the success message
+   /**
+    * Function to show the success message
+    * @param {string} message - The message to show
+    */
     this.success = function(message){
         Toastify({
             ...defaultOptions, 
@@ -16,7 +22,10 @@ angular.module('myApp').service('ToastService', function (){
             backgroundColor: '#4caf50'
         }).showToast();
     }
-    // function to show the error message
+    /**
+     * Function to show the error message
+     * @param {string} message - The message to show
+     */
     this.error = function(message){
         Toastify({
             ...defaultOptions, 
@@ -24,7 +33,10 @@ angular.module('myApp').service('ToastService', function (){
             backgroundColor: '#f44336'
         }).showToast();
     }
-    // function to show the info message
+    /**
+     * Function to show the info message
+     * @param {string} message - The message to show
+     */
     this.info = function(message){
         Toastify({
             ...defaultOptions, 

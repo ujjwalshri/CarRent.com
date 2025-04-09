@@ -1,14 +1,15 @@
 angular
   .module("myApp")
   .controller("userBookingsCtrl", function ($scope, BiddingFactory, ToastService, BiddingService, $uibModal, $timeout) {
-    $scope.bookings = [];
-    $scope.calculateBookingPrice = BiddingFactory.calculate;
-    $scope.currentPage = 1;
-    $scope.itemsPerPage = 6;
-    $scope.isLoading = false;
-    $scope.hasMoreData = true;
-    $scope.sortBy = '';
+    $scope.bookings = []; // array to hold the bookings
+    $scope.currentPage = 1; // setting the current page to 1
+    $scope.itemsPerPage = 6; // setting the items per page 
+    $scope.isLoading = false; // setting the isLoading to false
+    $scope.totalItems = 0;
+    $scope.maxSize = 5; // Number of page buttons to show
+    $scope.sortBy = ''; // setting the sortBy to an empty string
     
+    // Initialize the review object
     $scope.review = {
       rating: "",
       newReview: ""
@@ -19,11 +20,12 @@ angular
       getAllBookings();
     };
 
+    // function to handle the page changed event
     $scope.pageChanged = function() {
-      $scope.currentPage = $scope.currentPage + 1;
       getAllBookings();
     };
 
+    // function to open the review modal
     $scope.openModal = (booking) => {
       const modalInstance = $uibModal.open({
         templateUrl: 'reviewModal.html',
@@ -33,24 +35,25 @@ angular
         }
       });
 
+      // function to handle the modal result
       modalInstance.result.then(function() {
         // Modal was closed with success (review submitted)
-        $scope.currentPage= 1;
-        $scope.bookings = [];
+        $scope.currentPage = 1;
         getAllBookings();
         $timeout();
-      }, function() {
-        // Modal was dismissed
-        console.log('Modal dismissed');
       });
     };
 
     $scope.handleSorting = () => {
       $scope.currentPage = 1;
-      $scope.bookings = [];
       getAllBookings();
     };
 
+
+    /**
+     * Fetches all bookings for the user
+     * @returns {void}
+     */
     function getAllBookings() {
       if ($scope.isLoading) return;
 
@@ -63,16 +66,11 @@ angular
       $scope.isLoading = true;
       
       BiddingService.getBookingsForUser(params)
-        .then((biddings) => {
-          console.log("Bookings fetched successfully");
-          console.log(biddings);
-          
-          $scope.bookings = $scope.bookings.concat(biddings.bookings.map((booking) => {
+        .then((response) => {
+          $scope.bookings = response.bookings.map((booking) => {
             return BiddingFactory.createBid(booking, false);
-          }));
-          
-          $scope.hasMoreData = biddings.totalDocs > $scope.bookings.length;
-          $scope.totalPages = Math.ceil(biddings.totalDocs / $scope.itemsPerPage);
+          });
+          $scope.totalItems = response.totalDocs;
         })
         .catch((err) => {
           ToastService.error(`Error fetching bookings: ${err}`);
@@ -82,6 +80,15 @@ angular
         });
     }
   })
+  /**
+   * Controller for the review modal
+   * @param {Object} $scope - The scope object
+   * @param {Object} $uibModalInstance - The modal instance
+   * @param {Object} booking - The booking object
+   * @param {Object} CarService - The car service
+   * @param {Object} Review - The review service
+   * @param {Object} ToastService - The toast service
+   */
   .controller('ReviewModalCtrl', function($scope, $uibModalInstance, booking, CarService, Review, ToastService) {
     $scope.booking = booking;
     $scope.isLoading = false;
@@ -97,11 +104,6 @@ angular
     $scope.addReview = function() {
       if (!$scope.booking) {
         ToastService.error("No booking selected for review");
-        return;
-      }
-
-      if (!$scope.review.rating || !$scope.review.newReview) {
-        ToastService.error("Please provide both rating and review");
         return;
       }
 
@@ -125,7 +127,6 @@ angular
         .then(() => {
           ToastService.success("Review added successfully");
           $uibModalInstance.close();
-
         })
         .catch((err) => {
           ToastService.error(err.message || "Error adding review");

@@ -19,24 +19,27 @@ angular.module('myApp').factory('CarFactory', function() {
      * @param {Array} images - Array of image URLs for the car
      * @returns {Car} - New Car instance
      */
-    function Car(carName, company, carModel, category, carPrice, mileage, color, fuelType, city, images) {
+    function Car(carName, company, carModel, category, carPrice, mileage, color, fuelType,location, city, images) {
         // Ensure the function is called with 'new' operator
         if (!(this instanceof Car)) {
-            return new Car(carName, company, carModel, category, carPrice, mileage, color, fuelType, city, images);
+            return new Car(carName, company, carModel, category, carPrice, mileage, color, fuelType,location, city, images);
         }
 
         // Initialize car properties
-        this.name = carName;
-        this.company = company;
-        this.modelYear = carModel;
-        this.category = category;
-        this.price = carPrice;
-        this.mileage = mileage;
-        this.color = color;
-        this.fuelType = fuelType;
-        this.city = city;
+        this.name = carName ? carName.trim() : null;
+        this.company = company ? company.trim() : null;
+        this.modelYear = carModel ? carModel : null;
+        this.category = category ? category.trim() : null;
+        this.price = carPrice ? carPrice : null;
+        this.mileage = mileage? mileage : null;
+        this.color = color ? color.trim() : null;
+        this.fuelType = fuelType? fuelType : null;
+        this.location = location ? location.trim() : null;
+        this.city = city ? city : null;
         this.images = Array.isArray(images) ? images : [];
     }
+
+   
 
     /**
      * Validate the Car object properties
@@ -76,6 +79,9 @@ angular.module('myApp').factory('CarFactory', function() {
         if (!this.fuelType || typeof this.fuelType !== 'string') {
             return  "Fuel type is required and must be a string.";
         }
+        if(this.location && typeof this.location !== 'string'){
+            return  "Location is required and must be a string.";
+        }
         if (!this.city || typeof this.city !== 'string') {
             return  "City is required and must be a string.";
         }
@@ -87,7 +93,10 @@ angular.module('myApp').factory('CarFactory', function() {
         // Return errors if any, otherwise return the car object
         return this;
     };
-
+     /**
+     * Convert the Car object properties to FormData
+     * @returns {Object} - Returns FormData object
+     */
     Car.prototype.toFormData = function(){
         const formData = new FormData();
       formData.append('name', this.name);
@@ -123,17 +132,57 @@ angular.module('myApp').factory('CarFactory', function() {
             // Create new car instance with provided data
             var car = new Car(
                 data.name, data.company, data.modelYear, data.category,
-                data.price, data.mileage, data.color, data.fuelType, data.city, data.vehicleImages
+                data.price, data.mileage, data.color, data.fuelType,data.location, data.city, data.vehicleImages
             );
-            console.log(car);
-            
             // Validate the car and return result
             var validation = car.validate();
-            if (validation.error) {
+            if (typeof validation === 'string') {
                 return validation;
             }
             return car;
-        }
+        },
+        companies: [
+            'Toyota',
+            'Honda',
+            'Ford',
+            'Chevrolet',
+            'Nissan',
+            'Hyundai',
+            'Kia',
+            'Mercedes-Benz',
+            'Volkswagen',
+            'Volvo',
+            'Mahindra',
+            'Land Rover',
+            'Lexus',
+            'Mazda',
+            'BMW',
+            'Audi',
+            'Tesla',
+            'Porsche',
+            'Lamborghini',
+            'Ferrari',
+            'McLaren',
+            'Aston Martin',
+            'Bentley',
+            'Bugatti',
+            'Rolls-Royce',
+            'Jaguar'
+        ],
+        fuelTypes: [
+            'Petrol',
+            'Diesel',
+            'Hybrid',
+            'Gasoline',
+            'Electric',
+        ],
+        locationTypes: [
+            'Local',
+            'Outstation',
+            'Both',
+        ],
+        minPriceRange: 500,
+        maxPriceRange: 10000
     };
 
     return factory;

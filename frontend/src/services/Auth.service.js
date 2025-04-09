@@ -1,41 +1,20 @@
 // auth service to interact with the database
-angular.module('myApp').service('AuthService', function($q, ApiService, $http,$state) {
-    /* function to validate the user
-    @params user
-    @returns promise
-    */
-    this.validateUser = function(user) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // regex for email validation 
-        if (user.password.trim() !== user.confirmPassword.trim()) {
-            return $q.reject("Passwords do not match!");
-        } 
-        if(user.password.trim().length < 8){  
-            return $q.reject("Password should be atleast 8 characters long");
-        }
-        if(String(user.adhaar).length !== 12){
-            return $q.reject("Adhaar number should be 12 digits long");
-        }
-        if(user.username.trim().length < 6){
-            return $q.reject("Username should be atleast 6 characters long");
-        }
-        if(emailRegex.test(user.email.trim())===false){
-            return $q.reject("Invalid email address");
-        }
-        if(user.firstName.trim().length < 3){
-            return $q.reject("First name should be atleast 3 characters long");
-        }
-        return $q.resolve();
-    };
+angular.module('myApp').service('AuthService', function($q, ApiService, $http, $state, SocketService) {
 
-    /*
-    function to logout the user
-    @params none
-    @returns promise
-    */
+    /**
+     * Logout the user
+     * @returns promise
+     */
     this.logout = function(){
         let deffered = $q.defer();
+        
+        // Disconnect socket before logout
+        const socket = SocketService.getSocket();
+        if (socket) {
+            SocketService.disconnect();
+        }
+        
         $http.post(`${ApiService.baseURL}/api/auth/logout`, {}, { withCredentials: true }).then((res)=>{
-            
             deffered.resolve(`logged out successfully`);
             $state.go('login');
         }).catch((err)=>{
@@ -46,11 +25,12 @@ angular.module('myApp').service('AuthService', function($q, ApiService, $http,$s
    
   
 
-     /*
-    function to login the user
-    @params username, password
-    @returns promise
-    */
+    /**
+     * Login the user
+     * @param {string} username - The username of the user
+     * @param {string} password - The password of the user
+     * @returns promise
+     */
 
     this.loginUser = function(username, password) {
         const deferred = $q.defer();
@@ -63,21 +43,31 @@ angular.module('myApp').service('AuthService', function($q, ApiService, $http,$s
             withCredentials: true})
             .then(function(response) {
                 console.log('User logged in:', response.data);
-                deferred.resolve(response.data);
-                return response.data; // Return the response data from the server
+                
+                try {
+                    // Initialize socket immediately after login - this will
+                    // automatically set the user as online when connected
+                    SocketService.initialize(response.data);
+                    
+                    deferred.resolve(response.data);
+                } catch (error) {
+                    console.error('Error initializing socket:', error);
+                    // Still resolve even if socket fails
+                    deferred.resolve(response.data);
+                }
             })
             .catch(function(error) {
                 console.error('Error logging in user:', error);
                 console.log(error.data.err);
-                deferred.reject(`Error logging in user: ${error.data.err}`); // Reject the promise with the error
+                deferred.reject(`Error logging in user: ${error.data.err}`);
             });
         return deferred.promise;
     };
-  /*
-    function to register the user
-    @params user
-    @returns promise
-    */
+  /**
+     * Register the user
+     * @param {object} user - The user object
+     * @returns promise
+     */
 this.registerUser = function(user) {
     console.log(user);
     let deffered = $q.defer();

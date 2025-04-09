@@ -5,21 +5,21 @@
  */
 angular.module("myApp").controller("myProfileCtrl", function($scope, $state, ToastService, $uibModal, UserService, CarService, City, $q) {
 
-    $scope.isSeller = true; 
-    $scope.deleted = false;
+    $scope.isSeller = true;  // Flag to indicate if the user is a seller
+    $scope.deleted = false; // Flag to indicate if the user is deleted
     
-    $scope.userCars = [];
-    $scope.hasMoreCars = true;
-    $scope.selectedCarPrice = { price: 0 };
+    $scope.userCars = []; // Array to hold user's cars
+    $scope.hasMoreCars = true; // Flag to indicate if there are more cars to load 
+    $scope.selectedCarPrice = { price: 0 }; // Object to hold selected car price 
     
-    $scope.isLoading = false;
-    $scope.activeButton = 'all';
-    $scope.status;
+    $scope.isLoading = false; // Flag to indicate loading state 
+    $scope.activeButton = 'all'; // Active filter button 
+    $scope.status; // Filter status for cars (approved, rejected, all)
     
-    $scope.skip = 0;
-    $scope.limit = 10;
+    $scope.skip = 0; // Pagination offset
+    $scope.limit = 10; // Pagination limit 
     
-    $scope.cities = City.getCities();
+    $scope.cities = City.getCities(); // Array to hold city data 
     
     /**
      * Initializes the controller
@@ -48,7 +48,6 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
             console.log(result);
             $scope.user = result[0].data;
             $scope.updateUser = $scope.user;
-
             $scope.skip == 0 
             ? $scope.userCars = result[1].data 
             : $scope.userCars = $scope.userCars.concat(result[1].data);
@@ -89,7 +88,6 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
      */
     $scope.loadMore = () => {
         $scope.skip = $scope.skip + $scope.limit;
-        
         fetchProfileData($scope.status);
     }
     
@@ -156,7 +154,7 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
         
         CarService.updateCarPrice(carId, $scope.selectedCarPrice.price)
             .then(() => {
-                ToastService.success("Car price updated successfully");
+                ToastService.success("Car price updated successfully , It may take some time to reflect");
                 $scope.skip = 0;
                 fetchProfileData();
             })
@@ -172,8 +170,8 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
     $scope.openUpdateModal = () => {
         var modalInstance = $uibModal.open({
             templateUrl: 'updateUserModal.html',
-            controller: function($scope, $uibModalInstance, userData, UserService, ToastService) {
-                $scope.updatedUser = angular.copy(userData);
+            controller: function($scope, $uibModalInstance, userData, UserService, ToastService, UserFactory) {
+                $scope.updatedUser = angular.copy(userData); // creating a deep copy of the user data
                 $scope.cities = City.getCities();
                 
                 /**
@@ -193,13 +191,10 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
                         lastName: $scope.updatedUser.lastName,
                         city: $scope.updatedUser.city
                     };
-                    if(!data.firstName || !data.lastName){
-                        ToastService.error("first name and last name cannot be empty");
-                        return;
-                    }
 
-                    if(data.firstName.length < 3 || data.firstName.length>50 || data.lastName.length < 3 || data.lastName.length > 50){
-                        ToastService.error("first name and last name invalid");
+                   const validateionResult =   UserFactory.validateUpdateUserData(data);
+                   if(validateionResult !== true){
+                        ToastService.error(validateionResult);
                         return;
                     }
                     

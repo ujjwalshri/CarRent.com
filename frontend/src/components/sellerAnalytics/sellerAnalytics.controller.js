@@ -4,10 +4,6 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
         $scope.startDate = new Date();
         $scope.startDate.setDate($scope.startDate.getDate() - 7);
         $scope.endDate = new Date();
-        $scope.months = [
-            'January', 'February', 'March', 'April', 'May', 'June',
-            'July', 'August', 'September', 'October', 'November', 'December'
-        ];
     };
 
     // Initialize analytics data variables
@@ -16,14 +12,9 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
         $scope.averageRentalDuration = 0;
         $scope.totalFineCollected = 0;
         $scope.numberOfBookings = 0;
-        $scope.dateFiltered = false;
-        $scope.dateFilteredRevenue = 0;
-        $scope.percentageOfTotalRevenue = 100;
         $scope.negativeReviewsCount = 0;
-        $scope.percentageOfTotalFineCollected = 100;
         $scope.repeatingCustomersPercentage = 0;
-        $scope.showDateFilter = true;
-        $scope.timePeriod = 'last7days';
+        $scope.averageRevenue = 0;
     };
 
     /**
@@ -53,10 +44,20 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
     };
 
     /**
+     * Formats hour for display in charts
+     */
+    const formatHour = (hour) => {
+        const suffix = hour >= 12 ? "PM" : "AM";
+        return hour === 0 ? "12 AM" : 
+               hour === 12 ? "12 PM" : 
+               `${hour % 12} ${suffix}`;
+    };
+
+    /**
      * Creates all charts using ChartService
      */
     const createCharts = (data) => {
-        const { overview, performance, bookings } = data;
+        const { overview, performance, bookings, comparisons } = data;
 
         // Overview Charts
         if (overview.carDescription?.suvVsSedan) {
@@ -76,7 +77,7 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                 overview.popularCars.top3MostPopularCars.map(car => car._id),
                 overview.popularCars.top3MostPopularCars.map(car => car.count),
                 'Number of Bookings',
-                "Top 3 Most Popular Cars",
+                "Most Popular Cars",
                 "myMostPopularCar"
             );
         }
@@ -103,18 +104,13 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                 "carWiseNegativeReviews"
             );
         }
-        if (performance.nagativeReviewsCount?.result) {
-            // count the total number of nagative reviews
-            $scope.negativeReviewsCount = performance.negativeReviews.result.reduce((acc, curr) => acc + curr.count, 0);
-        }
-        
 
         if (performance.topEarningCars?.top3CarsWithMostEarning) {
             ChartService.createBarChart(
                 "bar",
                 performance.topEarningCars.top3CarsWithMostEarning.map(car => car._id),
                 performance.topEarningCars.top3CarsWithMostEarning.map(car => car.totalRevenue),
-                'Total Revenue (₹)',
+                'Total Revenue ($)',
                 "Top 3 Earning Cars",
                 "top3CarsWithMostEarning"
             );
@@ -122,24 +118,12 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
 
         // Booking Charts
         if (bookings.peakHours?.peakBiddingHours) {
-            ChartService.createBarChart(
-                "line",
-                bookings.peakHours.peakBiddingHours.map(hour => formatHour(hour.hour)),
-                bookings.peakHours.peakBiddingHours.map(hour => hour.count),
-                'Number of Bookings',
-                "Peak Booking Hours",
-                "hourlyBiddingHeatmap"
-            );
-        }
-        if(bookings.sellerBids?.sellerBids){
-            ChartService.createBarChart(
-                "line",
-                ["yourBids", "otherSellersAvgBids"],
-                [bookings.sellerBids.sellerBids[0].totalBids, bookings.otherSellersAvgBids.otherSellersAvgBids[0].avgBids],
-                'Number of Bids',
-                "your Bids vs Other Sellers Avg Bids",
-                "myBidsVsOtherSellersAvgBids"
-            )
+            ChartService.createLineChart("hourlyBiddingHeatmap", {
+                labels: bookings.peakHours.peakBiddingHours.map(hour => formatHour(hour.hour)),
+                data: bookings.peakHours.peakBiddingHours.map(hour => hour.count),
+                title: "Peak Booking Hours",
+                label: "Number of Bookings"
+            });
         }
 
         if (bookings.monthlyBookings?.monthWiseBookings) {
@@ -163,7 +147,8 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                 "top3CostumersWithMostBookings"
             );
         }
-        if(bookings.cityWiseBookings?.cityWiseBookings){
+
+        if (bookings.cityWiseBookings?.cityWiseBookings) {
             ChartService.createBarChart(
                 "bar",
                 bookings.cityWiseBookings.cityWiseBookings.map(city => city._id),
@@ -171,59 +156,39 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                 'Number of Bookings',
                 "City-wise Bookings",
                 "cityWiseBooking"
-            )
+            );
+        }
+         
+        // Comparison Charts
+        if (comparisons.biddingComparison) {
+            console.log(comparisons.biddingComparison);
+            const { myBids, otherSellersAvgBids } = comparisons.biddingComparison;
+            console.log(myBids, otherSellersAvgBids);
+            ChartService.createBarChart(
+                "bar",
+                ["My Bids", "Average Seller Bids"],
+                [myBids, otherSellersAvgBids],
+                'Number of Bids',
+                "Bidding Comparison",
+                "myBidsVsOtherSellersAvgBids"
+            );
+        }
+
+        if (comparisons.earningComparison) {
+            const { myEarnings, otherSellersAvgEarnings } = comparisons.earningComparison;
+            ChartService.createBarChart(
+                "bar",
+                ["My Earnings", "Average Seller Earnings"],
+                [myEarnings, otherSellersAvgEarnings],
+                'Earnings ($)',
+                "Earning Comparison",
+                "myEarningVsOtherSellersAvgEarnings"
+            );
         }
     };
 
     /**
-     * Formats hour for display in charts
-     */
-    const formatHour = (hour) => {
-        const suffix = hour >= 12 ? "PM" : "AM";
-        return hour === 0 ? "12 AM" : 
-               hour === 12 ? "12 PM" : 
-               `${hour % 12} ${suffix}`;
-    };
-
-    /**
-     * Updates analytics data based on API responses
-     */
-    const updateAnalyticsData = ([overview, performance, bookings]) => {
-
-        console.log(overview, performance, bookings);
-        if(bookings.averageRentalDuration){
-            $scope.averageRentalDuration = bookings.averageRentalDuration.averageRentalDuration[0].averageRentalDuration;
-        }
-        if(bookings.repeatingCustomersPercentage){
-
-            $scope.repeatingCustomersPercentage = bookings.repeatingCustomersPercentage.repeatingCustomersPercentage[0].repeatingCustomerPercentage;
-        }
-
-        // Update Overview metrics
-        if (overview.revenue) {
-            $scope.totalRevenue = overview.revenue.totalRevenue || 0;
-            $scope.totalFineCollected = overview.revenue.totalFineCollected || 0;
-            $scope.numberOfBookings = overview.revenue.totalBookings || 0;
-            $scope.averageRevenue = overview.revenue.averageRevenue || 0;
-        }
-
-        // Update Performance metrics
-        if (performance.negativeReviews) {
-            $scope.negativeReviewsCount = performance.negativeReviews.result.reduce((acc, curr) => acc + curr.count, 0);
-        }
-
-        // Update Booking metrics
-        if (bookings.monthlyBookings) {
-            $scope.totalMonthlyBookings = bookings.monthlyBookings.monthWiseBookings.reduce((acc, curr) => acc + curr.count, 0);
-        }
-
-        // Create all charts with the updated data
-        createCharts({ overview, performance, bookings });
-    };
-
-    /**
-     * Fetches analytics data from the server uses $q.all to make parallel API calls, updates the scope variables with the results, and handles errors
-     * @returns {Promise} Promise that resolves when all data is fetched
+     * Fetches analytics data from the server using individual API endpoints
      */
     const fetchAnalyticsData = () => {
         if (!validateDateRange()) return;
@@ -233,12 +198,112 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             endDate: $scope.endDate.toISOString()
         };
 
-        $q.all([
-            ChartService.getOverviewAnalytics(params),
-            ChartService.getPerformanceAnalytics(params),
-            ChartService.getBookingAnalytics(params)
+        // Overview Analytics
+        const overviewPromises = [
+            ChartService.getTotalRevenue(params),
+            ChartService.getCarDescription(params),
+            ChartService.getPopularCars(params)
+        ];
+
+        // Performance Analytics
+        const performancePromises = [
+            ChartService.getCarWiseBookings(params),
+            ChartService.getNegativeReviews(params),
+            ChartService.getTopEarningCars(params)
+        ];
+
+        // Booking Analytics
+        const bookingPromises = [
+            ChartService.getPeakHours(params),
+            ChartService.getMonthlyBookings(params),
+            ChartService.getTopCustomers(params),
+            ChartService.getAverageRentalDuration(params),
+            ChartService.getRepeatingCustomersPercentage(params),
+            ChartService.getCityWiseBookings(params)
+        ];
+
+        // Comparison Analytics
+        const comparisonPromises = [
+            ChartService.getBiddingComparison(params),
+            ChartService.getEarningComparison(params)
+        ];
+
+        // Execute all promises in parallel for better performance
+        Promise.all([
+            Promise.all(overviewPromises),
+            Promise.all(performancePromises),
+            Promise.all(bookingPromises),
+            Promise.all(comparisonPromises)
         ])
-        .then(updateAnalyticsData)
+        .then(([overviewData, performanceData, bookingData, comparisonData]) => {
+            // Process Overview Data
+            const [revenue, carDescription, popularCars] = overviewData;
+            
+            // Process Performance Data
+            const [carWiseBookings, negativeReviews, topEarningCars] = performanceData;
+            
+            // Process Booking Data
+            const [peakHours, monthlyBookings, topCustomers, averageRentalDuration, repeatingCustomers, cityWiseBookings] = bookingData;
+
+            // Process Comparison Data
+            const [biddingComparison, earningComparison] = comparisonData;
+
+            // Update scope variables
+            if (revenue?.revenue) {
+                $scope.totalRevenue = revenue.revenue.totalRevenue || 0;
+                $scope.totalFineCollected = revenue.revenue.totalFineCollected || 0;
+                $scope.numberOfBookings = revenue.revenue.totalBookings || 0;
+                $scope.averageRevenue = revenue.revenue.averageRevenue || 0;
+            }
+            console.log(overviewData);
+            console.log(performanceData);
+            console.log(bookingData);
+            console.log(comparisonData);
+
+
+            if (negativeReviews?.negativeReviews) {
+                $scope.negativeReviewsCount = negativeReviews.negativeReviews.result.reduce((acc, curr) => acc + curr.count, 0);
+            }
+
+            if (averageRentalDuration?.averageRentalDuration) {
+                $scope.averageRentalDuration = averageRentalDuration.averageRentalDuration.averageRentalDuration[0]?.averageRentalDuration || 0;
+            }
+
+            if (repeatingCustomers?.repeatingCustomersPercentage) {
+                $scope.repeatingCustomersPercentage = repeatingCustomers.repeatingCustomersPercentage.repeatingCustomersPercentage[0]?.repeatingCustomerPercentage || 0;
+            }
+
+            // Create charts with the updated data
+            createCharts({
+                overview: {
+                    revenue: revenue?.revenue,
+                    carDescription,
+                    popularCars
+                },
+                performance: {
+                    carPerformance: carWiseBookings?.carPerformance,
+                    negativeReviews: negativeReviews?.negativeReviews,
+                    topEarningCars: topEarningCars?.topEarningCars
+                },
+                bookings: {
+                    peakHours: peakHours?.peakHours,
+                    monthlyBookings: monthlyBookings?.monthlyBookings,
+                    topCustomers: topCustomers?.topCustomers,
+                    averageRentalDuration: averageRentalDuration?.averageRentalDuration,
+                    repeatingCustomersPercentage: repeatingCustomers?.repeatingCustomersPercentage,
+                    cityWiseBookings: cityWiseBookings?.cityWiseBookings
+                },
+                comparisons: {
+                    biddingComparison: biddingComparison?.biddingComparison,
+                    earningComparison: earningComparison?.earningComparison
+                }
+            });
+
+            // Apply digest cycle since we're updating scope variables
+            if (!$scope.$$phase) {
+                $scope.$apply();
+            }
+        })
         .catch(error => {
             console.error('Error fetching analytics data:', error);
             ToastService.error('Failed to fetch analytics data');
@@ -252,21 +317,12 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
         fetchAnalyticsData();
     };
 
-    $scope.getAnalytics = (value) => {
-        if ($scope.startDate && $scope.endDate) {
-            $scope.dateFiltered = true;
-            $scope.timePeriod = value || 'last7days';
-        } else {
-            $scope.dateFiltered = false;
-            $scope.timePeriod = $scope.timePeriod || 'last7days';
-        }
+    $scope.getAnalytics = () => {
         fetchAnalyticsData();
     };
 
     $scope.resetDateFilter = () => {
-        $scope.dateFiltered = false;
         initializeDates();
-        $scope.timePeriodParams = undefined;
         fetchAnalyticsData();
     };
 });

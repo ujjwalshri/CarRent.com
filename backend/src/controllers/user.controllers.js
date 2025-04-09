@@ -1,14 +1,15 @@
 import mongoose from "mongoose";
 import User from "../models/user.model.js"; 
 import Vehicle from "../models/vehicle.model.js";
+import redisClient from "../config/redis.connection.js"; // import redis client
 
 /*
 @description:  function to get all the users from the database implemented filtering using the search query
 */
 export const getAllUsers = async (req, res) => {
     const { city, search, skip=0, limit=10 } = req.query;
-
-
+    const adminId = req.user._id;
+    
     try {
         let pipeline = [];
 
@@ -35,7 +36,7 @@ export const getAllUsers = async (req, res) => {
 
 
         pipeline.push({
-            $match: { username: { $ne: 'ujjwal@123' } }
+            $match: { _id: { $ne: adminId } }
         });
 
         pipeline.push({
@@ -180,8 +181,7 @@ export const updateUserProfileController = async (req, res) => {
                 $set: {
                     firstName,
                     lastName,
-                    city,
-                    updatedAt: Date.now(),
+                    city
                 },
             },
             { new: true, runValidators: true }
@@ -190,7 +190,8 @@ export const updateUserProfileController = async (req, res) => {
         if (!updatedUser) {
             return res.status(404).json({ message: 'User not found' });
         }
-        
+
+
         return res.status(200).json({ message: 'User profile updated successfully', user: updatedUser });
     } catch (err) {
         console.log(`Error in the updateUserProfileController: ${err.message}`);

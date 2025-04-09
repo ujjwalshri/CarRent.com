@@ -152,63 +152,6 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
   // Create a new chart and store its instance
   this.chartInstances[htmlElementId] = new Chart(ctx, chartConfig);
 };
- /**
-     * Creates a line chart with customizable options
-     * @param {string} canvasId - The ID of the canvas element
-     * @param {Object} chartData - The data configuration object
-     * @param {string[]} chartData.labels - Array of labels for the x-axis
-     * @param {number[]} chartData.data - Array of data points
-     * @param {string} chartData.title - Chart title
-     * @param {Object} [chartData.colors] - Optional custom colors
-     * @param {string} [chartData.label] - Dataset label
-     * @returns {Chart} Chart instance
-     */
- this.createLineChart = function(canvasId, chartData) {
-  // Set default colors if not provided
-  const colors = chartData.colors || {
-      backgroundColor: [
-          'rgba(255, 99, 132, 0.2)',
-          'rgba(255, 206, 86, 0.2)',
-          'rgba(54, 162, 235, 0.2)'
-      ],
-      borderColor: [
-          'rgba(255, 99, 132, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(54, 162, 235, 1)'
-      ]
-  };
-
-  // Get canvas context
-  var ctx = document.getElementById(canvasId).getContext("2d");
-
-  // Create and return chart
-  return new Chart(ctx, {
-      type: 'line',
-      data: {
-          labels: chartData.labels,
-          datasets: [{
-              label: chartData.label || 'Data',
-              data: chartData.data,
-              backgroundColor: colors.backgroundColor,
-              borderColor: colors.borderColor,
-              borderWidth: 1
-          }]
-      },
-      options: {
-          title: {
-              display: true,
-              text: chartData.title
-          },
-          scales: {
-              yAxes: [{
-                  ticks: {
-                      beginAtZero: true
-                  }
-              }]
-          }
-      }
-  });
-};
     /*
     function to get the car description
     @params params
@@ -642,31 +585,146 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
     };
 
   
-    // New consolidated analytics endpoints
-    this.getOverviewAnalytics = (params) => {
-        return $http.get(`${ApiService.baseURL}/api/seller/overview`, { params , withCredentials:true})
+    // Individual analytics endpoints
+    this.getTotalRevenue = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/analytics/revenue`, { params, withCredentials: true })
             .then(response => response.data)
             .catch(error => {
-                console.error('Error fetching overview analytics:', error);
+                console.error('Error fetching revenue data:', error);
                 throw error;
             });
     };
 
-    this.getPerformanceAnalytics = (params) => {
-        return $http.get(`${ApiService.baseURL}/api/seller/performance`, { params , withCredentials:true})
+    this.getCarDescription = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/analytics/car-description`, { params, withCredentials: true })
             .then(response => response.data)
             .catch(error => {
-                console.error('Error fetching performance analytics:', error);
+                console.error('Error fetching car description data:', error);
                 throw error;
             });
     };
 
-    this.getBookingAnalytics = (params) => {
-        return $http.get(`${ApiService.baseURL}/api/seller/bookings`, { params , withCredentials:true})
+    this.getPopularCars = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/analytics/popular-cars`, { params, withCredentials: true })
             .then(response => response.data)
             .catch(error => {
-                console.error('Error fetching booking analytics:', error);
+                console.error('Error fetching popular cars data:', error);
                 throw error;
             });
+    };
+
+    this.getCarWiseBookings = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/analytics/car-wise-bookings`, { params, withCredentials: true })
+            .then(response => response.data)
+            .catch(error => {
+                console.error('Error fetching car-wise bookings data:', error);
+                throw error;
+            });
+    };
+
+    this.getNegativeReviews = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/analytics/negative-reviews`, { params, withCredentials: true })
+            .then(response => response.data)
+            .catch(error => {
+                console.error('Error fetching negative reviews data:', error);
+                throw error;
+            });
+    };
+
+    this.getTopEarningCars = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/analytics/top-earning-cars`, { params, withCredentials: true })
+            .then(response => response.data)
+            .catch(error => {
+                console.error('Error fetching top earning cars data:', error);
+                throw error;
+            });
+    };
+
+    this.getPeakHours = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/analytics/peak-hours`, { params, withCredentials: true })
+            .then(response => response.data)
+            .catch(error => {
+                console.error('Error fetching peak hours data:', error);
+                throw error;
+            });
+    };
+
+    this.getMonthlyBookings = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/analytics/monthly-bookings`, { params, withCredentials: true })
+            .then(response => response.data)
+            .catch(error => {
+                console.error('Error fetching monthly bookings data:', error);
+                throw error;
+            });
+    };
+
+    this.getTopCustomers = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/analytics/top-customers`, { params, withCredentials: true })
+            .then(response => response.data)
+            .catch(error => {
+                console.error('Error fetching top customers data:', error);
+                throw error;
+            });
+    };
+
+    this.getAverageRentalDuration = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/analytics/average-rental-duration`, { params, withCredentials: true })
+            .then(response => response.data)
+            .catch(error => {
+                console.error('Error fetching average rental duration data:', error);
+                throw error;
+            });
+    };
+
+    this.getRepeatingCustomersPercentage = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/analytics/repeating-customers`, { params, withCredentials: true })
+            .then(response => response.data)
+            .catch(error => {
+                console.error('Error fetching repeating customers data:', error);
+                throw error;
+            });
+    };
+
+    this.getCityWiseBookings = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/analytics/city-wise-bookings`, { params, withCredentials: true })
+            .then(response => response.data)
+            .catch(error => {
+                console.error('Error fetching city-wise bookings data:', error);
+                throw error;
+            });
+    };
+
+    /*
+    function to get bidding comparison data
+    @params params
+    @returns bidding comparison data
+    */
+    this.getBiddingComparison = (params) => {
+        let deferred = $q.defer();
+        $http.get(`${ApiService.baseURL}/api/seller/analytics/bidding-comparison`, { params: params, withCredentials: true })
+            .then((response) => {
+                deferred.resolve(response.data);
+            })
+            .catch((error) => {
+                deferred.reject(error);
+            });
+        return deferred.promise;
+    };
+
+    /*
+    function to get earning comparison data
+    @params params
+    @returns earning comparison data
+    */
+    this.getEarningComparison = (params) => {
+        let deferred = $q.defer();
+        $http.get(`${ApiService.baseURL}/api/seller/analytics/earning-comparison`, { params: params, withCredentials: true })
+            .then((response) => {
+                deferred.resolve(response.data);
+            })
+            .catch((error) => {
+                deferred.reject(error);
+            });
+        return deferred.promise;
     };
 })

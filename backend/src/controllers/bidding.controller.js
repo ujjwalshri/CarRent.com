@@ -145,7 +145,10 @@ export const updateBidStatusController = async (req, res) => {
                 { $set: { status: "rejected" } },
                 { session }
             );
-            generateAndSendMail({ subject: "Bidding Approved", text: `Congrats Your bid on vehicle ${bidding.vehicle.name} has been approved by the owner ${bidding.owner.username}, the bid amount is ${bidding.amount}, startDate is ${new Date(bidding.startDate).toLocaleDateString()}, endDate is ${new Date(bidding.endDate).toLocaleDateString()}`, to: bidding.from.email });
+            generateAndSendMail({ subject: "Bidding Approved", text: `Congrats Your bid on vehicle ${bidding.vehicle.name} has been approved by the owner ${bidding.owner.username}, the bid amount is ${bidding.amount}, startDate is ${new Date(bidding.startDate).toLocaleDateString()}, endDate is ${new Date(bidding.endDate).toLocaleDateString()}`, to: bidding.from.email })
+            .catch((err) => {
+                console.error(`Error sending bidding email: ${err.message}`);
+            });
         }
 
         await session.commitTransaction();
@@ -169,27 +172,31 @@ export const getBidForOwnerController = async (req, res) => {
     const {  page = 1, limit = 10, sort={}} = req.query;
     console.log(sort, page, limit);
     const status = req.query.status || 'pending';
-    
     const pageNumber = parseInt(page);
     const limitNumber = parseInt(limit);
     let finalSort = {...sort, createdAt: -1};
-    
     const skip = (pageNumber - 1) * limitNumber;
-
     try {
-        const totalDocs = await Bidding.countDocuments({ "owner._id": user._id, status });
         const aggregationPipeline = [
-            { $match: { "owner._id": user._id } },
-            { $match: {"status": status } },
-            { $sort: finalSort },
-            { $skip: skip },
-            { $limit: limitNumber },
+            { $match: { "owner._id": user._id, status } },
+            {
+                $facet: {
+                    metadata: [
+                        { $count: "totalDocs" }
+                    ],
+                    data: [
+                        { $sort: finalSort },
+                        { $skip: skip },
+                        { $limit: limitNumber }
+                    ]
+                }
+            }
         ];
 
-        const result = await Bidding.aggregate(aggregationPipeline);
+        const [result] = await Bidding.aggregate(aggregationPipeline);
         return res.status(200).json({
-            result,
-            totalDocs
+            result: result.data,
+            totalDocs: result.metadata[0]?.totalDocs || 0
         });
     } catch (error) {
         return res.status(400).json({ error: error.message });
@@ -200,29 +207,34 @@ export const getBidForOwnerController = async (req, res) => {
  @description function to get the  bids for the user according to the search query from the request.query
 */
 export const getBidForUserController = async (req, res) => {
-    console.log("req.query" ,req.query);
+
     let { page = 1, limit = 10, sort = {}, status="pending" } = req.query;
-    console.log(status, page, limit);
-    console.log("149", status);
     const pageNumber = parseInt(page);
     const limitNumber = parseInt(limit);
     let finalSort = { ...sort, createdAt: -1 };
     const skip = (pageNumber - 1) * limitNumber;
     
     try{
-        const totalDocs = await Bidding.countDocuments({ "from._id": req.user._id, status });
         const aggregationPipeline = [
-            { $match: { "from._id": req.user._id } },
-            { $match: { "status": status } },
-            { $sort: finalSort },
-            { $skip: skip },
-            { $limit: limitNumber }
+            { $match: { "from._id": req.user._id, status } },
+            {
+                $facet: {
+                    metadata: [
+                        { $count: "totalDocs" }
+                    ],
+                    data: [
+                        { $sort: finalSort },
+                        { $skip: skip },
+                        { $limit: limitNumber }
+                    ]
+                }
+            }
         ];
-        const result = await Bidding.aggregate(aggregationPipeline);
-        const bids = result
+
+        const [result] = await Bidding.aggregate(aggregationPipeline);
         return res.status(200).json({
-            bids, 
-            totalDocs
+            bids: result.data,
+            totalDocs: result.metadata[0]?.totalDocs || 0
         });
     }catch(err){
         console.log(`error in the getBidForUserController ${err.message}`);
@@ -230,18 +242,6 @@ export const getBidForUserController = async (req, res) => {
     }
 }
 
-/*
-    @description function to get all the bids 
- */
-export const getAllBids = async (req, res)=>{
-    try{
-        const bids = await Bidding.find();
-       return  res.status(200).json(bids);
-    }catch(err){
-        console.log(`error in the getAllBids ${err.message}`);
-        return res.status(500).json({message: `error in the getAllBids ${err.message}`});
-    }
-}
 /*
     @description function to get the bid by the car id
 */
@@ -267,91 +267,73 @@ export const getBookingsAtCarIdController = async (req, res)=>{
     @description function to get the bookings by the owner id
 */
 export const getAllBookingsAtOwnerIdController = async (req, res) => {
+    const { page = 1, limit = 10, sort = {}, bookingsType = '' } = req.query;
+    console.log("ownerID wali bids", sort, page, limit, bookingsType);
 
-    const { page = 1, limit = 10, sort = {}, bookingsType='' } = req.query;
-    console.log("ownerID wali bids" , sort, page, limit, bookingsType);
-    
     const userId = req.user._id;
     const pageNumber = parseInt(page);
     const limitNumber = parseInt(limit);
     const skip = (pageNumber - 1) * limitNumber;
-    
 
     const finalSort = { ...sort, createdAt: -1 };
-    
+
+    // Build base match
+    let matchStage = {
+        "owner._id": userId,
+        status: { $in: ['approved', 'started', 'ended', 'reviewed'] },
+    };
+
+    // Modify matchStage based on bookingsType
+    if (bookingsType === 'started') {
+        matchStage.status = 'started';
+    } else if (bookingsType === 'ended') {
+        matchStage.status = 'ended';
+    } else if (bookingsType === 'reviewed') {
+        matchStage.status = 'reviewed';
+    } else if (bookingsType === 'today') {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+
+        const todayEnd = new Date();
+        todayEnd.setHours(23, 59, 59, 999);
+
+        matchStage.startDate = { $lte: todayEnd };
+        matchStage.endDate = { $gte: todayStart };
+    }
+
     try {
-        let totalDocs = await Bidding.countDocuments({ "owner._id": userId, status: { $in: ['approved', 'started', 'ended','reviewed'] } });
         const aggregationPipeline = [
+            { $match: matchStage },
             {
-                $match: {
-                    "owner._id": userId,
-                    status: { $in: ['approved', 'started', 'ended','reviewed'] },
-                },
-            },
-            { $sort: finalSort }, 
-            { $skip: skip }, 
-            { $limit: limitNumber },
+                $facet: {
+                    bookings: [
+                        { $sort: finalSort },
+                        { $skip: skip },
+                        { $limit: limitNumber },
+                    ],
+                    totalCount: [
+                        { $count: "count" }
+                    ]
+                }
+            }
         ];
-       
-        let filter;
 
-        if(bookingsType === 'started'){
-             filter =  {
-                $match :{
-                    'owner._id' : userId,
-                    status: 'started'
-                }
-            }
-            aggregationPipeline[0] = filter;
-        }
+        const result = await Bidding.aggregate(aggregationPipeline);
 
-        if(bookingsType === 'ended'){
-             filter =  {
-                $match :{
-                    'owner._id' : userId,
-                    status: 'ended'
-                }
-            }
-            aggregationPipeline[0] = filter;
-        }
-        if(bookingsType === 'reviewed'){
-             filter =  {
-                $match :{
-                    'owner._id' : userId,
-                    status: 'reviewed'
-                }
-            }
-            aggregationPipeline[0] = filter;
-        }
-        if(bookingsType === 'today'){
-            filter = {
-                $match : {
-                    'owner._id' : userId,
-                    'status': { $in: ['approved', 'started', 'ended'] },
-                    createdAt: { $gte: new Date(new Date().setHours(0, 0, 0)), $lt: new Date(new Date().setHours(23, 59, 59)) }
-                }
-            }
-        }
+        const bookings = result[0].bookings;
+        const totalDocs = result[0].totalCount[0]?.count || 0;
 
-        if(filter !== undefined){
-            totalDocs = await Bidding.countDocuments(filter.$match);
-        }
-
-
-        
-    
-
-        const bookings = await Bidding.aggregate(aggregationPipeline);
         return res.status(200).json({ bookings, totalDocs });
     } catch (err) {
         console.error(`Error in the getAllBookingsAtOwnerIdController: ${err.message}`);
         return res.status(500).json({ error: `Error in the getAllBookingsAtOwnerIdController: ${err.message}` });
     }
 };
+
 /*
-    @description function to get the bookings by the car id
+    @description function to get the bookings by the user id
     uses req.query for the query parameters and applies pagination and sorting to the results
-    return all the booking with status approved, started, ended at a particular car id
+    return all the booking with status approved, started, ended at a particular user id
 */  
 export const getAllBookingsAtUserIdController = async (req, res)=>{
     let { page = 1, limit = 10, sort = {} } = req.query;
@@ -372,19 +354,31 @@ export const getAllBookingsAtUserIdController = async (req, res)=>{
     let finalSort = { ...sort, createdAt: -1 };
     const skip = (pageNumber - 1) * limitNumber;
     try{
-        const totalDocs = await Bidding.countDocuments({ "from._id": userId, status:  { $in: ['approved', 'started', 'ended'] } });
         const aggregationPipeline = [
-            { $match: { "from._id": userId } },
-            { 
-                $match: { 
-                    "status": { $in: ['approved', 'started', 'ended'] } 
-                } 
+            {
+                $match: {
+                    "from._id": userId,
+                    status: { $in: ['approved', 'started', 'ended'] }
+                }
             },
-            { $sort: finalSort },
-            { $skip: skip },
-            { $limit: limitNumber }
+            {
+                $facet: {
+                    bookings: [
+                        { $sort: finalSort },
+                        { $skip: skip },
+                        { $limit: limitNumber }
+                    ],
+                    totalCount: [
+                        { $count: "count" }
+                    ]
+                }
+            }
         ];
-        const bookings = await Bidding.aggregate(aggregationPipeline);
+
+        const result = await Bidding.aggregate(aggregationPipeline);
+        const bookings = result[0].bookings;
+        const totalDocs = result[0].totalCount[0]?.count || 0;
+
         return res.status(200).json({ bookings, totalDocs });
     }catch(err){
         console.log(`error in the getAllBookingsAtUserIdController ${err.message}`);
@@ -533,7 +527,11 @@ export const endBookingController = async (req, res)=>{
             { new: true }
           );
           console.log(booking);
-          sendInvoiceEmail({email: booking.from.email, booking: booking});
+
+          sendInvoiceEmail({email: booking.from.email, booking: booking})
+          .catch((err) => {
+            console.error(`Error sending invoice email: ${err.message}`);
+          });
           return res.status(200).json({ booking });
     }catch(err){
         console.log(`error in the endBookingController ${err.message}`);
@@ -557,7 +555,6 @@ export const reviewBookingController = async(req, res)=>{
             { new: true }
           );
 
-          console.log("booking status changed");
           return res.status(200).json({ booking });
     }catch(err){
         console.log(`error in the reviewBookingController ${err.message}`);

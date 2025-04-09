@@ -14,5 +14,4 @@ router.delete('/deleteCarCategory/:categoryID', protectRoute, allowAdmin, delete
 router.get('/topPerformers', protectRoute, topPerformersController); // get the top 10 sellers with most earnings
 router.post('/sendCongratulationMail', protectRoute, allowAdmin, sendCongratulationMailController); // send the congratulation mail
 
-
 export default router;

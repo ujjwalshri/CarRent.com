@@ -112,8 +112,8 @@ angular
      }
      
     /*
-    function to unblock a user from the database, and the bring back all the cars of the user on the platform
-      @params userId
+    function to unblock a user from the database
+      @params userId - ID of the user to unblock
       @returns none
     */
     $scope.unblock = (userId) => {
@@ -134,25 +134,13 @@ angular
         });
     };
 
-   /*
-    function to set the city filter
-    @params city
-    @returns none
-   */
-    $scope.setCity = (city) => {
-      $scope.city = city;
-      fetchUsers(true); // Reset user list and fetch with new city filter
-    };
 
-    /*
-    function to load more users
-    @params none
-    @returns none
-    */
+    /**
+     * Loads more users by incrementing skip value and fetching next page
+     * @returns {void}
+     */
     $scope.loadMore = () => {
-      // Only proceed if not currently loading and more users are available
       if (!$scope.isLoading && $scope.hasMoreUsers) {
-        // Increase skip value to fetch next page
         $scope.skip += $scope.limit;
         // Fetch next page and append to existing list
         fetchUsers(false);

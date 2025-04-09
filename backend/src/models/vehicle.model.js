@@ -86,6 +86,9 @@ const vehicleSchema = new mongoose.Schema({
     }
 }, {timestamps: true});
 
+vehicleSchema.index({ price: 1 });
+vehicleSchema.index({ city: 1 });
+
 const Vehicle = mongoose.model('Vehicle', vehicleSchema);
 
 export default Vehicle;

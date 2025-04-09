@@ -12,6 +12,7 @@ import mongoose from "mongoose";
 import Bidding from "../models/bidding.model.js";
 import Review from "../models/review.model.js";
 import Vehicle from "../models/vehicle.model.js";
+import { addReviewValidation } from "../validation/review.validation.js";
 
 
 /**
@@ -118,7 +119,7 @@ export const addReviewController = async (req, res) => {
     try {
         // Extract reviewer information from authenticated user
         const { _id, username, email, firstName, lastName, city } = req.user; 
-        const reviewer = { _id, username, email, firstName, lastName, city }; 
+        const reviewer = { _id, username, email, city }; 
         
         // Find the vehicle being reviewed
         const vehicle = await Vehicle.findById(id).session(session);
@@ -126,7 +127,7 @@ export const addReviewController = async (req, res) => {
         if (!vehicle) {
             throw new Error('Vehicle not found');
         }
-
+       
         // Create new review document
         const reviewData = new Review({ 
             rating,
@@ -134,6 +135,12 @@ export const addReviewController = async (req, res) => {
             vehicle,
             reviewer
         });
+        console.log(reviewData);
+
+        const { error } = addReviewValidation.validate(reviewData);
+        if(error){
+            return res.status(400).json({ error: error.details[0].message });
+        }
 
         // Save the review to the database within the transaction
         await reviewData.save({ session });

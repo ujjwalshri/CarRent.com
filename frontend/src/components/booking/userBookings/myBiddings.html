@@ -16,7 +16,7 @@
     </div>
 
     <!-- Filter Section -->
-    <div class="row margin-bottom-15">
+    <div class="row margin-bottom-15" >
         <div class="col-md-6 col-md-offset-3">
             <div class="panel panel-default">
                 <div class="panel-body">
@@ -70,7 +70,7 @@
                                 <tr ng-repeat="booking in bookings">
                                     <!-- Car Details -->
                                     <td>
-                                        <p class="lead margin-bottom-5">{{ booking.vehicle.name }}</p>
+                                        <p class="lead margin-bottom-5">{{ booking.vehicle.company }} {{ booking.vehicle.name }} {{ booking.vehicle.modelYear }}</p>
                                         <small class="text-muted">
                                             {{ booking.vehicle.modelYear }} • {{ booking.vehicle.fuelType }}
                                         </small>
@@ -103,7 +103,6 @@
                                     <!-- Owner Info -->
                                     <td>
                                         <p class="margin-bottom-5">{{ booking.owner.username }}</p>
-                                        <small class="text-muted">{{ booking.owner.email }}</small>
                                     </td>
                                     
                                     <!-- Status -->

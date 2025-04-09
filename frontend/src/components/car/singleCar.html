@@ -37,11 +37,11 @@
                                                 <span class="label" ng-style="{'background-color': car.color}">{{ car.color }}</span>
                                             </p>
                                             <p><strong>Fuel Type:</strong> {{ car.fuelType }}</p>
-                                            <p><strong>Location:</strong> {{ car.city }}</p>
+                                            <p><strong>Location:</strong> {{ car.city }} {{car.location==='undefined' ? '' : "("+ car.location + ")"}}</p>
                                             <p>
                                                 <strong>Rating:</strong>
                                                 <span>
-                                                    <i class="fa" ng-class="{'fa-star': $index+1 < averageRating, 'fa-star-half-o': $index + 0.5 == averageRating, 'fa-star-o': $index >= averageRating}" ng-style="{'color': $index < averageRating ? '#ffd700' : '#ccc'}" ng-repeat="_ in [0,1,2,3,4]"></i>
+                                                    <i class="fa" ng-class="{'fa-star': $index+1 <= averageRating, 'fa-star-half-o': $index + 0.5 == averageRating, 'fa-star-o': $index >= averageRating}" ng-style="{'color': $index < averageRating ? '#ffd700' : '#ccc'}" ng-repeat="_ in [0,1,2,3,4]"></i>
                                                     <span class="badge">{{averageRating | number:1}}</span>
                                                 </span>
                                             </p>

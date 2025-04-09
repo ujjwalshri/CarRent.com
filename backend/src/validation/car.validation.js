@@ -9,11 +9,12 @@ export const createCarValidation = joi.object({
     price: joi.number().min(0).required(),
     color: joi.string().min(3).max(20).required(),
     mileage: joi.number().min(0).max(1000).required(),
-    fuelType: joi.string().valid("petrol", "diesel", "electric").required(),
+    fuelType: joi.string().required(),
     category: joi.string().required(),
     deleted: joi.boolean().default(false),
     status: joi.string().valid("pending", "approved", "rejected").default("pending"),
     city: joi.string().min(2).max(50).required(),
+    vehicleImages: joi.array().min(1).max(5).required(),
     owner: joi.object().keys({
         username: joi.string().min(3).max(30).required(),
         email: joi.string().email().required(),
@@ -23,3 +24,4 @@ export const createCarValidation = joi.object({
         adhaar: joi.string().regex(/^\d{12}$/).required() // Aadhaar must be a 12-digit number
     }).required(),
 });
+

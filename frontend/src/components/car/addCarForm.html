@@ -26,17 +26,8 @@
             <label class="col-sm-3 col-form-label">Company:</label>
             <div class="col-sm-9">
                 <select class="form-control" ng-model="company" name="company" required>
-                    <option value="" disabled selected>Select Car company</option>
-                    <option value="Toyota">Toyota</option>
-                    <option value="Ford">Ford</option>
-                    <option value="Honda">Honda</option>
-                    <option value="BMW">BMW</option>
-                    <option value="Mercedes-Benz">Mercedes-Benz</option>
-                    <option value="Tesla">Tesla</option>
-                    <option value="Chevrolet">Chevrolet</option>
-                    <option value="Nissan">Nissan</option>
-                    <option value="Hyundai">Hyundai</option>
-                    <option value="Volkswagen">Volkswagen</option>
+                    <option value="" disabled selected>Select Company</option>
+                    <option ng-repeat="company in companies" value="{{company}}">{{company}}</option>
                 </select>
                 <div class="text-danger" ng-show="addCarForm.company.$touched && addCarForm.company.$error.required">
                     Company is required.
@@ -81,9 +72,7 @@
             <div class="col-sm-9">
                 <select class="form-control" ng-model="fuelType" name="fuelType" required>
                     <option value="" disabled selected>Select Fuel Type</option>
-                    <option value="petrol">Petrol</option>
-                    <option value="diesel">Diesel</option>
-                    <option value="electric">Electric</option>
+                    <option ng-repeat="type in fuelTypes" value="{{type}}">{{type}}</option>
                 </select>
                 <div class="text-danger" ng-show="addCarForm.fuelType.$touched && addCarForm.fuelType.$error.required">
                     Fuel type is required.
@@ -97,27 +86,13 @@
             <div class="col-sm-9">
                 <select class="form-control" ng-model="location" name="location" required>
                     <option value="" disabled selected>Select Location</option>
-                    <option value="local">Local</option>
-                    <option value="outstation">Outstation</option>
-                    <option value="both">Both</option>
+                    <option ng-repeat="location in locations" value="{{location}}">{{location}}</option>
                 </select>
                 <div class="text-danger" ng-show="addCarForm.location.$touched && addCarForm.location.$error.required">
                     Location is required.
                 </div>
             </div>
         </div>
-
-
-        <div class="form-group row">
-            <label class="col-sm-3 col-form-label">Car Color:</label>
-            <div class="col-sm-9">
-                <input type="color" class="form-control" ng-model="color" name="color" required>
-                <div class="text-danger" ng-show="addCarForm.color.$touched && addCarForm.color.$error.required">
-                    Car color is required.
-                </div>
-            </div>
-        </div>
-
 
         <div class="form-group row">
             <label class="col-sm-3 col-form-label">Price Per Day:</label>
@@ -153,16 +128,34 @@
         <div class="form-group row">
             <label class="col-sm-3 col-form-label">Car Images:</label>
             <div class="col-sm-9">
-                <input type="file" 
-                       class="form-control" 
-                       accept=".jpg, .jpeg, .png" 
-                       multiple 
-                       onchange="angular.element(this).scope().previewImages(this)"
-                       id="imageInput">
-                <small class="text-muted">Select up to 5 images (JPG, JPEG, PNG)</small>
-                <div class="text-danger" ng-if="imageError">{{ imageError }}</div>
+              <input type="file" 
+                     class="form-control" 
+                     accept=".jpg, .jpeg, .png, .webp" 
+                     multiple 
+                     onchange="angular.element(this).scope().previewImages(this)"
+                     id="imageInput">
+              <small class="text-muted">Select up to 5 images (JPG, JPEG, PNG, WEBP)</small>
+              <div class="text-danger" ng-if="imageError">{{ imageError }}</div>
+          
+              <!-- Preview Images + Dominant Color -->
+              <div class="row mt-3" ng-if="images.length > 0">
+                <div class="col-sm-4" ng-repeat="img in images track by $index">
+                  <img ng-src="{{ imagePreviews[$index] }}" 
+                       class="img-thumbnail mb-2" 
+                       style="max-height: 150px;" 
+                       alt="Preview">
+                  <div>
+                    <small>Dominant Color:</small>
+                    <div class="d-inline-block align-middle" 
+                         style="width: 30px; height: 30px; border: 1px solid #000; vertical-align: middle;" 
+                         ng-style="{'background-color': color}"></div>
+                    <small class="ml-2">{{ color }}</small>
+                  </div>
+                </div>
+              </div>
             </div>
-        </div>
+          </div>
+          
 
 
         <div class="form-group row">

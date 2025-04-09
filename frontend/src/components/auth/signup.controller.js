@@ -1,18 +1,20 @@
 
 app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService, $rootScope, UserFactory,City ) {
-   /*
-   function to singup the user
-    @params none
-    @returns none
+   
+  /**
+   * Initializes the signup controller
+   * Fetches all the cities and sets them in the scope
+   * @returns {Promise<void>}
    */
   $scope.init = function(){
     $scope.cities = City.getCities(); // Fetch all the cities
   }
-  /*
-  function to signup the user
-  @params none
-  @returns none
-  */
+  /**
+   * Signs up a new user
+   * Creates a user object using the UserFactory template
+   * Validates the user object and registers the user
+   * @returns {Promise<void>}
+   */
   $scope.signup = function () {
     // creating the user object using the UserFactory template
     let user  = UserFactory.create({firstName: $scope.firstName,lastName: $scope.lastName,email: $scope.email,username: $scope.username,password: $scope.password,confirmPassword: $scope.confirmPassword,city: $scope.city,adhaar: $scope.adhaar});

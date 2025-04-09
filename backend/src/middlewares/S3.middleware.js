@@ -1,6 +1,17 @@
 import upload from '../config/s3.connection.js'; // import the multer middleware
 import {uploadchat} from '../config/s3.connection.js';
 
+
+/**
+ * @function uploadMultipleImages
+ * @description Middleware to handle multiple image uploads to S3.
+ * It processes the uploaded files, saves them to S3, and attaches the saved attachments to the request object.
+ * and attaches the saved attachment to the request object.
+ * 
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @param {Function} next - Express next middleware function.
+ */
 export const uploadMultipleImages = function(req, res, next) {
     try {
         upload.array('images', 5)(req, res, (err) => {
@@ -21,7 +32,16 @@ export const uploadMultipleImages = function(req, res, next) {
         });
     }
 }
-
+/**
+ * @function uploadSingleImage
+ * @description Middleware to handle single image upload to S3.
+ * It processes the uploaded files, saves them to S3, and attaches the saved attachments to the request object.
+ * and attaches the saved attachment to the request object.
+ * 
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @param {Function} next - Express next middleware function.
+ */
 export const uploadSingleImage = function(req, res, next) {
     try {
         uploadchat.single('image')(req, res, (err) => {
@@ -43,6 +63,15 @@ export const uploadSingleImage = function(req, res, next) {
     }
 }
 
+
+/**
+ * @function deleteImage
+ * @description Middleware to handle image deletion to S3.
+ * 
+ * @param {Object} req - Express request object.
+ * @param {Object} res - Express response object.
+ * @param {Function} next - Express next middleware function.
+ */
 export const deleteImage = function(req, res, next) {
     try {
         const { key } = req.params;

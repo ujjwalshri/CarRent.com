@@ -1,3 +1,7 @@
+ /**
+     * angular js route configuration
+     * defines the routes for the application and the controllers associated with them
+ */
 angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise('/home');
     
@@ -184,9 +188,9 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             
         })
         .state('ownerBookings', {
-            url: '/ownerBookings',
-            templateUrl: 'components/booking/ownerBookings/ownerBookings.html',
-            controller: 'ownerBookingsCtrl',
+            url: '/ownerBiddings',
+            templateUrl: 'components/booking/ownerBookings/ownerBiddings.html',
+            controller: 'ownerBiddingsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
                     RouteProtection.getLoggedinUser().then((user)=>{

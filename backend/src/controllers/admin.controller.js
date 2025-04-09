@@ -2,10 +2,13 @@ import Bidding from "../models/bidding.model.js";
 import Vehicle from "../models/vehicle.model.js";
 import Review from "../models/review.model.js";
 import User from "../models/user.model.js";
-import City from "../models/city.model.js";
 import CarCategory from "../models/car.category.model.js";
 import { generateCongratulationMail,generateCongratulationMailToBuyer } from "../utils/gen.mail.js";
+// importing redis service
+import { getCachedData, setCachedData } from "../services/redis.service.js";
 
+const kilometersLimit = 300; // Constant for kilometers limit
+const finePerKilometer = 10; // Constant for fine per kilometer
 
 const getValue = (result, fallback = 0) =>
     result.status === "fulfilled" ? result.value : fallback;
@@ -20,6 +23,13 @@ export const getChartsDataController = async (req, res) => {
 
        if(!startDate || !endDate){
         return res.status(400).json({message: "startDate and endDate are required"});
+       }
+
+       const cacheKey = `admin-charts-data-${startDate}-${endDate}`;
+       const cachedData = await getCachedData(cacheKey);
+       if(cachedData){
+        console.log("serving data from cache");
+        return res.status(200).json(cachedData);
        }
 
         const carDescriptionPipeline = [
@@ -65,7 +75,7 @@ export const getChartsDataController = async (req, res) => {
         ];
 
 
-         // applying aggregation pipeline on the reviews
+
          const top3MostReviewedCarsPipeline = [
             {
                 $match: {
@@ -118,7 +128,7 @@ export const getChartsDataController = async (req, res) => {
             {
                 $match: {
                     createdAt: {
-                        $gte: new Date(startDate),
+                        $gte: new Date(startDate), 
                         $lte: new Date(endDate)
                     }
                 }
@@ -137,14 +147,14 @@ export const getChartsDataController = async (req, res) => {
                     $gte: new Date(startDate),
                     $lte: new Date(endDate)
                 }
-            }}, // Filter users based on date range if provided
+            }},
             {
              $group : {
                 _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
                 count: { $sum: 1 }
              }
             }, 
-            { $sort: { _id: 1 } } // Sort by date in ascending order
+            { $sort: { _id: 1 } } 
         ]
         
 
@@ -172,15 +182,15 @@ export const getChartsDataController = async (req, res) => {
                 $addFields: {
                     baseAmount: { $multiply: ["$amount", { $add: ["$numberOfDays", 1] }] },
                     excessKilometers: {
-                        $max: [{ $subtract: ["$kilometersDriven", 300] }, 0]
+                        $max: [{ $subtract: ["$kilometersDriven", kilometersLimit] }, 0]
                     }
                 }
             },
             {
                 $addFields: {
-                    fine: { $multiply: ["$excessKilometers", 10] },
+                    fine: { $multiply: ["$excessKilometers", finePerKilometer] },
                     totalBookingRevenue: {
-                        $add: ["$baseAmount", { $multiply: ["$excessKilometers", 10] }]
+                        $add: ["$baseAmount", { $multiply: ["$excessKilometers", finePerKilometer] }]
                     }
                 }
             },
@@ -196,7 +206,6 @@ export const getChartsDataController = async (req, res) => {
 
 
         // running all the pipelines in parallel using the Promise.allSettled
-
         const [ carDescriptionResult, top10PopularCarModelsResult, top3MostReviewedCarsResult, top3OwnersWithMostCarsAddedResult, numberOfBiddingsPerCityResult, userGrowthResult, highestEarningCitiesResult] = await Promise.allSettled([
             Vehicle.aggregate(carDescriptionPipeline),
             Bidding.aggregate(top10PopularCarModelsPipeline),
@@ -215,7 +224,17 @@ export const getChartsDataController = async (req, res) => {
         const numberOfBiddingsPerCity = getValue(numberOfBiddingsPerCityResult, []);
         const userGrowth = getValue(userGrowthResult, []);
         const highestEarningCities = getValue(highestEarningCitiesResult, []);
-
+       
+        // save the data to the cache 
+        await setCachedData(cacheKey, {
+            carDescription,
+            top10PopularCarModels,
+            top3MostReviewedCars,
+            top3OwnersWithMostCarsAdded,
+            numberOfBiddingsPerCity,
+            userGrowth,
+            highestEarningCities
+        });
 
 
         return res.status(200).json({ carDescription, top10PopularCarModels, top3MostReviewedCars, top3OwnersWithMostCarsAdded, numberOfBiddingsPerCity, userGrowth, highestEarningCities });
@@ -236,6 +255,13 @@ export const getGeneralAnalyticsController = async (req, res) => {
   
       if (!startDate || !endDate) {
         return res.status(400).json({ error: "startDate and endDate are required" });
+      }
+
+      const cacheKey = `admin-general-analytics-${startDate}-${endDate}`;
+      const cachedData = await getCachedData(cacheKey);
+      if(cachedData){
+        console.log("serving data from cache");
+        return res.status(200).json(cachedData);
       }
   
       const totalNumberOfBlockedUsersPromise = User.countDocuments({ isBlocked: true });
@@ -305,8 +331,6 @@ export const getGeneralAnalyticsController = async (req, res) => {
       ]);
   
       // Safe access helpers
-     
-  
       const totalNumberOfBlockedUsers = getValue(blockedUsersResult);
       const ongoingBookings = getValue(ongoingBookingsResult);
       const avgDurationData = getValue(avgDurationResult);
@@ -321,6 +345,17 @@ export const getGeneralAnalyticsController = async (req, res) => {
         totalNumberOfUsers !== 0
           ? (numberOfEngagedUsers / totalNumberOfUsers) * 100
           : 0;
+
+      await setCachedData(cacheKey, {
+        avgDuration,
+        engagementPercentage,
+        totalNumberOfUsers,
+        numberOfEngagedUsers,
+        totalNumberOfBlockedUsers,
+        ongoingBookings: ongoingBookings.length ? ongoingBookings[0].count : 0,
+      });
+      // serving data from cache
+      console.log("serving data from database");
   
       return res.status(200).json({
         avgDuration,
@@ -342,6 +377,16 @@ return all the overview stats
 */
 export const getOverviewStatsController = async (req, res) => {
     const {startDate, endDate} = req.query;
+    if(!startDate || !endDate){
+        return res.status(400).json({message: "startDate and endDate are required"});
+    }
+    // check if the data is already in the cache
+    const cacheKey = `admin-overview-stats-${startDate}-${endDate}`;
+    const cachedData = await getCachedData(cacheKey);
+    if(cachedData){
+        console.log("serving data from cache");
+        return res.status(200).json(cachedData);
+    }
     try {
         let matchStage =   {
             $match: {
@@ -409,14 +454,22 @@ export const getOverviewStatsController = async (req, res) => {
            }
         ]
 
+       
+
         const [biddingConversionRateResult, newUsersResult] = await Promise.allSettled([
             Bidding.aggregate(biddingConversionRatePipeline),
-            User.aggregate(newUsersPipeline)
+            User.aggregate(newUsersPipeline),
         ]);
 
         const biddingConversionRate = getValue(biddingConversionRateResult);
         const newUsers = getValue(newUsersResult);
 
+        await setCachedData(cacheKey, {
+            biddingConversionRate,
+            newUsers
+        });
+        // serving data from cache
+        console.log("serving data from database");
         return res.status(200).json({ biddingConversionRate, newUsers });
     } catch (err) {
         console.error(`Error in getBiddingConversionRateController: ${err}`);
@@ -431,21 +484,20 @@ export const getOverviewStatsController = async (req, res) => {
 returns the count of owners per city
 */
 export const usersPerCityController = async (req, res) => {
-   let matchStageForSellers = {
-    $match: {
-        isSeller: true,
-        isBlocked: false
-    }
-   }
-let matchStageForBuyers = {
-    $match: {
-        isSeller: false,
-        isBlocked: false
-    }
-}
     try {
+        const cacheKey = `admin-users-per-city`;
+        const cachedData = await getCachedData(cacheKey);
+        if(cachedData){
+            console.log("serving data from cache");
+            return res.status(200).json(cachedData);
+        }
         const aggregationPipelineForSellers = [
-           matchStageForSellers,
+            {
+                $match: {
+                    isSeller: true,
+                    isBlocked: false
+                }
+            },
             {
                 $group: {
                     _id: "$city",
@@ -454,7 +506,12 @@ let matchStageForBuyers = {
             }
         ];
         const aggregationPipelineForBuyers = [
-            matchStageForBuyers,
+            {
+                $match: {
+                    isSeller: false,
+                    isBlocked: false
+                }
+            },
             {
                 $group: {
                     _id: "$city",
@@ -466,8 +523,15 @@ let matchStageForBuyers = {
             User.aggregate(aggregationPipelineForSellers),
             User.aggregate(aggregationPipelineForBuyers)
         ]);
-        const sellers = getValue(sellersResult);
-        const buyers = getValue(buyersResult);
+        const sellers = getValue(sellersResult,[]);
+        const buyers = getValue(buyersResult,[]);
+
+        await setCachedData(cacheKey, {
+            sellers,
+            buyers
+        });
+        // serving data from cache
+        console.log("serving data from database");
         return res.status(200).json({ sellers, buyers });
     } catch (err) {
         console.error(`Error in numberOfOwnersPerCityController: ${err}`);
@@ -546,6 +610,13 @@ export const topPerformersController = async (req, res) => {
         return res.status(400).json({message: "startDate and endDate are required"});
     }
 
+    const cacheKey = `admin-top-performers-${startDate}-${endDate}`;
+    const cachedData = await getCachedData(cacheKey);
+    if(cachedData){
+        console.log("serving data from cache");
+        return res.status(200).json(cachedData);
+    }
+
     try {
         // Initialize match stage with completed booking statuses
         let sellersMatchStage = {
@@ -553,9 +624,8 @@ export const topPerformersController = async (req, res) => {
         };
 
         // Apply date filter if startDate and endDate are provided
-            sellersMatchStage.endDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
+        sellersMatchStage.endDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
         
-
         // Complex aggregation pipeline to calculate earnings
         const topSellersPipeline = [
             {
@@ -585,7 +655,7 @@ export const topPerformersController = async (req, res) => {
                     // Calculate excess kilometers (above 300km limit)
                     excessKilometers: {
                         $max: [
-                            { $subtract: ["$kilometersDriven", 300] },
+                            { $subtract: ["$kilometersDriven", kilometersLimit] },
                             0
                         ]
                     }
@@ -594,17 +664,17 @@ export const topPerformersController = async (req, res) => {
             {
                 $addFields: {
                     // Calculate fine for excess kilometers ($10 per km)
-                    fine: { $multiply: ["$excessKilometers", 10] },
+                    fine: { $multiply: ["$excessKilometers", finePerKilometer] },
                     // Calculate total revenue (base amount + fines)
                     totalBookingRevenue: {
                         $add: [
                             "$baseAmount",
                             { $multiply: [
                                 { $max: [
-                                    { $subtract: ["$kilometersDriven", 300] },
+                                    { $subtract: ["$kilometersDriven", kilometersLimit] },
                                     0
                                 ]},
-                                10
+                                finePerKilometer
                             ]}
                         ]
                     }
@@ -666,8 +736,15 @@ export const topPerformersController = async (req, res) => {
             Bidding.aggregate(topBuyersPipeline)
         ]);
 
-        const topSellers = getValue(topSellersResult);
-        const topBuyers = getValue(topBuyersResult);
+        const topSellers = getValue(topSellersResult, []);
+        const topBuyers = getValue(topBuyersResult, []);
+
+        await setCachedData(cacheKey, {
+            topSellers,
+            topBuyers
+        });
+        // serving data from cache
+        console.log("serving data from database");
 
         return res.status(200).json({ topSellers, topBuyers });
 
@@ -701,7 +778,9 @@ export const sendCongratulationMailController = async (req, res) => {
                 totalBookings,
                 formattedStartDate, 
                 formattedEndDate
-            );
+            ).catch((err) => {
+                console.error(`Error sending congratulation email to buyer: ${err.message}`);
+            });
             
             return res.status(200).json({message: "Congratulation mail sent successfully"});
         }catch(err){
@@ -723,7 +802,9 @@ export const sendCongratulationMailController = async (req, res) => {
             formattedAmount,
             formattedStartDate, 
             formattedEndDate
-        );
+        ).catch((err) => {
+            console.error(`Error sending congratulation email to seller: ${err.message}`);
+        });
         
         return res.status(200).json({message: "Congratulation mail sent successfully"});
     }catch(err){

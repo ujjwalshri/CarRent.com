@@ -1,17 +1,19 @@
-angular.module('myApp').service('BiddingService', function($q,BiddingFactory, ApiService, $http) {
-    /*
-    function to add a bid
-    @params carId, bid
-    @returns promise
+angular.module('myApp').service('BiddingService', function($q, BiddingFactory, ApiService, $http, SocketService) {
+   /**
+    * Add a bid
+    * @param {string} carId - The ID of the car
+    * @param {object} bid - The bid object
+    * @returns promise
     */
     this.addBid = function(carId, bid) {
-        console.log('Bid:', bid);
-        console.log('Car ID:', carId);
         const deferred = $q.defer();
+        
+        // Send the bid to the server
         $http.post(`${ApiService.baseURL}/api/bidding/addBid/${(carId).toString()}`, bid, { withCredentials: true })
             .then((res) => {
                 console.log(res);
-                deferred.resolve('Bidding added successfully');
+                // Don't show success message here, wait for socket notification
+                deferred.resolve({ status: 'pending', message: 'Processing bid...' });
             })
             .catch((err) => {
                 console.log(err);
@@ -19,11 +21,11 @@ angular.module('myApp').service('BiddingService', function($q,BiddingFactory, Ap
             });
         return deferred.promise;
     };
-    /*
-    function to get all the bids for a particular owner
-    @params none
-    @returns promise
-    */
+    /**
+     * Get all the bids for a particular owner
+     * @param {object} params - The parameters object
+     * @returns promise
+     */
     this.getOwnerBids = function(params){
         console.log(params);
         let deferred = $q.defer();
@@ -36,10 +38,10 @@ angular.module('myApp').service('BiddingService', function($q,BiddingFactory, Ap
         })
         return deferred.promise;
     }
-    /*
-    function to approve a bid
-    @params bidId
-    @returns promise
+   /**
+    * Approve a bid
+    * @param {string} bidId - The ID of the bid
+    * @returns promise
     */
     this.approveBid = function(bidId){
         let deferred = $q.defer();
@@ -54,11 +56,11 @@ angular.module('myApp').service('BiddingService', function($q,BiddingFactory, Ap
         })
         return deferred.promise;
     }
-    /*
-    function to reject a bid
-    @params bidId
-    @returns promise
-    */
+    /**
+     * Reject a bid
+     * @param {string} bidId - The ID of the bid
+     * @returns promise
+     */
     this.rejectBid = function(bidId){
         let deferred = $q.defer();
         $http.patch(`${ApiService.baseURL}/api/bidding/updateBookingStatus/${bidId}`, {
@@ -72,11 +74,11 @@ angular.module('myApp').service('BiddingService', function($q,BiddingFactory, Ap
         })
         return deferred.promise;
     }
-    /*
-    function to get all the bookings for a particular owner
-    @params none
-    @returns promise
-    */
+    /**
+     * Get all the bookings for a particular owner
+     * @param {object} params - The parameters object
+     * @returns promise
+     */
     this.getBookingsForOwner = function(params){
         let deffered = $q.defer();
         $http.get(`${ApiService.baseURL}/api/bidding/getBookings/owner`, { params:params, withCredentials: true }).then((res)=>{
@@ -86,11 +88,12 @@ angular.module('myApp').service('BiddingService', function($q,BiddingFactory, Ap
         })
         return deffered.promise;
     }
-    /*
-    function to get all the biddings for a particular user
-    @params none
-    @returns promise
-    */
+    
+    /**
+     * Get all the biddings for a particular user
+     * @param {object} params - The parameters object
+     * @returns promise
+     */
     this.getBiddingsForUser = function (params) {
 
         console.log(params);
@@ -110,11 +113,12 @@ angular.module('myApp').service('BiddingService', function($q,BiddingFactory, Ap
     
         return deferred.promise;
     };
-    /*
-    function to get all the bookings for a particular user
-    @params none
-    @returns promise
-    */
+   
+    /**
+     * Get all the bookings for a particular user
+     * @param {object} params - The parameters object
+     * @returns promise
+     */
     this.getBookingsForUser = function(params){
         console.log(params);
         console.log(typeof(params.sort));
@@ -126,11 +130,11 @@ angular.module('myApp').service('BiddingService', function($q,BiddingFactory, Ap
         })
         return deffered.promise
     }
-    /*
-    function to get all the bookings history for a particular user
-    @params none
-    @returns promise
-    */
+    /**
+     * Get all the bookings history for a particular user
+     * @param {object} params - The parameters object
+     * @returns promise
+     */
     this.getUserBookingsHistory = (params)=>{
         console.log(params);
         let deferred = $q.defer();
@@ -143,11 +147,11 @@ angular.module('myApp').service('BiddingService', function($q,BiddingFactory, Ap
         })
         return deferred.promise;
     }
-    /*
-    function to get a particular bid
-    @params none
-    @returns promise
-    */
+    /**
+     * Get a particular bid
+     * @param {string} biddingId - The ID of the bid
+     * @returns promise
+     */
     this.getBid = function(biddingId){
         console.log(biddingId);
         let deferred = $q.defer();
@@ -160,11 +164,12 @@ angular.module('myApp').service('BiddingService', function($q,BiddingFactory, Ap
         })
         return deferred.promise;
     }
-    /*
-    function to start a booking
-    @params bookingId, startOdometerValue
-    @returns promise
-    */
+    /**
+     * Start a booking
+     * @param {string} bookingId - The ID of the booking
+     * @param {number} startOdometerValue - The start odometer value
+     * @returns promise
+     */
     this.startBooking = function(bookingId, startOdometerValue){
         let deferred = $q.defer();
         $http.patch(`${ApiService.baseURL}/api/bidding/startBooking/${bookingId}`, {
@@ -180,11 +185,12 @@ angular.module('myApp').service('BiddingService', function($q,BiddingFactory, Ap
         })
         return deferred.promise;
     }
-    /*
-    function to end a booking
-    @params bookingId, endOdometerValue
-    @returns promise
-    */
+    /**
+     * End a booking
+     * @param {string} bookingId - The ID of the booking
+     * @param {number} endOdometerValue - The end odometer value
+     * @returns promise
+     */
     this.endBooking = function(bookingId, endOdometerValue){
         let deferred = $q.defer();
         $http.patch(`${ApiService.baseURL}/api/bidding/endBooking/${bookingId}`, {

@@ -42,8 +42,6 @@ export const addMessageController = async(req,res)=>{
             conversation: conversationId,
             sender: {
                 username: req.user.username,
-                firstName: req.user.firstName,
-                lastName: req.user.lastName,
             },
             message: message,
             image:image? image : null,
@@ -105,7 +103,12 @@ export const getMessagesController = async(req,res)=>{
     }
 }
 
-
+/**
+ * function to get all attachments for a conversation
+ * @param {*} req 
+ * @param {*} res 
+ * @returns {Object} JSON response with attachments array or error
+ */
 export const getAllAttachmentsController = async(req,res)=>{
     const conversationId = req.params.conversationId;
     try{

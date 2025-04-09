@@ -6,8 +6,8 @@
 import User from "../models/user.model.js";
 import Vehicle from "../models/vehicle.model.js"; 
 import { createCarValidation } from "../validation/car.validation.js";
-import { generateCongratulationMailToSeller } from "../utils/gen.mail.js";
-import redisClient from "../config/redis.connection.js";
+import { generateCongratulationMailToSeller, generateCarRejectionMail } from "../utils/gen.mail.js";
+import { getCachedData, setCachedData, deleteCachedData} from "../services/redis.service.js";
 import {Types} from 'mongoose';
 
 /**
@@ -41,7 +41,7 @@ export const addCarController = async (req, res) => {
     console.log(req.body);
     console.log(req.files);
     try {
-        const user = await User.findById(req.user._id);
+        const user = req.user;
         const images = req.files.map(file => ({
             url: file.location,
             key: file.key,
@@ -50,7 +50,7 @@ export const addCarController = async (req, res) => {
         }));
 
         const carData = {
-            name, company, modelYear, price, color, mileage, fuelType,location, category, city, owner:{
+            name, company, modelYear, price, color, mileage,vehicleImages:images, fuelType,location, category, city, owner:{
                 username: user.username,
                 email: user.email,
                 firstName: user.firstName,
@@ -89,15 +89,39 @@ export const addCarController = async (req, res) => {
         if(user.isSeller ){ // if the user is already a seller then the set the car as approved initially
             newCar.status = 'approved';
         }
-
-        const savedCar = await newCar.save(); 
-
+        await newCar.save();
+        // invalidate the redis cache for this user
+        const cacheKey = `userCars:${req.user._id}:all`;
+        await deleteCachedData(cacheKey);
         res.status(201).json({
             message: 'Car added successfully',
         });
     } catch (error) {
-        console.error('Add car error:', error);
-        res.status(500).json({ error: error.message });
+        if (req.files && req.files.length > 0) {
+            try {
+              const deleteParams = {
+                Bucket: process.env.S3_BUCKET_NAME,
+                Delete: {
+                  Objects: req.files.map(file => ({ Key: file.key })),
+                  Quiet: false
+                }
+              };
+          
+              await s3Client.deleteObjects(deleteParams).promise();
+              console.log('All uploaded images deleted from S3');
+            } catch (cleanupError) {
+              console.error('Failed to cleanup S3:', cleanupError);
+            }
+          }
+          
+          if (err.name === 'ValidationError') {
+            return res.status(400).json({
+              error: 'Validation Error',
+              details: Object.values(err.errors).map(err => err.message)
+            });
+          }
+          console.log(`Error adding message: ${err}`);
+          return res.status(500).json({ message: "Internal server error" });          
     }
 };
 
@@ -120,29 +144,24 @@ export const addCarController = async (req, res) => {
  * Retrieves approved vehicles using aggregation pipeline with text search,
  * filtering by price range, city, category, and pagination support.
  */
-
-
 export const getAllCarController = async (req, res) => {
     let { search = '', priceRange, city, category, limit = 6, skip = 0 } = req.query;
     skip = parseInt(skip);
     limit = parseInt(limit);
 
     if (priceRange === 'undefined') priceRange = false;
-    if (city === 'undefined') city = undefined;
-    if (category === 'undefined') category = undefined;
+    if (city === 'undefined') city = false;
+    if (category === 'undefined') category = false;
 
-    // 🔑 Create a unique cache key based on the query params
+    //  Create a unique cache key based on the query params
     const cacheKey = `cars:${search}:${priceRange}:${city}:${category}:${limit}:${skip}`;
+    const cachedData = await getCachedData(cacheKey);
+    if(cachedData){
+        console.log("serving data from cache");
+        return res.status(200).json(cachedData);
+    }
 
     try {
-
-        const cachedData = await redisClient.get(cacheKey);
-        if (cachedData) {
-
-            return res.status(200).json(JSON.parse(cachedData));
-        }
-
-
         const aggregationPipeline = [];
 
         if (search.trim()) {
@@ -185,14 +204,13 @@ export const getAllCarController = async (req, res) => {
         aggregationPipeline.push({$sort:{ createdAt: -1}},{ $skip: skip }, { $limit: limit });
 
         const cars = await Vehicle.aggregate(aggregationPipeline);
-        await redisClient.setEx(cacheKey, 60, JSON.stringify(cars));
+        await setCachedData(cacheKey, cars);
         res.status(200).json(cars);
     } catch (err) {
         console.error(`Error in the getAllCarController: ${err.message}`);
         res.status(500).json({ message: `Error in the getAllCarController: ${err.message}` });
     }
 };
-
 
 /**
  * Retrieves vehicles filtered by status
@@ -251,19 +269,25 @@ export const toggleVehicleStatusController = async (req, res) => {
         await Vehicle.updateOne({'_id': req.params.id}, { status: vehicleStatus });
         
         if(vehicleStatus === 'approved') {
-            // Get user data first
-            const user = await User.findById(ownerId);
-            if (!user) {
-                return res.status(404).json({message: 'Vehicle owner not found'});
-            }
-            
             // Update user to be a seller
             await User.updateOne({ _id: ownerId }, { isSeller: true });
-            
             // Send congratulation email to the seller for becoming a seller
-            generateCongratulationMailToSeller(user.email, vehicle.company, vehicle.name, vehicle.modelYear);
+            generateCongratulationMailToSeller(vehicle.owner.email, vehicle.company, vehicle.name, vehicle.modelYear)
+                .catch((err) => {
+                    console.error(`Error sending approval email: ${err.message}`);
+                });
+        } else if(vehicleStatus === 'rejected') {
+            // Send rejection email to the seller for not becoming a seller
+            generateCarRejectionMail({
+                email: vehicle.owner.email,
+                seller: vehicle.owner,
+                vehicle: vehicle
+            }).catch((err) => {
+                console.error(`Error sending rejection email: ${err.message}`);
+            });
         }
         
+        // Always return success response even if email fails
         res.status(200).json({
             message: vehicleStatus === 'approved' ? 'Car approved successfully' : 'Car status updated successfully',
         });
@@ -304,9 +328,8 @@ export const updateVehicleController = async (req, res)=>{
                 { _id: id }, 
                 { price: price } 
             );
-            // Clear the cache for this vehicle
-            const cacheKey = `vehicle:${id}`;
-            await redisClient.del(cacheKey);
+            const cacheKey = `userCars:${req.user._id}:all`;
+            await deleteCachedData(cacheKey);
             res.status(200).json({ message: 'Car updated successfully' });
         }catch(err){
             console.log(`error in the updateCarController ${err.message}`);
@@ -330,13 +353,11 @@ export const updateVehicleController = async (req, res)=>{
 export const getVehicleByIdController = async (req, res) => {
     const {id} = req.params;
 
-
-
     // implementing redis caching for the vehicle 
     const cacheKey = `vehicle:${id}`;
-    const cachedData = await redisClient.get(cacheKey);
+    const cachedData = await getCachedData(cacheKey);
     if (cachedData) {
-        return res.status(200).json(JSON.parse(cachedData));
+        return res.status(200).json(cachedData);
     }
     try{
         if(!Types.ObjectId.isValid(id)){
@@ -345,12 +366,12 @@ export const getVehicleByIdController = async (req, res) => {
         const car = await Vehicle.findById(id);
 
        // cache the data 
-        await redisClient.setEx(cacheKey, 60, JSON.stringify(car));
-        res.status(200).json(car);
+        await setCachedData(cacheKey, car);
+       return res.status(200).json(car);
 
     }catch(err){
         console.log(`error in the get vehicle controller ${err}`);
-        res.status(500).json({message: `error in the get vehicle controller ${err}`});
+        return res.status(500).json({message: `error in the get vehicle controller ${err}`});
     }
 }
 
@@ -377,11 +398,11 @@ export const getAllCarsByUser = async (req, res) => {
 
     // implementing redis caching 
     const cacheKey = `userCars:${req.user._id}:${carStatus}:${skip}:${limit}`;
-    const cachedData = await redisClient.get(cacheKey);
-    if (cachedData) {   
-
-        return res.status(200).json(JSON.parse(cachedData));
+    const cachedData = await getCachedData(cacheKey);
+    if(cachedData){
+        return res.status(200).json(cachedData);
     }
+  
     try {
         // Build the query based on owner ID and optional status filter
         const query = { 'owner._id': req.user._id };
@@ -404,22 +425,8 @@ export const getAllCarsByUser = async (req, res) => {
                 $limit: parseInt(limit)
             }
         ]);
-        console.log([
-            // Match stage - filter by query
-            {
-                $match: query
-            },
-            // Skip stage - for pagination
-            {
-                $skip: parseInt(skip)
-            },
-            // Limit stage - number of documents to return
-            {
-                $limit: parseInt(limit)
-            }
-        ]);
         // Cache the result for 60 seconds
-        await redisClient.setEx(cacheKey, 60, JSON.stringify(cars));
+        await setCachedData(cacheKey, cars);
         return res.status(200).json(cars);
     } catch (error) {
         console.error('Get all cars by user error:', error);
