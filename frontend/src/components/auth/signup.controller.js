@@ -1,5 +1,5 @@
 
-app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService, $rootScope, UserFactory,City ) {
+app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService, $rootScope, UserFactory,City, SocketService ) {
    
   /**
    * Initializes the signup controller
@@ -25,6 +25,13 @@ app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService
      }
        AuthService.registerUser(user)
       .then(function() {
+        const socket = SocketService.getSocket();
+        if (socket) {
+            // Force socket to join room and set user online
+            socket.emit('joinUserRoom', user.username);
+            socket.emit('userOnline', user.username);
+            socket.emit('getOnlineUsers');
+        }
         $rootScope.isLogged = true; 
         $state.go("login"); 
       })
