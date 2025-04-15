@@ -28,8 +28,9 @@ angular.module('myApp').service('BiddingService', function($q, BiddingFactory, A
      */
     this.getOwnerBids = function(params){
         console.log(params);
+        params.sortBy = JSON.stringify(params.sortBy);
         let deferred = $q.defer();
-        $http.get(`${ApiService.baseURL}/api/bidding/getBids/owner?page=${params.page}&limit=${params.limit}&status=${params.status}`, { withCredentials: true })
+        $http.get(`${ApiService.baseURL}/api/bidding/getBids/owner`, {params:params, withCredentials: true })
         .then((res)=>{
             deferred.resolve(res.data);
         })
@@ -201,6 +202,18 @@ angular.module('myApp').service('BiddingService', function($q, BiddingFactory, A
         })
         .catch(err=>{
             deferred.reject(`Error ending booking: ${err}`);
+        })
+        return deferred.promise;
+    }
+    this.getAddOnsForUser = function(ownerId){
+        console.log(ownerId);
+        let deferred = $q.defer();
+        $http.get(`${ApiService.baseURL}/api/bidding/getAddOnsForUser/${ownerId}`, { withCredentials: true })
+        .then((res)=>{
+            deferred.resolve(res.data);
+        })
+        .catch(err=>{
+            deferred.reject(`Error fetching addons: ${err}`);
         })
         return deferred.promise;
     }

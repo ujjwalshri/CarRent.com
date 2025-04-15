@@ -737,6 +737,29 @@ const pipelines = {
                 averageRentalDuration: { $avg: "$bookingDays" }
             }
         }
+    ]),
+    totalRevenueByAddons: (userId, startDate, endDate) => ([
+        {
+            $match: {
+                'owner._id': userId,
+                status: { $in: ["approved", "started", "ended", "reviewed"] },
+                startDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
+            }
+        },
+        {
+            $project: {
+                selectedAddons: 1,
+            }
+        },
+        {
+            $unwind: "$selectedAddons"
+        },
+        {
+            $group: {
+                _id: "$selectedAddons",
+                totalAmount: { $sum: "$selectedAddons.price" }
+            }
+        }
     ])
 };
 
@@ -1096,3 +1119,31 @@ export const getEarningComparison = async (req, res) => {
         return handleResponse(res, 500, { error: 'Failed to fetch earning comparison data' });
     }
 };
+
+
+export const getTotalRevenueByAddons = async (req, res) => {
+    const userId = req.user._id;
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+        return handleResponse(res, 400, { error: "startDate and endDate are required" });
+    }
+
+    const cacheKey = `seller-total-revenue-by-addons-${userId}-${startDate}-${endDate}`; // Cache key for total revenue by addons
+    const cachedData = await getCachedData(cacheKey); // Check if data is cached
+    if (cachedData) {
+        return handleResponse(res, 200, cachedData); // Return cached data if available
+    }
+
+    try {
+        const totalRevenueByAddonsData = await Bidding.aggregate(pipelines.totalRevenueByAddons(userId, startDate, endDate));
+        await setCachedData(cacheKey, { totalRevenueByAddons: { totalRevenueByAddons: totalRevenueByAddonsData } });
+        return handleResponse(res, 200, { totalRevenueByAddons: { totalRevenueByAddons: totalRevenueByAddonsData } });
+    } catch (error) {
+        console.error('Error in getTotalRevenueByAddons:', error);
+        return handleResponse(res, 500, { error: 'Failed to fetch total revenue by addons data' });
+    }
+};
+
+
+

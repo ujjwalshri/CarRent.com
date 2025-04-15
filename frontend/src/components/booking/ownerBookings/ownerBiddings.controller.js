@@ -8,12 +8,14 @@ angular
       $scope.bookingsType = { type: "pending" };  // variable to hold the booking type
       $scope.searchCarName = "";  // variable to hold the search car name
       $scope.calculateBookingPrice = BiddingFactory.calculate; // function to calculate the booking price from the booking factory
-      $scope.sortBy=""; // variable to hold the sort by value
       $scope.currentPage = 1; // setting the current page to 1
       $scope.itemsPerPage = 6; // setting the items per page to 6
       $scope.totalPages = 0; // setting the total pages to 0
       $scope.isLoading = false; // setting the isLoading to false
- 
+      $scope.sort = {
+        sortBy: ""  // Initialize with empty string for default sorting
+      };
+
       /*
       function to initialize the controller 
       @description: this function will be called when the controller is loaded, fetches the bookings initially 
@@ -27,18 +29,21 @@ angular
      */
       $scope.fetchBookings = function () {
         $scope.isLoading = true;
+
+        // Create sort object for the API
+        const sortByParam = $scope.sort.sortBy ? { [$scope.sort.sortBy]: -1 } : { createdAt: -1 };
+
         const params = {
           page: $scope.currentPage,
           limit: $scope.itemsPerPage,
           status: $scope.bookingsType.type, 
-          sort: $scope.sortBy?{[$scope.sortBy]:-1}:undefined, 
+          sortBy: sortByParam
         };
-
-        BiddingService.getOwnerBids(params) // get the bookings for the owner
+        
+        BiddingService.getOwnerBids(params)
           .then((response) => {
             $scope.bookings = response.result || [];
             $scope.totalPages = Math.ceil(response.totalDocs / $scope.itemsPerPage);
-           
           })
           .catch((err) => {
             ToastService.error(`Error fetching biddings: ${err}`);

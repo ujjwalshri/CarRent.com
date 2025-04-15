@@ -15,7 +15,8 @@ import {
     getRepeatingCustomersPercentage,
     getCityWiseBookings,
     getBiddingComparison,
-    getEarningComparison
+    getEarningComparison,
+    getTotalRevenueByAddons
 } from '../controllers/seller.analytics.controller.js';
 
 const router = express.Router(); 
@@ -24,6 +25,7 @@ const router = express.Router();
 router.get('/analytics/revenue', protectRoute, allowSeller, getTotalRevenue);
 router.get('/analytics/car-description', protectRoute, allowSeller, getCarDescription);
 router.get('/analytics/popular-cars', protectRoute, allowSeller, getPopularCars);
+router.get('/analytics/total-revenue-by-addons', protectRoute, allowSeller, getTotalRevenueByAddons);
 
 // Performance Analytics Routes
 router.get('/analytics/car-wise-bookings', protectRoute, allowSeller, getCarWiseBookings);

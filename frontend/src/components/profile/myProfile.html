@@ -15,32 +15,44 @@
     </div>
   </div>
   <div class="alert alert-warning mt-4" ng-if="user.isSeller===false">
-    <strong >Want to become a seller??  <button ng-click="navigate()" class="btn btn-primary"> Add Car </button> </strong>
-</div>
+    <strong>Want to become a seller??  <button ng-click="navigate()" class="btn btn-primary"> Add Car </button> </strong>
+  </div>
   <div class="panel panel-info" ng-if="user.isSeller">
     <div class="panel-heading text-center">
       <h3 class="panel-title">Added Cars</h3>
     </div>
-    <div class="panel-body text-center">
-      <div class="btn-group">
-        <button class="btn btn-default" ng-click="showRejected()" ng-class="{'active': activeButton === 'rejected'}">
-          Rejected
-        </button>
-        <button class="btn btn-default" ng-click="showApproved()" ng-class="{'active': activeButton === 'approved'}">
-          Approved
-        </button>
-        <button class="btn btn-default" ng-click="showAll()" ng-class="{'active': activeButton === 'all'}">
-          All
-        </button>
-        <button class="btn btn-primary" ng-click="reset()" ng-class="{'active': activeButton === 'all'}">
-          reset
+    <div class="panel-body">
+       <!-- Manage Addons Button -->
+       <div class="text-center mb-3" ng-if="userCars.length > 0">
+        <button class="btn btn-success" ng-click="openAddonsModal()">
+          <span class="glyphicon glyphicon-cog"></span> Manage Car Addons
         </button>
       </div>
+      <!-- Car Filter Buttons -->
+      <div class="text-center mb-3">
+        <div class="btn-group">
+          <button class="btn btn-default" ng-click="showRejected()" ng-class="{'active': activeButton === 'rejected'}">
+            Rejected
+          </button>
+          <button class="btn btn-default" ng-click="showApproved()" ng-class="{'active': activeButton === 'approved'}">
+            Approved
+          </button>
+          <button class="btn btn-default" ng-click="showAll()" ng-class="{'active': activeButton === 'all'}">
+            All
+          </button>
+          <button class="btn btn-primary" ng-click="reset()" ng-class="{'active': activeButton === 'all'}">
+            Reset
+          </button>
+        </div>
+      </div>
+
+     
+
       <div class="col-12 text-center" ng-show="userCars.length === 0">
         <div class="alert alert-warning mt-4">
-            <strong>No available cars matching your filters.</strong>
+          <strong>No available cars matching your filters.</strong>
         </div>
-    </div>
+      </div>
    
       <div class="row">
         <div class="col-md-4" ng-repeat="car in userCars" ng-if="userCars.length>0">
@@ -69,19 +81,91 @@
      
     </div>
     <div class="text-center" ng-click="loadMore()" ng-if="hasMoreCars && !isLoading" style="margin-bottom: 20px;">
-      <button id="load-more-btn" class="btn btn-primary mt-3">
-          Load More <span class="glyphicon glyphicon-chevron-down"></span>
-        </button>
-  </div>
+      <button id="load-more-btn" class="btn btn-primary mt-3" ng-disabled="isLoading">
+        Load More <span class="glyphicon glyphicon-chevron-down"></span>
+      </button>
+    </div>
     <!-- Loading spinner -->
     <div class="text-center" ng-show="isLoading" style="margin: 20px 0;">
       <span class="glyphicon glyphicon-refresh spin" style="font-size: 24px;"></span>
       <p>Loading...</p>
+    </div>
   </div>
-  </div>
 
+  <!-- Addons Management Modal -->
+  <script type="text/ng-template" id="addonsModal.html">
+    <div class="modal-header">
+      <h3 class="modal-title">Manage Cars Addons</h3>
+      <button type="button" class="close" ng-click="cancel()" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <!-- Current Addons Table -->
+      <div >
+        <h4>Current Addons for all cars</h4>
+        <div class="table-responsive" ng-if="addons && addons.length > 0">
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="addon in addons">
+                <td>{{addon.name}}</td>
+                <td>${{addon.price}}</td>
+                <td>
+                  <button class="btn btn-danger btn-sm" ng-click="removeAddon(addon._id)">
+                    <span class="glyphicon glyphicon-trash"></span>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p ng-if="!addons || addons.length === 0" class="text-muted">
+          No addons added for this car yet.
+        </p>
 
+        <!-- Add New Addon Form -->
+        <div class="add-addon-form mt-4">
+          <h4>Add New Addon</h4>
+          <form name="addonForm" ng-submit="addAddon()" novalidate>
+            <div class="form-group">
+              <label for="addonName">Name *</label>
+              <input type="text" 
+                     class="form-control" 
+                     id="addonName" 
+                     ng-model="newAddon.name" 
+                     required>
+            </div>
+            <div class="form-group">
+              <label for="addonPrice">Price ($ per day) *</label>
+              <input type="number" 
+                     class="form-control" 
+                     id="addonPrice" 
+                     ng-model="newAddon.price" 
+                     min="0" 
+                     step="0.01" 
+                     required>
+            </div>
+            <button type="submit" 
+                    class="btn btn-primary" 
+                    ng-disabled="addonForm.$invalid || isLoading">
+              <i class="glyphicon glyphicon-plus"></i> Add Addon
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" ng-click="cancel()">Close</button>
+    </div>
+  </script>
 
+  <!-- Price Update Modal -->
   <script type="text/ng-template" id="priceModal.html">
     <div class="modal-header">
       <button type="button" class="close" ng-click="$dismiss()">&times;</button>
@@ -95,7 +179,7 @@
     </div>
   </script>
 
-
+  <!-- User Update Modal -->
   <script type="text/ng-template" id="updateUserModal.html">
     <div class="modal-header">
       <button type="button" class="close" ng-click="cancel()">&times;</button>
@@ -138,13 +222,43 @@
           </select>
         </div>
       </form>
-      
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
       <button type="submit" class="btn btn-primary" ng-click="saveUser()">Save Changes</button>
     </div>
   </script>
-
-  
 </div>
+
+<style>
+  .spin {
+    -webkit-animation: spin 1s infinite linear;
+    animation: spin 1s infinite linear;
+  }
+  @-webkit-keyframes spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .badge {
+    margin-right: 5px;
+    margin-bottom: 5px;
+  }
+
+  .addons-list {
+    margin-bottom: 10px;
+  }
+
+  .mb-3 {
+    margin-bottom: 15px;
+  }
+
+  .mt-4 {
+    margin-top: 20px;
+  }
+</style>

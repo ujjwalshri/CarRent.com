@@ -6,125 +6,115 @@ angular
     $scope.city = ""; // City filter
     $scope.search = ''; // Search query filter
     $scope.cities = City.getCities(); // Available cities for filtering
-    $scope.skip = 0; // Number of records to skip (for pagination)
-    $scope.limit = 10; // Number of records per page
-    $scope.hasMoreUsers = true; // Flag indicating if more users are available
-    let searchTimeout; // Reference for search timeout
-    $scope.users = []; // array to hold the users
 
-
-    $scope.init = () => {
-      fetchUsers(true); // Initial fetch of users (reset=true)
+    // Pagination configuration
+    $scope.pagination = {
+      currentPage: 1,
+      itemsPerPage: 10,
+      totalItems: 0,
+      maxSize: 5 // Number of page buttons to show
     };
 
-     /* 
-     function to fetch all the users from the database
-      @params none
-      @returns none
-     */
-    function fetchUsers(reset = false) {
-      // Set loading state
+    let searchTimeout; // Reference for search timeout
+
+    $scope.init = () => {
+      fetchUsers(); // Initial fetch of users
+    };
+
+    /* 
+    function to fetch all the users from the database with pagination
+    */
+    function fetchUsers() {
       $scope.isLoading = true;
       
-      // If reset is true, clear existing users and reset pagination
-      if (reset) {
-        $scope.allUsers = [];
-        $scope.skip = 0;
-      }
+      // Calculate skip based on current page
+      const skip = ($scope.pagination.currentPage - 1) * $scope.pagination.itemsPerPage;
       
-      // Fetch users with current filters and pagination
-      UserService.getAllUsers($scope.city, $scope.search, $scope.skip, $scope.limit) 
+      UserService.getAllUsers($scope.city, $scope.search, skip, $scope.pagination.itemsPerPage) 
         .then((response) => {
-          // If reset, replace users, otherwise append to existing list
-          if (reset) {
+          if (response && response.users) {
             $scope.allUsers = response.users;
-          } else {
-            $scope.allUsers = $scope.allUsers.concat(response.users);
+            $scope.pagination.totalItems = response.pagination.total;
+            
+            // If current page is greater than total pages, reset to page 1
+            const totalPages = Math.ceil($scope.pagination.totalItems / $scope.pagination.itemsPerPage);
+            if ($scope.pagination.currentPage > totalPages) {
+              $scope.pagination.currentPage = 1;
+              fetchUsers();
+            }
           }
-          
-          // Determine if more users are available
-          $scope.hasMoreUsers = response.users.length >= $scope.limit;
-          console.log("Users loaded:", $scope.allUsers.length, "Has more:", $scope.hasMoreUsers);
         })
         .catch((err) => {
           ToastService.error(`Error fetching users: ${err}`);
         })
         .finally(() => {
-          // Reset loading state
           $scope.isLoading = false;
         });
     }
+
+    // Handle page change
+    $scope.pageChanged = function() {
+      console.log('Page changed to: ' + $scope.pagination.currentPage);
+      fetchUsers();
+    };
+
     // function to filter the users
     $scope.filterUsers = () => {
-      fetchUsers(true); // Reset user list and fetch with new filters
+      $scope.pagination.currentPage = 1; // Reset to first page when filtering
+      fetchUsers();
     };
 
     // function to reset the filter
     $scope.resetFilter = () => {
-      // Clear all filter criteria
       $scope.city = "";
       $scope.search = "";
-      
-      // Fetch users with cleared filters
-      fetchUsers(true);
+      $scope.pagination.currentPage = 1; // Reset to first page
+      fetchUsers();
     };
 
     /*
     function to filter the users with a delay when using the search bar 
-      @params none
-      @returns none
     */
     $scope.filterUsersWithDelay = () => {
-      // Cancel any pending search
       if (searchTimeout) {
         $timeout.cancel(searchTimeout);
       }
       
-      // Create new timeout for search
       searchTimeout = $timeout(() => {
         $scope.filterUsers(); 
       }, 300); // 300ms delay
     };
 
-    
     /*
-    function to block a user from the database, and the delete all the cars of the user on the platform
-      @params userId
-      @returns none
+    function to block a user from the database
     */
     $scope.block = (userId) => {
-      // Show loading indicator
-      $scope.isLoading = true;
-     if( $window.confirm("Are you sure you want to block this user? this action will delete all the cars of the user on the platform if he is seller")){
-      UserService.blockUser(userId)
-      .then(() => {
-        ToastService.success("User blocked successfully");
-        // Refresh current page of users
-        fetchUsers(true);
-      })
-      .catch((err) => {
-        ToastService.error(`Error blocking user: ${err}`);
-      })
-      .finally(() => {
-        $scope.isLoading = false;
-      });
-  };
-     }
+      if ($window.confirm("Are you sure you want to block this user? This action will delete all the cars of the user on the platform if they are a seller")) {
+        $scope.isLoading = true;
+        UserService.blockUser(userId)
+          .then(() => {
+            ToastService.success("User blocked successfully");
+            fetchUsers(); // Refresh current page
+          })
+          .catch((err) => {
+            ToastService.error(`Error blocking user: ${err}`);
+          })
+          .finally(() => {
+            $scope.isLoading = false;
+          });
+      }
+    };
      
     /*
     function to unblock a user from the database
-      @params userId - ID of the user to unblock
-      @returns none
     */
     $scope.unblock = (userId) => {
-      // Show loading indicator
       $scope.isLoading = true;
       
       UserService.unblockUser(userId)
         .then(() => {
           ToastService.success("User unblocked successfully");
-          // Refresh current page of users
-          fetchUsers(true);
+          fetchUsers(); // Refresh current page
         })
         .catch((err) => {
           ToastService.error(`Error unblocking user: ${err}`);
@@ -132,19 +122,6 @@ angular
         .finally(() => {
           $scope.isLoading = false;
         });
-    };
-
-
-    /**
-     * Loads more users by incrementing skip value and fetching next page
-     * @returns {void}
-     */
-    $scope.loadMore = () => {
-      if (!$scope.isLoading && $scope.hasMoreUsers) {
-        $scope.skip += $scope.limit;
-        // Fetch next page and append to existing list
-        fetchUsers(false);
-      }
     };
 
   });

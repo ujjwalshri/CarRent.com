@@ -595,6 +595,14 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
             });
     };
 
+    this.getTotalRevenueByAddons = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/analytics/total-revenue-by-addons`, { params, withCredentials: true })
+            .then(response => response.data)
+            .catch(error => {
+                console.error('Error fetching total revenue by addons data:', error);
+                throw error;
+            });
+    };
     this.getCarDescription = (params) => {
         return $http.get(`${ApiService.baseURL}/api/seller/analytics/car-description`, { params, withCredentials: true })
             .then(response => response.data)

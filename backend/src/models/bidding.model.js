@@ -114,6 +114,10 @@ const biddingSchema = new mongoose.Schema({
         type:Number,
         default:-1
     },
+    selectedAddons:{
+        type:Array,
+        default:[]
+    },
     status:{
         type:String,
         enum:["pending", "approved", "rejected", "reviewed", "ended"],

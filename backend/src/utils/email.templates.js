@@ -133,6 +133,7 @@ export const invoiceTemplate = (data) => {
     const distanceTraveled = data.booking.endOdometerValue - data.booking.startOdometerValue;
     const extraDistance = Math.max(0, distanceTraveled - 300);
     const distanceFine = extraDistance * 10;
+    const addonsTotal = data.booking.selectedAddons.reduce((acc, addon) => acc + addon.price, 0);
     
     // Calculate total price
     const totalPrice = basePrice + distanceFine;
@@ -159,6 +160,10 @@ export const invoiceTemplate = (data) => {
                     <p><strong>End Odometer:</strong> ${data.booking.endOdometerValue} km</p>
                     <p><strong>Distance Traveled:</strong> ${distanceTraveled} km</p>
                     <p><strong>Free Distance:</strong> 300 km</p>
+                </div>
+                <div>
+                    <h3 style="color: #4CAF50; margin-bottom: 10px;">Addons</h3>
+                    <p><strong>Addons:</strong> ${data.booking.selectedAddons.map(addon => addon.name).join(', ')}</p>
                 </div>
             </div>
 
@@ -198,9 +203,15 @@ export const invoiceTemplate = (data) => {
                     <span>₹${distanceFine}</span>
                 </div>
                 ` : ''}
+                ${addonsTotal > 0 ? `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #f44336;">
+                    <span>Addons (${data.booking.selectedAddons.length} addons)</span>
+                    <span>₹${addonsTotal}</span>
+                </div>
+                ` : ''}
                 <div style="display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 2px solid #ddd; font-weight: bold;">
                     <span>Total Amount</span>
-                    <span>₹${totalPrice}</span>
+                    <span>₹${totalPrice + addonsTotal}</span>
                 </div>
             </div>
 

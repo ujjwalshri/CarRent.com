@@ -13,43 +13,61 @@ export const getAllUsers = async (req, res) => {
     try {
         let pipeline = [];
 
-     
-        if (search) {
+         // Add search condition if provided
+         if (search) {
             pipeline.push({
                 $search: {
                     index: "userIndex", 
                     autocomplete: {
                         query: search,
-                        path:  "username",
-                        fuzzy: {  }
+                        path: "username",
+                        fuzzy: { }
                     }
                 }
             });
         }
 
+        // Base match condition to exclude admin
+        pipeline.push({
+            $match: { _id: { $ne: adminId } }
+        });
 
+       
+
+        // Add city filter if provided
         if (city) {
             pipeline.push({
                 $match: { city }
             });
         }
 
-
+        // Add facet to get both total count and paginated results
         pipeline.push({
-            $match: { _id: { $ne: adminId } }
+            $facet: {
+                metadata: [{ $count: "total" }],
+                data: [
+                    { $skip: parseInt(skip) },
+                    { $limit: parseInt(limit) }
+                ]
+            }
         });
 
-        pipeline.push({
-            $skip: parseInt(skip)
+        const result = await User.aggregate(pipeline);
+        
+        // Extract total count and data
+        const total = result[0].metadata[0]?.total || 0;
+        const users = result[0].data;
+
+        return res.status(200).json({ 
+            message: 'Users found', 
+            users,
+            pagination: {
+                total,
+                page: Math.floor(skip / limit) + 1,
+                limit: parseInt(limit),
+                pages: Math.ceil(total / limit)
+            }
         });
-
-        pipeline.push({
-            $limit: parseInt(limit)
-        });
-
-        const users = await User.aggregate(pipeline);
-
-        return res.status(200).json({ message: 'Users found', users });
     } catch (error) {
         console.error(`Error in getAllUsers: ${error.message}`);
         return res.status(500).json({ message: `Error in getAllUsers: ${error.message}` });
@@ -185,7 +203,7 @@ export const updateUserProfileController = async (req, res) => {
                 },
             },
             { new: true, runValidators: true }
-        );
+        ).select('-password');
         
         if (!updatedUser) {
             return res.status(404).json({ message: 'User not found' });

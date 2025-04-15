@@ -64,6 +64,7 @@
                                     <th>Price Details</th>
                                     <th>Owner Info</th>
                                     <th>Status</th>
+                                    <th>Addons</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -113,6 +114,13 @@
                                         }">
                                             {{ booking.status | uppercase }}
                                         </span>
+                                    </td>
+
+                                    <!-- Addons -->
+                                    <td>
+                                        <p class="margin-bottom-5" ng-repeat="addon in booking.selectedAddons">
+                                            {{ addon.name }}
+                                        </p>
                                     </td>
                                 </tr>
                             </tbody>

@@ -5,19 +5,20 @@
 angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastService, CarService, $timeout, UserService, UserFactory, $q, $rootScope, City, CarFactory) {
 
     // Initialize scope variables
-    $scope.allCars = [];
-    $scope.priceFilter = '';
-    $scope.search = '';
-    $scope.category = '';
-    $scope.cities = City.getCities();
-    $scope.user = false;
-    $scope.city = '';
-    $scope.skip = 0;
+    $scope.allCars = []; // Array to store all cars
+    $scope.priceFilter = ''; // Current price filter
+    $scope.search = ''; // Current search query
+    $scope.category = ''; // Current category filter
+    $scope.cities = City.getCities(); // Array of all cities
+    $scope.user = false; // User object
+    $scope.city = ''; // Current city filter
+    $scope.skip = 0; // Number of cars to skip
     $scope.isLoading = false;
-    $scope.limit = 5;
-    $scope.filteringStarted = false;
-    $scope.minPriceRange = CarFactory.minPriceRange;
-    $scope.maxPriceRange = CarFactory.maxPriceRange;
+    $scope.limit = 5; // Number of cars to load per page
+    $scope.filteringStarted = false; // Flag to indicate if filtering has started
+    $scope.minPriceRange = CarFactory.minPriceRange; // Minimum price range
+    $scope.maxPriceRange = CarFactory.maxPriceRange; // Maximum price range
+    $scope.priceRangeArray = CarFactory.getPriceRangeArray(); // Array of price ranges
     
     // Debounce mechanism for search input
     let searchTimeout;

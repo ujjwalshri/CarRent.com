@@ -114,6 +114,7 @@ angular.module('myApp').factory('CarFactory', function() {
       }
         return formData;
     }
+    
 
 
 
@@ -182,7 +183,15 @@ angular.module('myApp').factory('CarFactory', function() {
             'Both',
         ],
         minPriceRange: 500,
-        maxPriceRange: 10000
+        maxPriceRange: 10000,
+
+        getPriceRangeArray: function(){
+            const priceRangeArray = [];
+            for(let i = this.minPriceRange; i <= this.maxPriceRange; i+=500){
+               priceRangeArray.push(i.toString() + "-" + (i+500).toString());
+            }
+            return priceRangeArray;
+        }
     };
 
     return factory;

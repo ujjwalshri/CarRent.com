@@ -10,11 +10,11 @@
       </div>
    
     <div class="panel panel-default p-3"  ng-if="bookings.length > 0">
-        <label for="sortBy" class="control-label">Sort By:</label>
-        <select id="sortBy" class="form-control" ng-model="sortBy"  ng-change="fetchBookings()">
-            <option value="" disabled selected>Select Sorting Option</option>
-            <option value="amount">Price</option>
-            <option value="startDate">Start Date</option>
+        <label class="control-label">Sort By:</label>
+        <select class="form-control" ng-model="sort.sortBy" ng-change="fetchBookings()">
+            <option value="">Default (Latest First)</option>
+            <option value="amount">Price (High to Low)</option>
+            <option value="startDate">Start Date (Latest First)</option>
         </select>
     </div>
 <div class="text-center" ng-show="isLoading">
@@ -37,7 +37,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="booking in bookings | orderBy: '-createdAt'">
+                <tr ng-repeat="booking in bookings">
                     <td>{{booking.vehicle.company}} {{ booking.vehicle.name }}</td>
                     <td>{{ booking.vehicle.modelYear }}</td>
                     <td>${{ booking.vehicle.price }}</td>

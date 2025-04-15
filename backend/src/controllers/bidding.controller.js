@@ -1,5 +1,6 @@
 import Bidding from '../models/bidding.model.js';
 import Vehicle from '../models/vehicle.model.js';
+import AddOns from '../models/add-ons.model.js';
 import {sendInvoiceEmail} from '../utils/email.service.js';
 import validateBiddingData from '../validation/bid.validation.js';
 import {generateAndSendMail} from '../utils/gen.mail.js';
@@ -51,7 +52,8 @@ export const addBidController = async (req, res) => {
         startOdometerValue,
         endOdometerValue,
         owner, 
-        status
+        status,
+        selectedAddons
     } = req.body;
     const { _id, username, email, firstName, lastName, city } = req.user;
     const from = { _id, username, email, firstName, lastName, city };
@@ -83,6 +85,7 @@ export const addBidController = async (req, res) => {
                 city: vehicle.city,
             },
             status,
+            selectedAddons,
             from
         }
         if(validateBiddingData(biddingData).error){
@@ -168,13 +171,17 @@ export const updateBidStatusController = async (req, res) => {
 */
 export const getBidForOwnerController = async (req, res) => {
     const user = req.user;
-    console.log(req.query.page, req.query.limit, req.query.status);
-    const {  page = 1, limit = 10, sort={}} = req.query;
-    console.log(sort, page, limit);
+    console.log(req.query);
+    let {  page = 1, limit = 10, sortBy={}} = req.query;
+    console.log(sortBy, page, limit);
+    if(sortBy !== undefined){
+        sortBy = JSON.parse(sortBy);
+    }
     const status = req.query.status || 'pending';
     const pageNumber = parseInt(page);
     const limitNumber = parseInt(limit);
-    let finalSort = {...sort, createdAt: -1};
+    let finalSort = {...sortBy, createdAt: -1};
+    console.log(finalSort);
     const skip = (pageNumber - 1) * limitNumber;
     try {
         const aggregationPipeline = [
@@ -192,6 +199,7 @@ export const getBidForOwnerController = async (req, res) => {
                 }
             }
         ];
+        console.log(aggregationPipeline);
 
         const [result] = await Bidding.aggregate(aggregationPipeline);
         return res.status(200).json({
@@ -604,5 +612,56 @@ export const bookingRecommendationController = async (req, res) => {
     } catch(err) {
         console.log(`error in the bookingRecommendationController ${err.message}`);
         return res.status(500).json({error: `error in the bookingRecommendationController ${err.message}`});
+    }
+}
+
+
+export const addAddOnsController = async (req, res) => {
+    const { name, price } = req.body;
+    const owner = {
+        _id: req.user._id,
+        username: req.user.username
+    };
+    try{
+        const addOns = await AddOns.create({ name, price, owner });
+        console.log(addOns);
+        return res.status(200).json({ addOns });
+    }catch(err){
+        console.log(`error in the addAddOnsController ${err.message}`);
+        return res.status(500).json({error: `error in the addAddOnsController ${err.message}`});
+    }
+}
+
+export const getAllAddOnsController = async (req, res) => {
+    const ownerId = req.user._id;
+   try{
+    const addOns = await AddOns.find({ "owner._id": ownerId, isDeleted: false });
+    console.log(addOns);
+    return res.status(200).json({ addOns });
+   }catch(err){
+    console.log(`error in the getAllAddOnsController ${err.message}`);
+    return res.status(500).json({error: `error in the getAllAddOnsController ${err.message}`});
+   }
+}
+
+export const getAddOnsForUserController = async(req, res)=>{
+    const ownerId = req.params.ownerId;
+    try{
+        const addOns = await AddOns.find({ "owner._id": ownerId, isDeleted: false });
+        return res.status(200).json({ addOns });
+    }catch(err){
+        console.log(`error in the getAddOnsForUserController ${err.message}`);
+        return res.status(500).json({error: `error in the getAddOnsForUserController ${err.message}`});
+    }
+}
+
+export const deleteAddOnsController  = async (req, res) => {
+    const addonId = req.params.addonId;
+    try{
+        const addOns = await AddOns.findByIdAndUpdate(addonId, { isDeleted: true }, { new: true });
+        return res.status(200).json({ addOns });
+    }catch(err){
+        console.log(`error in the deleteAddOnsController ${err.message}`);
+        return res.status(500).json({error: `error in the deleteAddOnsController ${err.message}`});
     }
 }

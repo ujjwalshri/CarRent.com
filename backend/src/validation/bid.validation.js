@@ -36,6 +36,7 @@ const validateBiddingData = (data) => {
             city: Joi.string().required(),
         }).required(),
         status: Joi.string().valid('pending', 'approved', 'rejected', 'ended', 'reviewed'),
+        selectedAddons: Joi.array().max(10).required(),
         from: Joi.object({
             _id: Joi.required(),
             username: Joi.string().required(),

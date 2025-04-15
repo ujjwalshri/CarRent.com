@@ -1,4 +1,4 @@
-angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, ToastService, ChartService) {
+angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, ToastService, ChartService, $timeout) {
     // Initialize date-related variables
     const initializeDates = () => {
         $scope.startDate = new Date();
@@ -60,22 +60,22 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
         const { overview, performance, bookings, comparisons } = data;
 
         // Overview Charts
-        if (overview.carDescription?.suvVsSedan) {
+        if (overview.carDescription?.carDescription?.suvVsSedan) {
             ChartService.createBarChart(
                 "bar",
-                overview.carDescription.suvVsSedan.map(item => item._id),
-                overview.carDescription.suvVsSedan.map(item => item.count),
+                overview.carDescription.carDescription.suvVsSedan.map(item => item._id),
+                overview.carDescription.carDescription.suvVsSedan.map(item => item.count),
                 'Number of Cars',
                 "Car Categories Distribution",
                 "carCategoriesChart"
             );
         }
 
-        if (overview.popularCars?.top3MostPopularCars) {
+        if (overview.popularCars?.popularCars?.top3MostPopularCars) {
             ChartService.createBarChart(
                 "bar",
-                overview.popularCars.top3MostPopularCars.map(car => car._id),
-                overview.popularCars.top3MostPopularCars.map(car => car.count),
+                overview.popularCars.popularCars.top3MostPopularCars.map(car => car._id),
+                overview.popularCars.popularCars.top3MostPopularCars.map(car => car.count),
                 'Number of Bookings',
                 "Most Popular Cars",
                 "myMostPopularCar"
@@ -161,13 +161,11 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
          
         // Comparison Charts
         if (comparisons.biddingComparison) {
-            console.log(comparisons.biddingComparison);
-            const { myBids, otherSellersAvgBids } = comparisons.biddingComparison;
-            console.log(myBids, otherSellersAvgBids);
+
             ChartService.createBarChart(
-                "bar",
+                "line",
                 ["My Bids", "Average Seller Bids"],
-                [myBids, otherSellersAvgBids],
+                [comparisons.biddingComparison.biddingComparison.myBids, comparisons.biddingComparison.biddingComparison.otherSellersAvgBids],
                 'Number of Bids',
                 "Bidding Comparison",
                 "myBidsVsOtherSellersAvgBids"
@@ -175,9 +173,11 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
         }
 
         if (comparisons.earningComparison) {
-            const { myEarnings, otherSellersAvgEarnings } = comparisons.earningComparison;
+            const { myEarnings, otherSellersAvgEarnings } = comparisons.earningComparison.earningComparison;
+
+
             ChartService.createBarChart(
-                "bar",
+                "line",
                 ["My Earnings", "Average Seller Earnings"],
                 [myEarnings, otherSellersAvgEarnings],
                 'Earnings ($)',
@@ -202,7 +202,8 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
         const overviewPromises = [
             ChartService.getTotalRevenue(params),
             ChartService.getCarDescription(params),
-            ChartService.getPopularCars(params)
+            ChartService.getPopularCars(params),
+            ChartService.getTotalRevenueByAddons(params)
         ];
 
         // Performance Analytics
@@ -236,9 +237,16 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             Promise.all(comparisonPromises)
         ])
         .then(([overviewData, performanceData, bookingData, comparisonData]) => {
+
             // Process Overview Data
-            const [revenue, carDescription, popularCars] = overviewData;
-            
+            const [revenue, carDescription, popularCars, totalRevenueByAddons] = overviewData;
+            let arr = totalRevenueByAddons.totalRevenueByAddons.totalRevenueByAddons;
+            let sum = 0;
+            for(let i = 0; i < arr.length; i++){
+                sum += arr[i].totalAmount;
+            }
+            $scope.totalRevenueByAddons = sum;
+         
             // Process Performance Data
             const [carWiseBookings, negativeReviews, topEarningCars] = performanceData;
             
@@ -247,6 +255,7 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
 
             // Process Comparison Data
             const [biddingComparison, earningComparison] = comparisonData;
+            
 
             // Update scope variables
             if (revenue?.revenue) {
@@ -255,10 +264,6 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                 $scope.numberOfBookings = revenue.revenue.totalBookings || 0;
                 $scope.averageRevenue = revenue.revenue.averageRevenue || 0;
             }
-            console.log(overviewData);
-            console.log(performanceData);
-            console.log(bookingData);
-            console.log(comparisonData);
 
 
             if (negativeReviews?.negativeReviews) {
@@ -298,11 +303,10 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                     earningComparison: earningComparison?.earningComparison
                 }
             });
-
+            
             // Apply digest cycle since we're updating scope variables
-            if (!$scope.$$phase) {
-                $scope.$apply();
-            }
+            $timeout();
+
         })
         .catch(error => {
             console.error('Error fetching analytics data:', error);

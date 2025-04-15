@@ -59,8 +59,7 @@
 
 
             <div class="row">
-
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="panel panel-primary">
                         <div class="panel-heading">
                             <i class="fas fa-dollar-sign"></i> Total Revenue
@@ -73,7 +72,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="panel panel-primary">
                         <div class="panel-heading">
                             <i class="fas fa-dollar-sign"></i> Total number of bookings
@@ -88,7 +87,7 @@
                 </div>
 
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="panel panel-warning">
                         <div class="panel-heading">
                             <i class="fas fa-star-half-alt"></i> Negative Reviews
@@ -101,7 +100,7 @@
                 </div>
 
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="panel panel-success">
                         <div class="panel-heading">
                             <i class="fas fa-receipt"></i> Extra Travel Charges
@@ -109,6 +108,17 @@
                         <div class="panel-body text-center">
                             <h3>${{ totalFineCollected | number:2}}</h3>
                             <p>total fine collected by your cars</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="panel panel-success">
+                        <div class="panel-heading">
+                            <i class="fas fa-receipt"></i> Total Revenue by Addons
+                        </div>
+                        <div class="panel-body text-center">
+                            <h3>${{ totalRevenueByAddons | number:2}}</h3>
+                            <p>total revenue by your addons</p>
                         </div>
                     </div>
                 </div>

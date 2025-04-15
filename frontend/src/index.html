@@ -163,54 +163,42 @@ https://cdn.jsdelivr.net/npm/nodemailer@6.10.0/lib/nodemailer.min.js
    
     <nav class="navbar navbar-inverse" ng-hide="adminLogged">
         <div class="container-fluid">
-           
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle collapsed" ng-click="isNavCollapsed = !isNavCollapsed">
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" ui-sref="home">Car.com</a>
+                <a class="navbar-brand" ui-sref="home">
+                    <span class="glyphicon glyphicon-car"></span> Car.com
+                </a>
             </div>
 
-           
             <div class="collapse navbar-collapse" uib-collapse="isNavCollapsed">
                 <ul class="nav navbar-nav">
-                    <li><a ui-sref="home">Home</a></li>
+                    <li ng-show="isLogged"><a ui-sref="car"><span class="glyphicon glyphicon-plus"></span> Add Car</a></li>
+                    <li ng-show="isLogged"><a ui-sref="conversations({id:0})"><span class="glyphicon glyphicon-comment"></span> Chats</a></li>
                     
-                   
                     <li class="dropdown" uib-dropdown ng-show="isLogged">
-                        <a href="#" uib-dropdown-toggle>More <span class="caret"></span></a>
+                        <a href="#" class="dropdown-toggle" uib-dropdown-toggle>
+                            <span class="glyphicon glyphicon-calendar"></span> Bookings <span class="caret"></span>
+                        </a>
                         <ul class="dropdown-menu" uib-dropdown-menu>
-                            <li id="profile"><a ui-sref="myProfile">Profile</a></li>
-                            <li id="addCar"><a ui-sref="car">Add a car</a></li>
-                            <li id="chats"><a ui-sref="conversations({id:0})">Chats</a></li>
-                            <li id="chats" ng-if="!isSeller">
-                                <a ui-sref="userBookings">Bookings</a>
-                            </li>
-                            <li id="chats">
-                                <a ui-sref="bookingHistory">Booking History</a>
-                            </li>
-                            <li id="chats" ng-if="isSeller">
-                                <a ui-sref="ownerBookings">Biddings</a>
-                            </li>
-                            <li id="sellerAnalytics" ng-if="isSeller">
-                                <a ui-sref="sellerAnalytics">Analytics</a>
-                            </li>
-                            <li ng-if="!isSeller"><a ui-sref="myBiddings">My Biddings</a></li>
-                            <li id="chats" ng-if="isSeller">
-                                <a ui-sref="confirmedBookings">Confirmed Bookings</a>
-                            </li>
-                            <li id="logout" ng-click="logout()">
-                                <a ui-sref="login">Logout</a>
-                            </li>
+                            <li ng-if="!isSeller"><a ui-sref="userBookings"><span class="glyphicon glyphicon-list"></span> My Bookings</a></li>
+                            <li><a ui-sref="bookingHistory"><span class="glyphicon glyphicon-time"></span> Booking History</a></li>
+                            <li ng-if="isSeller"><a ui-sref="ownerBookings"><span class="glyphicon glyphicon-tag"></span> Biddings</a></li>
+                            <li ng-if="!isSeller"><a ui-sref="myBiddings"><span class="glyphicon glyphicon-bookmark"></span> My Biddings</a></li>
+                            <li ng-if="isSeller"><a ui-sref="confirmedBookings"><span class="glyphicon glyphicon-ok"></span> Confirmed Bookings</a></li>
                         </ul>
                     </li>
+                    
+                    <li ng-show="isLogged && isSeller"><a ui-sref="sellerAnalytics"><span class="glyphicon glyphicon-stats"></span> Analytics</a></li>
                 </ul>
 
-               
                 <ul class="nav navbar-nav navbar-right">
-                    <li><a ui-sref="login" class="btn btn-success navbar-btn" style="color:white" ng-show="!isLogged">Login</a></li>
+                    <li ng-show="isLogged"><a ui-sref="myProfile"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
+                    <li ng-show="isLogged"><a href="#" ng-click="logout()" ui-sref="login"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
+                    <li ng-show="!isLogged"><a ui-sref="login"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
                 </ul>
             </div>
         </div>

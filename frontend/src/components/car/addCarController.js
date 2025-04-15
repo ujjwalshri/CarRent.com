@@ -12,7 +12,6 @@ angular
     $scope.fuelTypes = CarFactory.fuelTypes;
     $scope.locations = CarFactory.locationTypes;
 
-
     // Get current year for model year validation
     $scope.currentYear = new Date().getFullYear();
 

@@ -25,11 +25,12 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
         startOdometerValue = null,
         endOdometerValue = null,
         status = "pending",
+        selectedAddons = []
     ) {
         if (!(this instanceof Bid)) {
             return new Bid(
                 _id, amount, startDate, endDate, from, vehicle, owner,
-                startOdometerValue, endOdometerValue, status, createdAt, updatedAt
+                startOdometerValue, endOdometerValue, status, selectedAddons, createdAt, updatedAt
             );
         }
 
@@ -44,6 +45,7 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
         this.startOdometerValue = startOdometerValue !== null ? startOdometerValue : -1;
         this.endOdometerValue = endOdometerValue !== null ? endOdometerValue : -1;
         this.status = status;
+        this.selectedAddons = selectedAddons;
     }
 
     /**
@@ -137,7 +139,9 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
         this.endDate = new Date(this.endDate).setHours(0, 0, 0, 0);
         var diffTime = this.endDate - this.startDate;
         var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        return (diffDays+1) * this.amount;
+
+        const addonPrice = this.selectedAddons.reduce((acc, addon) => acc + addon.price, 0);
+        return (diffDays+1) * this.amount + addonPrice;
     }
     /**
      * Generates and prints a PDF for the booking
@@ -155,7 +159,11 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
         // Calculate base booking price using the booking duration and daily rate
         const basePrice = this.calculate();
         
-        // Calculate total amount including extra distance fee
+        // Calculate total amount including extra distance fee and addons
+        let addonsTotal = 0;
+        if (this.selectedAddons && this.selectedAddons.length > 0) {
+            addonsTotal = this.selectedAddons.reduce((sum, addon) => sum + addon.price, 0);
+        }
         const totalAmount = basePrice + extraDistanceFee;
 
         // Define the PDF document structure
@@ -242,6 +250,7 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
                     ]
                 },
                 { text: '\n' },
+                
 
                 // Rental Period Section
                 {
@@ -291,6 +300,29 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
                 },
                 { text: '\n' },
 
+                // Selected Addons Section
+                ...(this.selectedAddons && this.selectedAddons.length > 0 ? [{
+                    stack: [
+                        { text: 'Selected Addons', style: 'sectionHeader' },
+                        {
+                            table: {
+                                headerRows: 1,
+                                widths: ['*', 'auto'],
+                                body: [
+                                    [
+                                        { text: 'Addon Name', style: 'tableHeader' },
+                                        { text: 'Price', style: 'tableHeader' }
+                                    ],
+                                    ...this.selectedAddons.map(addon => [
+                                        { text: addon.name, style: 'tableContent' },
+                                        { text: '$' + addon.price, style: 'tableContent' }
+                                    ])
+                                ]
+                            }
+                        }
+                    ]
+                }, { text: '\n' }] : []),
+
                 // Cost Breakdown Section
                 {
                     stack: [
@@ -310,7 +342,7 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
                                     ],
                                     [
                                         { text: 'Calculated Price', style: 'tableContent' },
-                                        { text: '$' + basePrice, style: 'tableContent' }
+                                        { text: '$' + (basePrice-addonsTotal), style: 'tableContent' }
                                     ],
                                     [
                                         { 
@@ -320,6 +352,10 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
                                         },
                                         { text: '$' + extraDistanceFee, style: 'tableContent' }
                                     ],
+                                    ...(addonsTotal > 0 ? [[
+                                        { text: 'Addons Total', style: 'tableContent' },
+                                        { text: '$' + addonsTotal, style: 'tableContent' }
+                                    ]] : []),
                                     [
                                         { text: 'Total Amount', style: 'totalLabel' },
                                         { text: '$' + totalAmount, style: 'totalAmount' }
@@ -400,15 +436,16 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
                     color: '#27ae60'
                 },
                 footer: {
-                    fontSize: 10,
+                    fontSize: 12,
                     color: '#7f8c8d',
-                    italics: true
+                    alignment: 'center',
+                    margin: [0, 20, 0, 0]
                 }
             }
         };
 
-        // Generate and print the PDF
-        pdfMake.createPdf(docDefinition).print();
+        // Generate and open PDF
+        pdfMake.createPdf(docDefinition).open();
     };
     /**
      * Checks if the current date is between the booking start and end dates.
@@ -432,8 +469,6 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
          * @returns {Object|Bid} - Returns either the validated bid object or an error object.
          */
         createBid: function(data = {}, toValidate=true) {
-
-            
             var bid = new Bid(
                 data._id,
                 data.amount,
@@ -445,6 +480,7 @@ angular.module('myApp').factory('BiddingFactory', function($timeout) {
                 data.startOdometerValue,
                 data.endOdometerValue,
                 data.status,
+                data.selectedAddons
             );
             if(toValidate) {
                 return bid.validate();

@@ -3,7 +3,7 @@
  * Handles user profile data display, editing, and car management for sellers
  * @module myProfileCtrl
  */
-angular.module("myApp").controller("myProfileCtrl", function($scope, $state, ToastService, $uibModal, UserService, CarService, City, $q) {
+angular.module("myApp").controller("myProfileCtrl", function($scope, $state, ToastService, $uibModal, UserService, CarService, City, $q, $timeout) {
 
     $scope.isSeller = true;  // Flag to indicate if the user is a seller
     $scope.deleted = false; // Flag to indicate if the user is deleted
@@ -15,6 +15,7 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
     $scope.isLoading = false; // Flag to indicate loading state 
     $scope.activeButton = 'all'; // Active filter button 
     $scope.status; // Filter status for cars (approved, rejected, all)
+
     
     $scope.skip = 0; // Pagination offset
     $scope.limit = 10; // Pagination limit 
@@ -45,14 +46,13 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
             UserService.getUserProfile(),
             CarService.fetchUserCars(status ? status : 'all', params)
         ]).then((result)=>{
-            console.log(result);
             $scope.user = result[0].data;
             $scope.updateUser = $scope.user;
+            $scope.hasMoreCars = result[1].data.length < $scope.limit ? false : true;
             $scope.skip == 0 
             ? $scope.userCars = result[1].data 
             : $scope.userCars = $scope.userCars.concat(result[1].data);
         
-        $scope.hasMoreCars = result[1].data.length > 0;
         }).catch((err)=>{
             ToastService.error("Error fetching the profile data" + err);
         }).finally(()=>{
@@ -97,7 +97,7 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
     $scope.showRejected = () => {
         $scope.activeButton = 'rejected';
         $scope.status = 'rejected';
-        
+
         $scope.skip = 0;
         fetchProfileData("rejected");
     };
@@ -108,7 +108,6 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
     $scope.showApproved = () => {
         $scope.activeButton = 'approved';
         $scope.status = 'approved';
-        
         $scope.skip = 0;
         fetchProfileData("approved");
     };
@@ -237,5 +236,116 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
                 }
             }
         });
+    };
+
+    // Load more cars
+    $scope.loadMore = function () {
+        if (!$scope.isLoading && $scope.hasMoreCars) {
+            $scope.skip += $scope.limit;
+            fetchProfileData($scope.status);
+        }
+    };
+
+    // Open addons management modal
+    $scope.openAddonsModal = function () {
+        var modalInstance = $uibModal.open({
+            templateUrl: 'addonsModal.html',
+            controller: 'AddonsModalCtrl',
+            resolve: {
+                userCars: function () {
+                    return $scope.userCars;
+                }
+            }
+        });
+
+        modalInstance.result.then(function (updatedCar) {
+            // Update the car in the list with new addons
+            var index = $scope.userCars.findIndex(car => car._id === updatedCar._id);
+            if (index !== -1) {
+                $scope.userCars[index] = updatedCar;
+            }
+        });
+    };
+});
+
+angular.module("myApp").controller('AddonsModalCtrl', function ($scope, $uibModalInstance, userCars, UserService, ToastService) {
+    $scope.userCars = userCars;
+    $scope.selectedCar = null;
+    $scope.newAddon = {
+        name: '',
+        price: 0,
+        description: ''
+    };
+    $scope.isLoading = false;
+
+    // Load addons for selected car
+    $scope.loadCarAddons = function () {
+            $scope.isLoading = true;
+            UserService.getCarAddons()
+                .then(function (response) {
+                    console.log(response);
+                    $scope.addons = response.addOns;
+                })
+                .catch(function (error) {
+                    ToastService.error("Error loading addons: " + error.message);
+                })
+                .finally(function () {
+                    $scope.isLoading = false;
+                });
+     };
+    $scope.loadCarAddons();
+
+    // Add new addon
+    $scope.addAddon = function () {
+     
+
+        $scope.isLoading = true;
+        UserService.addCarAddon($scope.newAddon)
+            .then(function (response) {
+                ToastService.success("Addon added successfully");
+                $scope.loadCarAddons();
+                // Reset form
+                $scope.newAddon = {
+                    name: '',
+                    price: 0,
+                    description: ''
+                };
+                $scope.addonForm.$setPristine();
+            })
+            .catch(function (error) {
+                ToastService.error("Error adding addon: " + error.message);
+            })
+            .finally(function () {
+                $scope.isLoading = false;
+            });
+    };
+
+    // Remove addon
+    $scope.removeAddon = function (addonId) {
+        console.log(addonId);
+        if (confirm('Are you sure you want to remove this addon?')) {
+            $scope.isLoading = true;
+            UserService.removeCarAddon(addonId)
+                .then(function (response) {
+                    console.log(response);
+                    ToastService.success("Addon removed successfully");
+                    $scope.loadCarAddons();
+                })
+                .catch(function (error) {
+                    ToastService.error("Error removing addon: " + error.message);
+                })
+                .finally(function () {
+                    $scope.isLoading = false;
+                });
+        }
+    };
+
+    $scope.cancel = function () {
+        $uibModalInstance.dismiss('cancel');
+    };
+
+    // Close modal and return updated car
+    $scope.close = function () {
+        $uibModalInstance.close($scope.selectedCar);
     };
 });

@@ -26,6 +26,7 @@ angular
       // Utility function to calculate booking price based on date range
       $scope.calculateBookingPrice = BiddingFactory.calculate;
       $scope.initializeFlatpickr = BiddingFactory.initializeFlatpickr;
+      $scope.totalAddonPrice = 0;
       
       // Initialize view model properties
       $scope.car = {};                 // Stores the current car's details
@@ -45,6 +46,7 @@ angular
       $scope.init = () => {
         fetchCarData();
         $scope.loadReviews();
+        
       };
 
       /**
@@ -64,7 +66,6 @@ angular
           RouteProtection.getLoggedinUser(), 
         ])
           .then((results) => {
-            console.log(results[1]);
             // Process booking data to determine which dates are unavailable
             $scope.blockedDates = BiddingFactory.calculateBlockedDates(results);
             $scope.initializeFlatpickr($scope.blockedDates, "#dateRangePicker", $scope);
@@ -72,14 +73,61 @@ angular
             $scope.car = results[0].data;
             // Store logged in user information
             $scope.LoggedinUser = results[2];
+            
+          })
+          .then(()=>{
+            $scope.loadAddOns();
           })
           .catch((error) => {
             // Show error notification if data fetching fails
             ToastService.error(`error fetching the car data ${error}`);
           });
       }
-   
+
+      $scope.loadAddOns = () => {
+        console.log($scope.car.owner._id);
+        $scope.selectedAddons = []; // Array to store selected addons
+        $scope.totalAddonPrice = 0; // Total price of selected addons
+        
+        BiddingService.getAddOnsForUser($scope.car.owner._id)
+          .then((res) => {
+            $scope.addOns = res.addOns;
+          })
+          .catch((err) => {
+            ToastService.error(`Error fetching the addons ${err}`);
+          });
+      }
+
+      // Function to handle addon selection
+      $scope.toggleAddon = function(addon) {
+        const index = $scope.selectedAddons.findIndex(a => a._id === addon._id);
+        if (index === -1) {
+          // Add addon
+          $scope.selectedAddons.push(addon);
+          $scope.totalAddonPrice += addon.price;
+        } else {
+          // Remove addon
+          $scope.selectedAddons.splice(index, 1);
+          $scope.totalAddonPrice -= addon.price;
+        }
+        
+      }
+
     
+
+      // Function to check if an addon is selected
+      $scope.isAddonSelected = function(addonId) {
+        return $scope.selectedAddons.some(addon => addon._id === addonId);
+      }
+
+      // Update calculateTotalPrice function to include addons
+      function calculateTotalPrice() {
+        if ($scope.startDate && $scope.endDate) {
+          const days = Math.ceil(($scope.endDate - $scope.startDate) / (1000 * 60 * 60 * 24));
+          $scope.totalDays = days;
+          $scope.totalPrice = ($scope.car.price * days) + ($scope.totalAddonPrice * days);
+        }
+      }
 
       /**
        * Load car reviews with pagination
@@ -155,7 +203,8 @@ angular
           amount: $scope.amount, 
           startDate: $scope.startDate, 
           endDate: $scope.endDate, 
-          owner: ownerObj
+          owner: ownerObj,
+          selectedAddons: $scope.selectedAddons
         });
         
         console.log("bidding factory's");
