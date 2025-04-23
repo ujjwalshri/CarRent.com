@@ -17,7 +17,7 @@ angular
         type: ''
       };
       $scope.sortBy = '';
-      $scope.isLoading = false;
+
       
       // Initialize controller by fetching owner's confirmed bookings
       $scope.init = () => {
@@ -153,8 +153,8 @@ angular
         }
         console.log(params);
         
-        // Set loading state to provide user feedback
-        $scope.isLoading = true;
+
+
         
         // Call API to fetch owner's bookings with current parameters
         BiddingService.getBookingsForOwner(params)
@@ -171,10 +171,6 @@ angular
             ToastService.error(`Error fetching bookings ${err}`);
             console.log(err);
           })
-          .finally(() => {
-            // Reset loading state when operation completes
-            $scope.isLoading = false;
-          });
       }
 
       // Initialize total pages for pagination UI
@@ -216,6 +212,7 @@ angular
        */
       $scope.applyFilter = () => {
         console.log("applying filter");
+        $scope.currentPage = 1;
         fetchOwnerConfirmedBookings();
       };
       

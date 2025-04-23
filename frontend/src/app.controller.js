@@ -37,7 +37,7 @@ app.controller("appCtrl", function($scope, $rootScope, ToastService, AuthService
         // Listen for bid success notifications
         SocketService.on('bidSuccess', function(bidData) {
             // Show success toast with bid details
-            ToastService.success(`Bid placed successfully on ${bidData.carName} for $${bidData.amount}`);
+            ToastService.success(`Bid placed successfully on ${bidData.carName}`);
         });
         SocketService.on('bidSuccess', function() {
             ToastService.success("Thank you for trusting us with your money");

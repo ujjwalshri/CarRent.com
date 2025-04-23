@@ -2,10 +2,12 @@ import Bidding from "../models/bidding.model.js";
 import Vehicle from "../models/vehicle.model.js";
 import Review from "../models/review.model.js";
 import User from "../models/user.model.js";
+import Price from "../models/price.model.js";
 import CarCategory from "../models/car.category.model.js";
 import { generateCongratulationMail,generateCongratulationMailToBuyer } from "../utils/gen.mail.js";
 // importing redis service
 import { getCachedData, setCachedData } from "../services/redis.service.js";
+import Charges from "../models/charges.model.js";
 
 const kilometersLimit = 300; // Constant for kilometers limit
 const finePerKilometer = 10; // Constant for fine per kilometer
@@ -814,4 +816,264 @@ export const sendCongratulationMailController = async (req, res) => {
 }
 
 
+
+/**
+ * Retrieves customer satisfaction score for a given date range
+ * 
+ * @param {Object} req - Express request object with optional startDate and endDate query params
+ * @param {Object} res - Express response object
+ * @returns {Object} - Object containing customer satisfaction score
+ */
+export const getCustomerSatisfactionScoreController = async (req, res)=>{
+    try{
+        const {startDate, endDate} = req.query;
+        if(!startDate || !endDate){
+            return res.status(400).json({message: "startDate and endDate are required"});
+        }
+
+        const cacheKey = `admin-customer-satisfaction-score-${startDate}-${endDate}`;
+        const cachedData = await getCachedData(cacheKey);
+        if(cachedData){
+            console.log("serving data from cache");
+            return res.status(200).json(cachedData);
+        }
+      // pipeline for calculating the customer satisfaction score which is calculated numberOfSatisfiedCustomers/numberOfCustomersWithReviews * 100
+      const customerSatisfactionPipeline = [
+        {
+          $match: {
+            createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            numberOfCustomersWithReviews: { $sum: 1 },
+            numberOfSatisfiedCustomers: {
+              $sum: {
+                $cond: [
+                  { $gte: ["$rating", 3] }, // Consider rating >= 3 as "satisfied"
+                  1,
+                  0
+                ]
+              }
+            }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            numberOfCustomersWithReviews: 1,
+            numberOfSatisfiedCustomers: 1,
+            customerSatisfactionScore: {
+              $cond: [
+                { $eq: ["$numberOfCustomersWithReviews", 0] },
+                0,
+                {
+                  $multiply: [
+                    { $divide: ["$numberOfSatisfiedCustomers", "$numberOfCustomersWithReviews"] },
+                    100
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ];
+      
+
+      const customerSatisfactionScore = await Review.aggregate(customerSatisfactionPipeline);
+      await setCachedData(cacheKey, {customerSatisfactionScore});
+      return res.status(200).json(customerSatisfactionScore);
+      
+    }catch(err){
+        console.log(`error in the getCustomerSatisfactionScoreController ${err}`);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}
+
+/**
+ * Adds a new price range to the database
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} - Object containing the price range
+ */
+export const updatePriceRangeController = async (req, res)=>{
+    try{
+        const {min, max} = req.body;
+        if(!min || !max){
+            return res.status(400).json({message: "min and max are required"});
+        }
+        if(min >= max){
+            return res.status(400).json({message: "min must be less than max"});
+        }
+        const priceRange = await Price.updateOne({_id: "68063765d698682cae2ad369"}, {min, max});
+        return res.status(200).json(priceRange);
+    }catch(err){
+        console.log(`error in the addPriceRangeController ${err}`);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}
+/**
+ * Retrieves current price ranges from the database 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Array} - Array of price ranges
+ */
+export const getCurrentPriceRangesController = async (req, res)=>{
+    try{
+        const priceRanges = await Price.find();
+        return res.status(200).json(priceRanges);
+    }catch(err){
+        console.log(`error in the getCurrentPriceRangesController ${err}`);
+        return res.status(500).json({message: "Internal server error"});    
+    }
+}
+
+/**
+ * Retrieves all charges from the database
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Array} - Array of charges
+ */
+export const getChargesController = async (req, res)=>{
+    try{
+        const charges = await Charges.find();
+        return res.status(200).json(charges);
+    }catch(err){
+        console.log(`error in the getChargesController ${err}`);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}
+
+
+/**
+ * Updates the charges in the database
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} - Object containing the updated charges
+ */
+export const updateChargesController = async (req, res)=>{
+    try{
+        const {charge, percentage} = req.body;
+        console.log(charge, percentage);
+        if(charge=== undefined || percentage=== undefined){
+            return res.status(400).json({message: "charge and percentage are required"});
+        }
+         await Charges.updateOne({name: charge}, { $set: {percentage: percentage}});
+        return res.status(200).json({message: "Charges updated successfully"});
+    }catch(err){
+        console.log(`error in the updateChargesController ${err}`);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}
+
+
+/**
+ * Retrieves the platform revenue for a given date range
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} - Object containing the platform revenue
+ */ 
+export const getPlatformRevenueForAdminController = async (req, res)=>{
+    try{
+        const {startDate, endDate} = req.query;
+        if(!startDate || !endDate){
+            return res.status(400).json({message: "startDate and endDate are required"});
+        }
+
+        const platformRevenue = await Bidding.aggregate([
+            {
+                $match: {
+                    status: { $in: ["ended", "reviewed"] },
+                    endDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
+                }
+            },
+            {
+                $addFields: {
+                    // Calculate number of days (including both start and end dates)
+                    numberOfDays: {
+                        $add: [
+                            {
+                                $divide: [
+                                    { $subtract: ["$endDate", "$startDate"] },
+                                    1000 * 60 * 60 * 24
+                                ]
+                            },
+                            1
+                        ]
+                    },
+                    // Calculate total addons price
+                    addonsTotal: {
+                        $reduce: {
+                            input: "$selectedAddons",
+                            initialValue: 0,
+                            in: { $add: ["$$value", "$$this.price"] }
+                        }
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    // Calculate base price (days * amount)
+                    basePrice: { $multiply: ["$numberOfDays", "$amount"] },
+                    // Calculate total booking price (base price + addons + distance fine)
+                    totalBookingPrice: {
+                        $add: [
+                            { $multiply: ["$numberOfDays", "$amount"] },
+                            "$addonsTotal",
+                            { $ifNull: ["$exceededKmCharge", 0] }
+                        ]
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    // Calculate platform fee if platformFeePercentage exists
+                    platformFee: {
+                        $cond: {
+                            if: { $gt: [{ $ifNull: ["$platformFeePercentage", 0] }, 0] },
+                            then: {
+                                $multiply: [
+                                    "$totalBookingPrice",
+                                    { $divide: [{ $ifNull: ["$platformFeePercentage", 0] }, 100] }
+                                ]
+                            },
+                            else: 0
+                        }
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    totalPlatformRevenue: { $sum: "$platformFee" },
+                    totalBookings: { $sum: 1 },
+                    totalBaseRevenue: { $sum: "$basePrice" },
+                    totalAddonsRevenue: { $sum: "$addonsTotal" },
+                    totalDistanceFines: { $sum: { $ifNull: ["$exceededKmCharge", 0] } }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    totalPlatformRevenue: { $round: ["$totalPlatformRevenue", 2] },
+                    totalBookings: 1,
+                    totalBaseRevenue: { $round: ["$totalBaseRevenue", 2] },
+                    totalAddonsRevenue: { $round: ["$totalAddonsRevenue", 2] },
+                    totalDistanceFines: { $round: ["$totalDistanceFines", 2] },
+                    totalGrossRevenue: {
+                        $round: [{
+                            $add: ["$totalBaseRevenue", "$totalAddonsRevenue", "$totalDistanceFines"]
+                        }, 2]
+                    }
+                }
+            }
+        ]);
+        return res.status(200).json(platformRevenue);
+        
+    }catch(err){
+        console.log(`error in the getPlatformRevenueForAdminController ${err}`);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}
 

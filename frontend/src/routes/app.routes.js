@@ -1,4 +1,4 @@
- /**
+/**
      * angular js route configuration
      * defines the routes for the application and the controllers associated with them
  */
@@ -294,8 +294,25 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
                     })
                 }]
             }
-            
         })
-        
+        .state('verified', {
+            url: '/verified',
+            templateUrl: 'components/auth/verifiedEmail.html',
+            resolve : {
+                auth : ['$state', 'RouteProtection', function($state, RouteProtection){
+                    RouteProtection.getLoggedinUser().then(user => {
+                        if(user && user.isAdmin){
+                            $state.go('admin');
+                        }
+                        if(user.isSeller === false){
+                            $state.go('home');
+                        } 
+                    }).catch((err)=>{
+                        $state.go('login');
+                    })
+
+                }]
+            }
+        });
         
 });

@@ -32,10 +32,6 @@ const biddingSchema = new mongoose.Schema({
         lastName: {
             type: String,
             required: true
-        },
-        city: {
-            type: String,
-            required: true
         }
     },
     vehicle:{
@@ -100,10 +96,6 @@ const biddingSchema = new mongoose.Schema({
         lastName: {
             type: String,
             required: true
-        },
-        city: {
-            type: String,
-            required: true
         }
     },
     startOdometerValue:{
@@ -117,6 +109,10 @@ const biddingSchema = new mongoose.Schema({
     selectedAddons:{
         type:Array,
         default:[]
+    },
+    platformFeePercentage:{
+        type:Number,
+        required:true
     },
     status:{
         type:String,

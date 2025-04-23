@@ -1,6 +1,6 @@
 angular
   .module("myApp")
-  .controller("addCarCtrl", function ($scope, $timeout,CarFactory, ToastService, CarService, City ) {
+  .controller("addCarCtrl", function ($scope, $timeout,CarFactory, ToastService, CarService, City, $rootScope, $q) {
     // Array to store the car images selected by the user
     $scope.images = []; 
     // Flag to track loading state during form submission
@@ -11,6 +11,8 @@ angular
     $scope.companies = CarFactory.companies;
     $scope.fuelTypes = CarFactory.fuelTypes;
     $scope.locations = CarFactory.locationTypes;
+    $scope.minPrice = 0;
+    $scope.maxPrice = 0;
 
     // Get current year for model year validation
     $scope.currentYear = new Date().getFullYear();
@@ -21,9 +23,15 @@ angular
      * Initialize the controller by fetching car categories
      */
     $scope.init = function(){
-      CarService.getAllCarCategoriesForAdmin().then((res)=>{
-        $scope.carCategories = res;
-      })
+       $q.all([
+        CarService.getAllCarCategoriesForAdmin(),
+        CarService.getCurrentPriceRanges()
+       ]).then(([carCategories, priceRanges])=>{
+        $scope.carCategories = carCategories;
+        console.log(priceRanges);
+        $scope.minPrice = priceRanges[0].min;
+        $scope.maxPrice = priceRanges[0].max;
+       })
     }
 
     /**
@@ -168,7 +176,11 @@ angular
       CarService.addCar(formData)
           .then((res) => {
               console.log("Car added successfully", res);
-              ToastService.success("Car added successfully");
+              if($rootScope.isSeller){
+                ToastService.success("Car added successfully");
+              }else{
+                ToastService.success("Car added successfully, please wait for approval");
+              }
           })
           .catch((err) => {
               ToastService.error(`Error adding car: ${err}`);

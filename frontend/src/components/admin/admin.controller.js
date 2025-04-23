@@ -7,7 +7,6 @@ angular.module("myApp").controller("adminCtrl", function($scope, $state, $rootSc
     $scope.adminLogout = function() {
         AuthService.logout()
             .then(function(res) {
-                $state.go("login");
                 $rootScope.isLogged = false;
                 $rootScope.adminLogged = false;
             })

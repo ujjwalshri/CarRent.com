@@ -1,27 +1,50 @@
 <back-button></back-button>
 <div ng-controller="ownerBiddingsCtrl" class="owner-bookings" ng-init="init()">
     <h1 class="text-center" ng-if="bookings.length > 0">Bidding Requests</h1>
-
-    <div class="container-fluid text-center" style="height: 100vh; background-color: #f8f9fa; display: flex; justify-content: center; align-items: center;" ng-hide="bookings.length>0">
-        <div class="well" style="max-width: 500px; width: 100%; padding: 20px; border-radius: 10px; background: white; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);">
-          <h1 style="font-size: 5rem;">❌</h1>
-          <h2 class="text-muted">No biddings </h2>
+    <div class="panel panel-default p-3" style="margin: 20px;" >
+        <div class="row">
+            <div class="col-md-5">
+                <div class="form-group">
+                    <label class="control-label">Filter by Car:</label>
+                    <select class="form-control" ng-model="filters.selectedCar" ng-change="fetchBookings()">
+                        <option value="">All Cars</option>
+                        <option ng-repeat="car in myCars" value="{{car._id}}">
+                            {{car.vehicle.company}} {{car.vehicle.name}} ({{car.vehicle.modelYear}})
+                        </option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="form-group">
+                    <label class="control-label">Sort By:</label>
+                    <select class="form-control" ng-model="sort.sortBy" ng-change="fetchBookings()">
+                        <option value="">Default (Latest First)</option>
+                        <option value="amount">Price (High to Low)</option>
+                        <option value="startDate">Start Date (Latest First)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-default" 
+                        ng-click="resetFilters()" 
+                        style="margin-top: 25px;"
+                        ng-disabled="!filters.selectedCar && !sort.sortBy">
+                    <i class="glyphicon glyphicon-refresh"></i> Reset Filters
+                </button>
+            </div>
         </div>
-      </div>
-   
-    <div class="panel panel-default p-3"  ng-if="bookings.length > 0">
-        <label class="control-label">Sort By:</label>
-        <select class="form-control" ng-model="sort.sortBy" ng-change="fetchBookings()">
-            <option value="">Default (Latest First)</option>
-            <option value="amount">Price (High to Low)</option>
-            <option value="startDate">Start Date (Latest First)</option>
-        </select>
     </div>
-<div class="text-center" ng-show="isLoading">
-    <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
-    <span>Loading...</span>
-</div>
-    <div class="table-responsive" ng-if="bookings.length > 0">
+
+    <div class="text-center" ng-show="isLoading">
+        <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
+        <span>Loading...</span>
+    </div>
+    <div ng-if="bookings.length === 0">
+        <div class="alert alert-info text-center">
+            <i class="fa fa-info-circle"></i> No biddings available
+        </div>
+    </div>
+    <div class="table-responsive" ng-if="bookings.length > 0" style="margin: 0 20px;">
         <table class="table table-striped table-bordered table-hover">
             <thead class="thead-dark">
                 <tr>
@@ -33,6 +56,7 @@
                     <th>End Date</th>
                     <th>Total Payable Price</th>
                     <th>User Details</th>
+                    <th>Addons</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -44,11 +68,17 @@
                     <td>${{ booking.amount }}</td>
                     <td>{{ booking.startDate | date:'yyyy-MM-dd' }}</td>
                     <td>{{ booking.endDate | date:'yyyy-MM-dd' }}</td>
-                    <td>${{ calculateBookingPrice(booking.startDate, booking.endDate, booking.amount) }}</td>
+                    <td>${{ booking.calculate() }}</td>
                     <td>
                         <p><strong>First Name:</strong> {{ booking.from.firstName }}</p>
                         <p><strong>Last Name:</strong> {{ booking.from.lastName }}</p>
                         <p><strong>Username:</strong> {{ booking.from.username }}</p>
+                    </td>
+                    <td>
+                        <p ng-if="booking.selectedAddons" ng-repeat="addon in booking.selectedAddons">{{ addon.name }}</p>
+                        <p ng-if="booking.selectedAddons.length===0">
+                            N/A
+                        </p>
                     </td>
                     <td class="text-center">
                         <button ng-click="approveBidding(booking._id)" 

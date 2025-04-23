@@ -1,5 +1,5 @@
 <div class="container-fluid px-3" ng-init="init()">
-
+    <loading-component is-loading="isLoading" loading-text="Loading Car Approvals..."></loading-component>
     <div class="panel panel-primary">
         <div class="panel-heading">
             <h3 class="panel-title">
@@ -88,6 +88,161 @@
         </div>
     </div>
 
+    <!-- Price Range Management Panel -->
+    <div class="panel panel-primary" style="margin-top: 20px;">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                <span class="glyphicon glyphicon-usd"></span> Car Price Range Management
+            </h3>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-8 col-sm-12">
+                    <form ng-submit="addPriceRange()" class="form-horizontal">
+                        <div class="form-group">
+                            <label class="control-label col-sm-3">Minimum Price ($):</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <span class="input-group-addon">$</span>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           ng-model="priceRange.min" 
+                                           placeholder="Enter minimum price"
+                                           min="0"
+                                           required>
+                                </div>
+                                <span class="help-block text-muted">Minimum allowed price for car listings</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-sm-3">Maximum Price ($):</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <span class="input-group-addon">$</span>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           ng-model="priceRange.max" 
+                                           placeholder="Enter maximum price"
+                                           min="{{priceRange.min}}"
+                                           required>
+                                </div>
+                                <span class="help-block text-muted">Maximum allowed price for car listings</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-sm-offset-3 col-sm-9">
+                                <button type="submit" 
+                                        class="btn btn-primary"
+                                        ng-disabled="!priceRange.min || !priceRange.max || priceRange.min >= priceRange.max">
+                                    <span class="glyphicon glyphicon-floppy-disk"></span> Save Price Range
+                                </button>
+                                <div class="help-block" ng-if="priceRange.min >= priceRange.max">
+                                    <span class="text-danger">
+                                        <span class="glyphicon glyphicon-warning-sign"></span> Maximum price must be greater than minimum price
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="col-md-4 col-sm-12">
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">Current Price Range</h4>
+                        </div>
+                        <div class="panel-body text-center">
+                            <h3 ng-if="priceRange.min !== undefined && priceRange.max !== undefined">
+                                ${{priceRange.min | number:0}} - ${{priceRange.max | number:0}}
+                            </h3>
+                            <p ng-if="priceRange.min === undefined || priceRange.max === undefined" class="text-muted">
+                                No price range set
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel-footer">
+            <small class="text-muted">
+                <span class="glyphicon glyphicon-info-sign"></span> 
+                These price limits will be enforced when users list new cars.
+            </small>
+        </div>
+    </div>
+
+    <!-- Platform Charge Management Panel -->
+    <div class="panel panel-primary" style="margin-top: 20px;">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                <span class="glyphicon glyphicon-percent"></span> Platform Charge Management
+            </h3>
+        </div>
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-8 col-sm-12">
+                    <form ng-submit="savePlatformCharge()" class="form-horizontal">
+                        <div class="form-group">
+                            <label class="control-label col-sm-3">Platform Charge (%):</label>
+                            <div class="col-sm-9">
+                                <div class="input-group">
+                                    <input type="number" 
+                                           class="form-control" 
+                                           ng-model="platformCharge.percentage" 
+                                           placeholder="Enter platform charge percentage"
+                                           min="0"
+                                           max="100"
+                                           step="0.01"
+                                           required>
+                                    <span class="input-group-addon">%</span>
+                                </div>
+                                <span class="help-block text-muted">Platform charge percentage to be applied on each rental</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-sm-offset-3 col-sm-9">
+                                <button type="submit" 
+                                        class="btn btn-primary"
+                                        ng-disabled="platformCharge.percentage === undefined || platformCharge.percentage < 0 || platformCharge.percentage > 100">
+                                    <span class="glyphicon glyphicon-floppy-disk"></span> Save Platform Charge
+                                </button>
+                                <div class="help-block" ng-if="platformCharge.percentage < 0 || platformCharge.percentage > 100">
+                                    <span class="text-danger">
+                                        <span class="glyphicon glyphicon-warning-sign"></span> Platform charge must be between 0% and 100%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="col-md-4 col-sm-12">
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">Current Platform Charge</h4>
+                        </div>
+                        <div class="panel-body text-center">
+                            <h3 ng-if="platformCharge.percentage !== undefined">
+                                {{platformCharge.percentage}}%
+                            </h3>
+                            <p ng-if="platformCharge.percentage === undefined" class="text-muted">
+                                No platform charge set
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel-footer">
+            <small class="text-muted">
+                <span class="glyphicon glyphicon-info-sign"></span> 
+                This percentage will be charged as platform fee on each rental transaction.
+            </small>
+        </div>
+    </div>
 
     <div class="container-fluid text-center" ng-if="cars.length === 0">
         <div class="alert alert-warning">

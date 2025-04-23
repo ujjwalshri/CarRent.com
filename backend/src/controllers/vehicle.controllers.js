@@ -5,6 +5,7 @@
  */
 import User from "../models/user.model.js";
 import Vehicle from "../models/vehicle.model.js"; 
+import Bidding from "../models/bidding.model.js";
 import { createCarValidation } from "../validation/car.validation.js";
 import { generateCongratulationMailToSeller, generateCarRejectionMail } from "../utils/gen.mail.js";
 import { getCachedData, setCachedData, deleteCachedData} from "../services/redis.service.js";
@@ -38,8 +39,6 @@ export const addCarController = async (req, res) => {
     const {
         name, company, modelYear, price, color, mileage, fuelType, category, city, location
     } = req.body;
-    console.log(req.body);
-    console.log(req.files);
     try {
         const user = req.user;
         const images = req.files.map(file => ({
@@ -157,7 +156,6 @@ export const getAllCarController = async (req, res) => {
     const cacheKey = `cars:${search}:${priceRange}:${city}:${category}:${limit}:${skip}`;
     const cachedData = await getCachedData(cacheKey);
     if(cachedData){
-        console.log("serving data from cache");
         return res.status(200).json(cachedData);
     }
 
@@ -316,10 +314,9 @@ export const toggleVehicleStatusController = async (req, res) => {
 export const updateVehicleController = async (req, res)=>{
      const{ id }= req.params;
      const {price} = req.body;
-     if(price<500 || price>10000){
-            return res.status(400).json({message: 'Invalid price range'});
-     }
 
+
+    
         try{
             if(!Types.ObjectId.isValid(id)){
                 return res.status(404).json({message: 'Invalid vehicle id'});
@@ -360,9 +357,7 @@ export const getVehicleByIdController = async (req, res) => {
         return res.status(200).json(cachedData);
     }
     try{
-        if(!Types.ObjectId.isValid(id)){
-            return res.status(404).json({message: 'Invalid vehicle id'});
-        }
+      
         const car = await Vehicle.findById(id);
 
        // cache the data 
@@ -395,11 +390,12 @@ export const getVehicleByIdController = async (req, res) => {
  */
 export const getAllCarsByUser = async (req, res) => {
     const { carStatus, skip=0, limit=5 } = req.query;
-
+    
     // implementing redis caching 
     const cacheKey = `userCars:${req.user._id}:${carStatus}:${skip}:${limit}`;
     const cachedData = await getCachedData(cacheKey);
     if(cachedData){
+        console.log("serving data from cache");
         return res.status(200).json(cachedData);
     }
   
@@ -410,23 +406,25 @@ export const getAllCarsByUser = async (req, res) => {
         if (carStatus !== 'all') {
             query.status = carStatus;
         }
-        
-        const cars = await Vehicle.aggregate([
-            // Match stage - filter by query
+        const aggregationPipeline =[
+
             {
                 $match: query
             },
-            // Skip stage - for pagination
+
             {
                 $skip: parseInt(skip)
             },
-            // Limit stage - number of documents to return
+
             {
                 $limit: parseInt(limit)
             }
-        ]);
+        ]
+
+        const cars = await Vehicle.aggregate(aggregationPipeline);
         // Cache the result for 60 seconds
         await setCachedData(cacheKey, cars);
+        console.log("serving data from the database");
         return res.status(200).json(cars);
     } catch (error) {
         console.error('Get all cars by user error:', error);
@@ -493,4 +491,29 @@ export const listUnlistCarController = async (req, res)=>{
         console.log(`error in the listUnlistCarController ${err.message}`);
         res.status(500).json({message: `error in the listUnlistCarController ${err.message}`});
     }
+}
+
+export const getCarsWithBids = async(req, res)=>{
+    const ownerId = req.user._id;
+  try{
+    const aggregationPipeline = [
+        {
+            $match : {
+                'owner._id' : ownerId,
+                status: 'pending'
+            }
+        },
+        {
+            $group : {
+                _id : '$vehicle._id',
+                vehicle : { $first : '$vehicle'}
+            }
+        }
+    ]
+    const cars = await Bidding.aggregate(aggregationPipeline);
+    return res.status(200).json(cars);
+  }catch(err){
+    console.log(`error in the getCarWithBids ${err.message}`);
+    return res.status(500).json({message: `error in the getCarWithBids ${err.message}`});
+  }
 }

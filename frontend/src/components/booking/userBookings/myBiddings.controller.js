@@ -31,6 +31,7 @@ angular.module('myApp').controller('myBiddingsCtrl', function($scope, BiddingFac
 
         BiddingService.getBiddingsForUser(params) // fetching the biddings for the user
             .then((biddings) => {
+                console.log(biddings);
                 $scope.bookings = biddings.bids || [];
                 $scope.bookings = biddings.bids.map((bid) => {
                    return BiddingFactory.createBid(bid, false);

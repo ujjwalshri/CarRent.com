@@ -1,6 +1,4 @@
 import Joi from 'joi';
-
-
 /* 
 function to validate the bidding data before saving it into the database
     @params data
@@ -19,7 +17,6 @@ const validateBiddingData = (data) => {
             email: Joi.string().email().required(),
             firstName: Joi.string().required(),
             lastName: Joi.string().required(),
-            city: Joi.string().required(),
         }).required(),
         vehicle: Joi.object({
             _id: Joi.required(),
@@ -37,13 +34,13 @@ const validateBiddingData = (data) => {
         }).required(),
         status: Joi.string().valid('pending', 'approved', 'rejected', 'ended', 'reviewed'),
         selectedAddons: Joi.array().max(10).required(),
+        platformFeePercentage: Joi.number().min(0).max(100).required(),
         from: Joi.object({
             _id: Joi.required(),
             username: Joi.string().required(),
             email: Joi.string().email().required(),
             firstName: Joi.string().required(),
             lastName: Joi.string().required(),
-            city: Joi.string().required(),
         }).required(),
     });
 

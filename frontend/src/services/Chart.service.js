@@ -422,6 +422,23 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
       });
       return deffered.promise;
     }
+    /*
+    function to get the customer satisfaction score for admin
+    @params params
+    @returns customer satisfaction score for admin
+    */
+    this.getCustomerSatisfactionScoreForAdmin = async (params) => {
+      let deffered = $q.defer();
+      $http.get(`${ApiService.baseURL}/api/admin/customerSatisfactionScore`, {params:params, withCredentials:true})
+      .then((response)=>{
+        deffered.resolve(response.data);
+      })
+      .catch((error)=>{
+        deffered.reject(error);
+      });
+      return deffered.promise;
+    }
+      
 
     this.topHighestEarningCitiesForAdmin = async (params) => {
       let deffered = $q.defer();
@@ -735,4 +752,31 @@ this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
             });
         return deferred.promise;
     };
-})
+
+    this.getAverageBidCostPerRental = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/analytics/average-bid-cost-per-rental`, { params, withCredentials: true })
+            .then(response => response.data)
+            .catch(error => {
+                console.error('Error fetching average cost per rental data:', error);
+                throw error;  
+            });
+    };
+
+    this.getAverageBookingPayment = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/analytics/average-booking-payment`, { params, withCredentials: true })
+            .then(response => response.data)
+            .catch(error => {
+                console.error('Error fetching average booking payment data:', error);
+                throw error;
+            });
+    };
+
+    this.getSelectedAddonsCount = (params) => {
+        return $http.get(`${ApiService.baseURL}/api/seller/analytics/selected-addons-count`, { params, withCredentials: true })
+            .then(response => response.data)
+            .catch(error => {
+                console.error('Error fetching selected addons count data:', error);
+                throw error;
+            });
+    };
+});

@@ -38,6 +38,7 @@ angular
       $scope.hasMoreReviews = true;    // Flag indicating if more reviews are available
       $scope.LoggedinUser = {};        // Current authenticated user information
       $scope.isLoading = false;        // Loading state for async operations
+      $scope.processingBid = false;   // Loading state for bid processing
 
       /**
        * Function to initialize the car details page
@@ -55,6 +56,8 @@ angular
        * existing bookings, and user information
        */
       function fetchCarData() {
+
+        $scope.isLoading = true;
         $q.all([
           // Get car details by ID from route parameter
           CarService.getCarById($stateParams.id),
@@ -64,6 +67,10 @@ angular
           
           // Get current user information
           RouteProtection.getLoggedinUser(), 
+
+          CarService.getCharges()
+
+
         ])
           .then((results) => {
             // Process booking data to determine which dates are unavailable
@@ -73,7 +80,10 @@ angular
             $scope.car = results[0].data;
             // Store logged in user information
             $scope.LoggedinUser = results[2];
-            
+
+            console.log(results[3][0].percentage);
+            $scope.platformFeePercentage = results[3][0].percentage;
+
           })
           .then(()=>{
             $scope.loadAddOns();
@@ -81,6 +91,8 @@ angular
           .catch((error) => {
             // Show error notification if data fetching fails
             ToastService.error(`error fetching the car data ${error}`);
+          }).finally(()=>{
+            $scope.isLoading = false;
           });
       }
 
@@ -176,7 +188,8 @@ angular
        */
       $scope.placeBid = async () => {
         // Set loading state to show spinner/disable buttons
-        $scope.isLoading = true;
+
+        $scope.processingBid = true;
         
         // Validate bid amount is at least the car's price
         if($scope.amount < $scope.car.price) {
@@ -229,7 +242,7 @@ angular
           })
           .finally(() => {
             // Reset form and loading state regardless of outcome
-            $scope.isLoading = false;
+            $scope.processingBid = false;
             $scope.amount = "";
             $scope.startDate = "";
             $scope.endDate = "";

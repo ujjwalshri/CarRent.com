@@ -1,10 +1,20 @@
 angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, ToastService, ChartService, $timeout) {
+    // Initialize chart instances
+    let chartInstances = {};
+
     // Initialize date-related variables
     const initializeDates = () => {
         $scope.startDate = new Date();
         $scope.startDate.setDate($scope.startDate.getDate() - 7);
         $scope.endDate = new Date();
     };
+
+    // Initialize loading states
+    $scope.isLoading = false;
+    $scope.isPerformanceLoading = false;
+    $scope.isBookingLoading = false;
+    $scope.performanceLoaded = false;
+    $scope.bookingLoaded = false;
 
     // Initialize analytics data variables
     const initializeAnalyticsData = () => {
@@ -15,6 +25,75 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
         $scope.negativeReviewsCount = 0;
         $scope.repeatingCustomersPercentage = 0;
         $scope.averageRevenue = 0;
+    };
+
+    // Initialize the controller
+    $scope.init = () => {
+        initializeDates();
+        initializeAnalyticsData();
+        $scope.currentTab = 'performance'; // Track current tab
+    };
+
+    // Reset date filter
+    $scope.resetDateFilter = () => {
+        initializeDates();
+        $scope.getAnalytics();
+    };
+
+    // Get analytics based on date filter
+    $scope.getAnalytics = () => {
+        destroyAllCharts();
+        $scope.performanceLoaded = false;
+        $scope.bookingLoaded = false;
+        
+        // Load data based on current tab
+        if ($scope.currentTab === 'performance') {
+            $scope.loadPerformanceAnalytics();
+        } else {
+            $scope.loadBookingAnalytics();
+        }
+    };
+
+    // Handle tab selection
+    $scope.onTabSelect = (tab) => {
+        $scope.currentTab = tab;
+        destroyAllCharts();
+        
+        if (tab === 'performance') {
+            $scope.loadPerformanceAnalytics();
+        } else {
+            $scope.loadBookingAnalytics();
+        }
+    };
+
+    // Destroy all existing charts
+    const destroyAllCharts = () => {
+        Object.values(chartInstances).forEach(chart => {
+            if (chart) {
+                chart.destroy();
+            }
+        });
+        chartInstances = {};
+    };
+
+    // Clean up on tab change
+    $scope.$on('$destroy', () => {
+        destroyAllCharts();
+    });
+
+    // Create chart if canvas exists
+    const createChartIfCanvasExists = (canvasId, createFn) => {
+        $timeout(() => {
+            const canvas = document.getElementById(canvasId);
+            if (canvas) {
+                // Destroy existing chart if it exists
+                if (chartInstances[canvasId]) {
+                    chartInstances[canvasId].destroy();
+                }
+                // Create new chart
+                chartInstances[canvasId] = createFn(canvas);
+            }
+        }, 100); // Small delay to ensure DOM is ready
     };
 
     /**
@@ -54,144 +133,13 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
     };
 
     /**
-     * Creates all charts using ChartService
+     * Load performance analytics data
      */
-    const createCharts = (data) => {
-        const { overview, performance, bookings, comparisons } = data;
-
-        // Overview Charts
-        if (overview.carDescription?.carDescription?.suvVsSedan) {
-            ChartService.createBarChart(
-                "bar",
-                overview.carDescription.carDescription.suvVsSedan.map(item => item._id),
-                overview.carDescription.carDescription.suvVsSedan.map(item => item.count),
-                'Number of Cars',
-                "Car Categories Distribution",
-                "carCategoriesChart"
-            );
-        }
-
-        if (overview.popularCars?.popularCars?.top3MostPopularCars) {
-            ChartService.createBarChart(
-                "bar",
-                overview.popularCars.popularCars.top3MostPopularCars.map(car => car._id),
-                overview.popularCars.popularCars.top3MostPopularCars.map(car => car.count),
-                'Number of Bookings',
-                "Most Popular Cars",
-                "myMostPopularCar"
-            );
-        }
-
-        // Performance Charts
-        if (performance.carPerformance?.carWiseBookings) {
-            ChartService.createBarChart(
-                "bar",
-                performance.carPerformance.carWiseBookings.map(car => car._id),
-                performance.carPerformance.carWiseBookings.map(car => car.count),
-                'Number of Bookings',
-                "Car-wise Booking Performance",
-                "carAndBookingsChart"
-            );
-        }
-
-        if (performance.negativeReviews?.result) {
-            ChartService.createBarChart(
-                "bar",
-                performance.negativeReviews.result.map(car => car._id),
-                performance.negativeReviews.result.map(car => car.count),
-                'Number of Negative Reviews',
-                "Car-wise Negative Reviews",
-                "carWiseNegativeReviews"
-            );
-        }
-
-        if (performance.topEarningCars?.top3CarsWithMostEarning) {
-            ChartService.createBarChart(
-                "bar",
-                performance.topEarningCars.top3CarsWithMostEarning.map(car => car._id),
-                performance.topEarningCars.top3CarsWithMostEarning.map(car => car.totalRevenue),
-                'Total Revenue ($)',
-                "Top 3 Earning Cars",
-                "top3CarsWithMostEarning"
-            );
-        }
-
-        // Booking Charts
-        if (bookings.peakHours?.peakBiddingHours) {
-            ChartService.createLineChart("hourlyBiddingHeatmap", {
-                labels: bookings.peakHours.peakBiddingHours.map(hour => formatHour(hour.hour)),
-                data: bookings.peakHours.peakBiddingHours.map(hour => hour.count),
-                title: "Peak Booking Hours",
-                label: "Number of Bookings"
-            });
-        }
-
-        if (bookings.monthlyBookings?.monthWiseBookings) {
-            ChartService.createBarChart(
-                "bar",
-                bookings.monthlyBookings.monthWiseBookings.map(booking => booking._id),
-                bookings.monthlyBookings.monthWiseBookings.map(booking => booking.count),
-                'Number of Bookings',
-                "Monthly Booking Trends",
-                "numberOfBookingsPerMonth"
-            );
-        }
-
-        if (bookings.topCustomers?.top3CostumersWithMostBookings) {
-            ChartService.createBarChart(
-                "bar",
-                bookings.topCustomers.top3CostumersWithMostBookings.map(customer => customer._id),
-                bookings.topCustomers.top3CostumersWithMostBookings.map(customer => customer.count),
-                'Number of Bookings',
-                "Top 3 Customers",
-                "top3CostumersWithMostBookings"
-            );
-        }
-
-        if (bookings.cityWiseBookings?.cityWiseBookings) {
-            ChartService.createBarChart(
-                "bar",
-                bookings.cityWiseBookings.cityWiseBookings.map(city => city._id),
-                bookings.cityWiseBookings.cityWiseBookings.map(city => city.count),
-                'Number of Bookings',
-                "City-wise Bookings",
-                "cityWiseBooking"
-            );
-        }
-         
-        // Comparison Charts
-        if (comparisons.biddingComparison) {
-
-            ChartService.createBarChart(
-                "line",
-                ["My Bids", "Average Seller Bids"],
-                [comparisons.biddingComparison.biddingComparison.myBids, comparisons.biddingComparison.biddingComparison.otherSellersAvgBids],
-                'Number of Bids',
-                "Bidding Comparison",
-                "myBidsVsOtherSellersAvgBids"
-            );
-        }
-
-        if (comparisons.earningComparison) {
-            const { myEarnings, otherSellersAvgEarnings } = comparisons.earningComparison.earningComparison;
-
-
-            ChartService.createBarChart(
-                "line",
-                ["My Earnings", "Average Seller Earnings"],
-                [myEarnings, otherSellersAvgEarnings],
-                'Earnings ($)',
-                "Earning Comparison",
-                "myEarningVsOtherSellersAvgEarnings"
-            );
-        }
-    };
-
-    /**
-     * Fetches analytics data from the server using individual API endpoints
-     */
-    const fetchAnalyticsData = () => {
+    $scope.loadPerformanceAnalytics = () => {
         if (!validateDateRange()) return;
+        $scope.isLoading = true;
+
+        $scope.isPerformanceLoading = true;
 
         const params = {
             startDate: $scope.startDate.toISOString(),
@@ -203,7 +151,9 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             ChartService.getTotalRevenue(params),
             ChartService.getCarDescription(params),
             ChartService.getPopularCars(params),
-            ChartService.getTotalRevenueByAddons(params)
+            ChartService.getTotalRevenueByAddons(params),
+            ChartService.getAverageBidCostPerRental(params),
+            ChartService.getAverageBookingPayment(params)
         ];
 
         // Performance Analytics
@@ -213,33 +163,18 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             ChartService.getTopEarningCars(params)
         ];
 
-        // Booking Analytics
-        const bookingPromises = [
-            ChartService.getPeakHours(params),
-            ChartService.getMonthlyBookings(params),
-            ChartService.getTopCustomers(params),
-            ChartService.getAverageRentalDuration(params),
-            ChartService.getRepeatingCustomersPercentage(params),
-            ChartService.getCityWiseBookings(params)
-        ];
-
-        // Comparison Analytics
-        const comparisonPromises = [
-            ChartService.getBiddingComparison(params),
-            ChartService.getEarningComparison(params)
-        ];
-
-        // Execute all promises in parallel for better performance
+        // Execute promises in parallel
         Promise.all([
             Promise.all(overviewPromises),
-            Promise.all(performancePromises),
-            Promise.all(bookingPromises),
-            Promise.all(comparisonPromises)
+            Promise.all(performancePromises)
         ])
-        .then(([overviewData, performanceData, bookingData, comparisonData]) => {
-
+        .then(([overviewData, performanceData]) => {
             // Process Overview Data
-            const [revenue, carDescription, popularCars, totalRevenueByAddons] = overviewData;
+            const [revenue, carDescription, popularCars, totalRevenueByAddons, averageBidCostPerRental, averageBookingPayment] = overviewData;
+
+            $scope.averageBidCostPerRental = averageBidCostPerRental.averageCostPerRental.averageCostPerRental[0]?.averageCostPerRental || 0;
+            $scope.averageBookingPayment = averageBookingPayment.averageBookingPayment.averageBookingPayment[0]?.averageBookingPayment || 0;
+
             let arr = totalRevenueByAddons.totalRevenueByAddons.totalRevenueByAddons;
             let sum = 0;
             for(let i = 0; i < arr.length; i++){
@@ -249,13 +184,6 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
          
             // Process Performance Data
             const [carWiseBookings, negativeReviews, topEarningCars] = performanceData;
-            
-            // Process Booking Data
-            const [peakHours, monthlyBookings, topCustomers, averageRentalDuration, repeatingCustomers, cityWiseBookings] = bookingData;
-
-            // Process Comparison Data
-            const [biddingComparison, earningComparison] = comparisonData;
-            
 
             // Update scope variables
             if (revenue?.revenue) {
@@ -265,11 +193,76 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                 $scope.averageRevenue = revenue.revenue.averageRevenue || 0;
             }
 
-
             if (negativeReviews?.negativeReviews) {
                 $scope.negativeReviewsCount = negativeReviews.negativeReviews.result.reduce((acc, curr) => acc + curr.count, 0);
             }
 
+            // Create performance charts
+            createPerformanceCharts({
+                overview: {
+                    carDescription,
+                    popularCars
+                },
+                performance: {
+                    carPerformance: carWiseBookings?.carPerformance,
+                    negativeReviews: negativeReviews?.negativeReviews,
+                    topEarningCars: topEarningCars?.topEarningCars
+                }
+            });
+
+            $scope.performanceLoaded = true;
+        })
+        .catch(error => {
+            console.error('Error loading performance analytics:', error);
+            ToastService.error('Failed to load performance analytics');
+        })
+        .finally(() => {
+            $scope.isPerformanceLoading = false;
+            $scope.isLoading = false;
+            $timeout();
+        });
+    };
+
+    /**
+     * Load booking analytics data
+     */
+    $scope.loadBookingAnalytics = () => {
+        if (!validateDateRange()) return;
+
+        $scope.isLoading = true;
+
+        $scope.isBookingLoading = true;
+
+        const params = {
+            startDate: $scope.startDate.toISOString(),
+            endDate: $scope.endDate.toISOString()
+        };
+
+        // Booking Analytics
+        const bookingPromises = [
+            ChartService.getPeakHours(params),
+            ChartService.getMonthlyBookings(params),
+            ChartService.getTopCustomers(params),
+            ChartService.getAverageRentalDuration(params),
+            ChartService.getRepeatingCustomersPercentage(params),
+            ChartService.getCityWiseBookings(params),
+            ChartService.getSelectedAddonsCount(params),
+            ChartService.getBiddingComparison(params),
+            ChartService.getEarningComparison(params)
+        ];
+
+        Promise.all(bookingPromises)
+        .then(([
+            peakHours,
+            monthlyBookings,
+            topCustomers,
+            averageRentalDuration,
+            repeatingCustomers,
+            cityWiseBookings,
+            selectedAddonsCount,
+            biddingComparison,
+            earningComparison
+        ]) => {
             if (averageRentalDuration?.averageRentalDuration) {
                 $scope.averageRentalDuration = averageRentalDuration.averageRentalDuration.averageRentalDuration[0]?.averageRentalDuration || 0;
             }
@@ -278,55 +271,194 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                 $scope.repeatingCustomersPercentage = repeatingCustomers.repeatingCustomersPercentage.repeatingCustomersPercentage[0]?.repeatingCustomerPercentage || 0;
             }
 
-            // Create charts with the updated data
-            createCharts({
-                overview: {
-                    revenue: revenue?.revenue,
-                    carDescription,
-                    popularCars
-                },
-                performance: {
-                    carPerformance: carWiseBookings?.carPerformance,
-                    negativeReviews: negativeReviews?.negativeReviews,
-                    topEarningCars: topEarningCars?.topEarningCars
-                },
+            // Create booking charts
+            createBookingCharts({
                 bookings: {
                     peakHours: peakHours?.peakHours,
                     monthlyBookings: monthlyBookings?.monthlyBookings,
                     topCustomers: topCustomers?.topCustomers,
-                    averageRentalDuration: averageRentalDuration?.averageRentalDuration,
-                    repeatingCustomersPercentage: repeatingCustomers?.repeatingCustomersPercentage,
-                    cityWiseBookings: cityWiseBookings?.cityWiseBookings
+                    cityWiseBookings: cityWiseBookings?.cityWiseBookings,
+                    selectedAddonsCount: selectedAddonsCount?.selectedAddonsCount
                 },
                 comparisons: {
                     biddingComparison: biddingComparison?.biddingComparison,
                     earningComparison: earningComparison?.earningComparison
                 }
             });
-            
-            // Apply digest cycle since we're updating scope variables
-            $timeout();
 
+            $scope.bookingLoaded = true;
         })
         .catch(error => {
-            console.error('Error fetching analytics data:', error);
-            ToastService.error('Failed to fetch analytics data');
+            console.error('Error loading booking analytics:', error);
+            ToastService.error('Failed to load booking analytics');
+        })
+        .finally(() => {
+            $scope.isBookingLoading = false;
+            $scope.isLoading = false;
+            $timeout();
         });
     };
 
-    // Controller public methods
-    $scope.init = () => {
-        initializeDates();
-        initializeAnalyticsData();
-        fetchAnalyticsData();
+    /**
+     * Creates performance charts
+     */
+    const createPerformanceCharts = (data) => {
+        const { overview, performance } = data;
+
+        // Overview Charts
+        if (overview.carDescription?.carDescription?.suvVsSedan) {
+            createChartIfCanvasExists("carCategoriesChart", () => 
+                ChartService.createBarChart(
+                    "bar",
+                    overview.carDescription.carDescription.suvVsSedan.map(item => item._id),
+                    overview.carDescription.carDescription.suvVsSedan.map(item => item.count),
+                    'Number of Cars',
+                    "Car Categories Distribution",
+                    "carCategoriesChart"
+                )
+            );
+        }
+
+        if (overview.popularCars?.popularCars?.top3MostPopularCars) {
+            createChartIfCanvasExists("myMostPopularCar", () =>
+                ChartService.createBarChart(
+                    "bar",
+                    overview.popularCars.popularCars.top3MostPopularCars.map(car => car._id),
+                    overview.popularCars.popularCars.top3MostPopularCars.map(car => car.count),
+                    'Number of Bookings',
+                    "Most Popular Cars",
+                    "myMostPopularCar"
+                )
+            );
+        }
+
+        // Performance Charts
+        if (performance.negativeReviews?.result) {
+            createChartIfCanvasExists("carWiseNegativeReviews", () =>
+                ChartService.createBarChart(
+                    "bar",
+                    performance.negativeReviews.result.map(car => car._id),
+                    performance.negativeReviews.result.map(car => car.count),
+                    'Number of Negative Reviews',
+                    "Car-wise Negative Reviews",
+                    "carWiseNegativeReviews"
+                )
+            );
+        }
+
+        if (performance.topEarningCars?.top3CarsWithMostEarning) {
+            createChartIfCanvasExists("top3CarsWithMostEarning", () =>
+                ChartService.createBarChart(
+                    "bar",
+                    performance.topEarningCars.top3CarsWithMostEarning.map(car => car._id),
+                    performance.topEarningCars.top3CarsWithMostEarning.map(car => car.totalRevenue),
+                    'Total Revenue ($)',
+                    "Top 3 Earning Cars",
+                    "top3CarsWithMostEarning"
+                )
+            );
+        }
     };
 
-    $scope.getAnalytics = () => {
-        fetchAnalyticsData();
-    };
+    /**
+     * Creates booking charts
+     */
+    const createBookingCharts = (data) => {
+        const { bookings, comparisons } = data;
 
-    $scope.resetDateFilter = () => {
-        initializeDates();
-        fetchAnalyticsData();
+        if (bookings.peakHours?.peakBiddingHours) {
+            createChartIfCanvasExists("hourlyBiddingHeatmap", () =>
+                ChartService.createLineChart("hourlyBiddingHeatmap", {
+                    labels: bookings.peakHours.peakBiddingHours.map(hour => formatHour(hour.hour)),
+                    data: bookings.peakHours.peakBiddingHours.map(hour => hour.count),
+                    title: "Peak Bidding Hours",
+                    label: "Number of Biddings"
+                })
+            );
+        }
+
+        if (bookings.monthlyBookings?.monthWiseBookings) {
+            createChartIfCanvasExists("numberOfBookingsPerMonth", () =>
+                ChartService.createBarChart(
+                    "bar",
+                    bookings.monthlyBookings.monthWiseBookings.map(booking => booking._id),
+                    bookings.monthlyBookings.monthWiseBookings.map(booking => booking.count),
+                    'Number of Bookings',
+                    "Monthly Booking Trends",
+                    "numberOfBookingsPerMonth"
+                )
+            );
+        }
+
+        if (bookings.topCustomers?.top3CostumersWithMostBookings) {
+            createChartIfCanvasExists("top3CostumersWithMostBookings", () =>
+                ChartService.createBarChart(
+                    "bar",
+                    bookings.topCustomers.top3CostumersWithMostBookings.map(customer => customer._id),
+                    bookings.topCustomers.top3CostumersWithMostBookings.map(customer => customer.count),
+                    'Number of Bookings',
+                    "Top 3 Customers",
+                    "top3CostumersWithMostBookings"
+                )
+            );
+        }
+
+        if (bookings.cityWiseBookings?.cityWiseBookings) {
+            createChartIfCanvasExists("cityWiseBooking", () =>
+                ChartService.createBarChart(
+                    "bar",
+                    bookings.cityWiseBookings.cityWiseBookings.map(city => city._id),
+                    bookings.cityWiseBookings.cityWiseBookings.map(city => city.count),
+                    'Number of Bookings',
+                    "City-wise Bookings",
+                    "cityWiseBooking"
+                )
+            );
+        }
+
+        if (bookings.selectedAddonsCount?.selectedAddonsCount) {
+            createChartIfCanvasExists("selectedAddonsCount", () =>
+                ChartService.createBarChart(
+                    "bar",
+                    bookings.selectedAddonsCount.selectedAddonsCount.map(addon => addon._id),
+                    bookings.selectedAddonsCount.selectedAddonsCount.map(addon => addon.count),
+                    'Number of Bookings',
+                    "Selected Addons Count",
+                    "selectedAddonsCount"
+                )
+            );
+        }
+
+        if (comparisons.biddingComparison?.biddingComparison) {
+            createChartIfCanvasExists("myBidsVsOtherSellersAvgBids", () =>
+                ChartService.createBarChart(
+                    "line",
+                    ["My Bids", "Average Seller Bids"],
+                    [
+                        comparisons.biddingComparison.biddingComparison.myBids,
+                        comparisons.biddingComparison.biddingComparison.otherSellersAvgBids
+                    ],
+                    'Number of Bids',
+                    "Bidding Comparison",
+                    "myBidsVsOtherSellersAvgBids"
+                )
+            );
+        }
+
+        if (comparisons.earningComparison?.earningComparison) {
+            createChartIfCanvasExists("myEarningVsOtherSellersAvgEarnings", () =>
+                ChartService.createBarChart(
+                    "line",
+                    ["My Earnings", "Average Seller Earnings"],
+                    [
+                        comparisons.earningComparison.earningComparison.myEarnings,
+                        comparisons.earningComparison.earningComparison.otherSellersAvgEarnings
+                    ],
+                    'Earnings ($)',
+                    "Earning Comparison",
+                    "myEarningVsOtherSellersAvgEarnings"
+                )
+            );
+        }
     };
 });

@@ -397,5 +397,94 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
         });
         return deferred.promise;
     }
+   /**
+    * Get Cars With Bids
+    * Retrieves all cars with bids on them for the seller
+    * 
+    * @returns {Promise} Promise resolving to the cars with bids or error
+    */
+    this.getCarsWithBids = ()=>{
+        let deferred = $q.defer();
+        $http.get(`${ApiService.baseURL}/api/vehicle/getCarsWithBids`, { withCredentials: true })
+        .then((res)=>{
+            deferred.resolve(res.data);
+        })
+        .catch((error)=>{
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+    /**
+     * Add Price Range
+     * Adds a new price range to the system (admin function)
+     * 
+     * @param {Object} priceRange - Price range details to add
+     * @returns {Promise} Promise resolving to confirmation or error
+     */
+    this.updateCarPriceRange = (priceRange)=>{
+        let deferred = $q.defer();
+        $http.post(`${ApiService.baseURL}/api/admin/updatePriceRange`, priceRange, { withCredentials: true })
+        .then((res)=>{
+            deferred.resolve(res.data);
+        })
+        .catch((error)=>{
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+    /**
+     * Get Current Price Ranges
+     * Retrieves all current price ranges from the system
+     * 
+     * @returns {Promise} Promise resolving to the current price ranges or error
+     */
+    this.getCurrentPriceRanges = ()=>{
+        let deferred = $q.defer();
+        $http.get(`${ApiService.baseURL}/api/admin/getCurrentPriceRanges`, { withCredentials: true })
+        .then((res)=>{
+            deferred.resolve(res.data);
+        })
+        .catch((error)=>{
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+    /**
+     * Get Charges
+     * Retrieves all charges from the system
+     * 
+     * @returns {Promise} Promise resolving to the charges or error
+     */
+    this.getCharges = ()=>{
+        let deferred = $q.defer();
+        $http.get(`${ApiService.baseURL}/api/admin/getCharges`, { withCredentials: true })
+        .then((res)=>{
+            deferred.resolve(res.data);
+        })
+        .catch((error)=>{
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+
+    /**
+     * Update Charges
+     * Updates the charges in the system
+     * 
+     * @param {Object} charges - Charges details to update
+     * @returns {Promise} Promise resolving to confirmation or error
+     */
+    this.updateCharges = (charges)=>{
+        let deferred = $q.defer();
+        $http.put(`${ApiService.baseURL}/api/admin/updateCharges`, charges, { withCredentials: true })
+        .then((res)=>{
+            deferred.resolve(res.data);
+        })
+        .catch((error)=>{
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
+    
     
 });

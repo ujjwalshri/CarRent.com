@@ -10,7 +10,7 @@ angular
     $scope.userGrowthFilter = "city";
     $scope.topSellersWithMostEarnings;
     $scope.top10BuyersWithMostBookings;
-    console.log($scope.userGrowthFilter);
+    $scope.isLoading = false;
     
     // Geographical data for mapping
     $scope.indianCitiesAndLongitudeAndLatitudeMap = City.getIndianCitiesAndLongitudeMap();
@@ -20,7 +20,6 @@ angular
      * Loads necessary data and creates visualization components
      */
     $scope.init = () => {
-      // Load initial chart data
       fetchChartsData();
     };
     
@@ -129,20 +128,13 @@ angular
       fetchChartsData();
     }
 
-    $scope.filterByUserGrowth = (filter) => {
-      if (!validateDateRange()) {
-        return;
 
-      }
-      $scope.userGrowthFilter = filter;
-      fetchChartsData();
-    }
-    
     /**
      * Fetches all analytics data for charts and visualizations
      * Uses validated and formatted dates for API calls
      */
     function fetchChartsData() {
+      $scope.isLoading = true;
       // Prepare parameters for API calls with formatted dates
       const params = {
         startDate: formatDateForAPI($scope.startDate),
@@ -164,6 +156,7 @@ angular
         ChartService.getOverviewStatsForAdmin(params), 
         ChartService.numberOfUsersPerCityForAdmin(),
         ChartService.getTopPerformersForAdmin(params), 
+        ChartService.getCustomerSatisfactionScoreForAdmin(params)
       ])
         .then(([
           chartsData, 
@@ -171,7 +164,14 @@ angular
           overviewStats, 
           usersPerCity, 
           topPerformers, 
+          customerSatisfactionScore
         ]) => {
+
+          console.log("customerSatisfactionScore", customerSatisfactionScore);
+          $scope.customerSatisfactionScore = customerSatisfactionScore[0]?.customerSatisfactionScore;
+          $scope.numberOfCustomersWithReviews = customerSatisfactionScore[0]?.numberOfCustomersWithReviews;
+          $scope.numberOfSatisfiedCustomers = customerSatisfactionScore[0]?.numberOfSatisfiedCustomers;
+          console.log($scope.customerSatisfactionScore, $scope.numberOfCustomersWithReviews, $scope.numberOfSatisfiedCustomers);
           // Process city owner distribution data
           $scope.ownerCountsPerCity = usersPerCity.sellers;
           $scope.buyerCountsPerCity = usersPerCity.buyers;
@@ -232,20 +232,17 @@ angular
           
 
           $scope.blockedUsers = generalAnalytics.totalNumberOfBlockedUsers;
-          $scope.newUsers = overviewStats.newUsers[0].count;
+          $scope.newUsers = overviewStats.newUsers[0]?.count || 0;
           
           // Process key performance indicators
           $scope.biddingConversionRate = overviewStats.biddingConversionRate[0].conversionRate?.toFixed(2);
           $scope.averageBookingDuration = generalAnalytics.avgDuration.toFixed(2);
           $scope.ongoingBookings = generalAnalytics.ongoingBookings;
           
-          // Process car type distribution data
-        
 
-          console.log($scope.suvs, $scope.sedans, $scope.truck, $scope.supercars);
           
           // Create all charts using the ChartService
-          
+  
           // User growth over time chart
           ChartService.createBarChart(
             "line", 
@@ -333,6 +330,8 @@ angular
         .catch((err) => {
           console.error('Error fetching analytics data:', err);
           ToastService.error('Failed to fetch analytics data');
+        }).finally(()=>{
+          $scope.isLoading = false;
         });
     }
     

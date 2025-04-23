@@ -1,3 +1,4 @@
+<loading-component is-loading="isLoading" loading-text="Loading Analytics..."></loading-component>
 <div ng-init="init()" class="container-fluid">
     <div class="page-header">
         <h1 class="text-center"><i class="fas fa-chart-line"></i> Analytics Dashboard</h1>
@@ -73,7 +74,7 @@
                             <i class="fas fa-sync"></i> Apply
                         </button>
                         <button class="btn btn-default" ng-click="resetAnalytics()">
-                            <i class="fas fa-undo"></i> Reset
+                            <i class="fa fa-rotate-left"></i> Reset
                         </button>
                     </div>
                 </div>
@@ -87,7 +88,7 @@
             <div class="row">
                
                
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="panel panel-primary">
                         <div class="panel-heading">
                             <i class="fas fa-chart-line"></i> Bidding Conversion
@@ -99,7 +100,19 @@
                     </div>
                    
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <i class="fas fa-chart-line"></i> Customer Satisfaction Score
+                        </div>
+                        <div class="panel-body text-center">
+                            <h3>{{customerSatisfactionScore}}%</h3>
+                            <small> total number of customers with reviews {{ numberOfCustomersWithReviews }} and total number of satisfied customers {{ numberOfSatisfiedCustomers }}</small>
+                        </div>
+                    </div>
+                   
+                </div>
+                <div class="col-md-4">
                     <div class="panel panel-primary">
                         <div class="panel-heading">
                             <i class="fas fa-chart-line"></i> New Users 
@@ -138,7 +151,7 @@
                                     <td>${{seller.totalEarnings + seller.totalFine | number:2}}</td>
                                     <td>
                                         <button class="btn btn-success btn-sm" ng-click="sendCongratulationMail(seller)">
-                                            <i class="fas fa-envelope"></i> Send
+                                            <i class="fa fa-envelope"></i> Send
                                         </button>
                                     </td>
                                 </tr>
@@ -147,7 +160,7 @@
                     </div>
                 </uib-accordion-group>
 
-                <!-- Top Buyers -->
+
                 <uib-accordion-group heading="Top 10 Buyers with Most Bookings">
                     <div class="table-responsive">
                         <table class="table table-hover table-striped">
@@ -169,7 +182,7 @@
                                     <td>{{buyer.buyerCity}}</td>
                                     <td>
                                         <button class="btn btn-success btn-sm" ng-click="sendCongratulationMail(buyer)">
-                                            <i class="fas fa-envelope"></i> Send
+                                            <i class="fa fa-envelope"></i> Send
                                         </button>
                                     </td>
                                 </tr>
@@ -180,10 +193,9 @@
             </uib-accordion>
         </uib-tab>
 
-        <!-- Charts Tab -->
         <uib-tab heading="Charts">
             <uib-accordion>
-                <!-- Time-Based Analytics -->
+
                 <uib-accordion-group heading="Time-Based Analytics" is-open="true">
                     <div class="row">
                         <div class="col-md-6" ng-repeat="chartId in ['top10Cars','userGrowth','topHighestEarningCities', 'top3Sellers', 'carDescription','top5MostReviewedCars']">
@@ -198,7 +210,7 @@
                     </div>
                 </uib-accordion-group>
 
-                <!-- General Statistics -->
+
                 <uib-accordion-group heading="General Statistics">
                     <div class="row">
                         <div class="col-md-6" ng-repeat="chartId in ['ownersPerCity', 'buyersPerCity']">
@@ -213,7 +225,7 @@
             </uib-accordion>
         </uib-tab>
 
-        <!-- Maps Tab -->
+
         <uib-tab heading="Maps">
             <div class="row">
                 <div class="col-md-6">

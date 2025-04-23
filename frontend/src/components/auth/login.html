@@ -17,8 +17,15 @@
 
                     <div class="form-group">
                         <label for="password">Password:</label>
-                        <input type="password" id="password" name="password" class="form-control"
-                            placeholder="Enter your password" ng-model="password" required>
+                        <div class="input-group">
+                            <input type="{{ showPassword ? 'text' : 'password' }}" id="password" name="password" class="form-control"
+                                placeholder="Enter your password" ng-model="password" required>
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default" ng-click="showPassword = !showPassword">
+                                    <i class="glyphicon" ng-class="{'glyphicon-eye-open': !showPassword, 'glyphicon-eye-close': showPassword}"></i>
+                                </button>
+                            </span>
+                        </div>
                     </div>
 
                     <button id="submit-button" type="submit" class="btn btn-success btn-block" ng-click="login()">

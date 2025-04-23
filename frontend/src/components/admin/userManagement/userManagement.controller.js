@@ -25,8 +25,7 @@ angular
     function to fetch all the users from the database with pagination
     */
     function fetchUsers() {
-      $scope.isLoading = true;
-      
+
       // Calculate skip based on current page
       const skip = ($scope.pagination.currentPage - 1) * $scope.pagination.itemsPerPage;
       
@@ -47,9 +46,6 @@ angular
         .catch((err) => {
           ToastService.error(`Error fetching users: ${err}`);
         })
-        .finally(() => {
-          $scope.isLoading = false;
-        });
     }
 
     // Handle page change

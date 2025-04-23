@@ -75,14 +75,32 @@
         </table>
     </div>
 
-    <div class="text-center" ng-click="pageChanged()" ng-if="hasMoreData && !isLoading" style="margin-bottom: 20px;">
-        <button id="load-more-btn" class="btn btn-primary mt-3">
-            Load More <span class="glyphicon glyphicon-chevron-down"></span>
-        </button>
-    </div>
     <div class="text-center" ng-show="isLoading">
         <i class="fa fa-spinner fa-spin fa-3x fa-fw text-primary"></i>
         <span class="text-primary">Loading...</span>
+    </div>
+
+    <!-- Pagination section -->
+    <div class="text-center" ng-if="pagination.totalItems > 0">
+        <div class="pagination-info">
+            Page {{pagination.currentPage}} of {{Math.ceil(pagination.totalItems/pagination.itemsPerPage)}}
+        </div>
+        <ul uib-pagination
+            total-items="pagination.totalItems"
+            ng-model="pagination.currentPage"
+            max-size="pagination.maxSize"
+            class="pagination-sm"
+            boundary-links="true"
+            force-ellipses="true"
+            items-per-page="pagination.itemsPerPage"
+            ng-change="pageChanged()"
+            first-text="&laquo;"
+            last-text="&raquo;"
+            previous-text="&lsaquo;"
+            next-text="&rsaquo;"
+            direction-links="true"
+            rotate="true">
+        </ul>
     </div>
 </div>
 

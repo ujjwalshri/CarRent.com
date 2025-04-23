@@ -1,4 +1,4 @@
-
+<loading-component is-loading="loadingCars" loading-text="Loading cars..."></loading-component>
 <div class="filter-container panel panel-default p-3" ng-init="init()" style="margin-top: 10px; margin-bottom: 20px;">
     <div class="panel-heading text-center">
         <h4>Filter Cars</h4>
@@ -66,7 +66,7 @@
 
         <div uib-slide ng-repeat="slideGroup in recommendedCarsGroups" index="$index">
           <div class="row">
-            <div class="col-xs-12 col-sm-4" ng-repeat="car in slideGroup">
+            <div class="col-xs-12 col-sm-4"  ng-repeat="car in slideGroup">
 
               <div class="thumbnail" ng-click="redirectCarPage(car._id)" style="cursor: pointer;">
                 <div class="caption">
@@ -104,81 +104,88 @@
 
 <div id="cars-listing" ng-init="init()" class="container mt-4">
     <div class="row">
-        <div class="col-md-6 col-sm-6" ng-repeat="car in allCars">
-            <div class="panel panel-default car-panel" ng-click="redirectCarPage(car._id)" style="margin-bottom: 20px; cursor: pointer;">
-                <div class="panel-body" style="padding: 0;">
-                    <!-- Image container with fixed dimensions -->
-                    <div class="car-image-container" style="height: 200px; overflow: hidden; position: relative; background-color: #f5f5f5;">
+        <div class="col-md-4 col-sm-4" ng-repeat="car in allCars">
+            <div class="panel panel-default car-panel" ng-click="redirectCarPage(car._id)" style="margin-bottom: 20px; cursor: pointer; height: 600px;">
+                <div class="panel-body" style="padding: 0; height: 100%;">
+                    <!-- Car Image Section -->
+                    <div class="car-image-container" style="height: 220px; overflow: hidden; position: relative; background-color: #f5f5f5;">
                         <img ng-src="{{ car.vehicleImages[0].url || 'default-car.jpg' }}" 
                              alt="{{ car.carName }}"
                              style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
+                        <span class="label label-danger" style="position: absolute; top: 10px; right: 10px;" ng-if="car.isPopular">
+                            <span class="glyphicon glyphicon-fire"></span> Popular
+                        </span>
                     </div>
-                    
-                    <!-- Car details with consistent padding -->
-                    <div class="car-details" style="padding: 15px;">
-                        <h4 class="text-primary" style="margin-top: 0; margin-bottom: 10px; height: 40px; overflow: hidden;">
-                            {{car.company}} {{ car.name }} ({{ car.modelYear }})
-                        </h4>
-                        
-                        <div class="row">
-                            <div class="col-xs-6">
-                                <p class="price-tag" style="font-size: 18px; margin-bottom: 10px;">
-                                    <strong>$ {{ car.price }}</strong> 
-                                    <small class="text-muted">per day</small>
-                                </p>
-                            </div>
-                            <div class="col-xs-6 text-right">
-                                <span class="label label-primary">{{car.category}}</span>
+
+                    <div class="car-details" style="padding: 15px; height: calc(100% - 220px); display: flex; flex-direction: column;">
+                        <!-- Car Title and Price Section -->
+                        <div class="car-header" style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
+                            <h4 class="text-primary" style="margin-top: 0; margin-bottom: 10px; font-size: 20px;">
+                                {{car.company}} {{ car.name }}
+                                <small class="text-muted">{{ car.modelYear }}</small>
+                            </h4>
+                            <div class="row">
+                                <div class="col-xs-7">
+                                    <h3 class="price-tag" style="margin: 0; color: #2ecc71;">
+                                        <strong>${{ car.price }}</strong>
+                                        <small class="text-muted" style="font-size: 14px;">per day</small>
+                                    </h3>
+                                </div>
+                                <div class="col-xs-5 text-right">
+                                    <span class="label label-primary" style="font-size: 12px; padding: 5px 10px;">
+                                        <span class="glyphicon glyphicon-tag"></span> {{car.category}}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="car-specs" style="margin-bottom: 15px;">
-                            <div class="row">
-                                <div class="col-xs-6">
-                                    <p style="margin-bottom: 5px;">
-                                        <span class="glyphicon glyphicon-map-marker"></span>
-                                        <strong>{{car.city}} {{ car.location==='undefined' ? '' : "(" +car.location+ ")"}}</strong>
-                                    </p>
-                                </div>
-                                <div class="col-xs-6">
-                                    <p style="margin-bottom: 5px;">
-                                        <span class="glyphicon glyphicon-dashboard"></span>
-                                        <strong>{{car.mileage}} kmpl</strong>
-                                    </p>
+                        <!-- Car Specifications Grid -->
+                        <div class="car-specs-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                            <div class="spec-item" style="background: #f8f9fa; padding: 8px; border-radius: 4px;">
+                                <span class="glyphicon glyphicon-map-marker text-primary"></span>
+                                <div style="display: inline-block; vertical-align: middle;">
+                                    <small class="text-muted">Location</small>
+                                    <div><strong>{{car.city}}</strong></div>
+                                    <small ng-if="car.location!=='undefined'">{{car.location}}</small>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-xs-6">
-                                    <p style="margin-bottom: 5px;">
-                                        <span class="glyphicon glyphicon-tint"></span>
-                                        <strong>{{car.fuelType}}</strong>
-                                    </p>
+                            <div class="spec-item" style="background: #f8f9fa; padding: 8px; border-radius: 4px;">
+                                <span class="glyphicon glyphicon-dashboard text-primary"></span>
+                                <div style="display: inline-block; vertical-align: middle;">
+                                    <small class="text-muted">Mileage</small>
+                                    <div><strong>{{car.mileage}} kmpl</strong></div>
                                 </div>
-                                <div class="col-xs-6">
-                                    <p style="margin-bottom: 5px;">
-                                        <span class="glyphicon glyphicon-record"></span>
-                                        Color: 
-                                        <span ng-attr-style="display: inline-block; width: 15px; height: 15px; border-radius: 50%; border: 1px solid #ccc; vertical-align: middle; margin-left: 5px; background-color: {{car.color}}" 
-                                              title="{{car.color}}">
-                                        </span>
-                                    </p>
+                            </div>
+                            <div class="spec-item" style="background: #f8f9fa; padding: 8px; border-radius: 4px;">
+                                <span class="glyphicon glyphicon-tint text-primary"></span>
+                                <div style="display: inline-block; vertical-align: middle;">
+                                    <small class="text-muted">Fuel Type</small>
+                                    <div><strong>{{car.fuelType}}</strong></div>
                                 </div>
-                                
+                            </div>
+                            <div class="spec-item" style="background: #f8f9fa; padding: 8px; border-radius: 4px;">
+                                <span class="glyphicon glyphicon-record text-primary"></span>
+                                <div style="display: inline-block; vertical-align: middle;">
+                                    <small class="text-muted">Color</small>
+                                    <div>
+                                        <strong style="vertical-align: middle;">{{car.color}}</strong>
+                                        <span ng-attr-style="display: inline-block; width: 15px; height: 15px; border-radius: 50%; border: 1px solid #ccc; vertical-align: middle; margin-left: 5px; background-color: {{car.color}}"></span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Owner details in a well with consistent height -->
-                        <div class="well well-sm" style="margin-bottom: 0; background-color: #f9f9f9;">
-                            <div class="row">
-                                <div class="col-xs-12">
-                                    <p style="margin-bottom: 5px;">
-                                        <span class="glyphicon glyphicon-user"></span>
-                                        <strong>{{car.owner.firstName}} {{car.owner.lastName}}</strong>
-                                    </p>
-                                    <p style="margin-bottom: 5px;">
-                                        <span class="glyphicon glyphicon-envelope"></span>
-                                        {{car.owner.username}}
-                                    </p>
+                        <!-- Owner Information Section -->
+                        <div class="owner-info" style="margin-top: auto; background-color: #f8f9fa; padding: 10px; border-radius: 4px; border: 1px solid #eee;">
+                            <div style="display: flex; align-items: center;">
+                                <div style="width: 40px; height: 40px; background-color: #e9ecef; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+                                    <span class="glyphicon glyphicon-user" style="font-size: 20px; color: #6c757d;"></span>
+                                </div>
+                                <div>
+                                    <h5 style="margin: 0; font-weight: bold;">{{car.owner.firstName}} {{car.owner.lastName}}</h5>
+                                    <small class="text-muted">
+                                        <span class="glyphicon glyphicon-envelope"></span> {{car.owner.username}}
+                                    </small>
                                 </div>
                             </div>
                         </div>
@@ -187,7 +194,7 @@
             </div>
         </div>
        
-        <!-- No cars message -->
+
         <div class="col-xs-12 text-center" ng-if="allCars.length === 0">
             <div class="alert alert-warning" style="margin-top: 20px;">
                 <strong>No available cars matching your filters.</strong>
@@ -195,14 +202,14 @@
         </div>
     </div>
 
-    <!-- Load more button -->
+
     <div class="text-center" style="margin: 20px 0;" ng-if="hasMoreCars && !isLoading">
         <button id="load-more-btn" class="btn btn-primary" ng-click="loadMoreCars()">
             Show More <span class="glyphicon glyphicon-chevron-down"></span>
           </button>
     </div>
 
-    <!-- Loading spinner -->
+
     <div class="text-center" ng-show="isLoading" style="margin: 20px 0;">
         <span class="glyphicon glyphicon-refresh spin" style="font-size: 24px;"></span>
         <p>Loading...</p>
@@ -214,11 +221,12 @@
         transition: transform 0.2s ease, box-shadow 0.2s ease;
         border: 1px solid #ddd;
         margin-bottom: 20px;
+        background: white;
     }
     
     .car-panel:hover {
         transform: translateY(-5px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
     }
 
     .car-details h4 {
@@ -254,5 +262,26 @@
 
     .glyphicon {
         margin-right: 5px;
+    }
+
+    .spec-item {
+        transition: background-color 0.2s ease;
+    }
+
+    .spec-item:hover {
+        background-color: #f0f0f0 !important;
+    }
+
+    .car-image-container {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .car-image-container img {
+        transition: transform 0.3s ease;
+    }
+
+    .car-panel:hover .car-image-container img {
+        transform: scale(1.05);
     }
 </style>

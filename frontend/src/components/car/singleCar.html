@@ -1,3 +1,4 @@
+<loading-component is-loading="isLoading" loading-text="Loading Car Details..."></loading-component>
 <back-button></back-button>
 <div class="container-fluid" ng-init="init()">
     <div class="row">
@@ -29,6 +30,7 @@
                                             <p><span class="label label-warning">Rating: {{averageRating==='0.0' ? 'No reviews yet' : averageRating + "⭐"}} </span></p>
                                             <p><strong>Price:</strong> ${{ car.price }} per day</p>
                                             <p class="text-warning"><small>$10 per kms after 300km</small></p>
+                                            <p class="text-warning">Platform fee of {{ platformFeePercentage }}% will be added to the total price for using our services and platform</p>
                                             <p><strong>Category:</strong> {{ car.category }}</p>
                                             <p><strong>Mileage:</strong> {{ car.mileage }} kmpl</p>
                                         </div>
@@ -172,10 +174,14 @@
                                                         <span>Add-ons Total:</span>
                                                         <span class="pull-right">${{totalAddonPrice}}</span>
                                                     </p>
+                                                    <p ng-if="platformFeePercentage > 0">
+                                                        <span>Platform Fee:</span>
+                                                        <span class="pull-right">${{ (calculateBookingPrice(startDate, endDate, amount) + totalAddonPrice) * platformFeePercentage / 100 }}</span>
+                                                    </p>
                                                     <hr>
                                                     <p class="total-price">
                                                         <strong>Total Amount:</strong>
-                                                        <span class="pull-right">${{calculateBookingPrice(startDate, endDate, amount) + totalAddonPrice}}</span>
+                                                        <span class="pull-right">${{calculateBookingPrice(startDate, endDate, amount) + totalAddonPrice + (calculateBookingPrice(startDate, endDate, amount) + totalAddonPrice) * platformFeePercentage / 100 }}</span>
                                                     </p>
                                                 </div>
                                             </div>
@@ -189,12 +195,12 @@
                         <div class="text-center">
                             <button type="submit" 
                                     class="btn btn-success btn-lg" 
-                                    ng-disabled="isLoading"
+                                    ng-disabled="processingBid"
                                     ng-click="placeBid()">
                                 <i class="glyphicon glyphicon-check"></i>
-                                Place Bid at ${{amount}}/day
+                                Place Bid at ${{calculateBookingPrice(startDate, endDate, amount) + totalAddonPrice}}/day
                             </button>
-                            <div class="loading-spinner" ng-show="isLoading">
+                            <div class="loading-spinner" ng-show="processingBid">
                                 <i class="fa fa-spinner fa-spin fa-2x"></i>
                                 <p class="text-muted">Processing your bid...</p>
                             </div>

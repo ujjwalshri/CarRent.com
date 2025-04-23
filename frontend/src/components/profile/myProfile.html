@@ -1,3 +1,4 @@
+<loading-component is-loading="loadingProfileData" loading-text="Loading Profile Data..."></loading-component>
 <back-button></back-button>
 <div ng-init="init()" class="container">
   <div class="panel panel-default user-card">
@@ -56,23 +57,53 @@
    
       <div class="row">
         <div class="col-md-4" ng-repeat="car in userCars" ng-if="userCars.length>0">
-          <div class="thumbnail">
-            <img style="width: 200px; height: 200px;" ng-src="{{ car.vehicleImages[0].url }}" alt="{{ car.carName }}" class="img-responsive" ng-click="redirectToCarPage(car._id)">
-            <div class="caption">
-              <p><strong>Price:</strong> ${{ car.price }} per day</p>
-              <p><strong>Car Name:</strong> {{ car.name }}</p>
-              <p><strong>Category:</strong> {{ car.category }}</p>
-              <p><strong>Status:</strong> {{ car.status }}</p>
-              <div class="btn-group">
-                <button class="btn btn-warning" ng-click="openPriceModal(car)">
-                  <span class="glyphicon glyphicon-pencil"></span> Edit Price
-                </button>
-                <button class="btn btn-info" 
-                        ng-if="car.status === 'approved'"
-                        ng-click="viewCarBookings(car)"
-                        type="button">
-                    <span class="glyphicon glyphicon-list"></span> View Bookings
-                </button>
+          <div class="panel panel-default">
+            <div class="panel-body" style="padding: 0;">
+              <!-- Car Image -->
+              <div class="thumbnail" style="margin-bottom: 0; border: none;">
+                <img ng-src="{{ car.vehicleImages[0].url }}" 
+                     alt="{{ car.carName }}" 
+                     class="img-responsive"
+                     ng-click="redirectToCarPage(car._id)"
+                     style="height: 200px; width: 100%; object-fit: cover;">
+              </div>
+              
+              <!-- Car Details -->
+              <div class="panel-body">
+                <!-- Price -->
+                <h3 class="text-primary" style="margin-top: 0;">
+                  ${{ car.price }} <small>per day</small>
+                </h3>
+                
+                <!-- Status Badge -->
+                <span class="label" 
+                      ng-class="{
+                        'label-success': car.status === 'approved',
+                        'label-warning': car.status === 'pending',
+                        'label-danger': car.status === 'rejected'
+                      }">
+                  {{ car.status }}
+                </span>
+
+                <!-- Car Info -->
+                <h4 class="text-info" style="margin-top: 15px;">{{ car.name }}</h4>
+                <p class="text-muted">
+                  <strong>Category:</strong> {{ car.category }}
+                </p>
+
+                <!-- Action Buttons -->
+                <div class="btn-group btn-group-justified" style="margin-top: 15px;">
+                  <div class="btn-group">
+                    <button class="btn btn-warning" ng-click="openPriceModal(car)">
+                      <span class="glyphicon glyphicon-pencil"></span> Edit Price
+                    </button>
+                  </div>
+                  <div class="btn-group" ng-if="car.status === 'approved'">
+                    <button class="btn btn-info" ng-click="viewCarBookings(car)">
+                      <span class="glyphicon glyphicon-list"></span> View Bookings
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -133,30 +164,48 @@
         <div class="add-addon-form mt-4">
           <h4>Add New Addon</h4>
           <form name="addonForm" ng-submit="addAddon()" novalidate>
-            <div class="form-group">
+            <div class="form-group" ng-class="{'has-error': addonForm.addonName.$touched && addonForm.addonName.$invalid}">
               <label for="addonName">Name *</label>
               <input type="text" 
                      class="form-control" 
                      id="addonName" 
+                     name="addonName"
                      ng-model="newAddon.name" 
+                     ng-minlength="3"
+                     ng-maxlength="50"
                      required>
+              <div class="help-block" ng-messages="addonForm.addonName.$error" ng-if="addonForm.addonName.$touched">
+                <div ng-message="required">Name is required.</div>
+                <div ng-message="minlength">Name must be at least 3 characters.</div>
+                <div ng-message="maxlength">Name cannot exceed 50 characters.</div>
+              </div>
             </div>
-            <div class="form-group">
+          
+            <div class="form-group" ng-class="{'has-error': addonForm.addonPrice.$touched && addonForm.addonPrice.$invalid}">
               <label for="addonPrice">Price ($ per day) *</label>
               <input type="number" 
                      class="form-control" 
                      id="addonPrice" 
+                     name="addonPrice"
                      ng-model="newAddon.price" 
-                     min="0" 
+                     ng-min="0" 
                      step="0.01" 
+                     ng-max="100000"
                      required>
+              <div class="help-block" ng-messages="addonForm.addonPrice.$error" ng-if="addonForm.addonPrice.$touched">
+                <div ng-message="required">Price is required.</div>
+                <div ng-message="min">Price must be at least $0.</div>
+                <div ng-message="max">Price cannot exceed $100,000.</div>
+              </div>
             </div>
+          
             <button type="submit" 
                     class="btn btn-primary" 
                     ng-disabled="addonForm.$invalid || isLoading">
               <i class="glyphicon glyphicon-plus"></i> Add Addon
             </button>
           </form>
+          
         </div>
       </div>
     </div>
@@ -243,15 +292,6 @@
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-  }
-
-  .badge {
-    margin-right: 5px;
-    margin-bottom: 5px;
-  }
-
-  .addons-list {
-    margin-bottom: 10px;
   }
 
   .mb-3 {

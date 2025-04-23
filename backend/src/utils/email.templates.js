@@ -1,3 +1,5 @@
+import Charges from '../models/charges.model.js';
+
 /**
  * Email Templates
  * @module utils/email.templates
@@ -134,90 +136,113 @@ export const invoiceTemplate = (data) => {
     const extraDistance = Math.max(0, distanceTraveled - 300);
     const distanceFine = extraDistance * 10;
     const addonsTotal = data.booking.selectedAddons.reduce((acc, addon) => acc + addon.price, 0);
-    
+
+    // Calculate subtotal and platform fee
+    const subtotal = basePrice + distanceFine + addonsTotal;
+    console.log("data charges ndshgsdioisgokjdisojsdidsohdsji __________ "  , data.charges);
+    const platformFeePercentage = data.charges?.percentage || 2; 
+    const platformFee = (subtotal * platformFeePercentage) / 100;
+
     // Calculate total price
-    const totalPrice = basePrice + distanceFine;
+    const totalPrice = subtotal + platformFee;
 
     return `
-    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto;">
-        <div style="background-color: #4CAF50; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
-            <h1 style="margin: 0;">CarRental.com Invoice</h1>
-            <p style="margin: 10px 0 0;">Booking Reference: ${data.booking._id}</p>
+    <div style="font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; background-color: #f8f9fa; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 30px; text-align: center; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <h1 style="margin: 0; font-size: 28px; text-transform: uppercase;">Rental Invoice</h1>
+            <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Booking Reference: ${data.booking._id}</p>
+            <p style="margin: 5px 0 0; font-size: 14px;">Date: ${new Date().toLocaleDateString()}</p>
         </div>
 
-        <div style="padding: 20px; border: 1px solid #ddd; border-radius: 0 0 8px 8px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 30px;">
+        <div style="background: white; padding: 25px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
                 <div>
-                    <h3 style="color: #4CAF50; margin-bottom: 10px;">Rental Details</h3>
-                    <p><strong>Start Date:</strong> ${new Date(data.booking.startDate).toLocaleDateString()}</p>
-                    <p><strong>End Date:</strong> ${new Date(data.booking.endDate).toLocaleDateString()}</p>
-                    <p><strong>Number of Days:</strong> ${numberOfDays}</p>
-                    <p><strong>Daily Rate:</strong> ₹${data.booking.amount}</p>
+                    <h3 style="color: #4CAF50; margin-bottom: 15px; font-size: 18px; border-bottom: 2px solid #4CAF50; padding-bottom: 5px;">
+                        <span style="display: inline-block; width: 20px; text-align: center;">📅</span> Rental Period
+                    </h3>
+                    <p style="margin: 8px 0;"><strong>Start Date:</strong> ${new Date(data.booking.startDate).toLocaleDateString()}</p>
+                    <p style="margin: 8px 0;"><strong>End Date:</strong> ${new Date(data.booking.endDate).toLocaleDateString()}</p>
+                    <p style="margin: 8px 0;"><strong>Duration:</strong> ${numberOfDays} days</p>
+                    <p style="margin: 8px 0;"><strong>Daily Rate:</strong> ₹${data.booking.amount}</p>
                 </div>
                 <div>
-                    <h3 style="color: #4CAF50; margin-bottom: 10px;">Distance Details</h3>
-                    <p><strong>Start Odometer:</strong> ${data.booking.startOdometerValue} km</p>
-                    <p><strong>End Odometer:</strong> ${data.booking.endOdometerValue} km</p>
-                    <p><strong>Distance Traveled:</strong> ${distanceTraveled} km</p>
-                    <p><strong>Free Distance:</strong> 300 km</p>
-                </div>
-                <div>
-                    <h3 style="color: #4CAF50; margin-bottom: 10px;">Addons</h3>
-                    <p><strong>Addons:</strong> ${data.booking.selectedAddons.map(addon => addon.name).join(', ')}</p>
+                    <h3 style="color: #4CAF50; margin-bottom: 15px; font-size: 18px; border-bottom: 2px solid #4CAF50; padding-bottom: 5px;">
+                        <span style="display: inline-block; width: 20px; text-align: center;">🚗</span> Distance Details
+                    </h3>
+                    <p style="margin: 8px 0;"><strong>Start Reading:</strong> ${data.booking.startOdometerValue} km</p>
+                    <p style="margin: 8px 0;"><strong>End Reading:</strong> ${data.booking.endOdometerValue} km</p>
+                    <p style="margin: 8px 0;"><strong>Distance Traveled:</strong> ${distanceTraveled} km</p>
+                    <p style="margin: 8px 0;"><strong>Free Distance:</strong> 300 km</p>
                 </div>
             </div>
 
             <div style="margin-bottom: 30px;">
-                <h3 style="color: #4CAF50; margin-bottom: 10px;">Vehicle Details</h3>
-                <div style="display: flex; justify-content: space-between;">
+                <h3 style="color: #4CAF50; margin-bottom: 15px; font-size: 18px; border-bottom: 2px solid #4CAF50; padding-bottom: 5px;">
+                    <span style="display: inline-block; width: 20px; text-align: center;">🚙</span> Vehicle Details
+                </h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div>
-                        <p><strong>Car Name:</strong> ${data.booking.vehicle.name}</p>
-                        <p><strong>Company:</strong> ${data.booking.vehicle.company}</p>
-                        <p><strong>Model Year:</strong> ${data.booking.vehicle.modelYear}</p>
-                        <p><strong>Color:</strong> ${data.booking.vehicle.color}</p>
+                        <p style="margin: 8px 0;"><strong>Car:</strong> ${data.booking.vehicle.company} ${data.booking.vehicle.name}</p>
+                        <p style="margin: 8px 0;"><strong>Model Year:</strong> ${data.booking.vehicle.modelYear}</p>
+                        <p style="margin: 8px 0;"><strong>Color:</strong> ${data.booking.vehicle.color}</p>
                     </div>
                     <div>
-                        <p><strong>Fuel Type:</strong> ${data.booking.vehicle.fuelType}</p>
-                        <p><strong>Category:</strong> ${data.booking.vehicle.category}</p>
-                        <p><strong>City:</strong> ${data.booking.vehicle.city}</p>
-                        <p><strong>Mileage:</strong> ${data.booking.vehicle.mileage} km/l</p>
+                        <p style="margin: 8px 0;"><strong>Category:</strong> ${data.booking.vehicle.category}</p>
+                        <p style="margin: 8px 0;"><strong>Fuel Type:</strong> ${data.booking.vehicle.fuelType}</p>
+                        <p style="margin: 8px 0;"><strong>City:</strong> ${data.booking.vehicle.city}</p>
                     </div>
                 </div>
             </div>
 
-            <div style="margin-bottom: 30px;">
-                <h3 style="color: #4CAF50; margin-bottom: 10px;">Owner Details</h3>
-                <p><strong>Name:</strong> ${data.booking.owner.firstName} ${data.booking.owner.lastName}</p>
-                <p><strong>City:</strong> ${data.booking.owner.city}</p>
-            </div>
-
-            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin-top: 20px;">
-                <h3 style="color: #4CAF50; margin-bottom: 15px;">Price Breakdown</h3>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                    <span>Base Price (${numberOfDays} days × ₹${data.booking.amount})</span>
-                    <span>₹${basePrice}</span>
+            <div style="background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin-top: 20px;">
+                <h3 style="color: #4CAF50; margin-bottom: 20px; font-size: 18px; text-align: center;">Price Breakdown</h3>
+                <div style="border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>Base Price (${numberOfDays} days × $${data.booking.amount})</span>
+                        <span>$ ${basePrice}</span>
+                    </div>
+                    ${distanceFine > 0 ? `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #dc3545;">
+                        <span>Distance Fine (${extraDistance} km × $10)</span>
+                        <span>$ ${distanceFine}</span>
+                    </div>
+                    ` : ''}
+                    ${data.booking.selectedAddons.length > 0 ? `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>Addons (${data.booking.selectedAddons.map(addon => addon.name).join(', ')})</span>
+                        <span>$ ${addonsTotal}</span>
+                    </div>
+                    ` : ''}
                 </div>
-                ${distanceFine > 0 ? `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #f44336;">
-                    <span>Distance Fine (${extraDistance} km × ₹10)</span>
-                    <span>₹${distanceFine}</span>
+                <div style="border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span><strong>Subtotal</strong></span>
+                        <span><strong>$ ${subtotal}</strong></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #666;">
+                        <span>Platform Fee (${platformFeePercentage}%)</span>
+                        <span>$ ${platformFee.toFixed(2)}</span>
+                    </div>
                 </div>
-                ` : ''}
-                ${addonsTotal > 0 ? `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; color: #f44336;">
-                    <span>Addons (${data.booking.selectedAddons.length} addons)</span>
-                    <span>₹${addonsTotal}</span>
-                </div>
-                ` : ''}
-                <div style="display: flex; justify-content: space-between; margin-top: 15px; padding-top: 15px; border-top: 2px solid #ddd; font-weight: bold;">
+                <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; color: #4CAF50;">
                     <span>Total Amount</span>
-                    <span>₹${totalPrice + addonsTotal}</span>
+                    <span>$ ${totalPrice.toFixed(2)}</span>
                 </div>
             </div>
 
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 14px; color: #666;">
-                <p><strong>Note:</strong> A distance fine of ₹10 per kilometer is applied for travel exceeding 300 kilometers.</p>
-                <p>For any queries regarding this invoice, please contact our support team.</p>
+            <div style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px; font-size: 14px;">
+                <h4 style="color: #4CAF50; margin-bottom: 10px;">Important Notes:</h4>
+                <ul style="list-style-type: none; padding-left: 0; margin: 0;">
+                    <li style="margin-bottom: 5px;">• A platform fee of ${platformFeePercentage}% is applied to all bookings</li>
+                    <li style="margin-bottom: 5px;">• Distance charges of $10/km apply beyond 300 kilometers</li>
+                    <li style="margin-bottom: 5px;">• All prices are in US Dollars ($)</li>
+                    <li style="margin-bottom: 5px;">• Platform fee is non-refundable</li>
+                </ul>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6;">
+                <p style="color: #666; margin-bottom: 5px;">Thank you for choosing our service!</p>
+                <p style="color: #666; font-size: 12px;">For support, contact us at support@carrental.com</p>
             </div>
         </div>
     </div>
@@ -247,3 +272,22 @@ export const carRejectionMailTemplate = (data) => {
     </div>
     `
 }
+
+export const verificationTemplate = (data) => {
+    return `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #333;">Verify Your Email Address</h2>
+            <p>Hello ${data.firstName},</p>
+            <p>Thank you for signing up with Car Rental! To complete your registration, please verify your email address by clicking the button below:</p>
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="http://localhost:8000/api/auth/verify/${data.verificationToken}" 
+                   style="background-color: #4CAF50; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">
+                    Verify Email
+                </a>
+            </div>
+            <p>This verification link will expire in 24 hours.</p>
+            <p>If you did not create an account with Car Rental, please ignore this email.</p>
+            <p>Best regards,<br>The Car Rental Team</p>
+        </div>
+    `;
+};

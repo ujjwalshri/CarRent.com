@@ -743,7 +743,7 @@ const pipelines = {
             $match: {
                 'owner._id': userId,
                 status: { $in: ["approved", "started", "ended", "reviewed"] },
-                startDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
+                endDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
             }
         },
         {
@@ -760,7 +760,141 @@ const pipelines = {
                 totalAmount: { $sum: "$selectedAddons.price" }
             }
         }
-    ])
+    ]),
+    averageBidCostPerRental: (userId, startDate, endDate) => ([
+        {
+            $match: {
+                'owner._id': userId,
+                status: { $in: ["approved", "started", "ended", "reviewed"] },
+                createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
+            }
+        },
+        {
+            $project: {
+                amount: 1
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                averageCostPerRental: { $avg: "$amount" }
+            }
+        }
+    ]),
+    averageBookingPayment: (userId, startDate, endDate) => ([
+        {
+            $match: {
+                'owner._id': userId,
+                status: { $in: ["ended", "reviewed"] },
+                endDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
+            }
+        },
+        {
+            $addFields: {
+                // Calculate number of days (endDate - startDate + 1)
+                numberOfDays: {
+                    $add: [
+                        {
+                            $dateDiff: {
+                                startDate: "$startDate",
+                                endDate: "$endDate",
+                                unit: "day"
+                            }
+                        },
+                        1
+                    ]
+                },
+                // Calculate extra kilometers charge if applicable
+                extraKmCharge: {
+                    $cond: {
+                        if: {
+                            $gt: [
+                                { $subtract: ["$endOdometerValue", "$startOdometerValue"] },
+                                300
+                            ]
+                        },
+                        then: {
+                            $multiply: [
+                                { 
+                                    $subtract: [
+                                        { $subtract: ["$endOdometerValue", "$startOdometerValue"] },
+                                        300
+                                    ]
+                                },
+                                10 // $10 per extra km
+                            ]
+                        },
+                        else: 0
+                    }
+                },
+                // Calculate total addons amount
+                addonsTotal: {
+                    $reduce: {
+                        input: "$selectedAddons",
+                        initialValue: 0,
+                        in: { $add: ["$$value", "$$this.price"] }
+                    }
+                }
+            }
+        },
+        {
+            $addFields: {
+                // Calculate total payment for each booking
+                totalPayment: {
+                    $add: [
+                        { $multiply: ["$amount", "$numberOfDays"] }, // Base amount * days
+                        "$extraKmCharge", // Extra km charges
+                        "$addonsTotal" // Addons total
+                    ]
+                }
+            }
+        },
+        {
+            $group: {
+                _id: null,
+                averageBookingPayment: { $avg: "$totalPayment" },
+                totalBookings: { $sum: 1 },
+                totalRevenue: { $sum: "$totalPayment" }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                averageBookingPayment: { $round: ["$averageBookingPayment", 2] },
+                totalBookings: 1,
+                totalRevenue: { $round: ["$totalRevenue", 2] }
+            }
+        }
+    ]),
+    selectedAddonsCount : (userId, startDate, endDate)=> ([
+        {
+            $match: {
+                'owner._id': userId,
+                status: { $in: ["approved", "started", "ended", "reviewed"] },
+                startDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
+            }
+        },
+        {
+            $project: {
+                selectedAddons: 1
+            }
+        },
+        {
+            $unwind: "$selectedAddons"
+        },
+        {
+            $group: {
+                _id: "$selectedAddons.name", 
+                count: { $sum: 1 }
+            }
+        },
+        {
+            $sort: { count: -1 }
+        },
+        {
+            $limit: 5
+        }
+    ]),
 };
 
 // Individual API Endpoints for Overview Analytics
@@ -1146,4 +1280,76 @@ export const getTotalRevenueByAddons = async (req, res) => {
 };
 
 
+/**
+ * @description Get the average cost per rental for the seller
+ * @param {Object} req - The request object
+ * @param {Object} req.user - The user object
+ * @param {string} req.user._id - The user id
+ * @param {string} req.query.startDate - The start date
+ * @param {string} req.query.endDate - The end date
+ * @returns {Object} The average cost per rental data
+ */
+export const getAverageBidCostPerRental = async (req, res) => {
+    const userId = req.user._id;
+    const { startDate, endDate } = req.query;
 
+    if (!startDate || !endDate) {
+        return handleResponse(res, 400, { error: "startDate and endDate are required" });
+    }
+
+    const cacheKey = `seller-average-cost-per-rental-${userId}-${startDate}-${endDate}`;
+    const cachedData = await getCachedData(cacheKey);
+    if (cachedData) {
+        return handleResponse(res, 200, cachedData);
+    }
+
+    try {
+        const averageCostPerRentalData = await Bidding.aggregate(pipelines.averageBidCostPerRental(userId, startDate, endDate));
+        await setCachedData(cacheKey, { averageCostPerRental: { averageCostPerRental: averageCostPerRentalData } });
+        return handleResponse(res, 200, { averageCostPerRental: { averageCostPerRental: averageCostPerRentalData } });
+    } catch (error) {
+        console.error('Error in getAverageCostPerRental:', error);
+        return handleResponse(res, 500, { error: 'Failed to fetch average cost per rental data' });
+    }
+};
+
+export const getAverageBookingPayment = async (req, res) => {
+    const userId = req.user._id;
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+        return handleResponse(res, 400, { error: "startDate and endDate are required" });
+    }
+
+    const cacheKey = `seller-average-booking-payment-${userId}-${startDate}-${endDate}`;
+    const cachedData = await getCachedData(cacheKey);
+    if (cachedData) {
+        return handleResponse(res, 200, cachedData);
+    }
+
+    try {
+        const averageBookingPaymentData = await Bidding.aggregate(pipelines.averageBookingPayment(userId, startDate, endDate));
+        await setCachedData(cacheKey, { averageBookingPayment: { averageBookingPayment: averageBookingPaymentData } });
+        return handleResponse(res, 200, { averageBookingPayment: { averageBookingPayment: averageBookingPaymentData } });
+    } catch (error) {
+        console.error('Error in getAverageBookingPayment:', error);
+        return handleResponse(res, 500, { error: 'Failed to fetch average booking payment data' });
+    }
+};
+
+export const getSelectedAddonsCount = async (req, res) => {
+    const userId = req.user._id;
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+        return handleResponse(res, 400, { error: "startDate and endDate are required" });
+    }
+
+    try {
+        const selectedAddonsCountData = await Bidding.aggregate(pipelines.selectedAddonsCount(userId, startDate, endDate));
+        return handleResponse(res, 200, { selectedAddonsCount: { selectedAddonsCount: selectedAddonsCountData } });
+    } catch (error) {
+        console.error('Error in getSelectedAddonsCount:', error);
+        return handleResponse(res, 500, { error: 'Failed to fetch selected addons count data' });
+    }
+};

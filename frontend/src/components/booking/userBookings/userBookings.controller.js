@@ -4,7 +4,6 @@ angular
     $scope.bookings = []; // array to hold the bookings
     $scope.currentPage = 1; // setting the current page to 1
     $scope.itemsPerPage = 6; // setting the items per page 
-    $scope.isLoading = false; // setting the isLoading to false
     $scope.totalItems = 0;
     $scope.maxSize = 5; // Number of page buttons to show
     $scope.sortBy = ''; // setting the sortBy to an empty string
@@ -17,8 +16,9 @@ angular
 
     // Initialize the controller
     $scope.init = function() {
-      getAllBookings();
+      getAllBookings()
     };
+    
 
     // function to handle the page changed event
     $scope.pageChanged = function() {
@@ -63,7 +63,6 @@ angular
         sort: $scope.sortBy ? { [$scope.sortBy]: 1 } : undefined
       };
 
-      $scope.isLoading = true;
       
       BiddingService.getBookingsForUser(params)
         .then((response) => {

@@ -2,7 +2,7 @@ angular
   .module("myApp")
   .controller(
     "ownerBiddingsCtrl",
-    function ($scope, BiddingFactory, ToastService, BiddingService, $window) {
+    function ($scope, BiddingFactory, ToastService, BiddingService, $window, CarService) {
 
       $scope.bookings = [];   // array to hold the bookings of the logged in user
       $scope.bookingsType = { type: "pending" };  // variable to hold the booking type
@@ -15,14 +15,30 @@ angular
       $scope.sort = {
         sortBy: ""  // Initialize with empty string for default sorting
       };
+      $scope.filters = {
+        selectedCar: "" // Initialize with empty string for no car filter
+      };
+      $scope.myCars = []; // Array to store cars with bids
 
       /*
       function to initialize the controller 
       @description: this function will be called when the controller is loaded, fetches the bookings initially 
       */
       $scope.init = function () { 
+        getCarsWithBids();
         $scope.fetchBookings(); 
       } 
+
+      /*
+      function to reset all filters and refresh the bookings list
+      */
+      $scope.resetFilters = function() {
+        $scope.filters.selectedCar = "";
+        $scope.sort.sortBy = "";
+        $scope.currentPage = 1;
+        $scope.fetchBookings();
+        ToastService.success("Filters have been reset");
+      };
 
      /* 
      function to fetch the bookings for logged in owner
@@ -39,10 +55,16 @@ angular
           status: $scope.bookingsType.type, 
           sortBy: sortByParam
         };
+
+        // Add car filter if selected
+        if ($scope.filters.selectedCar) {
+          params.carId = $scope.filters.selectedCar;
+        }
         
         BiddingService.getOwnerBids(params)
           .then((response) => {
-            $scope.bookings = response.result || [];
+            console.log(response);
+            $scope.bookings = response.result.map((booking)=>BiddingFactory.createBid(booking, false));
             $scope.totalPages = Math.ceil(response.totalDocs / $scope.itemsPerPage);
           })
           .catch((err) => {
@@ -54,11 +76,27 @@ angular
       };
 
       /*
+      function to fetch cars that have bids
+      */
+      function getCarsWithBids(){
+        CarService.getCarsWithBids()
+          .then((cars) => {
+            $scope.myCars = cars;
+            console.log($scope.myCars);
+          })
+          .catch((err) => {
+            ToastService.error(`Error fetching cars: ${err}`);
+          });
+      }
+
+      /*
       function to handle pageChanged event
       */
       $scope.pageChanged = function () {
         $scope.fetchBookings(); 
       };
+
+     
 
       /*
       function to handle prev page button

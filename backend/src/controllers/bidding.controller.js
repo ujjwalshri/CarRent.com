@@ -1,12 +1,14 @@
 import Bidding from '../models/bidding.model.js';
 import Vehicle from '../models/vehicle.model.js';
 import AddOns from '../models/add-ons.model.js';
+import Charges from '../models/charges.model.js';
 import {sendInvoiceEmail} from '../utils/email.service.js';
 import validateBiddingData from '../validation/bid.validation.js';
 import {generateAndSendMail} from '../utils/gen.mail.js';
 import dotenv from 'dotenv';
 import AWS from 'aws-sdk';
 import mongoose from 'mongoose';
+const { ObjectId } = mongoose.Types;
 import sqsProducerService from '../services/SQS.producer.service.js';
 
 dotenv.config();
@@ -53,7 +55,7 @@ export const addBidController = async (req, res) => {
         endOdometerValue,
         owner, 
         status,
-        selectedAddons
+        selectedAddons,
     } = req.body;
     const { _id, username, email, firstName, lastName, city } = req.user;
     const from = { _id, username, email, firstName, lastName, city };
@@ -61,15 +63,24 @@ export const addBidController = async (req, res) => {
     if(startDate > endDate){
         return res.status(400).json({error: 'startDate cannot be greater than endDate'});
     }
+
+
     try {
         const vehicle = await Vehicle.findById(carId);
+        const platformFeePercentage = await Charges.findOne({name: "Platform Fee"});
         const biddingData = {
             amount, 
             startDate, 
             endDate, 
             startOdometerValue,
             endOdometerValue,
-            owner, 
+            owner : {
+                _id : owner._id,
+                username : owner.username,
+                email : owner.email,
+                firstName : owner.firstName,
+                lastName : owner.lastName
+            }, 
             vehicle : {
                 _id: vehicle._id,
                 name: vehicle.name,
@@ -86,7 +97,14 @@ export const addBidController = async (req, res) => {
             },
             status,
             selectedAddons,
-            from
+            platformFeePercentage: platformFeePercentage.percentage,
+            from : {
+                _id : from._id,
+                username : from.username, 
+                email : from.email,
+                firstName : from.firstName, 
+                lastName : from.lastName
+            }
         }
         if(validateBiddingData(biddingData).error){
             return res.status(400).json({error: validateBiddingData(biddingData).error.details[0].message});
@@ -110,6 +128,7 @@ export const updateBidStatusController = async (req, res) => {
     if (!biddingStatus) {
         return res.status(400).json({ error: 'Bidding status is required' });
     }
+    console.log(biddingStatus, "and", req.params.id);
     
     let session; 
     try {
@@ -117,6 +136,10 @@ export const updateBidStatusController = async (req, res) => {
         session.startTransaction();
 
         const bidding = await Bidding.findById(req.params.id).session(session);
+
+        console.log("bidding", bidding);
+
+
         console.log(req.user._id.toString(), "and", bidding.owner._id.toString());
 
         if (req.user._id.toString() !== bidding.owner._id.toString()) {
@@ -172,8 +195,8 @@ export const updateBidStatusController = async (req, res) => {
 export const getBidForOwnerController = async (req, res) => {
     const user = req.user;
     console.log(req.query);
-    let {  page = 1, limit = 10, sortBy={}} = req.query;
-    console.log(sortBy, page, limit);
+    let {  page = 1, limit = 10, sortBy={}, carId} = req.query;
+    console.log(sortBy, page, limit, carId);
     if(sortBy !== undefined){
         sortBy = JSON.parse(sortBy);
     }
@@ -181,11 +204,16 @@ export const getBidForOwnerController = async (req, res) => {
     const pageNumber = parseInt(page);
     const limitNumber = parseInt(limit);
     let finalSort = {...sortBy, createdAt: -1};
-    console.log(finalSort);
     const skip = (pageNumber - 1) * limitNumber;
+
+
+    const matchStage =  { $match: { "owner._id": user._id, status } };
+    if(carId){
+        matchStage.$match["vehicle._id"] = new ObjectId(carId);
+    }
     try {
         const aggregationPipeline = [
-            { $match: { "owner._id": user._id, status } },
+           matchStage,
             {
                 $facet: {
                     metadata: [
@@ -199,6 +227,7 @@ export const getBidForOwnerController = async (req, res) => {
                 }
             }
         ];
+
         console.log(aggregationPipeline);
 
         const [result] = await Bidding.aggregate(aggregationPipeline);
@@ -400,19 +429,10 @@ export const getAllBookingsAtUserIdController = async (req, res)=>{
 */  
 export const getUserBookingHistory = async (req, res) => {
     const { page = 1, limit = 10, sort = {}, startDate = '', search = '' } = req.query;
-    console.log('Received sort:', sort);
+    
     const userId = req.user._id;
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
-
-    // Validate page and limit
-    if (isNaN(pageNumber) || pageNumber <= 0) {
-        return res.status(400).json({ error: "Invalid page number. It must be a positive integer." });
-    }
-    if (isNaN(limitNumber) || limitNumber <= 0) {
-        return res.status(400).json({ error: "Invalid limit number. It must be a positive integer." });
-    }
-
     const skip = (pageNumber - 1) * limitNumber;
 
     // Parse sort if it's a string
@@ -421,43 +441,111 @@ export const getUserBookingHistory = async (req, res) => {
         try {
             sortObj = JSON.parse(sort);
         } catch (err) {
-            console.error('Error parsing sort:', err);
             sortObj = { createdAt: -1 }; // default sort
         }
     }
 
     try {
-        let aggregationPipeline = [];
-
-        // Count total documents for pagination
-        const totalDocs = await Bidding.countDocuments({ "from._id": userId, status: "reviewed" });
-        console.log(`Total documents: ${totalDocs}`);
-
-        // Add match stage for user and status
-        const matchStage = {
-            $match: {
-                "from._id": userId,
-                status: "reviewed",
+        const aggregationPipeline = [
+            {
+                $match: {
+                    "from._id": userId,
+                    status: "reviewed",
+                }
             },
-        };
-        aggregationPipeline.push(matchStage);
+            {
+                $addFields: {
+                    // Calculate number of days (endDate - startDate + 1)
+                    numberOfDays: {
+                        $add: [
+                            {
+                                $dateDiff: {
+                                    startDate: "$startDate",
+                                    endDate: "$endDate",
+                                    unit: "day"
+                                }
+                            },
+                            1
+                        ]
+                    },
+                    // Calculate extra kilometers charge if applicable
+                    extraKmCharge: {
+                        $cond: {
+                            if: {
+                                $gt: [
+                                    { $subtract: ["$endOdometerValue", "$startOdometerValue"] },
+                                    300
+                                ]
+                            },
+                            then: {
+                                $multiply: [
+                                    { 
+                                        $subtract: [
+                                            { $subtract: ["$endOdometerValue", "$startOdometerValue"] },
+                                            300
+                                        ]
+                                    },
+                                    10 // $10 per extra km
+                                ]
+                            },
+                            else: 0
+                        }
+                    },
+                    // Calculate total addons amount
+                    addonsTotal: {
+                        $reduce: {
+                            input: "$selectedAddons",
+                            initialValue: 0,
+                            in: { $add: ["$$value", "$$this.price"] }
+                        }
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    // Calculate total payment
+                    totalPayment: {
+                        $add: [
+                            { $multiply: ["$amount", "$numberOfDays"] }, // Base amount * days
+                            "$extraKmCharge", // Extra km charges
+                            "$addonsTotal" // Addons total
+                        ]
+                    }
+                }
+            },
+            {
+                $facet: {
+                    bookings: [
+                        { $sort: sortObj },
+                        { $skip: skip },
+                        { $limit: limitNumber }
+                    ],
+                    totalCount: [
+                        { $count: "count" }
+                    ],
+                    averagePayment: [
+                        {
+                            $group: {
+                                _id: null,
+                                avgPayment: { $avg: "$totalPayment" }
+                            }
+                        }
+                    ]
+                }
+            }
+        ];
 
-        // Add sort stage
-        aggregationPipeline.push({ $sort: sortObj });
-
-        // Add pagination stages
-        aggregationPipeline.push(
-            { $skip: skip },
-            { $limit: limitNumber }
-        );
-
-        console.log('Aggregation Pipeline:', JSON.stringify(aggregationPipeline, null, 2));
-
-        // Execute aggregation pipeline
-        const bookings = await Bidding.aggregate(aggregationPipeline);
-        console.log(`Bookings fetched: ${bookings.length}`);
-
-        return res.status(200).json({ bookings, totalDocs });
+        const result = await Bidding.aggregate(aggregationPipeline);
+        
+        const bookings = result[0].bookings || [];
+        const totalDocs = result[0].totalCount[0]?.count || 0;
+        const averagePayment = result[0].averagePayment[0]?.avgPayment || 0;
+        
+        return res.status(200).json({ 
+            bookings, 
+            totalDocs,
+            averagePayment: Math.round(averagePayment * 100) / 100 // Round to 2 decimal places
+        });
     } catch (err) {
         console.error(`Error in getUserBookingHistory: ${err.message}`);
         return res.status(500).json({ error: `Error in getUserBookingHistory: ${err.message}` });
@@ -536,7 +624,9 @@ export const endBookingController = async (req, res)=>{
           );
           console.log(booking);
 
-          sendInvoiceEmail({email: booking.from.email, booking: booking})
+          const charges = await Charges.findOne({name: "Platform Fee"});
+
+          sendInvoiceEmail({email: booking.from.email, booking: booking, charges: charges})
           .catch((err) => {
             console.error(`Error sending invoice email: ${err.message}`);
           });
@@ -580,33 +670,65 @@ export const bookingRecommendationController = async (req, res) => {
     try {
         const recommendations = await Bidding.aggregate([
             {
-                $match: {
-                    status: {$in : ['approved', 'started', 'ended', 'reviewed']},
-                    'vehicle.city': userCity
+              $match: {
+                status: { $in: ['approved', 'started', 'ended', 'reviewed'] },
+                'vehicle.city': userCity
+              }
+            },
+            {
+              $group: {
+                _id: '$vehicle._id',
+                bookingCount: { $sum: 1 },
+                vehicleInfo: { $first: '$vehicle' }
+              }
+            },
+            {
+              $lookup: {
+                from: 'reviews', 
+                localField: '_id',
+                foreignField: 'vehicle._id',
+                as: 'reviews'
+              }
+            },
+            {
+              $addFields: {
+                averageRating: { 
+                  $cond: [
+                    { $gt: [{ $size: '$reviews' }, 0] },
+                    { $avg: '$reviews.rating' },
+                    0
+                  ]
+                },
+                totalReviews: { $size: '$reviews' }
+              }
+            },
+            {
+              $addFields: {
+                score: {
+                  $add: [
+                    { $multiply: ['$bookingCount', 1] },   // weight for bookings
+                    { $multiply: ['$averageRating', 2] }   // weight for reviews
+                  ]
                 }
+              }
             },
             {
-                $group: {
-                    _id: "$vehicle._id", // Group by vehicle ID
-                    count: { $sum: 1 },
-                    vehicleBasic: { $first: "$vehicle" } // Basic vehicle info from bidding
-                }
+              $sort: { score: -1 } // Combined score: prioritize well-reviewed AND frequently booked cars
             },
             {
-                $sort: { count: -1 }
+              $limit: 5
             },
             {
-                $limit: 3  
-            },
-            {
-                $project: {
-                    _id: 1,
-                    vehicleId: "$_id",
-                    vehicle: "$vehicleBasic",
-                    count: 1
-                }
+              $project: {
+                vehicleId: '$_id',
+                vehicle: '$vehicleInfo',
+                bookingCount: 1,
+                averageRating: 1,
+                totalReviews: 1
+              }
             }
-        ]);
+          ]);
+          
      
         return res.status(200).json({ recommendations });
     } catch(err) {
@@ -665,3 +787,4 @@ export const deleteAddOnsController  = async (req, res) => {
         return res.status(500).json({error: `error in the deleteAddOnsController ${err.message}`});
     }
 }
+

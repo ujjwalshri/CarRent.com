@@ -13,10 +13,10 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
     $scope.selectedCarPrice = { price: 0 }; // Object to hold selected car price 
     
     $scope.isLoading = false; // Flag to indicate loading state 
+    $scope.loadingProfileData = false;
     $scope.activeButton = 'all'; // Active filter button 
     $scope.status; // Filter status for cars (approved, rejected, all)
 
-    
     $scope.skip = 0; // Pagination offset
     $scope.limit = 10; // Pagination limit 
     
@@ -36,15 +36,17 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
      */
     function fetchProfileData(status){
         $scope.isLoading = true;
+        $scope.loadingProfileData = true;
 
         const params = {
             skip: $scope.skip,
             limit: $scope.limit
         }
-        console.log(params);
+        
         $q.all([
             UserService.getUserProfile(),
-            CarService.fetchUserCars(status ? status : 'all', params)
+            CarService.fetchUserCars(status ? status : 'all', params),
+            CarService.getCurrentPriceRanges()
         ]).then((result)=>{
             $scope.user = result[0].data;
             $scope.updateUser = $scope.user;
@@ -52,11 +54,13 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
             $scope.skip == 0 
             ? $scope.userCars = result[1].data 
             : $scope.userCars = $scope.userCars.concat(result[1].data);
-        
+            $scope.minPrice = result[2][0].min;
+            $scope.maxPrice = result[2][0].max;
         }).catch((err)=>{
             ToastService.error("Error fetching the profile data" + err);
         }).finally(()=>{
             $scope.isLoading = false;
+            $scope.loadingProfileData = false;
         })
     }
   
@@ -145,11 +149,12 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
      */
     $scope.updatePrice = () => {
         const carId = $scope.selectedCarId;
-        console.log($scope.selectedCarPrice.price);
         const carPrice = $scope.selectedCarPrice.price;
-        console.log(carPrice);  
-        console.log(carId);
-        console.log($scope.selectedCarPrice.price);
+
+        if(carPrice < $scope.minPrice || carPrice > $scope.maxPrice){
+            ToastService.error(`Car price cannot be less than ${$scope.minPrice} and greater than ${$scope.maxPrice}`);
+            return;
+        }
         
         CarService.updateCarPrice(carId, $scope.selectedCarPrice.price)
             .then(() => {

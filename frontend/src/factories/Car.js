@@ -2,7 +2,10 @@
  * Angular factory module for handling Car-related operations
  * This factory provides methods for creating and validating car objects
  */
-angular.module('myApp').factory('CarFactory', function() {
+angular.module('myApp').factory('CarFactory', function(CarService, $q) {
+
+   
+
     /**
      * Car Constructor Function
      * Creates a new Car object with the specified properties
@@ -39,6 +42,7 @@ angular.module('myApp').factory('CarFactory', function() {
         this.images = Array.isArray(images) ? images : [];
     }
 
+
    
 
     /**
@@ -52,43 +56,40 @@ angular.module('myApp').factory('CarFactory', function() {
     Car.prototype.validate = function() {
         console.log(this);
 
-
         // Validate each property with specific rules
         if (!this.name || typeof this.name !== 'string') {
-            return  "Car name is required and must be a string.";
+            return "Car name is required and must be a string.";
         }
         if (!this.company || typeof this.company !== 'string' || this.company.length < 3 || this.company.length > 20) {
-            return  "Company name is required and must be a string. and must be between 3 and 20 characters";
+            return "Company name is required and must be a string. and must be between 3 and 20 characters";
         }
-        // 1886 is the year when the first car was invented
         if (!this.modelYear || isNaN(this.modelYear) || this.modelYear < 1900 || this.modelYear > new Date().getFullYear()+1) {
-            return  "Car model year is required and must be a valid number (>=1900).";
+            return "Car model year is required and must be a valid number (>=1900).";
         }
         if (!this.category || typeof this.category !== 'string') {
-            return  "Car category is required and must be a string.";
+            return "Car category is required and must be a string.";
         }
-        if (isNaN(this.price) || this.price <= 0) {
-            return  "Car price must be a positive number.";
+        if (isNaN(this.price) || this.price < _priceRange.min || this.price > _priceRange.max) {
+            return `Car price must be between $${_priceRange.min} and $${_priceRange.max}.`;
         }
         if (isNaN(this.mileage) || this.mileage <= 0) {
-            return  "Mileage must be a positive number.";
+            return "Mileage must be a positive number.";
         }
         if (!this.color || typeof this.color !== 'string') {
-            return  "Color is required and must be a string.";
+            return "Color is required and must be a string.";
         }
         if (!this.fuelType || typeof this.fuelType !== 'string') {
-            return  "Fuel type is required and must be a string.";
+            return "Fuel type is required and must be a string.";
         }
         if(this.location && typeof this.location !== 'string'){
-            return  "Location is required and must be a string.";
+            return "Location is required and must be a string.";
         }
         if (!this.city || typeof this.city !== 'string') {
-            return  "City is required and must be a string.";
+            return "City is required and must be a string.";
         }
         if (!Array.isArray(this.images) || this.images.length === 0 || this.images.length>5) {
-            return  "Images can be in 1 to 5 range";
+            return "Images can be in 1 to 5 range";
         }
-
 
         // Return errors if any, otherwise return the car object
         return this;
@@ -123,6 +124,21 @@ angular.module('myApp').factory('CarFactory', function() {
      * Provides methods to create and validate car instances
      */
     var factory = {
+        /**
+         * Get current price range
+         * @returns {Object} Current price range {min, max}
+         */
+        getPriceRange: function() {
+            let deferred = $q.defer();
+            CarService.getCurrentPriceRanges().then((ranges)=>{
+                console.log(ranges);
+                deferred.resolve(ranges[0]);
+            }).catch((error)=>{
+                deferred.reject(error);
+            });
+            return deferred.promise;
+        },
+
         /**
          * Creates and validates a new Car instance from provided data
          * 
@@ -182,17 +198,25 @@ angular.module('myApp').factory('CarFactory', function() {
             'Outstation',
             'Both',
         ],
-        minPriceRange: 500,
-        maxPriceRange: 10000,
 
-        getPriceRangeArray: function(){
+    
+
+        /**
+         * Get array of price ranges for filtering
+         * @returns {Array} Array of price range strings
+         */
+        getPriceRangeArray: function(min , max) {
+
             const priceRangeArray = [];
-            for(let i = this.minPriceRange; i <= this.maxPriceRange; i+=500){
-               priceRangeArray.push(i.toString() + "-" + (i+500).toString());
+            const step = 500;
+            for(let i = min; i <= max; i += step) {
+                priceRangeArray.push(`${i}-${Math.min(i + step, max)}`);
             }
             return priceRangeArray;
         }
     };
+
+
 
     return factory;
 });

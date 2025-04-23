@@ -1,6 +1,7 @@
 angular.module("myApp").controller("loginCtrl", function($scope, $state, $rootScope, AuthService, ToastService, SocketService) {
     $scope.username = ""; // variable to hold the username
     $scope.password = ""; // variable to hold the password
+    $scope.showPassword = false; // variable to control password visibility
    
     /**
      * Logs in a user
@@ -38,7 +39,7 @@ angular.module("myApp").controller("loginCtrl", function($scope, $state, $rootSc
             })
             .catch(function(error) {
                 console.error('Login error:', error);
-                ToastService.error(error && error.data ? error.data.err : "Error logging in");
+                ToastService.error(error);
             });
     };
 });

@@ -16,9 +16,10 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
     $scope.isLoading = false;
     $scope.limit = 5; // Number of cars to load per page
     $scope.filteringStarted = false; // Flag to indicate if filtering has started
-    $scope.minPriceRange = CarFactory.minPriceRange; // Minimum price range
-    $scope.maxPriceRange = CarFactory.maxPriceRange; // Maximum price range
-    $scope.priceRangeArray = CarFactory.getPriceRangeArray(); // Array of price ranges
+  
+    $scope.loadingCars = false;
+    
+    console.log($scope.priceRangeArray);
     
     // Debounce mechanism for search input
     let searchTimeout;
@@ -31,14 +32,16 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
      * Initializes the home page
      */
     $scope.init = function() {
-        $scope.isLoading = true;
+        $scope.loadingCars = true;
         
         let promises = [];
         
         if ($rootScope.isLogged === false) {
             promises = [
                 CarService.getAllApprovedCars($scope.search, $scope.priceFilter, $scope.city, $scope.category, $scope.skip),
-                CarService.getAllCarCategoriesForAdmin()
+                CarService.getAllCarCategoriesForAdmin(),
+                CarService.getCurrentPriceRanges()
+                
             ];
         } else {
             const params = {
@@ -48,7 +51,8 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
                 UserService.getUserProfile(),
                 CarService.getAllApprovedCars($scope.search, $scope.priceFilter, $scope.city, $scope.category, $scope.skip),
                 CarService.getCarRecommendationsForUser(params),
-                CarService.getAllCarCategoriesForAdmin()
+                CarService.getAllCarCategoriesForAdmin(),
+                CarService.getCurrentPriceRanges()
             ];
         }
         
@@ -61,6 +65,9 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
                     }
                     if (responses[1] && responses[1]) {
                         $scope.carCategories = responses[1];
+                    }
+                    if (responses[2] && responses[2]) {
+                        $scope.priceRangeArray = CarFactory.getPriceRangeArray(responses[2][0].min, responses[2][0].max);
                     }
                 } else {
                     if (responses[0] && responses[0].data) {
@@ -85,21 +92,27 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
                     if (responses[3] && responses[3]) {
                         $scope.carCategories = responses[3];
                     }
+                    if (responses[4] && responses[4]) {
+                        $scope.priceRangeArray = CarFactory.getPriceRangeArray(responses[4][0].min, responses[4][0].max);
+                    }
                 }
             })
             .catch(function(errors) {
-                console.error("Error loading data:", errors);
-                ToastService.error(typeof errors === 'string' ? errors : 'Error loading data');
+            console.log(errors);
             })
             .finally(function() {
-                $scope.isLoading = false;
+                $scope.loadingCars = false;
             });
     };
+
+
+
 
     /**
      * Fetches filtered cars from the database
      */
     function fetchAllCars(skip) {
+        $scope.loadingCars = true;
         CarService.getAllApprovedCars($scope.search, $scope.priceFilter, $scope.city, $scope.category, skip)
             .then((res) => {
                 $scope.allCars = res.data;
@@ -107,6 +120,9 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
             })
             .catch(err => {
                 ToastService.error(err);
+            })
+            .finally(() => {
+                $scope.loadingCars = false;
             });
     }
 
@@ -122,6 +138,7 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
      * Debounced version of filterCars for search input
      */
     $scope.filterCarsWithDelay = () => {
+
         if (searchTimeout) {
             $timeout.cancel(searchTimeout);
         }
@@ -131,7 +148,7 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
     };
 
     /**
-     * Loads more cars for infinite scrolling
+     * Loads more cars for infinite scrolling using the lode more button
      */
     $scope.loadMoreCars = () => {
         $scope.isLoading = true;

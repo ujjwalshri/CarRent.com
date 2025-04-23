@@ -136,16 +136,29 @@ angular.module('myApp').service('BiddingService', function($q, BiddingFactory, A
      * @param {object} params - The parameters object
      * @returns promise
      */
-    this.getUserBookingsHistory = (params)=>{
-        console.log(params);
+    this.getUserBookingsHistory = (params) => {
+        console.log('getUserBookingsHistory called with params:', JSON.stringify(params));
+        
+        // Ensure params is an object
+        const requestParams = { ...params };
+        
+        // Make sure we don't modify the original params object
         let deferred = $q.defer();
-        $http.get(`${ApiService.baseURL}/api/bidding/getBookingsHistory/user`, { params: params, withCredentials: true })
-        .then((res)=>{
+        
+        // Send the request
+        $http.get(`${ApiService.baseURL}/api/bidding/getBookingsHistory/user`, { 
+            params: requestParams, 
+            withCredentials: true 
+        })
+        .then((res) => {
+            console.log(`Received ${res.data.bookings?.length || 0} bookings from API`);
             deferred.resolve(res.data);
         })
-        .catch(err=>{
-            deferred.reject("Error fetching user bookings");
-        })
+        .catch(err => {
+            console.error('Error in getUserBookingsHistory:', err);
+            deferred.reject(`Error fetching user bookings: ${err}`);
+        });
+        
         return deferred.promise;
     }
     /**
@@ -214,6 +227,18 @@ angular.module('myApp').service('BiddingService', function($q, BiddingFactory, A
         })
         .catch(err=>{
             deferred.reject(`Error fetching addons: ${err}`);
+        })
+        return deferred.promise;
+    }
+    this.recommendBidding = function(vehicleId){
+        console.log(vehicleId);
+        let deferred = $q.defer();
+        $http.post(`${ApiService.baseURL}/api/gemini/getOptimalBids/${vehicleId}`, { withCredentials: true })
+        .then((res)=>{
+            deferred.resolve(res.data);
+        })
+        .catch(err=>{
+            deferred.reject(`Error recommending bidding: ${err}`);
         })
         return deferred.promise;
     }

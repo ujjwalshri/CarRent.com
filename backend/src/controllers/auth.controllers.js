@@ -12,7 +12,9 @@ import User from '../models/user.model.js';
 import bcrypt from 'bcryptjs';
 import validateUser from '../validation/user.validate.js';
 import {generateTokenAndSetCookie} from '../utils/gen.token.js';
-import { generateWelcomeMail} from '../utils/gen.mail.js';
+import { generateWelcomeMail } from '../utils/gen.mail.js';
+import { sendVerificationEmail } from '../utils/email.service.js';
+import crypto from 'crypto';
 
 /**
  * User Signup Controller
@@ -37,9 +39,10 @@ import { generateWelcomeMail} from '../utils/gen.mail.js';
 export const signupController = async (req, res) => {
     const { username, password, firstName, lastName, email, city, adhaar } = req.body;
     
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+  
     try {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
        const userData = {
               username,
               password,
@@ -67,6 +70,10 @@ export const signupController = async (req, res) => {
            return res.status(400).json({ message: "Email already exists" });
        }
 
+       // Generate verification token
+       const verificationToken = crypto.randomBytes(32).toString('hex');
+       const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+
        const user = new User({
               username,
               password: hashedPassword,
@@ -74,20 +81,28 @@ export const signupController = async (req, res) => {
               lastName,
               email,
               city, 
-              adhaar
-       })
+              adhaar,
+              verificationToken,
+              verificationTokenExpires,
+              isEmailVerified: false
+       });
 
         await user.save();
 
         if(user){
-            await generateTokenAndSetCookie(user, res); // Generate token and set cookie
+            // Send verification email 
+            try {
+                await sendVerificationEmail({
+                    email: user.email,
+                    firstName: user.firstName,
+                    verificationToken: user.verificationToken
+                });
+            } catch (err) {
+                console.error(`Error sending verification email: ${err.message}`);
+            }
             
-            // generate the welcome email
-            generateWelcomeMail(user).catch((err) => {
-                console.error(`Error sending welcome email: ${err.message}`);
-            });
-            
-            return  res.status(201).json({ 
+            return res.status(201).json({ 
+                message: "Registration successful! Please check your email to verify your account.",
                 _id: user._id,
                 username: user.username,
                 firstName: user.firstName,
@@ -97,21 +112,61 @@ export const signupController = async (req, res) => {
                 isAdmin: user.isAdmin,
                 isSeller: user.isSeller,
                 isBlocked: user.isBlocked,
+                isEmailVerified: user.isEmailVerified,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
                 adhaar: user.adhaar
              });
-        }else {
+        } else {
             return res.status(400).json({ err: "Invalid user data" });
         }
        
     } catch (error) {
-        res.status(500).json({ message: `error in the singup controller ${error.message}` });
+        res.status(500).json({ message: `error in the signup controller ${error.message}` });
         if (!res.headersSent) {
             return res.status(500).json({ err: `Internal server error: ${error}` });
         } else {
             console.error('Response headers already sent', error);
         }
+    }
+}
+
+export const verifyEmailController = async (req, res) => {
+    try {
+        const { token } = req.params;
+        
+        const user = await User.findOne({
+            verificationToken: token,
+            verificationTokenExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                message: "Invalid or expired verification token"
+            });
+        }
+
+        // Update user verification status
+        user.isEmailVerified = true;
+        user.verificationToken = null;
+        user.verificationTokenExpires = null;
+        await user.save();
+
+        // Now send the welcome email since the account is verified
+        generateWelcomeMail(user).catch((err) => {
+            console.error(`Error sending welcome email: ${err.message}`);
+        });
+
+        await generateTokenAndSetCookie(user, res);
+
+        // Redirect to the verification success page
+        res.redirect('http://localhost:5500/frontend/src/#!/verified');
+
+    } catch (error) {
+        console.error('Verification error:', error);
+        res.status(500).json({
+            message: "Error verifying email"
+        });
     }
 }
 
@@ -134,32 +189,35 @@ export const loginController = async (req, res) => {
     const { username, password } = req.body;
     try{
         const user = await User.findOne({ username : username });
-        if(user.isBlocked){
-            return res.status(401).json({ err: "User is blocked" });
+        
+        if(!user){
+            return res.status(401).json({ err: "Invalid username" });
         }
-        if(user){
-            const isMatch = await bcrypt.compare(password, user.password);
-            
-            if(isMatch){
-                await generateTokenAndSetCookie(user, res); // Generate token and set cookie
-                return res.status(200).json({
-                    _id: user._id,
-                    username: user.username,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    email: user.email,
-                    city: user.city,
-                    isSeller: user.isSeller,
-                    isAdmin: user.isAdmin,
-                    isBlocked: user.isBlocked,
-                    createdAt: user.createdAt,
-                    updatedAt: user.updatedAt,
-                });
-            }else{
-                return res.status(401).json({ err: "Invalid password" });
-            }
+
+        if(user.isBlocked){
+            return res.status(401).json({ err: "User is blocked by the admin" });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        
+        if(isMatch){
+            await generateTokenAndSetCookie(user, res); // Generate token and set cookie
+            return res.status(200).json({
+                _id: user._id,
+                username: user.username,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                city: user.city,
+                isSeller: user.isSeller,
+                isAdmin: user.isAdmin,
+                isBlocked: user.isBlocked,
+                isEmailVerified: user.isEmailVerified,
+                createdAt: user.createdAt,
+                updatedAt: user.updatedAt,
+            });
         }else{
-            return res.status(401).json({ err: "Invalid username " });
+            return res.status(401).json({ err: "Invalid password" });
         }
 
     }catch(err){

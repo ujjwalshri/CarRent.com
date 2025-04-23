@@ -1,10 +1,17 @@
-angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, BiddingFactory, ToastService, BiddingService, $state) {
-    $scope.bookings = []; // array to hold all the boooking histories
-    $scope.currentPage = 1; // setting the current page to 1
-    $scope.itemsPerPage = 6; // setting the items per page to 5
-    $scope.isLoading = false; // setting the isLoading to false
-    $scope.hasMoreData = true; // setting the hasMoreData to true
-    $scope.startDate = ''; // setting the startDate to empty string
+angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, BiddingFactory, ToastService, BiddingService, $state, $window) {
+    // Initialize scope variables
+    $scope.bookings = [];
+    $scope.isLoading = false;
+    $scope.startDate = '';
+    $scope.Math = $window.Math;
+    
+    // Initialize pagination
+    $scope.pagination = {
+        currentPage: 1,
+        itemsPerPage: 6,
+        totalItems: 0,
+        maxSize: 5
+    };
 
     // Initialize sorting
     $scope.selectedSort = {
@@ -13,85 +20,71 @@ angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, Biddi
         label: 'Latest First'
     };
 
-    //  init to initialize the page data 
-    $scope.init = ()=>{
+    // Initialize controller
+    $scope.init = () => {
         fetchBookingHistory();
-    }
-   /**
-    * 
-    * @param {*} field 
-    * @param {*} order 
-    * @param {*} label 
-    * @description function to apply sorting to the page
-    */
+    };
+
+    /**
+     * Apply sorting and refresh data
+     * @param {string} field - Field to sort by
+     * @param {number} order - Sort order (1 or -1)
+     * @param {string} label - Label for the sort option
+     */
     $scope.applySorting = function(field, order, label) {
         $scope.selectedSort = {
             field: field,
             order: order,
             label: label
         };
-        // Reset pagination and reload data
-        $scope.bookings = [];
-        $scope.currentPage = 1;
-        $scope.hasMoreData = true;
+        $scope.pagination.currentPage = 1; // Reset to first page when sorting changes
         fetchBookingHistory();
     };
 
-    /** 
-    function to fetch all the bookings
-    @{params} none
-    @{returns} none
-    */
+    /**
+     * Fetch booking history with current pagination and sorting
+     */
     function fetchBookingHistory() {
-        if ($scope.isLoading) return;
-        
+        if ($scope.isLoading) return; // Prevent multiple simultaneous requests
+
         $scope.isLoading = true;
-        console.log('Fetching with sort:', $scope.selectedSort);
         
-        // Create sort object
         const sortObj = {};
         sortObj[$scope.selectedSort.field] = $scope.selectedSort.order;
         
         const params = {
-            page: $scope.currentPage,
-            limit: $scope.itemsPerPage,
+            page: $scope.pagination.currentPage,
+            limit: $scope.pagination.itemsPerPage,
             startDate: $scope.startDate || undefined,
-            sort: sortObj
+            sort: JSON.stringify(sortObj)
         };
 
         BiddingService.getUserBookingsHistory(params)
             .then((response) => {
-                if ($scope.currentPage === 1) {
-                    $scope.bookings = response.bookings.map(booking => BiddingFactory.createBid(booking, false));
-                } else {
-                    $scope.bookings = $scope.bookings.concat(
-                        response.bookings.map(booking => BiddingFactory.createBid(booking, false))
-                    );
-                }
-                
-                $scope.hasMoreData = response.totalDocs > $scope.bookings.length;
-                console.log('Bookings loaded:', $scope.bookings.length, 'Total:', response.totalDocs);
+                $scope.bookings = response.bookings.map(booking => BiddingFactory.createBid(booking, false));
+                $scope.pagination.totalItems = response.totalDocs; // Update total items count
             })
             .catch((err) => {
+                console.error('Error in getUserBookingsHistory:', err);
                 ToastService.error(`Error fetching bookings: ${err}`);
             })
             .finally(() => {
                 $scope.isLoading = false;
             });
     }
-    // function to change the page
+    
+    /**
+     * Handle page change events
+     */
     $scope.pageChanged = function() {
-        if (!$scope.isLoading && $scope.hasMoreData) {
-            $scope.currentPage++;
-            fetchBookingHistory();
-        }
+        fetchBookingHistory();
     };
-    /*
-    function to navigate to the single car page
-    @params carId
-    @returns none
-    */
-    $scope.navigateToSingleCarPage = function(carId){
+    
+    /**
+     * Navigate to single car page
+     * @param {string} carId - ID of the car to view
+     */
+    $scope.navigateToSingleCarPage = function(carId) {
         $state.go('singleCar', {id: carId});
-    }
+    };
 });

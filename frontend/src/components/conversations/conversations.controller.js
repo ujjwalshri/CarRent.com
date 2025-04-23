@@ -91,7 +91,6 @@ angular
         SocketService.off("newMessage");
         SocketService.off("onlineUsers");
         SocketService.off("newConversation");
-        // No need to handle disconnect - service handles it automatically
       });
       
       // Scrolls the chat box to display the most recent messages

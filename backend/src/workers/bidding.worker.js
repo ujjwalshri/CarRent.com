@@ -49,7 +49,9 @@ async function processBidMessage(message) {
         // Send confirmation emails
         generateAndSendMail({
             subject: "Bidding Sent",
-            text: `Congrats You have successfully placed a bid on vehicle ${bidData.vehicle.name} the owner of the vehicle is ${bidData.owner.username}, the bid amount is $ ${bidData.amount}, startDate is ${new Date(bidData.startDate).toLocaleDateString()}, endDate is ${new Date(bidData.endDate).toLocaleDateString()}`,
+            text: `Congrats You have successfully placed a bid on vehicle ${bidData.vehicle.name} the owner of the vehicle is ${bidData.owner.username}, the bid amount is $ ${bidData.amount}, startDate is ${new Date(bidData.startDate).toLocaleDateString()}, endDate is ${new Date(bidData.endDate).toLocaleDateString()}
+               , selected addons : ${bidData.selectedAddons.length > 0 ? bidData.selectedAddons.map(addon => addon.name).join(', ') : 'No addons selected'}
+            `,
             to: bidData.from.email
         }).catch((err) => {
             console.error(`Error sending bidding email: ${err.message}`);
@@ -57,7 +59,9 @@ async function processBidMessage(message) {
 
         generateAndSendMail({
             subject: "Bidding Sent",
-            text: `Congrats bid placed on your vehicle ${bidData.vehicle.name} the bid amount is $ ${bidData.amount}, startDate is ${new Date(bidData.startDate).toLocaleDateString()}, endDate is ${new Date(bidData.endDate).toLocaleDateString()} placed by ${bidData.from.username}`,
+            text: `Congrats bid placed on your vehicle ${bidData.vehicle.name} the bid amount is $ ${bidData.amount}, startDate is ${new Date(bidData.startDate).toLocaleDateString()}, endDate is ${new Date(bidData.endDate).toLocaleDateString()} placed by ${bidData.from.username}
+           , selected addons : ${ bidData.selectedAddons.length > 0 ? bidData.selectedAddons.map(addon => addon.name).join(', ') : 'No addons selected'}
+            `,
             to: bidData.owner.email
         }).catch((err) => {
             console.error(`Error sending bidding email: ${err.message}`);

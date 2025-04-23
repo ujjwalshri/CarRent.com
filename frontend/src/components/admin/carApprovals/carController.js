@@ -1,6 +1,9 @@
 angular.module("myApp").controller("carCtrl", function ($scope, ToastService, CarService, $q) {
   $scope.carCategories  = []; // array to store the car categories
   $scope.carCategory = ""; // string to store the car category
+  $scope.isLoading = false; 
+  $scope.priceRange = {min: 0, max: 0}; // object to store the price range
+  $scope.platformCharge = {percentage: 0}; // object to store the platform charge percentage
   
    /*
     function to initialize the car controller
@@ -16,17 +19,41 @@ angular.module("myApp").controller("carCtrl", function ($scope, ToastService, Ca
    * @returns {void}
    */
   function fetchCarManagementData(){
+    $scope.isLoading = true;
     $q.all([  
       CarService.getCars(),
-      CarService.getAllCarCategoriesForAdmin()
-    ]).then(([cars, carCategories]) => {
+      CarService.getAllCarCategoriesForAdmin(),
+      CarService.getCurrentPriceRanges(),
+      CarService.getCharges()
+    ]).then(([cars, carCategories, priceRanges, charges]) => {
       $scope.cars = cars;
-      $scope.carCategories =carCategories;
+      $scope.carCategories = carCategories;
+      $scope.priceRange = priceRanges[0];
+      console.log(charges);
+      $scope.platformCharge.percentage = charges[0].percentage;
     }).catch((err)=>{
       ToastService.error("Error fetching car management data");
+    }).finally(()=>{
+      $scope.isLoading = false;
     })
   }
   
+  /**
+   * Saves the platform charge percentage
+   * @returns {void}
+   */
+  $scope.savePlatformCharge = () => {
+    
+   
+    CarService.updateCharges({charge: "Platform Fee", percentage: $scope.platformCharge.percentage })
+      .then(() => {
+        ToastService.success("Platform charge updated successfully");
+        fetchCarManagementData();
+      })
+      .catch((err) => {
+        ToastService.error("Error updating platform charge");
+      });
+  }
 
   /**
    * Adds a car category to the database
@@ -45,6 +72,21 @@ angular.module("myApp").controller("carCtrl", function ($scope, ToastService, Ca
       ToastService.error("Error adding car category");
     }).finally(()=>{
       $scope.carCategory = "";
+    })
+  }
+
+  /**
+   * Adds a price range to the database
+   * @returns {void}
+   */
+  $scope.addPriceRange = () => {
+    CarService.updateCarPriceRange($scope.priceRange).then((priceRange) => {
+      ToastService.success("Price range added successfully");
+      fetchCarManagementData();
+    }).catch((err)=>{
+      ToastService.error("Error adding price range");
+    }).finally(()=>{
+      $scope.priceRange = "";
     })
   }
 

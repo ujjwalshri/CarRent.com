@@ -43,8 +43,20 @@ const userSchema = new mongoose.Schema({
         type:String,
         required:[ true, "Adhaar is required"],
         unique:true
+    },
+    isEmailVerified: {
+        type: Boolean,
+        default: false
+    },
+    verificationToken: {
+        type: String,
+        default: null
+    },
+    verificationTokenExpires: {
+        type: Date,
+        default: null
     }
-    }, {timestamps:true});
+}, {timestamps:true});
 
 userSchema.index({ city: 1 });
 const User = mongoose.model('User', userSchema);
