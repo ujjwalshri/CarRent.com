@@ -3,9 +3,6 @@
  * This factory provides methods for creating and validating car objects
  */
 angular.module('myApp').factory('CarFactory', function(CarService, $q) {
-
-   
-
     /**
      * Car Constructor Function
      * Creates a new Car object with the specified properties
@@ -68,9 +65,6 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q) {
         }
         if (!this.category || typeof this.category !== 'string') {
             return "Car category is required and must be a string.";
-        }
-        if (isNaN(this.price) || this.price < _priceRange.min || this.price > _priceRange.max) {
-            return `Car price must be between $${_priceRange.min} and $${_priceRange.max}.`;
         }
         if (isNaN(this.mileage) || this.mileage <= 0) {
             return "Mileage must be a positive number.";
@@ -149,10 +143,15 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q) {
             // Create new car instance with provided data
             var car = new Car(
                 data.name, data.company, data.modelYear, data.category,
-                data.price, data.mileage, data.color, data.fuelType,data.location, data.city, data.vehicleImages
+                data.price, data.mileage, data.color, data.fuelType, data.location, data.city, data.vehicleImages
             );
+            
+            console.log("Created car object:", car);
+            
             // Validate the car and return result
             var validation = car.validate();
+            console.log("Validation result:", validation);
+            
             if (typeof validation === 'string') {
                 return validation;
             }

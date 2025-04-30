@@ -162,7 +162,30 @@ export const getAllCarController = async (req, res) => {
     try {
         const aggregationPipeline = [];
 
-        if (search.trim()) {
+        
+        let matchConditions = {
+            status: 'approved',
+            deleted: false
+        };
+
+        
+        if (priceRange) {
+            const [minPrice, maxPrice] = priceRange.split('-').map(Number);
+            matchConditions.price = { $gte: minPrice, $lte: maxPrice };
+        }
+
+        
+        if (city) {
+            matchConditions.city = city;
+        }
+
+        
+        if (category) {
+            matchConditions.category = category;
+        }
+
+        
+        if (search?.trim()) {
             aggregationPipeline.push({
                 $search: {
                     index: "vehicleSearchIndex",
@@ -175,31 +198,15 @@ export const getAllCarController = async (req, res) => {
             });
         }
 
-        aggregationPipeline.push({
-            $match: {
-                status: 'approved',
-                deleted: false,
-            },
-        });
+        
+        aggregationPipeline.push({ $match: matchConditions });
 
-        if (priceRange) {
-            const [minPrice, maxPrice] = priceRange.split('-').map(Number);
-            aggregationPipeline.push({
-                $match: {
-                    price: { $gte: minPrice, $lte: maxPrice },
-                },
-            });
-        }
-
-        if (city) {
-            aggregationPipeline.push({ $match: { city } });
-        }
-
-        if (category) {
-            aggregationPipeline.push({ $match: { category } });
-        }
-
-        aggregationPipeline.push({$sort:{ createdAt: -1}},{ $skip: skip }, { $limit: limit });
+        
+        aggregationPipeline.push(
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: limit }
+        );
 
         const cars = await Vehicle.aggregate(aggregationPipeline);
         await setCachedData(cacheKey, cars);
@@ -314,13 +321,8 @@ export const toggleVehicleStatusController = async (req, res) => {
 export const updateVehicleController = async (req, res)=>{
      const{ id }= req.params;
      const {price} = req.body;
-
-
-    
+     
         try{
-            if(!Types.ObjectId.isValid(id)){
-                return res.status(404).json({message: 'Invalid vehicle id'});
-            }
             await Vehicle.updateOne(
                 { _id: id }, 
                 { price: price } 
@@ -389,43 +391,83 @@ export const getVehicleByIdController = async (req, res) => {
  * filtering by status and pagination support.
  */
 export const getAllCarsByUser = async (req, res) => {
-    const { carStatus, skip=0, limit=5 } = req.query;
-    
-    // implementing redis caching 
-    const cacheKey = `userCars:${req.user._id}:${carStatus}:${skip}:${limit}`;
-    const cachedData = await getCachedData(cacheKey);
-    if(cachedData){
-        console.log("serving data from cache");
-        return res.status(200).json(cachedData);
-    }
-  
+
+    const userId = req.user._id;
+    const { carStatus, skip=0, limit=5, search='', fuelType='', category='', city='', priceRange='' } = req.query;
     try {
-        // Build the query based on owner ID and optional status filter
-        const query = { 'owner._id': req.user._id };
+        const aggregationPipeline = [];
 
-        if (carStatus !== 'all') {
-            query.status = carStatus;
+        // Add text search if search query exists
+        if (search.trim()) {
+            aggregationPipeline.push({
+                $search: {
+                    index: "vehicleSearchIndex",
+                    text: {
+                        query: search,
+                        path: ["company", "modelYear", "name"],
+                        fuzzy: {},
+                    },
+                },
+            });
         }
-        const aggregationPipeline =[
 
+        // Build the match query based on owner ID and optional status filter
+        const matchQuery = { 'owner._id': new Types.ObjectId(String(userId)) };
+        if (carStatus !== 'all') {
+            matchQuery.status = carStatus;
+        }
+        if(req.params.userId){
+            matchQuery.status = 'approved';
+        }
+        if(fuelType){
+            matchQuery.fuelType = fuelType;
+        }
+        if(category){
+            matchQuery.category = category;
+        }
+        if(city){
+            matchQuery.city = city;
+        }
+        if(priceRange){
+            const [minPrice, maxPrice] = priceRange.split('-').map(Number);
+            matchQuery.price = { $gte: minPrice, $lte: maxPrice };
+        }
+        
+        // Create a copy of the pipeline for counting total documents
+        const countPipeline = [...aggregationPipeline];
+        countPipeline.push({ $match: matchQuery }, { $count: "total" });
+        
+        // Main pipeline for fetching cars with pagination
+        aggregationPipeline.push(
             {
-                $match: query
+                $match: matchQuery
             },
-
             {
                 $skip: parseInt(skip)
             },
-
             {
                 $limit: parseInt(limit)
+            },
+            {
+                $sort: { createdAt: -1 }
             }
-        ]
+        );
 
-        const cars = await Vehicle.aggregate(aggregationPipeline);
-        // Cache the result for 60 seconds
-        await setCachedData(cacheKey, cars);
-        console.log("serving data from the database");
-        return res.status(200).json(cars);
+        // Execute both pipelines
+        const [cars, countResult] = await Promise.all([
+            Vehicle.aggregate(aggregationPipeline),
+            Vehicle.aggregate(countPipeline)
+        ]);
+        
+        // Get total count from count pipeline result
+        const totalDocs = countResult.length > 0 ? countResult[0].total : 0;
+        
+        return res.status(200).json({
+            data: cars,
+            totalDocs: totalDocs,
+            page: parseInt(skip/limit) + 1,
+            limit: parseInt(limit)
+        });
     } catch (error) {
         console.error('Get all cars by user error:', error);
         return res.status(500).json({ error: error.message });
@@ -483,7 +525,7 @@ export const getPendingCars = async (req, res) => {
  */
 export const listUnlistCarController = async (req, res)=>{
     const {vehicleId} = req.params;
-    console.log(vehicleId);
+
     try{
         const vehicle = await Vehicle.findByIdAndUpdate(vehicleId, {deleted: !deleted});
         res.status(200).json({message: 'Car updated successfully', vehicle});
@@ -493,6 +535,19 @@ export const listUnlistCarController = async (req, res)=>{
     }
 }
 
+/**
+ * Retrieves cars with bids
+ * 
+ * @async
+ * @function getCarsWithBids
+ * @param {Object} req - Express request object
+ * @param {Object} req.user - Authenticated user object
+ * @param {string} req.user._id - User ID
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with cars and bids or error
+ * @description
+ * Retrieves cars with bids for the authenticated user.
+ */
 export const getCarsWithBids = async(req, res)=>{
     const ownerId = req.user._id;
   try{

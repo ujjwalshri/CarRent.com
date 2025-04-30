@@ -9,11 +9,12 @@
  */
 
 import User from '../models/user.model.js';
+import Token from '../models/token.model.js';
 import bcrypt from 'bcryptjs';
 import validateUser from '../validation/user.validate.js';
 import {generateTokenAndSetCookie} from '../utils/gen.token.js';
 import { generateWelcomeMail } from '../utils/gen.mail.js';
-import { sendVerificationEmail } from '../utils/email.service.js';
+import { sendVerificationEmail } from '../services/email.service.js';
 import crypto from 'crypto';
 
 /**
@@ -39,63 +40,65 @@ import crypto from 'crypto';
 export const signupController = async (req, res) => {
     const { username, password, firstName, lastName, email, city, adhaar } = req.body;
     
-  
     try {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-       const userData = {
-              username,
-              password,
-              firstName,
-              lastName,
-              email,
-              city,
-              adhaar
-       }
+        const userData = {
+            username,
+            password,
+            firstName,
+            lastName,
+            email,
+            city,
+            adhaar
+        }
 
-       // validate the user before proceeding
-       const validUser = validateUser(userData);
-       if(validUser.error){
-           return res.status(400).json({ err: `error ${validUser.error}` });
-       }
-       // Check for existing username
-       const existingUsername = await User.findOne({ username });
-       if (existingUsername) {
-           return res.status(400).json({ message: "Username already exists" });
-       }
+        const validUser = validateUser(userData);
+        if(validUser.error){
+            return res.status(400).json({ err: `error ${validUser.error}` });
+        }
 
-       // Check for existing email
-       const existingEmail = await User.findOne({ email });
-       if (existingEmail) {
-           return res.status(400).json({ message: "Email already exists" });
-       }
+        const existingUsername = await User.findOne({ username });
+        if (existingUsername) {
+            return res.status(400).json({ message: "Username already exists" });
+        }
 
-       // Generate verification token
-       const verificationToken = crypto.randomBytes(32).toString('hex');
-       const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+        const existingEmail = await User.findOne({ email });
+        if (existingEmail) {
+            return res.status(400).json({ message: "Email already exists" });
+        }
 
-       const user = new User({
-              username,
-              password: hashedPassword,
-              firstName,
-              lastName,
-              email,
-              city, 
-              adhaar,
-              verificationToken,
-              verificationTokenExpires,
-              isEmailVerified: false
-       });
+        const user = new User({
+            username,
+            password: hashedPassword,
+            firstName,
+            lastName,
+            email,
+            city, 
+            adhaar,
+            isEmailVerified: false
+        });
 
         await user.save();
 
-        if(user){
-            // Send verification email 
+        if(user) {
+
+            const verificationToken = crypto.randomBytes(32).toString('hex');
+            
+            const token = new Token({
+                userId: user._id,
+                token: verificationToken,
+                type: 'email_verification',
+                expires: new Date(Date.now() + 24 * 60 * 60 * 1000) 
+            });
+            
+            await token.save();
+
             try {
                 await sendVerificationEmail({
                     email: user.email,
                     firstName: user.firstName,
-                    verificationToken: user.verificationToken
+                    verificationToken: verificationToken
                 });
             } catch (err) {
                 console.error(`Error sending verification email: ${err.message}`);
@@ -116,7 +119,7 @@ export const signupController = async (req, res) => {
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
                 adhaar: user.adhaar
-             });
+            });
         } else {
             return res.status(400).json({ err: "Invalid user data" });
         }
@@ -131,41 +134,128 @@ export const signupController = async (req, res) => {
     }
 }
 
+/**
+ * @async
+ * @function verifyEmailController
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.token - Verification token
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with user details or error message
+ */
 export const verifyEmailController = async (req, res) => {
     try {
         const { token } = req.params;
         
-        const user = await User.findOne({
-            verificationToken: token,
-            verificationTokenExpires: { $gt: Date.now() }
+        // Find the token document
+        const verificationToken = await Token.findOne({
+            token: token,
+            type: 'email_verification',
+            expires: { $gt: Date.now() }
         });
 
-        if (!user) {
+        if (!verificationToken) {
             return res.status(400).json({
                 message: "Invalid or expired verification token"
             });
         }
 
+        // Find and update the user
+        const user = await User.findById(verificationToken.userId);
+        
+        if (!user) {
+            return res.status(400).json({
+                message: "User not found"
+            });
+        }
+
         // Update user verification status
         user.isEmailVerified = true;
-        user.verificationToken = null;
-        user.verificationTokenExpires = null;
         await user.save();
+
+        // Delete the used token
+        await Token.deleteOne({ _id: verificationToken._id });
 
         // Now send the welcome email since the account is verified
         generateWelcomeMail(user).catch((err) => {
             console.error(`Error sending welcome email: ${err.message}`);
         });
 
-        await generateTokenAndSetCookie(user, res);
-
         // Redirect to the verification success page
-        res.redirect('http://localhost:5500/frontend/src/#!/verified');
+        res.redirect('http://localhost:5500/#!/verified');
 
     } catch (error) {
         console.error('Verification error:', error);
         res.status(500).json({
             message: "Error verifying email"
+        });
+    }
+}
+
+/**
+ * function to resend the verification email to the user 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns send the verification email to the user and return the response if successful else return the error
+ * @async 
+ * @function resendVerificationEmailController
+ */
+export const resendVerificationEmailController = async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        if (!email) {
+            return res.status(400).json({ message: "Email is required" });
+        }
+
+
+        const user = await User.findOne({ email });
+        
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        if (user.isEmailVerified) {
+            return res.status(400).json({ message: "Email is already verified" });
+        }
+
+        await Token.deleteMany({ 
+            userId: user._id, 
+            type: 'email_verification'
+        });
+
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        
+
+        const token = new Token({
+            userId: user._id,
+            token: verificationToken,
+            type: 'email_verification',
+            expires: new Date(Date.now() + 24 * 60 * 60 * 1000) 
+        });
+        
+        await token.save();
+
+        try {
+            await sendVerificationEmail({
+                email: user.email,
+                firstName: user.firstName,
+                verificationToken: verificationToken
+            });
+
+            return res.status(200).json({ 
+                message: "Verification email has been resent successfully" 
+            });
+        } catch (err) {
+            console.error(`Error sending verification email: ${err.message}`);
+            return res.status(500).json({ 
+                message: "Error sending verification email" 
+            });
+        }
+    } catch (error) {
+        console.error('Resend verification error:', error);
+        return res.status(500).json({
+            message: "Error resending verification email"
         });
     }
 }
@@ -197,6 +287,11 @@ export const loginController = async (req, res) => {
         if(user.isBlocked){
             return res.status(401).json({ err: "User is blocked by the admin" });
         }
+        
+        // Uncomment in the production environment so that only verified users can login
+        // if(user.isEmailVerified === false){
+        //     return res.status(401).json({ err: "Email is not verified" });
+        // }
 
         const isMatch = await bcrypt.compare(password, user.password);
         
@@ -244,15 +339,11 @@ export const loginController = async (req, res) => {
  * @returns {Object} JSON response with current user details or error message
  */
 export const meController = async (req, res) => {
-    // check if the user is already cached in redis
-    const userId = req.user;
-   
+
     try{
-        const userId = req.user;
+        const userId = req.user._id;
         const user = await User.findById(userId);
         if(user){
-          
-
             return res.status(200).json({
                 username: user.username,
                 firstName: user.firstName,
@@ -262,11 +353,11 @@ export const meController = async (req, res) => {
                 isSeller: user.isSeller,
                 isAdmin: user.isAdmin,
                 isBlocked: user.isBlocked,
+                isEmailVerified: user.isEmailVerified,
                 createdAt: user.createdAt,
                 updatedAt: user.updatedAt,
             });
         }else{
-
             return res.status(404).json({ err: "User not found" });
         }
 

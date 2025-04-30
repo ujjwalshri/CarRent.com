@@ -1,3 +1,4 @@
+
 /**
  * Seller Analytics Controller
  * This controller handles all analytics-related operations for sellers including revenue calculations,
@@ -7,8 +8,8 @@
 import Vehicle from "../models/vehicle.model.js";
 import Bidding from "../models/bidding.model.js";
 import Review from "../models/review.model.js";
-import redisClient from "../config/redis.connection.js";
 import { getCachedData, setCachedData } from "../services/redis.service.js";
+import { Types } from "mongoose";
 
 
 /**
@@ -640,14 +641,14 @@ const pipelines = {
                 _id: {
                     $hour: {
                         date: "$createdAt",
-                        timezone: "Asia/Kolkata"
+                        timezone: "Asia/Kolkata" // timezone for india
                     }
                 },
                 count: { $sum: 1 }
             }
         },
         {
-            $sort: { _id: 1 }
+            $sort: { _id: 1 } // sort by hour
         },
         {
             $project: {
@@ -895,6 +896,66 @@ const pipelines = {
             $limit: 5
         }
     ]),
+    sellerRating: (sellerId) => ([
+        {
+          $match: {
+            'owner._id': { $exists: true, $eq: new Types.ObjectId(String(sellerId)) }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            averageRating: { $avg: "$rating" }
+          }
+        }
+      ])
+      ,
+      topCitiesWithMostNegativeReviews: (sellerId, startDate, endDate) => ([
+        {
+          $match: {
+            'owner._id': { $exists: true, $eq: new Types.ObjectId(String(sellerId)) },
+            createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
+            rating: { $lt: 3 } 
+          }
+        },
+        {
+          $project: {
+            city: "$vehicle.city",
+            createdAt: 1
+          }
+        },
+        {
+          $project: {
+            city: 1,
+            createdAt: {
+              $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } 
+            }
+          }
+        },
+        {
+          $group: {
+            _id: { city: "$city", date: "$createdAt" }, 
+            count: { $sum: 1 }  
+          }
+        },
+        {
+          $group: {
+            _id: "$_id.city",  
+            reviewCounts: {
+              $push: { 
+                date: "$_id.date", 
+                count: "$count" 
+              }
+            }
+          }
+        },
+        {
+          $sort: { count: -1 }
+        },
+        {
+          $limit: 5 
+        }
+      ])
 };
 
 // Individual API Endpoints for Overview Analytics
@@ -1353,3 +1414,47 @@ export const getSelectedAddonsCount = async (req, res) => {
         return handleResponse(res, 500, { error: 'Failed to fetch selected addons count data' });
     }
 };
+
+
+/**
+ * @description Get the seller rating
+ * @param {Object} req - The request object
+ * @param {Object} req.params - The params object
+ * @param {string} req.params.id - The seller id
+ * @returns {Object} The seller rating data
+ */
+export const getSellerRating = async (req, res)=>{
+    const sellerId = req.params.id;
+    if(!sellerId){
+        return handleResponse(res, 400, {error: "sellerId is required"});
+    }
+    try {
+        const sellerRatingData = await Review.aggregate(pipelines.sellerRating(sellerId));
+        return handleResponse(res, 200, {sellerRating:  sellerRatingData});
+    } catch (error) {
+        console.error('Error in getSellerRating:', error);
+        return handleResponse(res, 500, {error: 'Failed to fetch seller rating data'});
+    }
+}
+
+
+/**
+ * Controller function to get the top cities with most negative reviews for a seller
+ * @param {*} req  - The request object
+ * @param {*} res - The response object
+ * @returns returns the top cities with most negative reviews for a seller
+ */
+export const topCitiesWithMostNegativeReviews = async (req, res)=>{
+    const sellerId = req.user._id;
+    const { startDate, endDate } = req.query;
+    if(!sellerId){
+        return handleResponse(res, 400, {error: "sellerId is required"});
+    }
+    try {
+        const topCitiesWithMostNegativeReviewsData = await Review.aggregate(pipelines.topCitiesWithMostNegativeReviews(sellerId, startDate, endDate));
+        return handleResponse(res, 200, topCitiesWithMostNegativeReviewsData );
+    } catch (error) {
+        console.error('Error in getTopCitiesWithMostNegativeReviews:', error);
+        return handleResponse(res, 500, {error: 'Failed to fetch top cities with most negative reviews data'});
+    }
+}

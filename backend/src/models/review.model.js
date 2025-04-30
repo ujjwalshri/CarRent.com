@@ -31,6 +31,10 @@ const reviewSchema = new mongoose.Schema(
                 type: Number,
                 required: true,
             },
+            city: {
+                type: String,
+                required: true,
+            }
         },
         reviewer: {
             _id: {
@@ -50,13 +54,24 @@ const reviewSchema = new mongoose.Schema(
                 required: true,
             }
         },
+        owner:{
+            _id: {
+                type: mongoose.Schema.Types.ObjectId,
+                required: true,
+            },
+            username: {
+                type: String,
+                required: true,
+            }
+        },
         rating: {
             type: Number,
             required: true,
         },
         review: {
             type: String,
-            required: true,
+            default: "", // Adding a default empty string
+            required: false // Explicitly making it not required
         },
     },
     { timestamps: true }

@@ -1,11 +1,15 @@
 import mongoose from "mongoose";
 import User from "../models/user.model.js"; 
 import Vehicle from "../models/vehicle.model.js";
-import redisClient from "../config/redis.connection.js"; // import redis client
 
-/*
-@description:  function to get all the users from the database implemented filtering using the search query
-*/
+
+
+/**
+ * Retrieves all users from the database, excluding the admin user
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with users and pagination details
+ */
 export const getAllUsers = async (req, res) => {
     const { city, search, skip=0, limit=10 } = req.query;
     const adminId = req.user._id;
@@ -13,8 +17,14 @@ export const getAllUsers = async (req, res) => {
     try {
         let pipeline = [];
 
-         // Add search condition if provided
-         if (search) {
+        // Build match conditions
+        let matchConditions = { _id: { $ne: adminId } };
+        if (city) {
+            matchConditions.city = city;
+        }
+
+        // Add search stage if search query exists
+        if (search) {
             pipeline.push({
                 $search: {
                     index: "userIndex", 
@@ -27,21 +37,12 @@ export const getAllUsers = async (req, res) => {
             });
         }
 
-        // Base match condition to exclude admin
+        // Add match stage
         pipeline.push({
-            $match: { _id: { $ne: adminId } }
+            $match: matchConditions
         });
 
-       
-
-        // Add city filter if provided
-        if (city) {
-            pipeline.push({
-                $match: { city }
-            });
-        }
-
-        // Add facet to get both total count and paginated results
+        // Add facet for pagination
         pipeline.push({
             $facet: {
                 metadata: [{ $count: "total" }],
@@ -74,10 +75,14 @@ export const getAllUsers = async (req, res) => {
     }
 };
 
-/*
-@description: function to block a user
-*/
-
+/**
+ * Blocks a user and marks their cars as deleted uses transactions to ensure data consistency
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.userId - User ID to block
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message or error
+ */
 export const blockUser = async (req, res) => {
     const { userId } = req.params;
 
@@ -92,9 +97,7 @@ export const blockUser = async (req, res) => {
             { new: true, session }
         );
 
-        if (!user) {
-            throw new Error('User not found');
-        }
+       
 
         // Fetch all cars belonging to the user and set `deleted = true`
         await Vehicle.updateMany(
@@ -117,9 +120,99 @@ export const blockUser = async (req, res) => {
         return res.status(500).json({ error: `Error in blockUser: ${err.message}` });
     }
 };
-/*
-function to unblock a user and mark their cars as not deleted
-*/
+
+
+/**
+ * Makes a user a seller
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.userId - User ID to make a seller
+ * @param {Object} res - Express response object
+ */
+export const makeUserSeller = async(req, res)=>{
+    const {userId} = req.params;
+    if(!userId){
+        return res.status(400).json({message: 'userId is required'});
+    }
+    try {
+        const user = User.updateOne({_id: userId}, {isSeller: true});
+        return res.status(200).json({message: 'User is now a seller'});
+    }catch(err){
+        console.log(`error in the makeUserSeller ${err.message}`);
+        res.status(500).json({message: `error in the makeUserSeller ${err.message}`});
+    }
+}
+
+/**
+ * Updates the user profile
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.userId - User ID to update the profile
+ * @param {Object} res - Express response object
+ */
+export const updateUserProfileController = async (req, res) => {
+    const userId = req.user._id;
+   
+    const { firstName, lastName, city } = req.body;
+
+
+    if (!firstName || !lastName || !city) {
+        return res.status(400).json({ message: 'All fields (firstName, lastName, city) are required' });
+    }
+
+
+    try {
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            {
+                $set: {
+                    firstName,
+                    lastName,
+                    city
+                },
+            },
+            { new: true, runValidators: true }
+        ).select('-password');
+        
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+
+        return res.status(200).json({ message: 'User profile updated successfully', user: updatedUser });
+    } catch (err) {
+        console.log(`Error in the updateUserProfileController: ${err.message}`);
+        return res.status(500).json({ message: `Error in the updateUserProfileController: ${err.message}` });
+    }
+};
+
+
+/**
+ * @description: function to get the user at the userId
+ * @param {string} userId - the userId of the user to get   
+ * @returns {object} - the user object
+ */
+export const getUserAtUserId = async (req, res) => {
+    const {userId} = req.params;
+    try {
+        const user = await User.findById(userId).select('-password -adhaar');
+        if(!user){
+            return res.status(404).json({message: 'User not found'});
+        }
+        return res.status(200).json({message: 'User found', user});
+    }catch(err){
+        console.log(`Error in the getUserAtUserId: ${err.message}`);
+        return res.status(500).json({message: `Error in the getUserAtUserId: ${err.message}`});
+    }
+}
+
+/**
+ * Unblocks a user and marks their cars as not deleted
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - Request parameters
+ * @param {string} req.params.userId - User ID to unblock
+ * @param {Object} res - Express response object
+ */
 export const unblockUser = async (req, res) => {
     const { userId } = req.params;
 
@@ -159,61 +252,3 @@ export const unblockUser = async (req, res) => {
         return res.status(500).json({ error: `Error in blockUser: ${err.message}` });
     }
 };
-
-
-/*
-@description: function to make a user seller
-*/
-export const makeUserSeller = async(req, res)=>{
-    const {userId} = req.params;
-    if(!userId){
-        return res.status(400).json({message: 'userId is required'});
-    }
-    try {
-        const user = User.updateOne({_id: userId}, {isSeller: true});
-        return res.status(200).json({message: 'User is now a seller'});
-    }catch(err){
-        console.log(`error in the makeUserSeller ${err.message}`);
-        res.status(500).json({message: `error in the makeUserSeller ${err.message}`});
-    }
-}
-
-/*
-@description: function to update the user profile
-*/
-export const updateUserProfileController = async (req, res) => {
-    const userId = req.user._id;
-   
-    const { firstName, lastName, city } = req.body;
-
-
-    if (!firstName || !lastName || !city) {
-        return res.status(400).json({ message: 'All fields (firstName, lastName, city) are required' });
-    }
-
-
-    try {
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            {
-                $set: {
-                    firstName,
-                    lastName,
-                    city
-                },
-            },
-            { new: true, runValidators: true }
-        ).select('-password');
-        
-        if (!updatedUser) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-
-        return res.status(200).json({ message: 'User profile updated successfully', user: updatedUser });
-    } catch (err) {
-        console.log(`Error in the updateUserProfileController: ${err.message}`);
-        return res.status(500).json({ message: `Error in the updateUserProfileController: ${err.message}` });
-    }
-};
-

@@ -4,7 +4,7 @@ import joi from 'joi';
     @returns object
 */
 function validateUser(user){
-    console.log("validate user mai " , user);
+
     const validateUserSchema = joi.object({
         username: joi.string().min(3).max(30).required(),
         email:joi.string()
@@ -16,7 +16,7 @@ function validateUser(user){
         city: joi.string().min(3).max(30).required(),
         adhaar: joi.required(),
     });
-    console.log(validateUserSchema.validate(user));
+
     return validateUserSchema.validate(user);
 }
 

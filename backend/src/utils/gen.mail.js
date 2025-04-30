@@ -10,7 +10,7 @@ import {
     sendCongratulationEmail, 
     sendInvoiceEmail,
     sendCarRejectionEmail
-} from './email.service.js';
+} from '../services/email.service.js';
 
 /**
  * Generates and sends a generic email using provided data

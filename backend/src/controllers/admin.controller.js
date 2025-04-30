@@ -5,7 +5,6 @@ import User from "../models/user.model.js";
 import Price from "../models/price.model.js";
 import CarCategory from "../models/car.category.model.js";
 import { generateCongratulationMail,generateCongratulationMailToBuyer } from "../utils/gen.mail.js";
-// importing redis service
 import { getCachedData, setCachedData } from "../services/redis.service.js";
 import Charges from "../models/charges.model.js";
 
@@ -14,26 +13,23 @@ const finePerKilometer = 10; // Constant for fine per kilometer
 
 const getValue = (result, fallback = 0) =>
     result.status === "fulfilled" ? result.value : fallback;
-/*
-@description: function to get charts data by running all the pipelines in parallel using Promise.allSettled 
-@params startDate and endDate
-returns the charts data
-*/
-export const getChartsDataController = async (req, res) => {
-    try {
-        const { startDate, endDate } = req.query; //2025-03-25T00:00:00.000Z example date format
 
-       if(!startDate || !endDate){
-        return res.status(400).json({message: "startDate and endDate are required"});
-       }
 
-       const cacheKey = `admin-charts-data-${startDate}-${endDate}`;
-       const cachedData = await getCachedData(cacheKey);
-       if(cachedData){
-        console.log("serving data from cache");
+/**
+ * Get car description statistics grouped by car category
+ * @param {*} req 
+ * @param {*} res 
+ * @returns car description statistics
+ */
+export const getCarDescriptionStats = async (req, res) => {
+    const { startDate, endDate } = req.query;
+    // redis cache
+    const cacheKey = `car-description-stats-${startDate}-${endDate}`;
+    const cachedData = await getCachedData(cacheKey);
+    if(cachedData){
         return res.status(200).json(cachedData);
-       }
-
+    }
+    try {
         const carDescriptionPipeline = [
             {
                 $match: {
@@ -53,6 +49,28 @@ export const getChartsDataController = async (req, res) => {
             }
         ];
 
+        const stats = await Vehicle.aggregate(carDescriptionPipeline);
+        await setCachedData(cacheKey, stats);
+        res.status(200).json(stats);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * Get top 10 popular car models
+ * @param {*} req 
+ * @param {*} res 
+ * @returns top 10 popular car models grouped by the whole car name
+ */
+export const getTop10PopularCarModels = async (req, res) => {
+    const { startDate, endDate } = req.query;
+    const cacheKey = `top-10-popular-car-models-${startDate}-${endDate}`;
+    const cachedData = await getCachedData(cacheKey);
+    if(cachedData){
+        return res.status(200).json(cachedData);
+    }
+    try {
         const top10PopularCarModelsPipeline = [
             {
                 $match: {
@@ -75,10 +93,30 @@ export const getChartsDataController = async (req, res) => {
                 $limit: 10
             }
         ];
+        const stats = await Bidding.aggregate(top10PopularCarModelsPipeline);
+        await setCachedData(cacheKey, stats);
+        res.status(200).json(stats);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
+/**
+ * Get top 3 most reviewed cars
+ * @param {*} req 
+ * @param {*} res 
+ * @returns top 3 most reviewed cars grouped by the whole car name
+ */
+export const getTop3MostReviewedCars = async (req, res) => {
+    const { startDate, endDate } = req.query;
+    const cacheKey = `top-3-most-reviewed-cars-${startDate}-${endDate}`;
+    const cachedData = await getCachedData(cacheKey);
+    if(cachedData){
+        return res.status(200).json(cachedData);
+    }
+    try {
 
-
-         const top3MostReviewedCarsPipeline = [
+        const top3MostReviewedCarsPipeline = [
             {
                 $match: {
                     createdAt: {
@@ -86,6 +124,17 @@ export const getChartsDataController = async (req, res) => {
                         $lte: new Date(endDate)
                     }
                 }
+            },
+            {
+               $project : {
+                vehicle : {
+                    company : 1,
+                    name : { $toLower: "$vehicle.name" },
+                    modelYear : 1
+                },
+                
+               
+               }
             },
             {
                 $group: {
@@ -100,7 +149,25 @@ export const getChartsDataController = async (req, res) => {
                 $limit: 3
             },
         ];
+        const stats = await Review.aggregate(top3MostReviewedCarsPipeline);
+        await setCachedData(cacheKey, stats);
+        res.status(200).json(stats);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
+/**
+ * Get top 3 owners with most cars
+ */
+export const getTop3OwnersWithMostCars = async (req, res) => {
+    const { startDate, endDate } = req.query;
+    const cacheKey = `top-3-owners-with-most-cars-${startDate}-${endDate}`;
+    const cachedData = await getCachedData(cacheKey);
+    if(cachedData){
+        return res.status(200).json(cachedData);
+    }
+    try {
         const top3OwnersWithMostCarsAddedPipeline = [
             {
                 $match: {
@@ -125,7 +192,25 @@ export const getChartsDataController = async (req, res) => {
                 $limit: 3
             }
         ]
-        
+        const stats = await Vehicle.aggregate(top3OwnersWithMostCarsAddedPipeline);
+        await setCachedData(cacheKey, stats);
+        res.status(200).json(stats);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * Get number of biddings per city
+ */
+export const getBiddingsPerCity = async (req, res) => {
+    const { startDate, endDate } = req.query;
+    const cacheKey = `biddings-per-city-${startDate}-${endDate}`;
+    const cachedData = await getCachedData(cacheKey);
+    if(cachedData){
+        return res.status(200).json(cachedData);
+    }
+    try {
         const numberOfBiddingPerCityPipeline = [
             {
                 $match: {
@@ -142,6 +227,25 @@ export const getChartsDataController = async (req, res) => {
                 }
             }
         ];
+        const stats = await Bidding.aggregate(numberOfBiddingPerCityPipeline);
+        await setCachedData(cacheKey, stats);
+        res.status(200).json(stats);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+/**
+ * Get user growth statistics
+ */
+export const getUserGrowthStats = async (req, res) => {
+    const { startDate, endDate } = req.query;
+    const cacheKey = `user-growth-stats-${startDate}-${endDate}`;
+    const cachedData = await getCachedData(cacheKey);
+    if(cachedData){
+        return res.status(200).json(cachedData);
+    }
+    try {
 
         const userGrowthPipeline = [
             { $match: {
@@ -159,7 +263,25 @@ export const getChartsDataController = async (req, res) => {
             { $sort: { _id: 1 } } 
         ]
         
+        const stats = await User.aggregate(userGrowthPipeline);
+        await setCachedData(cacheKey, stats);
+        res.status(200).json(stats);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
+/**
+ * Get highest earning cities
+ */
+export const getHighestEarningCities = async (req, res) => {
+    const { startDate, endDate } = req.query;
+    const cacheKey = `highest-earning-cities-${startDate}-${endDate}`;
+    const cachedData = await getCachedData(cacheKey);
+    if(cachedData){
+        return res.status(200).json(cachedData);
+    }
+    try {
         const highestEarningCitiesPipeline =  [
             { $match:  {
                 status: { $in: ["ended", "reviewed"] },
@@ -205,45 +327,11 @@ export const getChartsDataController = async (req, res) => {
             { $sort: { totalEarnings: -1 } },
             { $limit: 5 }
         ];
-
-
-        // running all the pipelines in parallel using the Promise.allSettled
-        const [ carDescriptionResult, top10PopularCarModelsResult, top3MostReviewedCarsResult, top3OwnersWithMostCarsAddedResult, numberOfBiddingsPerCityResult, userGrowthResult, highestEarningCitiesResult] = await Promise.allSettled([
-            Vehicle.aggregate(carDescriptionPipeline),
-            Bidding.aggregate(top10PopularCarModelsPipeline),
-            Review.aggregate(top3MostReviewedCarsPipeline),
-            Vehicle.aggregate(top3OwnersWithMostCarsAddedPipeline),
-            Bidding.aggregate(numberOfBiddingPerCityPipeline),
-            User.aggregate(userGrowthPipeline),
-            Bidding.aggregate(highestEarningCitiesPipeline)
-        ]);
-
-        // Safe access helpers
-        const carDescription = getValue(carDescriptionResult, []);
-        const top10PopularCarModels = getValue(top10PopularCarModelsResult, []);
-        const top3MostReviewedCars = getValue(top3MostReviewedCarsResult, []);
-        const top3OwnersWithMostCarsAdded = getValue(top3OwnersWithMostCarsAddedResult, []);
-        const numberOfBiddingsPerCity = getValue(numberOfBiddingsPerCityResult, []);
-        const userGrowth = getValue(userGrowthResult, []);
-        const highestEarningCities = getValue(highestEarningCitiesResult, []);
-       
-        // save the data to the cache 
-        await setCachedData(cacheKey, {
-            carDescription,
-            top10PopularCarModels,
-            top3MostReviewedCars,
-            top3OwnersWithMostCarsAdded,
-            numberOfBiddingsPerCity,
-            userGrowth,
-            highestEarningCities
-        });
-
-
-        return res.status(200).json({ carDescription, top10PopularCarModels, top3MostReviewedCars, top3OwnersWithMostCarsAdded, numberOfBiddingsPerCity, userGrowth, highestEarningCities });
-        
-    } catch (err) {
-        console.error(`Error in getSuvVsSedanCarsController: ${err.message}`);
-        return res.status(500).json({ error: "An internal server error occurred." });
+        const stats = await Bidding.aggregate(highestEarningCitiesPipeline);
+        await setCachedData(cacheKey, stats);
+        res.status(200).json(stats);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };
 
@@ -252,6 +340,7 @@ export const getChartsDataController = async (req, res) => {
 return overall general analytics for the admin
 */
 export const getGeneralAnalyticsController = async (req, res) => {
+  
     try {
       const { startDate, endDate } = req.query;
   
@@ -309,7 +398,7 @@ export const getGeneralAnalyticsController = async (req, res) => {
   
       const totalNumberOfUsersPromise = User.countDocuments();
   
-      const userEngagementPromise = User.aggregate([
+      const userEngagementPromise = User.aggregate([ 
         {
           $group: {
             _id: "$from.username",
@@ -955,7 +1044,6 @@ export const getChargesController = async (req, res)=>{
 export const updateChargesController = async (req, res)=>{
     try{
         const {charge, percentage} = req.body;
-        console.log(charge, percentage);
         if(charge=== undefined || percentage=== undefined){
             return res.status(400).json({message: "charge and percentage are required"});
         }
@@ -968,112 +1056,195 @@ export const updateChargesController = async (req, res)=>{
 }
 
 
-/**
- * Retrieves the platform revenue for a given date range
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @returns {Object} - Object containing the platform revenue
- */ 
-export const getPlatformRevenueForAdminController = async (req, res)=>{
+// /**
+//  * Retrieves the platform revenue for a given date range
+//  * @param {Object} req - Express request object
+//  * @param {Object} res - Express response object
+//  * @returns {Object} - Object containing the platform revenue
+//  */ 
+// export const getPlatformRevenueForAdminController = async (req, res)=>{
+//     try{
+//         const {startDate, endDate} = req.query;
+//         if(!startDate || !endDate){
+//             return res.status(400).json({message: "startDate and endDate are required"});
+//         }
+
+//         const platformRevenue = await Bidding.aggregate([
+//             {
+//                 $match: {
+//                     status: { $in: ["ended", "reviewed"] },
+//                     endDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
+//                 }
+//             },
+//             {
+//                 $addFields: {
+
+//                     numberOfDays: {
+//                         $add: [
+//                             {
+//                                 $divide: [
+//                                     { $subtract: ["$endDate", "$startDate"] },
+//                                     1000 * 60 * 60 * 24
+//                                 ]
+//                             },
+//                             1
+//                         ]
+//                     },
+//                     // Calculate total addons price
+//                     addonsTotal: {
+//                         $reduce: {
+//                             input: "$selectedAddons",
+//                             initialValue: 0,
+//                             in: { $add: ["$$value", "$$this.price"] }
+//                         }
+//                     }
+//                 }
+//             },
+//             {
+//                 $addFields: {
+//                     // Calculate base price (days * amount)
+//                     basePrice: { $multiply: ["$numberOfDays", "$amount"] },
+//                     // Calculate total booking price (base price + addons + distance fine)
+//                     totalBookingPrice: {
+//                         $add: [
+//                             { $multiply: ["$numberOfDays", "$amount"] },
+//                             "$addonsTotal",
+//                         ]
+//                     }
+//                 }
+//             },
+//             {
+//                 $addFields: {
+//                     platformFee: {
+//                         $cond: {
+//                             if: { $gt: [{ $ifNull: ["$platformFeePercentage", 0] }, 0] },
+//                             then: {
+//                                 $multiply: [
+//                                     "$totalBookingPrice",
+//                                     { $divide: [{ $ifNull: ["$platformFeePercentage", 0] }, 100] }
+//                                 ]
+//                             },
+//                             else: 0
+//                         }
+//                     }
+//                 }
+//             },
+//             {
+//                 $group: {
+//                     _id: null,
+//                     totalPlatformRevenue: { $sum: "$platformFee" },
+//                     totalBookings: { $sum: 1 },
+//                     totalBaseRevenue: { $sum: "$basePrice" },
+//                     totalAddonsRevenue: { $sum: "$addonsTotal" },
+//                 }
+//             },
+//             {
+//                 $project: {
+//                     _id: 0,
+//                     totalPlatformRevenue: { $round: ["$totalPlatformRevenue", 2] },
+//                     totalBookings: 1,
+//                     totalBaseRevenue: { $round: ["$totalBaseRevenue", 2] },
+//                     totalAddonsRevenue: { $round: ["$totalAddonsRevenue", 2] },
+//                     totalDistanceFines: { $round: ["$totalDistanceFines", 2] },
+//                     totalGrossRevenue: {
+//                         $round: [{
+//                             $add: ["$totalBaseRevenue", "$totalAddonsRevenue", "$totalDistanceFines"]
+//                         }, 2]
+//                     }
+//                 }
+//             }
+//         ]);
+//         return res.status(200).json(platformRevenue);
+//     }catch(err){
+//         console.log(`error in the getPlatformRevenueForAdminController ${err}`);
+//         return res.status(500).json({message: "Internal server error"});
+//     }
+// }
+
+export const getNewUsers = async(req, res)=>{
     try{
         const {startDate, endDate} = req.query;
         if(!startDate || !endDate){
             return res.status(400).json({message: "startDate and endDate are required"});
         }
+        const cacheKey = `new-users-${startDate}-${endDate}`;
+        const cachedData = await getCachedData(cacheKey);
+        if(cachedData){
+            return res.status(200).json(cachedData);
+        }
 
-        const platformRevenue = await Bidding.aggregate([
+        const newUsers = await User.aggregate([
             {
                 $match: {
-                    status: { $in: ["ended", "reviewed"] },
-                    endDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
-                }
-            },
-            {
-                $addFields: {
-                    // Calculate number of days (including both start and end dates)
-                    numberOfDays: {
-                        $add: [
-                            {
-                                $divide: [
-                                    { $subtract: ["$endDate", "$startDate"] },
-                                    1000 * 60 * 60 * 24
-                                ]
-                            },
-                            1
-                        ]
-                    },
-                    // Calculate total addons price
-                    addonsTotal: {
-                        $reduce: {
-                            input: "$selectedAddons",
-                            initialValue: 0,
-                            in: { $add: ["$$value", "$$this.price"] }
-                        }
-                    }
-                }
-            },
-            {
-                $addFields: {
-                    // Calculate base price (days * amount)
-                    basePrice: { $multiply: ["$numberOfDays", "$amount"] },
-                    // Calculate total booking price (base price + addons + distance fine)
-                    totalBookingPrice: {
-                        $add: [
-                            { $multiply: ["$numberOfDays", "$amount"] },
-                            "$addonsTotal",
-                            { $ifNull: ["$exceededKmCharge", 0] }
-                        ]
-                    }
-                }
-            },
-            {
-                $addFields: {
-                    // Calculate platform fee if platformFeePercentage exists
-                    platformFee: {
-                        $cond: {
-                            if: { $gt: [{ $ifNull: ["$platformFeePercentage", 0] }, 0] },
-                            then: {
-                                $multiply: [
-                                    "$totalBookingPrice",
-                                    { $divide: [{ $ifNull: ["$platformFeePercentage", 0] }, 100] }
-                                ]
-                            },
-                            else: 0
-                        }
-                    }
+                    createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
                 }
             },
             {
                 $group: {
                     _id: null,
-                    totalPlatformRevenue: { $sum: "$platformFee" },
-                    totalBookings: { $sum: 1 },
-                    totalBaseRevenue: { $sum: "$basePrice" },
-                    totalAddonsRevenue: { $sum: "$addonsTotal" },
-                    totalDistanceFines: { $sum: { $ifNull: ["$exceededKmCharge", 0] } }
+                    totalNewUsers: { $sum: 1 }
+                }
+            }
+        ]);
+        await setCachedData(cacheKey, newUsers);
+        return res.status(200).json(newUsers);
+    }catch(err){
+        console.log(`error in the getNewUsersController ${err}`);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}
+/**
+ * Retrieves the top 3 companies with the most negative reviews for a given date range
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} - Object containing the top 3 companies with the most negative reviews
+ */
+export const getTop3CompaniesWithMostNegativeReviews = async(req, res)=>{
+    try{
+        const {startDate, endDate} = req.query;
+        if(!startDate || !endDate){
+            return res.status(400).json({message: "startDate and endDate are required"});
+        }
+        const cacheKey = `top-3-companies-with-most-negative-reviews-${startDate}-${endDate}`;
+        const cachedData = await getCachedData(cacheKey);
+        if(cachedData){
+            return res.status(200).json(cachedData);
+        }
+        const companies = await Review.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
                 }
             },
             {
                 $project: {
-                    _id: 0,
-                    totalPlatformRevenue: { $round: ["$totalPlatformRevenue", 2] },
-                    totalBookings: 1,
-                    totalBaseRevenue: { $round: ["$totalBaseRevenue", 2] },
-                    totalAddonsRevenue: { $round: ["$totalAddonsRevenue", 2] },
-                    totalDistanceFines: { $round: ["$totalDistanceFines", 2] },
-                    totalGrossRevenue: {
-                        $round: [{
-                            $add: ["$totalBaseRevenue", "$totalAddonsRevenue", "$totalDistanceFines"]
-                        }, 2]
-                    }
+                    company: "$vehicle.company",
+                    rating: 1,
+                    createdAt: 1
                 }
+            },
+            {
+                $group: {
+                    _id: "$company",
+                    totalNegativeReviews: { $sum: { $cond: [{ $lt: ["$rating", 3] }, 1, 0] } }
+                }
+            },
+            {
+                $sort: {
+                    totalNegativeReviews: -1
+                }
+            },
+            {
+                $limit: 3
             }
         ]);
-        return res.status(200).json(platformRevenue);
-        
+        await setCachedData(cacheKey, companies);
+        return res.status(200).json(companies);
     }catch(err){
-        console.log(`error in the getPlatformRevenueForAdminController ${err}`);
+        console.log(`error in the getTop3CompaniesWithMostNegativeReviewsController ${err}`);
         return res.status(500).json({message: "Internal server error"});
     }
 }
+
+
 

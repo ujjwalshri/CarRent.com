@@ -37,7 +37,7 @@ const setupSocketEvents = () => {
  * @param {Object} socket - Socket instance
  */
 const handleConnection = (socket) => {
-    console.log('A user connected:', socket.id);
+
     
     // Get username from connection query
     const username = socket.handshake.query.username;
@@ -88,7 +88,7 @@ const handleUserOnline = (socket, username) => {
         io.emit('userOnline', username);
     }
     handleJoinUserRoom(socket, username);
-};
+};     
 
 /**
  * Handle user going offline

@@ -35,8 +35,6 @@ import { addReviewValidation } from "../validation/review.validation.js";
 export const getAllReviewsAtCarIdController = async (req, res) => {
     const { id } = req.params;
     const { skip = 0, limit = 1 } = req.query;
-    console.log(req.query);
-
     try {
         // Fetch reviews for the specified vehicle with pagination
         const reviews = await Review.find({ 'vehicle._id': id })
@@ -46,12 +44,9 @@ export const getAllReviewsAtCarIdController = async (req, res) => {
         // Calculate average rating using aggregation pipeline
         const avgRatingResult = await Review.aggregate([
             {
-                // Match reviews for the specific vehicle
-                // Validate ObjectId to prevent errors with invalid IDs
                 $match: { 'vehicle._id': mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : null }
             },
             {
-                // Group all matches and calculate average rating
                 $group: {
                     _id: null,
                     avgRating: { $avg: '$rating' }
@@ -96,22 +91,11 @@ export const getAllReviewsAtCarIdController = async (req, res) => {
  * @returns {Object} JSON response indicating success or error
  */
 export const addReviewController = async (req, res) => { 
-    console.log(req.query);
+
     const { bookingId } = req.query;
     const { id } = req.params;
     const { rating, review } = req.body;
 
-    // Input validation for review and rating 
-    if (!rating || !review) {
-        return res.status(400).json({ error: 'Rating and review are required' });
-    }
-    if(rating < 1 || rating > 5){
-        return res.status(400).json({ error: 'Rating should be between 1 and 5' });
-    }
-    if(review.length > 10000){
-        return res.status(400).json({ error: 'Review should be atleast 10 characters long' });
-    }
-    
     // Start a database transaction to ensure data consistency
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -123,19 +107,30 @@ export const addReviewController = async (req, res) => {
         
         // Find the vehicle being reviewed
         const vehicle = await Vehicle.findById(id).session(session);
-
-        if (!vehicle) {
-            throw new Error('Vehicle not found');
-        }
+        
+      
        
         // Create new review document
         const reviewData = new Review({ 
             rating,
             review,
-            vehicle,
-            reviewer
+            vehicle : {
+                _id : vehicle._id,
+                name : vehicle.name,
+                company : vehicle.company,
+                modelYear : vehicle.modelYear,
+                city: vehicle.city,
+                color : vehicle.color,
+                mileage : vehicle.mileage,
+                price : vehicle.price,
+            },
+            reviewer,
+            owner : {
+                _id : vehicle.owner._id,
+                username : vehicle.owner.username
+            }
         });
-        console.log(reviewData);
+
 
         const { error } = addReviewValidation.validate(reviewData);
         if(error){
@@ -152,21 +147,11 @@ export const addReviewController = async (req, res) => {
             { new: true, session }
         );
        
-        // Validate that the booking exists
-        if (!bookingUpdate) {
-            throw new Error('Booking not found');
-        }
-
-        console.log("bookingStatus changed");
 
         // Commit the transaction if both operations succeed
         await session.commitTransaction();
         session.endSession();
         
-        // Verify the updated booking (for debugging)
-        const booking = await Bidding.findById(bookingId);
-        console.log(booking);
-
         // Return success response
         return res.status(201).json({ message: 'Review added successfully' }); 
     } catch (err) {

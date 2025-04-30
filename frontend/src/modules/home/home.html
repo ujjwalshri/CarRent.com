@@ -1,0 +1,276 @@
+<loading-component is-loading="loadingCars" loading-text="Loading cars..."></loading-component>
+<div class="filter-container panel panel-default p-3" ng-init="init()" style="margin-top: 10px; margin-bottom: 20px;">
+    <div class="panel-heading text-center">
+        <h4>Filter Cars</h4>
+    </div>
+    <div class="panel-body">
+        <div class="row">
+
+            <div class="col-md-4">
+                <label>Search:</label>
+                <input type="text" ng-model="search" placeholder="Search for cars" 
+                    class="form-control mb-2" 
+                    ng-change="filterCarsWithDelay()">
+            </div>
+
+            <div class="col-md-4">
+                <label>Price Range:</label>
+                <select class="form-control" ng-model="priceFilter" ng-change="filterCars()">
+                    <option value="">All</option>
+                    <option ng-repeat="priceRange in priceRangeArray" value="{{priceRange}}">{{priceRange}}</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label>City:</label>
+                <select class="form-control" ng-model="city" ng-change="filterCars()">
+                    <option value="">Select City</option>
+                    <option ng-repeat="cityOption in cities" value="{{cityOption}}">{{cityOption}}</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4">
+                <label>Category:</label>
+                <select class="form-control" ng-model="category" ng-change="filterCars()">
+                    <option value="">Select Category</option>
+                    <option ng-repeat="cat in carCategories" value="{{cat.name}}">{{cat.name}}</option>
+                </select>
+            </div>
+
+            <div class="col-md-4 text-center" style="margin-top: 25px;"> 
+                <button class="btn btn-warning" ng-click="resetFilters()">
+                    <span class="glyphicon glyphicon-refresh"></span> Reset Filters
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-default" ng-if="user && !user.isSeller && !filteringStarted">
+
+    <div class="panel-heading" ng-if="recommendedCarsGroups.length>0">
+      <h3 class="panel-title text-center">
+        <span class="glyphicon glyphicon-thumbs-up"></span> Top Car Recommendations in {{user.city}}
+      </h3>
+    </div>
+    <div class="col-12 text-center" ng-if="recommendedCarsGroups.length === 0">
+      <div class="alert alert-warning mt-4">
+          <strong>Unable to find Recommendations within your city</strong>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="carousel-container" style="position: relative;">
+        <div uib-carousel active="active" interval="5000" no-wrap="false" style="margin-bottom: 10px;">
+          <div uib-slide ng-repeat="slideGroup in recommendedCarsGroups" index="$index" style="padding: 15px;">
+            <div class="row" >
+              <div class="col-xs-12 col-sm-4" ng-repeat="car in slideGroup">
+                <div class="thumbnail" ng-click="redirectCarPage(car._id)" style="cursor: pointer;">
+                  <div class="caption">
+                    <span class="label label-danger pull-right" ng-if="car.isPopular">Popular</span>
+                  </div>
+                  <img ng-src="{{car.vehicleImages[0].url}}" alt="{{car.name}}" class="img-responsive">
+                  <h4>{{car.vehicle.company}} {{car.vehicle.name}} {{car.vehicle.modelYear}}</h4>
+                  <p class="text-danger"><strong>${{car.vehicle.price}}</strong> per day</p>
+                  <p>
+                    <span class="text-muted"><span class="glyphicon glyphicon-map-marker"></span> {{car.vehicle.city}}</span>
+                    <span class="text-muted "><span class="glyphicon glyphicon-tag"></span> {{car.vehicle.category}}</span>
+                    <span class="text-muted"><span class="glyphicon glyphicon-dashboard"></span> {{car.vehicle.mileage}} kmpl</span>
+                    <span class="text-muted "><span class="glyphicon glyphicon-tint"></span> {{car.vehicle.fuelType}}</span>
+                  </p>
+                  <p class="text-center">
+                    <button class="btn btn-primary">View Details</button>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+  
+
+<div id="cars-listing" ng-init="init()" class="container mt-4">
+    <div class="row">
+        <div class="col-md-4 col-sm-4" ng-repeat="car in allCars">
+            <div class="panel panel-default car-panel" ng-click="redirectCarPage(car._id)" style="margin-bottom: 20px; cursor: pointer; height: 600px;">
+                <div class="panel-body" style="padding: 0; height: 100%;">
+
+                    <div class="car-image-container" style="height: 220px; overflow: hidden; position: relative; background-color: #f5f5f5;">
+                        <img ng-src="{{ car.vehicleImages[0].url || 'default-car.jpg' }}" 
+                             alt="{{ car.carName }}"
+                             style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
+                        <span class="label label-danger" style="position: absolute; top: 10px; right: 10px;" ng-if="car.isPopular">
+                            <span class="glyphicon glyphicon-fire"></span> Popular
+                        </span>
+                    </div>
+
+                    <div class="car-details" style="padding: 15px; height: calc(100% - 220px); display: flex; flex-direction: column;">
+
+                        <div class="car-header" style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
+                            <h4 class="text-primary" style="margin-top: 0; margin-bottom: 10px; font-size: 20px;">
+                                {{car.company}} {{ car.name }}
+                                <small class="text-muted">{{ car.modelYear }}</small>
+                            </h4>
+                            <div class="row">
+                                <div class="col-xs-7">
+                                    <h3 class="price-tag" style="margin: 0; color: #2ecc71;">
+                                        <strong>${{ car.price }}</strong>
+                                        <small class="text-muted" style="font-size: 14px;">per day</small>
+                                    </h3>
+                                </div>
+                                <div class="col-xs-5 text-right">
+                                    <span class="label label-primary" style="font-size: 12px; padding: 5px 10px;">
+                                        <span class="glyphicon glyphicon-tag"></span> {{car.category}}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="car-specs-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                            <div class="spec-item" style="background: #f8f9fa; padding: 8px; border-radius: 4px;">
+                                <span class="glyphicon glyphicon-map-marker text-primary"></span>
+                                <div style="display: inline-block; vertical-align: middle;">
+                                    <small class="text-muted">Location</small>
+                                    <div><strong>{{car.city}}</strong></div>
+                                    <small ng-if="car.location!=='undefined'">{{car.location}}</small>
+                                </div>
+                            </div>
+                            <div class="spec-item" style="background: #f8f9fa; padding: 8px; border-radius: 4px;">
+                                <span class="glyphicon glyphicon-dashboard text-primary"></span>
+                                <div style="display: inline-block; vertical-align: middle;">
+                                    <small class="text-muted">Mileage</small>
+                                    <div><strong>{{car.mileage}} kmpl</strong></div>
+                                </div>
+                            </div>
+                            <div class="spec-item" style="background: #f8f9fa; padding: 8px; border-radius: 4px;">
+                                <span class="glyphicon glyphicon-tint text-primary"></span>
+                                <div style="display: inline-block; vertical-align: middle;">
+                                    <small class="text-muted">Fuel Type</small>
+                                    <div><strong>{{car.fuelType}}</strong></div>
+                                </div>
+                            </div>
+                            <div class="spec-item" style="background: #f8f9fa; padding: 8px; border-radius: 4px;">
+                                <span class="glyphicon glyphicon-record text-primary"></span>
+                                <div style="display: inline-block; vertical-align: middle;">
+                                    <small class="text-muted">Color</small>
+                                    <div>
+                                        <strong style="vertical-align: middle;">{{car.color}}</strong>
+                                        <span ng-attr-style="display: inline-block; width: 15px; height: 15px; border-radius: 50%; border: 1px solid #ccc; vertical-align: middle; margin-left: 5px; background-color: {{car.color}}"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="owner-info" style="margin-top: auto; background-color: #f8f9fa; padding: 10px; border-radius: 4px; border: 1px solid #eee;">
+                            <div style="display: flex; align-items: center;">
+                                <div style="width: 40px; height: 40px; background-color: #e9ecef; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+                                    <span class="glyphicon glyphicon-user" style="font-size: 20px; color: #6c757d;"></span>
+                                </div>
+                                <div>
+                                    <small class="text-muted">
+                                        </span> {{car.owner.username}}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+       
+
+        <div class="col-xs-12 text-center" ng-if="allCars.length === 0">
+            <div class="alert alert-warning" style="margin-top: 20px;">
+                <strong>No available cars matching your filters.</strong>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="text-center" style="margin: 20px 0;" ng-if="hasMoreCars && !isLoading">
+        <button id="load-more-btn" class="btn btn-primary" ng-click="loadMoreCars()">
+            Show More <span class="glyphicon glyphicon-chevron-down"></span>
+          </button>
+    </div>
+
+
+    <div class="text-center" ng-show="isLoading" style="margin: 20px 0;">
+        <span class="glyphicon glyphicon-refresh spin" style="font-size: 24px;"></span>
+        <p>Loading...</p>
+    </div>
+</div>
+
+<style>
+    .car-panel {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: 1px solid #ddd;
+        margin-bottom: 20px;
+        background: white;
+    }
+    
+    .car-panel:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    }
+
+    .car-details h4 {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .spin {
+        -webkit-animation: spin 1s infinite linear;
+        animation: spin 1s infinite linear;
+    }
+
+    @-webkit-keyframes spin {
+        0% { -webkit-transform: rotate(0deg); }
+        100% { -webkit-transform: rotate(360deg); }
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .well {
+        padding: 10px;
+        margin-bottom: 0;
+    }
+
+    .label {
+        display: inline-block;
+        padding: 5px 10px;
+    }
+
+    .glyphicon {
+        margin-right: 5px;
+    }
+
+    .spec-item {
+        transition: background-color 0.2s ease;
+    }
+
+    .spec-item:hover {
+        background-color: #f0f0f0 !important;
+    }
+
+    .car-image-container {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .car-image-container img {
+        transition: transform 0.3s ease;
+    }
+
+    .car-panel:hover .car-image-container img {
+        transform: scale(1.05);
+    }
+</style>

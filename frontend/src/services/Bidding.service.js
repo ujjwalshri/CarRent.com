@@ -218,6 +218,11 @@ angular.module('myApp').service('BiddingService', function($q, BiddingFactory, A
         })
         return deferred.promise;
     }
+    /**
+     * Get all the addons for a particular user
+     * @param {string} ownerId - The ID of the owner
+     * @returns promise
+     */
     this.getAddOnsForUser = function(ownerId){
         console.log(ownerId);
         let deferred = $q.defer();
@@ -230,6 +235,11 @@ angular.module('myApp').service('BiddingService', function($q, BiddingFactory, A
         })
         return deferred.promise;
     }
+    /**
+     * Recommend a bidding for a particular vehicle
+     * @param {string} vehicleId - The ID of the vehicle
+     * @returns promise
+     */
     this.recommendBidding = function(vehicleId){
         console.log(vehicleId);
         let deferred = $q.defer();
@@ -242,5 +252,41 @@ angular.module('myApp').service('BiddingService', function($q, BiddingFactory, A
         })
         return deferred.promise;
     }
+
+    /**
+     * Get the overlapping bids for a particular car
+     * @param {string} carId - The ID of the car
+     * @param {string} startDate - The start date of the booking
+     * @param {string} endDate - The end date of the booking
+     * @returns promise
+     */
+    this.getOverlappingBids = function(carId, startDate, endDate){
+        console.log(carId, startDate, endDate);
+        let deferred = $q.defer();
+        $http.get(`${ApiService.baseURL}/api/bidding/getOverlappingBids/${carId}`, {params: {startDate, endDate}, withCredentials: true})
+        .then((res)=>{
+            deferred.resolve(res.data);
+        })
+        .catch(err=>{
+            deferred.reject(`Error fetching overlapping bids: ${err}`);
+        })
+        return deferred.promise;
+    }
     
+    /**
+     * Get overlapping bids for a specific bid
+     * @param {string} bidId - The ID of the bid
+     * @returns promise
+     */
+    this.getOverlappingBids = function(bidId) {
+        let deferred = $q.defer();
+        $http.get(`${ApiService.baseURL}/api/bidding/getOverlappingBids/${bidId}`, { withCredentials: true })
+        .then((res) => {
+            deferred.resolve(res.data);
+        })
+        .catch(err => {
+            deferred.reject(`Error fetching overlapping bids: ${err}`);
+        });
+        return deferred.promise;
+    }
  });

@@ -1,6 +1,6 @@
 import express from "express";
 import protectRoute from "../middlewares/protectRoute.js";
-import {addBidController, updateBidStatusController, getBidForOwnerController, getBidForUserController, getBookingsAtCarIdController, getAllBookingsAtOwnerIdController ,getAllBookingsAtUserIdController, getUserBookingHistory, getBookingAtBookingIdController, startBookingController, endBookingController , reviewBookingController, bookingRecommendationController, addAddOnsController, getAllAddOnsController, deleteAddOnsController, getAddOnsForUserController} from "../controllers/bidding.controller.js";
+import {addBidController, updateBidStatusController, getBidForOwnerController, getBidForUserController, getBookingsAtCarIdController, getAllBookingsAtOwnerIdController ,getAllBookingsAtUserIdController, getUserBookingHistory, getBookingAtBookingIdController, startBookingController, endBookingController , reviewBookingController, bookingRecommendationController, addAddOnsController, getAllAddOnsController, deleteAddOnsController, getAddOnsForUserController, getOverlappingBidsController} from "../controllers/bidding.controller.js";
 import allowUser from "../middlewares/authenticateUser.js";
 import allowSeller from "../middlewares/authenticateSeller.js";
 const router = express.Router();
@@ -22,4 +22,5 @@ router.post('/addAddon', protectRoute, allowSeller, addAddOnsController) // add 
 router.get('/getAllAddons', protectRoute, allowSeller, getAllAddOnsController) // get all the addons
 router.delete('/deleteAddon/:addonId', protectRoute, allowSeller, deleteAddOnsController) // delete the addon
 router.get('/getAddOnsForUser/:ownerId', protectRoute, getAddOnsForUserController) // get the addons for the user
+router.get('/getOverlappingBids/:id', protectRoute, allowSeller, getOverlappingBidsController) // get the overlapping bids
 export default router;

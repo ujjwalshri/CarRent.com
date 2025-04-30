@@ -2,7 +2,7 @@ import Bidding from '../models/bidding.model.js';
 import Vehicle from '../models/vehicle.model.js';
 import AddOns from '../models/add-ons.model.js';
 import Charges from '../models/charges.model.js';
-import {sendInvoiceEmail} from '../utils/email.service.js';
+import {sendInvoiceEmail} from '../services/email.service.js';
 import validateBiddingData from '../validation/bid.validation.js';
 import {generateAndSendMail} from '../utils/gen.mail.js';
 import dotenv from 'dotenv';
@@ -43,7 +43,6 @@ const sqs = new AWS.SQS();
  * @param {Object} res - Express response object
  * @returns {Object} JSON response with success/error message
  */
-
 export const addBidController = async (req, res) => {
     
     const {carId} = req.params;
@@ -63,7 +62,6 @@ export const addBidController = async (req, res) => {
     if(startDate > endDate){
         return res.status(400).json({error: 'startDate cannot be greater than endDate'});
     }
-
 
     try {
         const vehicle = await Vehicle.findById(carId);
@@ -91,7 +89,6 @@ export const addBidController = async (req, res) => {
                 mileage: vehicle.mileage,
                 fuelType: vehicle.fuelType,
                 category: vehicle.category,
-                deleted: vehicle.deleted,
                 status: vehicle.status,
                 city: vehicle.city,
             },
@@ -128,7 +125,6 @@ export const updateBidStatusController = async (req, res) => {
     if (!biddingStatus) {
         return res.status(400).json({ error: 'Bidding status is required' });
     }
-    console.log(biddingStatus, "and", req.params.id);
     
     let session; 
     try {
@@ -136,11 +132,6 @@ export const updateBidStatusController = async (req, res) => {
         session.startTransaction();
 
         const bidding = await Bidding.findById(req.params.id).session(session);
-
-        console.log("bidding", bidding);
-
-
-        console.log(req.user._id.toString(), "and", bidding.owner._id.toString());
 
         if (req.user._id.toString() !== bidding.owner._id.toString()) {
             await session.abortTransaction();
@@ -194,9 +185,8 @@ export const updateBidStatusController = async (req, res) => {
 */
 export const getBidForOwnerController = async (req, res) => {
     const user = req.user;
-    console.log(req.query);
+
     let {  page = 1, limit = 10, sortBy={}, carId} = req.query;
-    console.log(sortBy, page, limit, carId);
     if(sortBy !== undefined){
         sortBy = JSON.parse(sortBy);
     }
@@ -205,7 +195,6 @@ export const getBidForOwnerController = async (req, res) => {
     const limitNumber = parseInt(limit);
     let finalSort = {...sortBy, createdAt: -1};
     const skip = (pageNumber - 1) * limitNumber;
-
 
     const matchStage =  { $match: { "owner._id": user._id, status } };
     if(carId){
@@ -227,8 +216,6 @@ export const getBidForOwnerController = async (req, res) => {
                 }
             }
         ];
-
-        console.log(aggregationPipeline);
 
         const [result] = await Bidding.aggregate(aggregationPipeline);
         return res.status(200).json({
@@ -284,9 +271,6 @@ export const getBidForUserController = async (req, res) => {
 */
 export const getBookingsAtCarIdController = async (req, res)=>{
     const {carId} = req.params;
-    if(!carId){
-        return res.status(400).json({error: 'carId is required'});
-    }
     const objectIdCarId = new mongoose.Types.ObjectId(String(carId)); 
     try{
         const bookings = await Bidding.aggregate([
@@ -304,9 +288,7 @@ export const getBookingsAtCarIdController = async (req, res)=>{
     @description function to get the bookings by the owner id
 */
 export const getAllBookingsAtOwnerIdController = async (req, res) => {
-    const { page = 1, limit = 10, sort = {}, bookingsType = '' } = req.query;
-    console.log("ownerID wali bids", sort, page, limit, bookingsType);
-
+    const { page = 1, limit = 10, sort = {}, bookingsType = '', searchQuery = '' } = req.query;
     const userId = req.user._id;
     const pageNumber = parseInt(page);
     const limitNumber = parseInt(limit);
@@ -340,20 +322,51 @@ export const getAllBookingsAtOwnerIdController = async (req, res) => {
 
     try {
         const aggregationPipeline = [
-            { $match: matchStage },
-            {
-                $facet: {
-                    bookings: [
-                        { $sort: finalSort },
-                        { $skip: skip },
-                        { $limit: limitNumber },
-                    ],
-                    totalCount: [
-                        { $count: "count" }
+            { $match: matchStage }
+        ];
+
+        // Add search by car name if searchQuery is provided
+        if (searchQuery && searchQuery.trim() !== '') {
+            const combinedField = { 
+                $concat: [ 
+                    { $ifNull: ["$vehicle.name", ""] }, 
+                    " ", 
+                    { $ifNull: ["$vehicle.company", ""] } 
+                ] 
+            };
+            
+            aggregationPipeline.push({
+                $match: {
+                    $or: [
+                        { "vehicle.name": { $regex: searchQuery, $options: "i" } },
+                        { "vehicle.company": { $regex: searchQuery, $options: "i" } },
+                        { 
+                            $expr: { 
+                                $regexMatch: { 
+                                    input: combinedField,
+                                    regex: searchQuery,
+                                    options: "i" 
+                                }
+                            } 
+                        }
                     ]
                 }
+            });
+        }
+
+        // Add facet for pagination
+        aggregationPipeline.push({
+            $facet: {
+                bookings: [
+                    { $sort: finalSort },
+                    { $skip: skip },
+                    { $limit: limitNumber },
+                ],
+                totalCount: [
+                    { $count: "count" }
+                ]
             }
-        ];
+        });
 
         const result = await Bidding.aggregate(aggregationPipeline);
 
@@ -395,7 +408,7 @@ export const getAllBookingsAtUserIdController = async (req, res)=>{
             {
                 $match: {
                     "from._id": userId,
-                    status: { $in: ['approved', 'started', 'ended'] }
+                    status: { $in: ['approved', 'started'] }
                 }
             },
             {
@@ -428,13 +441,14 @@ export const getAllBookingsAtUserIdController = async (req, res)=>{
     return all the booking history for the particular user
 */  
 export const getUserBookingHistory = async (req, res) => {
-    const { page = 1, limit = 10, sort = {}, startDate = '', search = '' } = req.query;
+    const { page = 1, limit = 10, sort = {}, search = undefined } = req.query;
     
     const userId = req.user._id;
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
     const skip = (pageNumber - 1) * limitNumber;
 
+    
     // Parse sort if it's a string
     let sortObj = sort;
     if (typeof sort === 'string') {
@@ -450,67 +464,7 @@ export const getUserBookingHistory = async (req, res) => {
             {
                 $match: {
                     "from._id": userId,
-                    status: "reviewed",
-                }
-            },
-            {
-                $addFields: {
-                    // Calculate number of days (endDate - startDate + 1)
-                    numberOfDays: {
-                        $add: [
-                            {
-                                $dateDiff: {
-                                    startDate: "$startDate",
-                                    endDate: "$endDate",
-                                    unit: "day"
-                                }
-                            },
-                            1
-                        ]
-                    },
-                    // Calculate extra kilometers charge if applicable
-                    extraKmCharge: {
-                        $cond: {
-                            if: {
-                                $gt: [
-                                    { $subtract: ["$endOdometerValue", "$startOdometerValue"] },
-                                    300
-                                ]
-                            },
-                            then: {
-                                $multiply: [
-                                    { 
-                                        $subtract: [
-                                            { $subtract: ["$endOdometerValue", "$startOdometerValue"] },
-                                            300
-                                        ]
-                                    },
-                                    10 // $10 per extra km
-                                ]
-                            },
-                            else: 0
-                        }
-                    },
-                    // Calculate total addons amount
-                    addonsTotal: {
-                        $reduce: {
-                            input: "$selectedAddons",
-                            initialValue: 0,
-                            in: { $add: ["$$value", "$$this.price"] }
-                        }
-                    }
-                }
-            },
-            {
-                $addFields: {
-                    // Calculate total payment
-                    totalPayment: {
-                        $add: [
-                            { $multiply: ["$amount", "$numberOfDays"] }, // Base amount * days
-                            "$extraKmCharge", // Extra km charges
-                            "$addonsTotal" // Addons total
-                        ]
-                    }
+                    status: { $in: ["reviewed", "ended"] },
                 }
             },
             {
@@ -522,29 +476,47 @@ export const getUserBookingHistory = async (req, res) => {
                     ],
                     totalCount: [
                         { $count: "count" }
-                    ],
-                    averagePayment: [
-                        {
-                            $group: {
-                                _id: null,
-                                avgPayment: { $avg: "$totalPayment" }
-                            }
-                        }
                     ]
                 }
             }
         ];
+       
+        if (search?.trim()) {
+            const combinedField = { 
+                $concat: [ 
+                    { $ifNull: ["$vehicle.name", ""] }, 
+                    " ", 
+                    { $ifNull: ["$vehicle.company", ""] } 
+                ] 
+            };
+        
+            aggregationPipeline.unshift({
+                $match: {
+                    $or: [
+                        { "vehicle.name": { $regex: search, $options: "i" } },
+                        { "vehicle.company": { $regex: search, $options: "i" } },
+                        { 
+                            $expr: { 
+                                $regexMatch: { 
+                                    input: combinedField,
+                                    regex: search,
+                                    options: "i" 
+                                }
+                            } 
+                        }
+                    ]
+                }
+            });
+        }
 
         const result = await Bidding.aggregate(aggregationPipeline);
-        
         const bookings = result[0].bookings || [];
         const totalDocs = result[0].totalCount[0]?.count || 0;
-        const averagePayment = result[0].averagePayment[0]?.avgPayment || 0;
+
         
         return res.status(200).json({ 
             bookings, 
-            totalDocs,
-            averagePayment: Math.round(averagePayment * 100) / 100 // Round to 2 decimal places
+            totalDocs
         });
     } catch (err) {
         console.error(`Error in getUserBookingHistory: ${err.message}`);
@@ -557,7 +529,6 @@ export const getUserBookingHistory = async (req, res) => {
 */
 export const getBookingAtBookingIdController = async (req, res)=>{
     const bookingId = req.params.bookingId;
-    console.log(bookingId);
     if(!bookingId){
         return res.status(400).json({error: 'bookingId is required'});
     }
@@ -577,11 +548,7 @@ export const getBookingAtBookingIdController = async (req, res)=>{
 export const startBookingController = async (req, res)=>{
 
     const bookingId = req.params.bookingId;
-    
     const { startOdometerValue } = req.body;
-    console.log("startOdometerValue at backend" + startOdometerValue);
-   
-    console.log(bookingId, startOdometerValue);
     if(!bookingId){
         return res.status(400).json({error: 'bookingId is required'});
     }
@@ -594,8 +561,6 @@ export const startBookingController = async (req, res)=>{
             }, 
             { new: true }
           );
-          console.log(booking);
-
           return res.status(200).json({ booking });
     }catch(err){
         console.log(`error in the startBookingController ${err.message}`);
@@ -622,7 +587,7 @@ export const endBookingController = async (req, res)=>{
             }, 
             { new: true }
           );
-          console.log(booking);
+
 
           const charges = await Charges.findOne({name: "Platform Fee"});
 
@@ -737,7 +702,12 @@ export const bookingRecommendationController = async (req, res) => {
     }
 }
 
-
+/**
+ * Adds a new add-on to the platform
+ * @param {Object} req - The request object containing the add-on details
+ * @param {Object} res - The response object
+ * @returns {Object} The newly created add-on
+ */
 export const addAddOnsController = async (req, res) => {
     const { name, price } = req.body;
     const owner = {
@@ -754,6 +724,12 @@ export const addAddOnsController = async (req, res) => {
     }
 }
 
+/**
+ * Retrieves all add-ons for a specific owner
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ * @returns {Object} The list of add-ons
+ */
 export const getAllAddOnsController = async (req, res) => {
     const ownerId = req.user._id;
    try{
@@ -766,6 +742,12 @@ export const getAllAddOnsController = async (req, res) => {
    }
 }
 
+/**
+ * Retrieves all add-ons for a specific owner
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ * @returns {Object} The list of add-ons
+ */
 export const getAddOnsForUserController = async(req, res)=>{
     const ownerId = req.params.ownerId;
     try{
@@ -777,6 +759,12 @@ export const getAddOnsForUserController = async(req, res)=>{
     }
 }
 
+/**
+ * Deletes an add-on by its ID
+ * @param {Object} req - The request object
+ * @param {Object} res - The response object
+ * @returns {Object} The updated add-on
+ */
 export const deleteAddOnsController  = async (req, res) => {
     const addonId = req.params.addonId;
     try{
@@ -788,3 +776,35 @@ export const deleteAddOnsController  = async (req, res) => {
     }
 }
 
+/*
+ @description: This function will get all overlapping bids for a specific bid
+*/
+export const getOverlappingBidsController = async (req, res) => {
+    try {
+        const bidding = await Bidding.findById(req.params.id);
+
+        console.log(bidding);
+        
+        if (!bidding) {
+            return res.status(404).json({ error: "Bidding not found" });
+        }
+
+        if (req.user._id.toString() !== bidding.owner._id.toString()) {
+            return res.status(403).json({ error: "You are not authorized to view overlapping bids for this bid" });
+        }
+
+        const { startDate, endDate } = bidding;
+        const overlappingBids = await Bidding.find({
+            _id: { $ne: bidding._id },
+            'vehicle._id': bidding.vehicle._id,
+            status: { $nin: ["rejected", "approved", "ended", "started", "reviewed"] },
+            startDate: { $lte: endDate },
+            endDate: { $gte: startDate }
+        });
+
+        return res.status(200).json({ overlappingBids });
+    } catch (err) {
+        console.error(`Error in getOverlappingBidsController: ${err.message}`);
+        return res.status(500).json({ error: err.message });
+    }
+};

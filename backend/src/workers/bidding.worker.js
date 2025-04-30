@@ -23,11 +23,7 @@ async function processBidMessage(message) {
     try {
         const bidData = JSON.parse(message.Body);
 
-        if (!bidData.vehicle || !bidData.from || !bidData.owner || !bidData.amount) {
-            throw new Error('Invalid bid data structure');
-        }
-
-        // Save the bid to database
+        // Saving the bid to database
         const newBid = new Bidding(bidData);
         const savedBid = await newBid.save();
         

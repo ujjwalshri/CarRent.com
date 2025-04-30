@@ -5,163 +5,112 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Car.com - Vehicle Rental</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/jpeg" href="/frontend/public/assets/carRentlogo.jpeg">
+    <link rel="icon" type="image/jpeg" href="../../public/assets/carRentlogo.jpeg">
+
+    <!-- Dependencies first -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- angular -->
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
 
+    <!-- Google Maps with init function -->
+    <script>
+      function initMap() {
+        // This function will be called by Google Maps API as a callback
+        console.log("Google Maps initialized");
+      }
+    </script>
     <script async
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB438DF3pwmDK9oh_5ULpO504fYhfOKQ0o&loading=async&libraries=visualization&callback=initMap">
-</script>
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB438DF3pwmDK9oh_5ULpO504fYhfOKQ0o&libraries=visualization&callback=initMap">
+    </script>
    
     <!-- ui Router -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/1.0.29/angular-ui-router.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.5.6/ui-bootstrap-tpls.min.js"></script>
      
-    
     <!-- Flatpickr CSS -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
-    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    
     <!--color theif library for picking the color from the images-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.2/color-thief.umd.js"></script>
 
-
-
-  
     <!--importing the socket.io client -->
-    <script src="/frontend/node_modules/socket.io-client/dist/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
+    
     <!--importing the async library -->
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/async/3.2.6/async.min.js"
-      integrity="sha512-Ps4UroO9GAII8QTM2IE4KcHjslTEZjoZY6OhztAFKSnnqshNnPR8PQl1usQpGiHQXnyRCwEMZAsVJgGg2z8Kog=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/async/3.2.6/async.min.js"></script>
+    
     <!--importing the pdfKit lib to download the pdf of the bill generated-->
-    <script
-      type="text/javascript"
-      src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.56/pdfmake.min.js"
-    ></script>
-    <script
-      type="text/javascript"
-      src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.56/vfs_fonts.js"
-    ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.56/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.56/vfs_fonts.js"></script>
+    
     <!--importing the chart js library-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    
     <!--importing the heatmap.js library-->
-   <script src="/frontend/node_modules/heatmap.js/build/heatmap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/heatmap.js@2.0.5/build/heatmap.min.js"></script>
+    
     <!--importing the css for the toastify library-->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    
     <!--importing the js for the toastify library-->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    
     <!--importing the font awesome-->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <!--importing the node emailer -->
-    <script src="
-https://cdn.jsdelivr.net/npm/nodemailer@6.10.0/lib/nodemailer.min.js
-"></script>
 
+    <!-- App Initialization -->
+    <script src="app.controller.js"></script>
 
-    <!-- importing the app.js which has the main Controller for whole application -->
-    <script src="/frontend/src/app.controller.js"></script>
-     <!--importing the back button component-->
-   <script src="/frontend/src/angularComponents/backButton.js"></script>
-   <!--importing the loading component-->
-   <script src="/frontend/src/angularComponents/loadingComponent.js"></script>
-    <!--importing the admin controller-->
-    <script src="/frontend/src/components/admin/admin.controller.js"></script>
-
-    <!--importing the analytics controller-->
-    <script src="/frontend/src/components/admin/Analytics/analytics.controller.js"></script>
-    <!--importing the car controller-->
-    <script src="/frontend/src/components/admin/carApprovals/carController.js"></script>
-    <!--importing the home controller-->
-    <script src="/frontend/src/components/home/home.controller.js"></script>
-    <!--importing the single Car controller-->
-    <script src="/frontend/src/components/car/singleCar.controller.js"></script>
-    <!--importing the signup controller -->
-    <script src="/frontend/src/components/auth/signup.controller.js"></script>
-    <!--importing the login controller -->
-    <script src="/frontend/src/components/auth/login.controller.js"></script>
-    <!--importing the owner Booking controller -->
-    <script src="/frontend/src/components/booking/ownerBookings/ownerBiddings.controller.js"></script>
-    <!-- importing the add Car controller  -->
-    <script src="/frontend/src/components/car/addCarController.js"></script>
-    <!--importing the myProfile controller -->
-    <script src="/frontend/src/components/profile/myProfile.controller.js"></script>
-    <!--importing the userManagement controller-->
-    <script src="/frontend/src/components/admin/userManagement/userManagement.controller.js"></script>
-    <!--importing the conversations contorller-->
-    <script src="/frontend/src/components/conversations/conversations.controller.js"></script>
-    <!--importing the owner confirmed booking controller -->
-    <script src="/frontend/src/components/booking/ownerBookings/confirmedBookings.controller.js"></script>
-    <!--importing the myBiddings controller -->
-    <script src="/frontend/src/components/booking/userBookings/myBiddings.controller.js"></script>
-    <!--importing the user  booking controller -->
-    <script src="/frontend/src/components/booking/userBookings/userBookings.controller.js"></script>
-
-    <!--importing the sellerAnalytics controller-->
-    <script src="/frontend/src/components/sellerAnalytics/sellerAnalytics.controller.js"></script>
-    <!--importing the bookingsHistory controller-->
-    <script src="/frontend/src/components/booking/userBookings/bookingsHistory.controller.js"></script>
-    <!--importing the bookingModal controller-->
-    <script src="/frontend/src/components/profile/bookingModal.controller.js"></script>
-
-    <!--importing the app routes -->
-    <script src="/frontend/src/routes/app.routes.js"></script>
-
-    <!--importing the route protection service-->
-    <script src="/frontend/src/services/routeProtection.service.js"></script>
-    <!--importing the auth service-->
-    <script src="/frontend/src/services/Auth.service.js"></script>
-    <!--importing the Toast service-->
-    <script src="/frontend/src/services/Toast.service.js"></script>
-    <!--importing the chart service-->
-    <script src="/frontend/src/services/Chart.service.js"></script>
-    <!--importing the api service-->
-    <script src="/frontend/src/services/Api.service.js"></script>
-    <!--importing the car service-->
-    <script src="/frontend/src/services/Car.service.js"></script>
-    <!--importing the bidding service-->
-    <script src="/frontend/src/services/Bidding.service.js"></script>
-    <!--importing the user service-->
-    <script src="/frontend/src/services/User.service.js"></script>
-    <!--importing the chat service -->
-    <script src="/frontend/src/services/Chat.service.js"></script>
-    <!--importing the city service-->
-    <script src="/frontend/src/services/City.service.js"></script>
-    <!--importing the socket service-->
-    <script src="/frontend/src/services/Socket.service.js"></script>
-
-
-    <!--importing the factory for getting the isValid bidding details-->
-    <script src="/frontend/src/factories/Bidding.js"></script>
-    <!--importing the factory for car validation-->
-    <script src="/frontend/src/factories/Car.js"></script>
-    <!--importing the factory for review validation and other functions-->
-    <script src="/frontend/src/factories/Review.js"></script>
-
-
-    <!--importing the factory for the user -->
-    <script src="/frontend/src/factories/User.js"></script>
+    <!-- Components and Services (must be after app.controller.js) -->
+    <script src="components/backButton.js"></script>
+    <script src="components/paginationComponent.js"></script>
+    <script src="components/loadingComponent.js"></script>
     
+    <script src="modules/admin/admin.controller.js"></script>
+    <script src="modules/admin/Analytics/analytics.controller.js"></script>
+    <script src="modules/admin/platformManagement/platformManagement.controller.js"></script>
+    <script src="modules/home/home.controller.js"></script>
+    <script src="modules/car/singleCar.controller.js"></script>
+    <script src="modules/auth/signup.controller.js"></script>
+    <script src="modules/auth/login.controller.js"></script>
+    <script src="modules/booking/ownerBookings/ownerBiddings.controller.js"></script>
+    <script src="modules/car/addCarController.js"></script>
+    <script src="modules/profile/myProfile.controller.js"></script>
+    <script src="modules/admin/userManagement/userManagement.controller.js"></script>
+    <script src="modules/conversations/conversations.controller.js"></script>
+    <script src="modules/booking/ownerBookings/confirmedBookings.controller.js"></script>
+    <script src="modules/booking/userBookings/myBiddings.controller.js"></script>
+    <script src="modules/booking/userBookings/userBookings.controller.js"></script>
+    <script src="modules/booking/ownerBookings/overlappingBidsModal.controller.js"></script>
+    <script src="modules/sellerAnalytics/sellerAnalytics.controller.js"></script>
+    <script src="modules/booking/userBookings/bookingsHistory.controller.js"></script>
+    <script src="modules/sellerListings/bookingModal.controller.js"></script>
+    <script src="modules/sellerListings/sellerListings.controller.js"></script>
+    <script src="modules/sellerListings/addCarModalController.js"></script>
 
-    <!--importing the bootstrap css-->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.5.6/ui-bootstrap-tpls.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css"
-    />
-    <!-- angular material -->
-    <script src="https://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-2.5.0.js"></script>
-   
-    
+    <script src="services/routeProtection.service.js"></script>
+    <script src="services/Auth.service.js"></script>
+    <script src="services/Toast.service.js"></script>
+    <script src="services/Chart.service.js"></script>
+    <script src="services/Api.service.js"></script>
+    <script src="services/Car.service.js"></script>
+    <script src="services/Bidding.service.js"></script>
+    <script src="services/User.service.js"></script>
+    <script src="services/Chat.service.js"></script>
+    <script src="services/City.service.js"></script>
+    <script src="services/Socket.service.js"></script>
 
+    <script src="factories/Bidding.js"></script>
+    <script src="factories/Car.js"></script>
+    <script src="factories/Review.js"></script>
+    <script src="factories/User.js"></script>
+
+    <!-- Routes must be last -->
+    <script src="routes/app.routes.js"></script>
   </head>
   <body ng-controller="appCtrl" ng-init="init()">
    
@@ -180,8 +129,8 @@ https://cdn.jsdelivr.net/npm/nodemailer@6.10.0/lib/nodemailer.min.js
 
             <div class="collapse navbar-collapse" uib-collapse="isNavCollapsed">
                 <ul class="nav navbar-nav">
-                    <li ng-show="isLogged"><a ui-sref="car"><span class="glyphicon glyphicon-plus"></span> Add Car</a></li>
-                    <li ng-show="isLogged"><a ui-sref="conversations({id:0})"><span class="glyphicon glyphicon-comment"></span> Chats</a></li>
+                    <li ng-show="isLogged && isSeller"><a ui-sref="sellerListings"><span class="glyphicon glyphicon-list-alt"></span> My Listings</a></li>
+                    <li ng-show="isLogged"><a ui-sref="conversations({id: undefined})"><span class="glyphicon glyphicon-comment"></span> Chats</a></li>
                     
                     <li class="dropdown" uib-dropdown ng-show="isLogged">
                         <a href="#" class="dropdown-toggle" uib-dropdown-toggle>
@@ -189,7 +138,7 @@ https://cdn.jsdelivr.net/npm/nodemailer@6.10.0/lib/nodemailer.min.js
                         </a>
                         <ul class="dropdown-menu" uib-dropdown-menu>
                             <li ng-if="!isSeller"><a ui-sref="userBookings"><span class="glyphicon glyphicon-list"></span> My Bookings</a></li>
-                            <li><a ui-sref="bookingHistory"><span class="glyphicon glyphicon-time"></span> Booking History</a></li>
+                            <li ng-if="!isSeller"><a ui-sref="bookingHistory"><span class="glyphicon glyphicon-time"></span> Booking History</a></li>
                             <li ng-if="isSeller"><a ui-sref="ownerBookings"><span class="glyphicon glyphicon-tag"></span> Biddings</a></li>
                             <li ng-if="!isSeller"><a ui-sref="myBiddings"><span class="glyphicon glyphicon-bookmark"></span> My Biddings</a></li>
                             <li ng-if="isSeller"><a ui-sref="confirmedBookings"><span class="glyphicon glyphicon-ok"></span> Confirmed Bookings</a></li>
@@ -200,7 +149,7 @@ https://cdn.jsdelivr.net/npm/nodemailer@6.10.0/lib/nodemailer.min.js
                 </ul>
 
                 <ul class="nav navbar-nav navbar-right">
-                    <li ng-show="isLogged"><a ui-sref="myProfile"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
+                    <li ng-show="isLogged"><a ui-sref="myProfile({id: undefined})"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
                     <li ng-show="isLogged"><a href="#" ng-click="logout()" ui-sref="login"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
                     <li ng-show="!isLogged"><a ui-sref="login"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
                 </ul>

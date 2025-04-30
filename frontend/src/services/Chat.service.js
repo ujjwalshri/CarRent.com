@@ -1,11 +1,11 @@
 
-
 angular.module('myApp').service('ChatService', function($q, ApiService, $http) {    
-    /*
-    function to create a conversation
-    @params owner, vehicleId
-    @returns promise
-    */
+    /**
+     * Creates a conversation
+     * @param {*} owner 
+     * @param {*} vehicleId 
+     * @returns created conversation
+     */
     this.createConversation = function(owner, vehicleId){
 
         const deferred = $q.defer();
@@ -19,11 +19,10 @@ angular.module('myApp').service('ChatService', function($q, ApiService, $http) {
             });
         return deferred.promise;
     }
-    /*
-    function to get all conversations
-    @params none
-    @returns promise
-    */
+    /**
+     * Gets all conversations
+     * @returns all the conversations
+     */
     this.getAllConversations = function(){
         const deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/conversation/getAllConversations`, { withCredentials: true })
@@ -35,13 +34,13 @@ angular.module('myApp').service('ChatService', function($q, ApiService, $http) {
             });
         return deferred.promise;
     }
-    /*
-    function to get all conversations at a car id
-    @params id
-    @returns promise
-    */
+    /**
+     * Gets all conversations at a car id
+     * @param {*} id 
+     * @returns all the conversations at a car id
+     */
     this.getConversationsAtCarId = function(id){
-        console.log(id);
+
         const deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/conversation/getConversatons/vehicle/${id}`, { withCredentials: true })
             .then((res) => {
@@ -52,11 +51,12 @@ angular.module('myApp').service('ChatService', function($q, ApiService, $http) {
             });
         return deferred.promise;
     }
-    /*
-    function to add a message
-    @params formData, conversationId
-    @returns promise
-    */
+    /**
+     * Adds a message
+     * @param {*} formData 
+     * @param {*} conversationId 
+     * @returns added message
+     */
     this.addMessage = ( formData , conversationId)=>{
         const deferred = $q.defer();
         $http.post(`${ApiService.baseURL}/api/message/addMessage/${conversationId}`, formData, { withCredentials: true, headers: { 'Content-Type': undefined },
@@ -69,13 +69,13 @@ angular.module('myApp').service('ChatService', function($q, ApiService, $http) {
             });
         return deferred.promise;
     }
-    /*
-    function to get all messages
-    @params conversationId
-    @returns promise
-    */
+    /**
+     * Gets all messages
+     * @param {*} conversationId 
+     * @returns all the messages of a conversation
+     */
     this.getAllMessages = (conversationId)=>{
-        console.log(conversationId);
+
         const deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/message/getMessages/${conversationId}`, { withCredentials: true })
             .then((res) => {
@@ -87,13 +87,13 @@ angular.module('myApp').service('ChatService', function($q, ApiService, $http) {
         return deferred.promise;
 
     }
-    /*
-    function to get all attachments
-    @params conversationId
-    @returns promise
-    */
+    /**
+     * Gets all attachments
+     * @param {*} conversationId 
+     * @returns all the attachments of a conversation
+     */
     this.getAllAttachments = (conversationId)=>{
-        console.log(conversationId);
+
         const deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/message/getAttachments/${conversationId}`, { withCredentials: true })
             .then((res) => {

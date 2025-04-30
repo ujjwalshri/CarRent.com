@@ -25,7 +25,6 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
      * @returns {Promise} Promise resolving to the vehicles data or error
      */
     this.getAllApprovedCars = (search, price, city,category, skip)=>{
-        console.log('skip', skip);
         let deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/vehicle/allApprovedVehicles?search=${search===undefined?'':search}&priceRange=${price}&city=${city}&category=${category}&skip=${skip}`, { withCredentials: true })
         .then((res)=>{
@@ -76,7 +75,7 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
      * @returns {Promise} Promise resolving to the reviews data or error
      */
     this.getReviewsByCarId = (carId, params)=>{
-        console.log(carId);
+
         let deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/review/getAllReviews/car/${carId}`, { params:params, withCredentials: true })
         .then((res)=>{
@@ -98,7 +97,6 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
      * @returns {Promise} Promise resolving to the bookings data or error
      */
     this.fetchBookingsAtCarId = (carId)=>{
-        console.log(carId);
         let deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/bidding/getBookings/car/${carId}`, { withCredentials: true }).then((res)=>{
             console.log("bookings", res.data.bookings);
@@ -145,12 +143,25 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
      * Retrieves all vehicles owned by the current user, with optional status filtering
      * 
      * @param {string} status - Optional filter for vehicle status (pending, approved, rejected)
-     * @param {Object} params - Additional query parameters
+     * @param {Object} params - Additional query parameters including search, skip, and limit
      * @returns {Promise} Promise resolving to the user's vehicles or error
      */
-    this.fetchUserCars = (status, params)=>{
+    this.fetchUserCars = (status, params, userId=undefined)=>{
         let deferred = $q.defer();
-        $http.get(`${ApiService.baseURL}/api/vehicle/getAllCarsByUser?carStatus=${status}`, {params:params, withCredentials: true })
+        const queryParams = {
+            ...params,
+            search: params.search || '',
+            carStatus: status
+        };
+
+        let url = `${ApiService.baseURL}/api/vehicle/getAllCarsByUser`;
+        if(userId){
+            url += `/${userId}`;
+        }
+        $http.get(url, {
+            params: queryParams,
+            withCredentials: true 
+        })
         .then((res)=>{
             deferred.resolve(res);
         })
@@ -159,7 +170,6 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
             console.log(err);
         })
         return deferred.promise;
-
     }
     /*
     function to delete a car
@@ -375,6 +385,12 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
         });
         return deferred.promise;
     }
+    /**
+     * Get All Car Categories For Admin
+     * Retrieves all car categories from the system
+     * 
+     * @returns {Promise} Promise resolving to the car categories or error
+     */
     this.getAllCarCategoriesForAdmin = ()=>{
         let deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/admin/getAllCarCategories`, { withCredentials: true })
@@ -386,6 +402,13 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
         });
         return deferred.promise;
     }
+    /**
+     * Delete Car Category
+     * Deletes a car category from the system (admin function)
+     * 
+     * @param {string} categoryID - The unique identifier of the car category to delete
+     * @returns {Promise} Promise resolving to confirmation or error
+     */
     this.deleteCarCategory = (categoryID)=>{
         let deferred = $q.defer();
         $http.delete(`${ApiService.baseURL}/api/admin/deleteCarCategory/${categoryID}`, { withCredentials: true })

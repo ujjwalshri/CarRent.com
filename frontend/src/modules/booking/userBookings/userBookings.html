@@ -1,0 +1,195 @@
+<back-button></back-button>
+<div class="container-fluid" ng-init="init()">
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="page-header text-center small-header" ng-show="bookings.length > 0">
+                <h3><i class="glyphicon glyphicon-calendar"></i> Your Bookings</h3>
+                <p class="text-muted small">Manage and track all your car rental bookings</p>
+            </div>
+            <div class="alert alert-info" ng-show="bookings.length === 0 && !isLoading">
+                <div class="text-center">
+                    <i class="fa fa-info-circle fa-2x margin-bottom-10"></i>
+                    <h4>No Active Bookings</h4>
+                    <p class="small">You haven't made any bookings yet. Start exploring cars to rent!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row" ng-show="isLoading">
+        <div class="col-md-12">
+            <div class="text-center">
+                <i class="fa fa-spinner fa-spin fa-2x margin-bottom-10"></i>
+                <p class="text-muted small">Loading your bookings...</p>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row" ng-show="bookings.length > 0">
+        <div class="col-md-12">
+            <div class="panel panel-primary compact-panel">
+                <div class="panel-heading">
+                    <h3 class="panel-title small"><i class="glyphicon glyphicon-filter"></i> Sort & Filter</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="sortBy" class="control-label small"><i class="glyphicon glyphicon-sort"></i> Sort By:</label>
+                                <select id="sortBy" class="form-control input-sm" ng-model="sortBy" ng-change="handleSorting()">
+                                    <option value="" disabled selected>Select Sorting Option</option>
+                                    <option value="amount">Price (High to Low)</option>
+                                    <option value="startDate">Start Date (Latest First)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-default btn-sm btn-block" style="margin-top: 20px;" ng-click="resetFilters()">
+                                <i class="glyphicon glyphicon-refresh"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row" ng-show="bookings.length > 0">
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title small"><i class="glyphicon glyphicon-list"></i> Booking Details</h3>
+                </div>
+                <div class="panel-body compact-panel">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-striped table-condensed">
+                            <thead>
+                                <tr>
+                                    <th class="text-center small">Booking ID</th>
+                                    <th class="text-center small">Amount</th>
+                                    <th class="text-center small">Duration</th>
+                                    <th class="text-center small">Car Details</th>
+                                    <th class="text-center small">Owner Details</th>
+                                    <th class="text-center small">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="booking in bookings">
+                                    <td class="text-center">
+                                        <small class="text-muted smaller">{{booking._id}}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <p class="text-success margin-0 medium">${{booking.calculate()}}</p>
+                                        <small class="text-muted smaller">${{booking.amount}}/day</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <p class="margin-bottom-5">
+                                            <span class="label label-primary small-label">
+                                                <i class="glyphicon glyphicon-calendar"></i> 
+                                                {{booking.startDate | date: 'MMM dd, yyyy'}}
+                                            </span>
+                                        </p>
+                                        <p class="margin-0">
+                                            <span class="label label-info small-label">
+                                                <i class="glyphicon glyphicon-calendar"></i> 
+                                                {{booking.endDate | date: 'MMM dd, yyyy'}}
+                                            </span>
+                                        </p>
+                                    </td>
+                                    <td>
+                                        <div class="well well-sm margin-0 compact-well">
+                                            <p class="margin-0 medium">{{booking.vehicle.company}} {{booking.vehicle.name}}</p>
+                                            <p class="text-muted margin-top-5 smaller">
+                                                <i class="glyphicon glyphicon-calendar"></i> {{booking.vehicle.modelYear}} |
+                                                <i class="glyphicon glyphicon-tag"></i> {{booking.vehicle.category}} |
+                                                <i class="glyphicon glyphicon-tint"></i> {{booking.vehicle.fuelType}} |
+                                                <i class="glyphicon glyphicon-dashboard"></i> {{booking.vehicle.mileage}} kmpl
+                                            </p>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="well well-sm margin-0 compact-well">
+                                            <p class="margin-0 small">{{booking.owner.firstName}} {{booking.owner.lastName}}</p>
+                                            <p class="margin-0 smaller">@{{booking.owner.username}}</p>
+                                            <p class="margin-0 smaller text-muted">
+                                                <i class="glyphicon glyphicon-envelope"></i> {{booking.owner.email}}
+                                            </p>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="label small-label" ng-class="{
+                                            'label-success': booking.status === 'started',
+                                            'label-warning': booking.status === 'approved',
+                                            'label-info': booking.status === 'ended',
+                                            'label-default': booking.status === 'reviewed'
+                                        }">
+                                            <i class="glyphicon" ng-class="{
+                                                'glyphicon-play': booking.status === 'started',
+                                                'glyphicon-ok': booking.status === 'approved',
+                                                'glyphicon-stop': booking.status === 'ended',
+                                                'glyphicon-star': booking.status === 'reviewed'
+                                            }"></i>
+                                            {{booking.status | uppercase}}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row" ng-show="pagination.totalItems > 0">
+        <div class="col-md-12">
+            <div class="text-center">
+                <ul uib-pagination
+                    total-items="pagination.totalItems"
+                    ng-model="pagination.currentPage"
+                    max-size="pagination.maxSize"
+                    class="pagination pagination-sm"
+                    boundary-links="true"
+                    force-ellipses="true"
+                    items-per-page="pagination.itemsPerPage"
+                    ng-change="pageChanged()"
+                    first-text="&laquo;"
+                    last-text="&raquo;"
+                    previous-text="&lsaquo;"
+                    next-text="&rsaquo;"
+                    direction-links="true">
+                </ul>
+                <p class="text-muted smaller">Page {{pagination.currentPage}} of {{pagination.totalPages}}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style>
+.margin-0 { margin: 0; }
+.margin-top-5 { margin-top: 5px; }
+.margin-bottom-5 { margin-bottom: 5px; }
+.margin-bottom-10 { margin-bottom: 10px; }
+.well { background-color: #f9f9f9; }
+.page-header { border-bottom: 1px solid #eee; margin: 20px 0 15px; padding-bottom: 5px; }
+.small-header h3 { font-size: 20px; margin: 10px 0; }
+.panel-title { margin: 0; }
+.compact-panel .panel-body { padding: 10px; }
+.compact-well { padding: 5px 8px; }
+.small-label { padding: 4px 8px; font-size: 11px; }
+.smaller { font-size: 11px; }
+.small { font-size: 12px; }
+.medium { font-size: 13px; }
+.panel-primary > .panel-heading { background-color: #337ab7; padding: 5px 10px; }
+.table > thead > tr > th { background-color: #f5f5f5; padding: 8px; }
+.table > tbody > tr > td { padding: 8px; }
+.pagination > li > a { padding: 4px 8px; font-size: 12px; }
+.form-control { font-size: 12px; }
+.btn { font-size: 12px; }
+</style>

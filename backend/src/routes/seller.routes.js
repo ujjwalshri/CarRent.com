@@ -19,7 +19,9 @@ import {
     getTotalRevenueByAddons,
     getAverageBidCostPerRental,
     getAverageBookingPayment,
-    getSelectedAddonsCount
+    getSelectedAddonsCount,
+    getSellerRating,
+    topCitiesWithMostNegativeReviews
 } from '../controllers/seller.controller.js';
 
 const router = express.Router(); 
@@ -37,6 +39,7 @@ router.get('/analytics/average-booking-payment', protectRoute, allowSeller, getA
 router.get('/analytics/car-wise-bookings', protectRoute, allowSeller, getCarWiseBookings);
 router.get('/analytics/negative-reviews', protectRoute, allowSeller, getNegativeReviews);
 router.get('/analytics/top-earning-cars', protectRoute, allowSeller, getTopEarningCars);
+router.get('/analytics/top-city-most-negative-reviews', protectRoute, allowSeller, topCitiesWithMostNegativeReviews);
 
 // Booking Analytics Routes
 router.get('/analytics/peak-hours', protectRoute, allowSeller, getPeakHours);
@@ -46,6 +49,8 @@ router.get('/analytics/average-rental-duration', protectRoute, allowSeller, getA
 router.get('/analytics/repeating-customers', protectRoute, allowSeller, getRepeatingCustomersPercentage);
 router.get('/analytics/city-wise-bookings', protectRoute, allowSeller, getCityWiseBookings);
 router.get('/analytics/selected-addons-count', protectRoute, allowSeller, getSelectedAddonsCount)
+router.get('/analytics/seller-rating/:id', protectRoute, getSellerRating);
+
 
 // Comparison Analytics Routes
 router.get('/analytics/bidding-comparison', protectRoute, allowSeller, getBiddingComparison);

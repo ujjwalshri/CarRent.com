@@ -25,7 +25,7 @@ import reviewRoutes from "./routes/review.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import sellerRoutes from "./routes/seller.routes.js";
 import conversationRoutes from "./routes/conversation.routes.js";
-import geminiRoutes from "./routes/gemini.routes.js";
+
 import passport from "./config/passport.js"
 import cors from "cors";
 import { initializeSocket, emitBidSuccess } from './services/socket.service.js';
@@ -103,7 +103,6 @@ app.use('/api/admin', adminAnalyticsRoutes); // Admin dashboard and analytics
 app.use('/api/conversation', conversationRoutes); // Messaging conversations
 app.use('/api/message', messageRoutes);     // Individual messages
 app.use('/api/seller', sellerRoutes); // Seller analytics and dashboard
-app.use('/api/gemini', geminiRoutes); // Gemini API endpoints
 
 /**
  * Initialize SQS Worker Thread

@@ -1,7 +1,5 @@
 import upload from '../config/s3.connection.js'; // import the multer middleware
 import {uploadchat} from '../config/s3.connection.js';
-
-
 /**
  * @function uploadMultipleImages
  * @description Middleware to handle multiple image uploads to S3.

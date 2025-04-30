@@ -29,9 +29,10 @@ app.controller("appCtrl", function($scope, $rootScope, ToastService, AuthService
             $rootScope.isLogged = false;
         })
     };
-
+ 
     /**
-     * Setup socket event handlers for global notifications
+     * Sets up socket event listeners
+     * @returns {void}
      */
     const setupSocketEvents = function() {
         // Listen for bid success notifications

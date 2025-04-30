@@ -38,8 +38,7 @@ angular.module('myApp').service('SocketService', function($timeout, ApiService) 
             socket = null;
         }
         
-        // Create new socket connection
-        console.log('Creating new socket connection for', user.username);
+
         socket = io(ApiService.baseURL || "http://localhost:8000", {
             reconnection: true,
             reconnectionDelay: 1000,

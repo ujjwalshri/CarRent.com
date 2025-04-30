@@ -1,0 +1,157 @@
+<div class="container" ng-controller="signupCtrl" ng-init="init()">
+  <loading-component is-loading="isLoading" loading-text="Signing up user...."></loading-component>
+  <div class="row" style="min-height: 100vh; display: flex; justify-content: center; align-items: center;">
+   
+      <div class="col-lg-4 col-md-6 col-sm-8 col-xs-10">
+         
+          <!-- Verification Message -->
+          <div class="panel panel-success" ng-if="showVerificationMessage">
+              <div class="panel-heading text-center">
+                  <h3 class="panel-title">
+                      <i class="glyphicon glyphicon-envelope"></i> Verification Email Sent
+                  </h3>
+              </div>
+              <div class="panel-body text-center">
+                  <p class="lead">Thank you for signing up!</p>
+                  <p>A verification email has been sent to:</p>
+                  <p><strong>{{userEmail}}</strong></p>
+                  <p>Please check your email and click on the verification link to complete your registration.</p>
+                  <div class="alert alert-info" role="alert">
+                      <i class="glyphicon glyphicon-info-sign"></i>
+                      If you don't see the email in your inbox, please check your spam folder.
+                  </div>
+                  <div>
+                      <span ng-if="!resendDisabled">
+                          Did not receive the email? <a href="" ng-click="resendVerificationEmail()">Resend Verification Email</a>
+                      </span>
+                      <span ng-if="resendDisabled">
+                          Resend available in {{cooldownTime}} seconds
+                      </span>
+                  </div>
+              </div>
+          </div>
+
+          <!-- Signup Form -->
+          <form id="userForm" name="userForm" ng-submit="signup()" novalidate class="panel panel-default" ng-if="!showVerificationMessage">
+              <div class="panel-heading text-center">
+                  <h3 class="panel-title">Sign Up</h3>
+              </div>
+              <div class="panel-body">
+                  
+                  <div class="form-group" ng-if="!userEmail">
+                      <label for="firstName">First Name:</label>
+                      <input type="text" class="form-control" id="firstName" name="firstName"
+                          placeholder="Enter your first name" ng-model="formData.firstName" required>
+                      <span class="text-danger" ng-show="userForm.firstName.$error.required && userForm.firstName.$touched">
+                          First Name is required.
+                      </span>
+                  </div>
+
+                  <div class="form-group">
+                      <label for="lastName">Last Name:</label>
+                      <input type="text" class="form-control" id="lastName" name="lastName"
+                          placeholder="Enter your last name" ng-model="formData.lastName" required>
+                      <span class="text-danger" ng-show="userForm.lastName.$error.required && userForm.lastName.$touched">
+                          Last Name is required.
+                      </span>
+                  </div>
+
+                  <div class="form-group">
+                      <label for="username">Username:</label>
+                      <input type="text" class="form-control" id="username" name="username"
+                          placeholder="Enter your username" ng-model="formData.username" required ng-minlength="5">
+                      <span class="text-danger" ng-show="userForm.username.$error.required && userForm.username.$touched">
+                          Username is required.
+                      </span>
+                      <span class="text-danger" ng-show="userForm.username.$error.minlength && userForm.username.$touched">
+                          Must be at least 5 characters.
+                      </span>
+                  </div>
+
+                  <div class="form-group">
+                      <label for="email">Email:</label>
+                      <input type="email" class="form-control" id="email" name="email"
+                          placeholder="Enter a valid email" ng-model="formData.email" required>
+                      <span class="text-danger" ng-show="userForm.email.$error.required && userForm.email.$touched">
+                          Email is required.
+                      </span>
+                      <span class="text-danger" ng-show="userForm.email.$error.email && userForm.email.$touched">
+                          Enter a valid email.
+                      </span>
+                  </div>
+
+                  <div class="form-group">
+                      <label for="password">Password:</label>
+                      <div class="input-group">
+                          <input type="{{ showPassword ? 'text' : 'password' }}" class="form-control" id="password" name="password"
+                              placeholder="Enter a password" ng-model="formData.password" required ng-minlength="6">
+                          <span class="input-group-btn">
+                              <button type="button" class="btn btn-default" ng-click="showPassword = !showPassword">
+                                  <i class="glyphicon" ng-class="{'glyphicon-eye-open': !showPassword, 'glyphicon-eye-close': showPassword}"></i>
+                              </button>
+                          </span>
+                      </div>
+                      <span class="text-danger" ng-show="userForm.password.$error.required && userForm.password.$touched">
+                          Password is required.
+                      </span>
+                      <span class="text-danger" ng-show="userForm.password.$error.minlength && userForm.password.$touched">
+                          Must be at least 6 characters.
+                      </span>
+                  </div>
+
+                  <div class="form-group">
+                      <label for="confirm-password">Confirm Password:</label>
+                      <div class="input-group">
+                          <input type="{{ showConfirmPassword ? 'text' : 'password' }}" class="form-control" id="confirm-password" name="confirmPassword"
+                              placeholder="Confirm your password" ng-model="formData.confirmPassword" required>
+                          <span class="input-group-btn">
+                              <button type="button" class="btn btn-default" ng-click="showConfirmPassword = !showConfirmPassword">
+                                  <i class="glyphicon" ng-class="{'glyphicon-eye-open': !showConfirmPassword, 'glyphicon-eye-close': showConfirmPassword}"></i>
+                              </button>
+                          </span>
+                      </div>
+                      <span class="text-danger" ng-show="userForm.confirmPassword.$error.required && userForm.confirmPassword.$touched">
+                          Confirm Password is required.
+                      </span>
+                      <span class="text-danger" ng-show="formData.confirmPassword !== formData.password && userForm.confirmPassword.$touched">
+                          Passwords do not match.
+                      </span>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="city">City:</label>
+                    <select class="form-control" id="city" name="city" ng-model="formData.city" required>
+                        <option value="" disabled selected>Select your city</option>
+                        <option ng-repeat="city in cities" value="{{city}}">{{city}}</option>
+                    </select>
+                    <span class="text-danger" ng-show="userForm.city.$error.required && userForm.city.$touched">
+                        Please select a city.
+                    </span>
+                </div>
+
+                  <div class="form-group">
+                      <label for="adhaar">Aadhaar Number:</label>
+                      <input type="number" class="form-control" id="adhaar" name="adhaar"
+                          placeholder="Enter Aadhaar number" ng-model="formData.adhaar" required ng-pattern="/^\d{12}$/">
+                      <span class="text-danger" ng-show="userForm.adhaar.$error.required && userForm.adhaar.$touched">
+                          Aadhaar number is required.
+                      </span>
+                      <span class="text-danger" ng-show="userForm.adhaar.$error.pattern && userForm.adhaar.$touched">
+                          Must be exactly 12 digits.
+                      </span>
+                  </div>
+
+              </div>
+
+              <div class="panel-footer text-center">
+                  <span>Already a user? <a ui-sref="login">Login</a></span>
+                  <button type="submit" class="btn btn-success btn-block" ng-disabled="userForm.$invalid">
+                      Submit
+                  </button>
+              </div>
+          </form>
+        
+
+      </div>
+  </div>
+</div>

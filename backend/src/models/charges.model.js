@@ -12,6 +12,9 @@ const chargesSchema = new mongoose.Schema({
 }, {timestamps: true})
 
 const Charges = mongoose.model('Charges', chargesSchema);
+
+
+
 export default Charges;
 
 

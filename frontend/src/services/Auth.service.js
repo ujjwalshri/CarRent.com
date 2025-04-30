@@ -91,4 +91,18 @@ this.registerUser = function(user) {
         });
     return deffered.promise;
 };
+
+   this.resendVerificationEmail = function(email) {
+        let deffered = $q.defer();
+        $http.post(`${ApiService.baseURL}/api/auth/resendVerificationEmail`, { email: email }, { withCredentials: true })
+            .then(function(response) {
+                console.log('Verification email resent:', response.data);
+                deffered.resolve(response.data);
+            })
+            .catch(function(error) {
+                console.error('Error resending verification email:', error.data.message);
+                deffered.reject(error.data.message); 
+            });
+        return deffered.promise;
+    };
 });

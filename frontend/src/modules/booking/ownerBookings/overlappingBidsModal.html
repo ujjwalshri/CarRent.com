@@ -1,0 +1,35 @@
+<div class="modal-header">
+    <h3 class="modal-title">Overlapping Bids</h3>
+</div>
+<div class="modal-body">
+    <div class="alert alert-warning">
+        <strong>Warning!</strong> Approving this bid will automatically reject the following overlapping bids:
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Amount</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Total Payable amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="bid in overlappingBids">
+                    <td>{{bid.from.firstName}} {{bid.from.lastName}}</td>
+                    <td>${{bid.amount}}</td>
+                    <td>{{bid.startDate | date:'yyyy-MM-dd'}}</td>
+                    <td>{{bid.endDate | date:'yyyy-MM-dd'}}</td>
+                    <td>${{bid.calculate()}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-primary" ng-click="confirm()">Approve Bid</button>
+    <button class="btn btn-default" ng-click="cancel()">Cancel</button>
+</div> 

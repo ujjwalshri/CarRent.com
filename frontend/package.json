@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "ng serve --port 5000",
+    "dev": "npx http-server . -p 5500 -c-1 --proxy http://localhost:5500? -o --config server.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
@@ -12,9 +12,7 @@
   "dependencies": {
     "async": "^3.2.6",
     "heatmap.js": "^2.0.5",
+    "http-server": "^14.1.1",
     "socket.io-client": "^4.8.1"
-  },
-  "devDependencies": {
-    "@angular-devkit/build-angular": "^19.2.1"
   }
 }

@@ -1,21 +1,56 @@
 import express from 'express';
 import protectRoute from "../middlewares/protectRoute.js";
-import { getChartsDataController , getGeneralAnalyticsController,getOverviewStatsController, addCarCategoryController, getAllCarCategoriesController, deleteCarCategoryController, topPerformersController, sendCongratulationMailController, usersPerCityController, getCustomerSatisfactionScoreController, updatePriceRangeController, getCurrentPriceRangesController, getChargesController, updateChargesController} from '../controllers/admin.controller.js';
+import { 
+    getGeneralAnalyticsController,
+    getOverviewStatsController, 
+    addCarCategoryController, 
+    getAllCarCategoriesController, 
+    deleteCarCategoryController, 
+    topPerformersController, 
+    sendCongratulationMailController, 
+    usersPerCityController, 
+    getCustomerSatisfactionScoreController, 
+    updatePriceRangeController, 
+    getCurrentPriceRangesController, 
+    getChargesController, 
+    updateChargesController,
+    getCarDescriptionStats,
+    getTop10PopularCarModels,
+    getTop3MostReviewedCars,
+    getTop3OwnersWithMostCars,
+    getBiddingsPerCity,
+    getUserGrowthStats,
+    getHighestEarningCities,
+    getNewUsers,
+    getTop3CompaniesWithMostNegativeReviews
+} from '../controllers/admin.controller.js';
 import allowAdmin from '../middlewares/authenticateAdminRole.js';
 const router = express.Router();
 
-router.get('/charts', protectRoute, allowAdmin, getChartsDataController); // get the car description
-router.get('/getGeneralAnalytics', protectRoute, getGeneralAnalyticsController); // get the average booking duration
-router.get('/getOverviewStats', protectRoute, getOverviewStatsController); // get the bidding conversion rate
-router.get('/numberOfUsersPerCity', protectRoute, usersPerCityController); // get the number of owners per city
-router.post('/addCarCategory', protectRoute,allowAdmin, addCarCategoryController); // add the car category
-router.get('/getAllCarCategories', getAllCarCategoriesController); // get all the car categories
-router.delete('/deleteCarCategory/:categoryID', protectRoute, allowAdmin, deleteCarCategoryController); // delete the car category
-router.post('/updatePriceRange', protectRoute, allowAdmin, updatePriceRangeController); // add the price range
-router.get('/getCurrentPriceRanges', getCurrentPriceRangesController); // get the current price ranges
-router.get('/topPerformers', protectRoute, topPerformersController); // get the top 10 sellers with most earnings
-router.post('/sendCongratulationMail', protectRoute, allowAdmin, sendCongratulationMailController); // send the congratulation mail
-router.get('/customerSatisfactionScore', protectRoute, allowAdmin, getCustomerSatisfactionScoreController); // get the customer satisfaction score
-router.get('/getCharges', getChargesController); // get the charges
-router.put('/updateCharges', protectRoute, allowAdmin, updateChargesController); // update the charges
+// Analytics Routes
+router.get('/analytics/car-description', protectRoute, allowAdmin, getCarDescriptionStats);
+router.get('/analytics/popular-cars', protectRoute, allowAdmin, getTop10PopularCarModels);
+router.get('/analytics/most-reviewed', protectRoute, allowAdmin, getTop3MostReviewedCars);
+router.get('/analytics/top-owners', protectRoute, allowAdmin, getTop3OwnersWithMostCars);
+router.get('/analytics/biddings-per-city', protectRoute, allowAdmin, getBiddingsPerCity);
+router.get('/analytics/user-growth', protectRoute, allowAdmin, getUserGrowthStats);
+router.get('/analytics/highest-earning-cities', protectRoute, allowAdmin, getHighestEarningCities);
+router.get('/analytics/new-users', protectRoute, allowAdmin, getNewUsers);
+router.get('/analytics/top-3-companies-with-most-negative-reviews', protectRoute, allowAdmin, getTop3CompaniesWithMostNegativeReviews);
+
+// Existing Routes
+router.get('/getGeneralAnalytics', protectRoute, getGeneralAnalyticsController);
+router.get('/getOverviewStats', protectRoute, getOverviewStatsController);
+router.get('/numberOfUsersPerCity', protectRoute, usersPerCityController);
+router.post('/addCarCategory', protectRoute, allowAdmin, addCarCategoryController);
+router.get('/getAllCarCategories', getAllCarCategoriesController);
+router.delete('/deleteCarCategory/:categoryID', protectRoute, allowAdmin, deleteCarCategoryController);
+router.post('/updatePriceRange', protectRoute, allowAdmin, updatePriceRangeController);
+router.get('/getCurrentPriceRanges', getCurrentPriceRangesController);
+router.get('/topPerformers', protectRoute, topPerformersController);
+router.post('/sendCongratulationMail', protectRoute, allowAdmin, sendCongratulationMailController);
+router.get('/customerSatisfactionScore', protectRoute, allowAdmin, getCustomerSatisfactionScoreController);
+router.get('/getCharges', getChargesController);
+router.put('/updateCharges', protectRoute, allowAdmin, updateChargesController);
+
 export default router;

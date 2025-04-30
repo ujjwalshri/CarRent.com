@@ -41,14 +41,7 @@ angular.module('myApp').factory('Review', function() {
      * @returns {string} result.message - Validation message or error
      */
     Review.prototype.isValid = function() {
-        // Check if review text is empty
-        if (!this.review || this.review.trim() === "") {
-            return {
-                status: false,
-                message: "Review cannot be empty"
-            };
-        }
-
+     
         // Check review length (max 150 characters)
         if (this.review.trim().length > 150) {
             return {

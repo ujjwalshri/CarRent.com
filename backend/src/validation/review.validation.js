@@ -12,16 +12,14 @@ export const addReviewValidation = Joi.object({
             'any.required': 'Rating is required'
         }),
     review: Joi.string()
-        .min(2)
+        .allow('')  // Allow empty strings
+        .optional() // Make the field optional
         .max(500)
-        .required()
         .trim()
         .messages({
-            'string.empty': 'Review cannot be empty',
-            'string.min': 'Review must be at least 10 characters long',
-            'string.max': 'Review cannot exceed 500 characters',
-            'any.required': 'Review text is required'
+            'string.max': 'Review cannot exceed 500 characters'
         }),
+    owner: Joi.object().unknown(true),
     vehicle: Joi.object().unknown(true),
     reviewer: Joi.object().unknown(true)
 }).unknown(true);

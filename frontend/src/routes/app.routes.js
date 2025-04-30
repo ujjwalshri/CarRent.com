@@ -8,13 +8,16 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
     $stateProvider
         .state("home", {
             url: "/home",
-            templateUrl: "components/home/home.html",
+            templateUrl: "modules/home/home.html",
             controller: "homeCtrl",
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
                     RouteProtection.getLoggedinUser().then((user)=>{
                         if(user && user.isAdmin){
                             $state.go('admin');
+                        }
+                        if(user && user.isSeller){
+                            $state.go('sellerListings');
                         }
                     }).catch((err)=>{
                      
@@ -24,7 +27,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state("login",{
             url: "/login",
-            templateUrl: "components/auth/login.html",
+            templateUrl: "modules/auth/login.html",
             controller: "loginCtrl",
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
@@ -44,7 +47,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state("signup",{
            url: "/signup",
-           templateUrl: "components/auth/signup.html",
+           templateUrl: "modules/auth/signup.html",
            controller: "signupCtrl",
               resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
@@ -62,7 +65,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('car', {
             url: '/car',
-            templateUrl: 'components/car/addCarForm.html',
+            templateUrl: 'modules/car/addCarForm.html',
             controller: 'addCarCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
@@ -79,7 +82,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('admin', {
             url: '/admin',
-            templateUrl: 'components/admin/admin.html',
+            templateUrl: 'modules/admin/admin.html',
             controller: 'adminCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
@@ -93,11 +96,11 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
                 }]
             }
         })
-        .state('admin.carApprovals', {
-            url: '/carApprovals',
+        .state('admin.platformManagement', {
+            url: '/platformManagement',
             views: {
                 'adminContent@admin': { 
-                    templateUrl: 'components/admin/carApprovals/carApprovals.html',
+                    templateUrl: 'modules/admin/platformManagement/platformManagement.html',
                     controller: 'carCtrl'
                 }
             }
@@ -106,7 +109,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             url: '/userManagement',
             views: {
                 'adminContent@admin': {
-                    templateUrl: 'components/admin/userManagement/userManagement.html',
+                    templateUrl: 'modules/admin/userManagement/userManagement.html',
                     controller: 'userManagementCtrl',
                 }
             }
@@ -115,14 +118,14 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             url: '/analytics',
             views: {
                 'adminContent@admin': {
-                    templateUrl: 'components/admin/Analytics/analytics.html',
+                    templateUrl: 'modules/admin/Analytics/analytics.html',
                     controller: 'analyticsCtrl'
                 }
             }
         })
         .state('singleCar',{
             url: '/singleCar/:id',
-            templateUrl: 'components/car/singleCar.html',
+            templateUrl: 'modules/car/singleCar.html',
             controller: 'singleCarCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
@@ -136,8 +139,8 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             }
         })
         .state('conversations', {
-            url: '/conversations:id',
-            templateUrl: 'components/conversations/conversations.html',
+            url: '/conversations?/:id',
+            templateUrl: 'modules/conversations/conversations.html',
             controller: 'conversationsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
@@ -152,8 +155,8 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             }
         }) 
         .state('myProfile', {
-            url: '/myProfile',
-            templateUrl: 'components/profile/myProfile.html',
+            url: '/myProfile?/:id',
+            templateUrl: 'modules/profile/myProfile.html',
             controller: 'myProfileCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
@@ -169,7 +172,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('userBookings', {
             url: '/userBookings',
-            templateUrl: 'components/booking/userBookings/userBookings.html',
+            templateUrl: 'modules/booking/userBookings/userBookings.html',
             controller: 'userBookingsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
@@ -189,7 +192,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('ownerBookings', {
             url: '/ownerBiddings',
-            templateUrl: 'components/booking/ownerBookings/ownerBiddings.html',
+            templateUrl: 'modules/booking/ownerBookings/ownerBiddings.html',
             controller: 'ownerBiddingsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
@@ -208,7 +211,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('bookingHistory', {
             url: '/bookingHistory',
-            templateUrl: 'components/booking/userBookings/bookingsHistory.html',
+            templateUrl: 'modules/booking/userBookings/bookingsHistory.html',
             controller: 'bookingsHistoryCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
@@ -224,7 +227,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('confirmedBookings', {
             url: '/confirmedBookings',
-            templateUrl: 'components/booking/ownerBookings/confirmedBookings.html',
+            templateUrl: 'modules/booking/ownerBookings/confirmedBookings.html',
             controller: 'confirmedBookingsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
@@ -243,7 +246,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('manageBookings', {
             url: '/manageBookings:id',
-            templateUrl: 'components/booking/ownerBookings/manageBookings.html',
+            templateUrl: 'modules/booking/ownerBookings/manageBookings.html',
             controller: 'manageBookingsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
@@ -260,7 +263,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('myBiddings', {
             url: '/myBiddings',
-            templateUrl: 'components/booking/userBookings/myBiddings.html',
+            templateUrl: 'modules/booking/userBookings/myBiddings.html',
             controller: 'myBiddingsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
@@ -278,7 +281,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('sellerAnalytics', {
             url: '/sellerAnalytics',
-            templateUrl: 'components/sellerAnalytics/sellerAnalytics.html',
+            templateUrl: 'modules/sellerAnalytics/sellerAnalytics.html',
             controller: 'sellerAnalyticsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
@@ -297,20 +300,30 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('verified', {
             url: '/verified',
-            templateUrl: 'components/auth/verifiedEmail.html',
+            templateUrl: 'modules/auth/verifiedEmail.html',
             resolve : {
                 auth : ['$state', 'RouteProtection', function($state, RouteProtection){
-                    RouteProtection.getLoggedinUser().then(user => {
+                    
+                }]
+            }
+        })
+        .state('sellerListings', {
+            url: '/sellerListings',
+            templateUrl: 'modules/sellerListings/sellerListings.html',
+            controller: 'sellerListingsCtrl',
+            resolve : {
+                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
+                    RouteProtection.getLoggedinUser().then((user)=>{
+                        
                         if(user && user.isAdmin){
                             $state.go('admin');
                         }
                         if(user.isSeller === false){
                             $state.go('home');
-                        } 
+                        }
                     }).catch((err)=>{
                         $state.go('login');
                     })
-
                 }]
             }
         });

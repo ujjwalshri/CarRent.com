@@ -126,4 +126,37 @@ angular.module('myApp').service('UserService', function($http, ApiService, $q) {
                 return error
             });
     }
+    /**
+     * Function to get the user at the userId
+     * @param {string} userId - the userId of the user to get
+     * @returns {object} - the user object
+     */
+    this.getUserAtUserId = (userId)=>{
+        let deferred = $q.defer();
+        $http.get(`${ApiService.baseURL}/api/user/getUserAtUserId/${userId}`, { withCredentials: true })
+        .then((res)=>{
+            deferred.resolve(res.data);
+        })
+        .catch(err=>{
+            deferred.reject("Error fetching user at userId");
+        })
+        return deferred.promise;
+    }
+
+    /**
+     * Function to get the seller rating
+     * @param {string} sellerId - The seller id
+     * @returns {object} - The seller rating
+     */
+    this.getSellerRating = (sellerId)=>{
+        let deferred = $q.defer();
+        $http.get(`${ApiService.baseURL}/api/seller/analytics/seller-rating/${sellerId}`, { withCredentials: true })
+        .then((res)=>{
+            deferred.resolve(res.data);
+        })
+        .catch(err=>{
+            deferred.reject("Error fetching seller rating");
+        })
+        return deferred.promise;
+    }
 });
