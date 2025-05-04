@@ -39,11 +39,6 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
-    adhaar:{
-        type:String,
-        required:[ true, "Adhaar is required"],
-        unique:true
-    },
     isEmailVerified: {
         type: Boolean,
         default: false

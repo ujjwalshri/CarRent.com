@@ -7,7 +7,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/jpeg" href="../../public/assets/carRentlogo.jpeg">
 
-    <!-- Dependencies first -->
+    <!-- Dependencies  -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -65,14 +65,15 @@
     <!-- App Initialization -->
     <script src="app.controller.js"></script>
 
-    <!-- Components and Services (must be after app.controller.js) -->
+
     <script src="components/backButton.js"></script>
-    <script src="components/paginationComponent.js"></script>
     <script src="components/loadingComponent.js"></script>
+    <script src="components/navbar/dynamicNavbar.js"></script>
     
     <script src="modules/admin/admin.controller.js"></script>
     <script src="modules/admin/Analytics/analytics.controller.js"></script>
     <script src="modules/admin/platformManagement/platformManagement.controller.js"></script>
+    <script src="modules/admin/platformManagement/taxesManagement.controller.js"></script>
     <script src="modules/home/home.controller.js"></script>
     <script src="modules/car/singleCar.controller.js"></script>
     <script src="modules/auth/signup.controller.js"></script>
@@ -91,8 +92,9 @@
     <script src="modules/sellerListings/bookingModal.controller.js"></script>
     <script src="modules/sellerListings/sellerListings.controller.js"></script>
     <script src="modules/sellerListings/addCarModalController.js"></script>
+    <script src="modules/car/placeBidModal.controller.js"></script>
 
-    <script src="services/routeProtection.service.js"></script>
+    <script src="services/RouteProtection.service.js"></script>
     <script src="services/Auth.service.js"></script>
     <script src="services/Toast.service.js"></script>
     <script src="services/Chart.service.js"></script>
@@ -103,60 +105,22 @@
     <script src="services/Chat.service.js"></script>
     <script src="services/City.service.js"></script>
     <script src="services/Socket.service.js"></script>
+    <script src="services/Addon.service.js"></script>
+    <script src="services/Tax.service.js"></script>
+    <script src="services/SellerAnalytics.service.js"></script>
+    <script src="services/AdminAnalytics.service.js"></script>
+    <script src="services/Recommendation.service.js"></script>
 
     <script src="factories/Bidding.js"></script>
     <script src="factories/Car.js"></script>
     <script src="factories/Review.js"></script>
     <script src="factories/User.js"></script>
 
-    <!-- Routes must be last -->
+
     <script src="routes/app.routes.js"></script>
   </head>
   <body ng-controller="appCtrl" ng-init="init()">
-   
-    <nav class="navbar navbar-inverse" ng-hide="adminLogged">
-        <div class="container-fluid">
-            <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" ng-click="isNavCollapsed = !isNavCollapsed">
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a class="navbar-brand" ui-sref="home">
-                    <span class="glyphicon glyphicon-car"></span> Car.com
-                </a>
-            </div>
-
-            <div class="collapse navbar-collapse" uib-collapse="isNavCollapsed">
-                <ul class="nav navbar-nav">
-                    <li ng-show="isLogged && isSeller"><a ui-sref="sellerListings"><span class="glyphicon glyphicon-list-alt"></span> My Listings</a></li>
-                    <li ng-show="isLogged"><a ui-sref="conversations({id: undefined})"><span class="glyphicon glyphicon-comment"></span> Chats</a></li>
-                    
-                    <li class="dropdown" uib-dropdown ng-show="isLogged">
-                        <a href="#" class="dropdown-toggle" uib-dropdown-toggle>
-                            <span class="glyphicon glyphicon-calendar"></span> Bookings <span class="caret"></span>
-                        </a>
-                        <ul class="dropdown-menu" uib-dropdown-menu>
-                            <li ng-if="!isSeller"><a ui-sref="userBookings"><span class="glyphicon glyphicon-list"></span> My Bookings</a></li>
-                            <li ng-if="!isSeller"><a ui-sref="bookingHistory"><span class="glyphicon glyphicon-time"></span> Booking History</a></li>
-                            <li ng-if="isSeller"><a ui-sref="ownerBookings"><span class="glyphicon glyphicon-tag"></span> Biddings</a></li>
-                            <li ng-if="!isSeller"><a ui-sref="myBiddings"><span class="glyphicon glyphicon-bookmark"></span> My Biddings</a></li>
-                            <li ng-if="isSeller"><a ui-sref="confirmedBookings"><span class="glyphicon glyphicon-ok"></span> Confirmed Bookings</a></li>
-                        </ul>
-                    </li>
-                    
-                    <li ng-show="isLogged && isSeller"><a ui-sref="sellerAnalytics"><span class="glyphicon glyphicon-stats"></span> Analytics</a></li>
-                </ul>
-
-                <ul class="nav navbar-nav navbar-right">
-                    <li ng-show="isLogged"><a ui-sref="myProfile({id: undefined})"><span class="glyphicon glyphicon-user"></span> Profile</a></li>
-                    <li ng-show="isLogged"><a href="#" ng-click="logout()" ui-sref="login"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
-                    <li ng-show="!isLogged"><a ui-sref="login"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
+    <dynamic-navbar></dynamic-navbar>
     <div id="main-view" ui-view></div>
 </body>
 

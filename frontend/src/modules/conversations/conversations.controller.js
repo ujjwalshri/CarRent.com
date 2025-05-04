@@ -14,22 +14,22 @@ angular
       $timeout,
       $uibModal
     ) {
-      // Data collections
+
       $scope.myConversations = []; // List of user's active conversations
       $scope.messages = []; // Messages for currently selected conversation
       $scope.onlineUsers = []; // Users currently active in the system
       
-      // UI state tracking
+
       $scope.selectedConversation = null; // Currently selected/active conversation
       $scope.isLoading = false; // Main content loading state
       $scope.messageLoading = false; // Message loading state
       
-      // User input handling
+
       $scope.inputMessage = ""; // Current message being composed
       $scope.loggedInUser = null; // Current user's profile
       $scope.image; // Image attachment for current message
       
-      // Main initialization function - called on controller load
+
       $scope.init = () => {
         // Begin loading sequence
         $scope.isLoading = true;
@@ -96,12 +96,9 @@ angular
       // Scrolls the chat box to display the most recent messages
       // Called after new messages are added or conversation changes
       $scope.scrollToBottom = function () {
-        // Delay execution to ensure DOM has updated with new messages
         $timeout(function () {
-          // Find chat container element
           var chatBox = document.getElementById("chatBox");
           if (chatBox) {
-            // Scroll to bottom of container
             chatBox.scrollTop = chatBox.scrollHeight;
           }
         }); 

@@ -1,10 +1,9 @@
 import Bidding from '../models/bidding.model.js';
 import Vehicle from '../models/vehicle.model.js';
-import AddOns from '../models/add-ons.model.js';
 import Charges from '../models/charges.model.js';
-import {sendInvoiceEmail} from '../services/email.service.js';
+import Tax from '../models/taxes.model.js';
+import {sendInvoiceEmail, sendGenericEmail} from '../services/email.service.js';
 import validateBiddingData from '../validation/bid.validation.js';
-import {generateAndSendMail} from '../utils/gen.mail.js';
 import dotenv from 'dotenv';
 import AWS from 'aws-sdk';
 import mongoose from 'mongoose';
@@ -66,6 +65,7 @@ export const addBidController = async (req, res) => {
     try {
         const vehicle = await Vehicle.findById(carId);
         const platformFeePercentage = await Charges.findOne({name: "Platform Fee"});
+        const taxes = await Tax.find({isActive: true});
         const biddingData = {
             amount, 
             startDate, 
@@ -95,6 +95,7 @@ export const addBidController = async (req, res) => {
             status,
             selectedAddons,
             platformFeePercentage: platformFeePercentage.percentage,
+            taxes: taxes.filter(tax => tax.isActive),
             from : {
                 _id : from._id,
                 username : from.username, 
@@ -162,7 +163,11 @@ export const updateBidStatusController = async (req, res) => {
                 { $set: { status: "rejected" } },
                 { session }
             );
-            generateAndSendMail({ subject: "Bidding Approved", text: `Congrats Your bid on vehicle ${bidding.vehicle.name} has been approved by the owner ${bidding.owner.username}, the bid amount is ${bidding.amount}, startDate is ${new Date(bidding.startDate).toLocaleDateString()}, endDate is ${new Date(bidding.endDate).toLocaleDateString()}`, to: bidding.from.email })
+            sendGenericEmail({
+                to: bidding.from.email,
+                subject: "Bidding Approved",
+                text: `Congrats Your bid on vehicle ${bidding.vehicle.name} has been approved by the owner ${bidding.owner.username}, the bid amount is  ₹${bidding.amount}, startDate is ${new Date(bidding.startDate).toLocaleDateString()}, endDate is ${new Date(bidding.endDate).toLocaleDateString()}`
+            })
             .catch((err) => {
                 console.error(`Error sending bidding email: ${err.message}`);
             });
@@ -196,10 +201,18 @@ export const getBidForOwnerController = async (req, res) => {
     let finalSort = {...sortBy, createdAt: -1};
     const skip = (pageNumber - 1) * limitNumber;
 
-    const matchStage =  { $match: { "owner._id": user._id, status } };
+    const matchStage =  { $match: { 
+        "owner._id": user._id, 
+        status,
+        startDate:{
+            $gte: new Date(new Date().setHours(0, 0, 0, 0)), // making sure user dont see the past bids that cant be accepted
+        }
+    }};
+    
     if(carId){
-        matchStage.$match["vehicle._id"] = new ObjectId(carId);
+        matchStage.$match["vehicle._id"] = new ObjectId(String(carId));
     }
+    
     try {
         const aggregationPipeline = [
            matchStage,
@@ -274,8 +287,15 @@ export const getBookingsAtCarIdController = async (req, res)=>{
     const objectIdCarId = new mongoose.Types.ObjectId(String(carId)); 
     try{
         const bookings = await Bidding.aggregate([
-            {$match: {'vehicle._id': objectIdCarId}},
-            { $match: { 'status': { $in: ['approved', 'started'] } } }
+           {
+            $match: {
+                "vehicle._id": objectIdCarId,
+                status: { $in: ['approved'] },
+                startDate: {
+                    $gte: new Date(new Date().setHours(0, 0, 0, 0)), 
+                }
+            }
+           }
         ]);
         return res.status(200).json({bookings});
     }catch(err){
@@ -288,7 +308,7 @@ export const getBookingsAtCarIdController = async (req, res)=>{
     @description function to get the bookings by the owner id
 */
 export const getAllBookingsAtOwnerIdController = async (req, res) => {
-    const { page = 1, limit = 10, sort = {}, bookingsType = '', searchQuery = '' } = req.query;
+    const { page = 1, limit = 10, sort = {}, bookingsType = '', carSearchQuery = '', usernameSearchQuery = '', startDate = null, endDate = null } = req.query;
     const userId = req.user._id;
     const pageNumber = parseInt(page);
     const limitNumber = parseInt(limit);
@@ -307,17 +327,13 @@ export const getAllBookingsAtOwnerIdController = async (req, res) => {
         matchStage.status = 'started';
     } else if (bookingsType === 'ended') {
         matchStage.status = 'ended';
-    } else if (bookingsType === 'reviewed') {
+    } else if(bookingsType === 'reviewed') {
         matchStage.status = 'reviewed';
-    } else if (bookingsType === 'today') {
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
+    }
 
-        const todayEnd = new Date();
-        todayEnd.setHours(23, 59, 59, 999);
-
-        matchStage.startDate = { $lte: todayEnd };
-        matchStage.endDate = { $gte: todayStart };
+    // Apply date range filter if both startDate and endDate are provided
+    if (startDate && endDate) {
+       matchStage.startDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
 
     try {
@@ -325,26 +341,30 @@ export const getAllBookingsAtOwnerIdController = async (req, res) => {
             { $match: matchStage }
         ];
 
-        // Add search by car name if searchQuery is provided
-        if (searchQuery && searchQuery.trim() !== '') {
-            const combinedField = { 
-                $concat: [ 
-                    { $ifNull: ["$vehicle.name", ""] }, 
-                    " ", 
-                    { $ifNull: ["$vehicle.company", ""] } 
-                ] 
-            };
+        // Add car search query processing
+        if (carSearchQuery && carSearchQuery.trim() !== '') {
+            aggregationPipeline.push({
+                $addFields: {
+                    combinedVehicle: {
+                        $concat: [
+                            { $ifNull: ["$vehicle.name", ""] },
+                            " ",
+                            { $ifNull: ["$vehicle.company", ""] }
+                        ]
+                    }
+                }
+            });
             
             aggregationPipeline.push({
                 $match: {
                     $or: [
-                        { "vehicle.name": { $regex: searchQuery, $options: "i" } },
-                        { "vehicle.company": { $regex: searchQuery, $options: "i" } },
+                        { "vehicle.name": { $regex: carSearchQuery, $options: "i" } },
+                        { "vehicle.company": { $regex: carSearchQuery, $options: "i" } },
                         { 
                             $expr: { 
                                 $regexMatch: { 
-                                    input: combinedField,
-                                    regex: searchQuery,
+                                    input: "$combinedVehicle",
+                                    regex: carSearchQuery,
                                     options: "i" 
                                 }
                             } 
@@ -354,13 +374,27 @@ export const getAllBookingsAtOwnerIdController = async (req, res) => {
             });
         }
 
-        // Add facet for pagination
+        // Add username search query processing
+        if (usernameSearchQuery && usernameSearchQuery.trim() !== '') {
+            aggregationPipeline.push({
+                $match: {
+                    $or: [
+                        { "from.username": { $regex: usernameSearchQuery, $options: "i" } },
+                        { "from.firstName": { $regex: usernameSearchQuery, $options: "i" } },
+                        { "from.lastName": { $regex: usernameSearchQuery, $options: "i" } },
+                        { "from.email": { $regex: usernameSearchQuery, $options: "i" } }
+                    ]
+                }
+            });
+        }
+
+        // Add pagination and sorting
         aggregationPipeline.push({
             $facet: {
                 bookings: [
                     { $sort: finalSort },
                     { $skip: skip },
-                    { $limit: limitNumber },
+                    { $limit: limitNumber }
                 ],
                 totalCount: [
                     { $count: "count" }
@@ -386,7 +420,7 @@ export const getAllBookingsAtOwnerIdController = async (req, res) => {
     return all the booking with status approved, started, ended at a particular user id
 */  
 export const getAllBookingsAtUserIdController = async (req, res)=>{
-    let { page = 1, limit = 10, sort = {} } = req.query;
+    let { page = 1, limit = 10, sort = {}, ownerName = '' } = req.query;
      if(req.query.sort !== undefined){
         let parsedSort;
         try {
@@ -410,20 +444,45 @@ export const getAllBookingsAtUserIdController = async (req, res)=>{
                     "from._id": userId,
                     status: { $in: ['approved', 'started'] }
                 }
-            },
-            {
-                $facet: {
-                    bookings: [
-                        { $sort: finalSort },
-                        { $skip: skip },
-                        { $limit: limitNumber }
-                    ],
-                    totalCount: [
-                        { $count: "count" }
-                    ]
-                }
             }
         ];
+
+        // Add owner name search if provided
+        if (ownerName && ownerName.trim() !== '') {
+            aggregationPipeline.push({
+                $match: {
+                    $or: [
+                        { "owner.firstName": { $regex: ownerName, $options: "i" } },
+                        { "owner.lastName": { $regex: ownerName, $options: "i" } },
+                        { "owner.username": { $regex: ownerName, $options: "i" } },
+                        { "owner.email": { $regex: ownerName, $options: "i" } },
+                        { 
+                            $expr: { 
+                                $regexMatch: { 
+                                    input: { $concat: ["$owner.firstName", " ", "$owner.lastName"] },
+                                    regex: ownerName,
+                                    options: "i" 
+                                }
+                            } 
+                        }
+                    ]
+                }
+            });
+        }
+
+        // Add pagination and sorting
+        aggregationPipeline.push({
+            $facet: {
+                bookings: [
+                    { $sort: finalSort },
+                    { $skip: skip },
+                    { $limit: limitNumber }
+                ],
+                totalCount: [
+                    { $count: "count" }
+                ]
+            }
+        });
 
         const result = await Bidding.aggregate(aggregationPipeline);
         const bookings = result[0].bookings;
@@ -591,7 +650,8 @@ export const endBookingController = async (req, res)=>{
 
           const charges = await Charges.findOne({name: "Platform Fee"});
 
-          sendInvoiceEmail({email: booking.from.email, booking: booking, charges: charges})
+
+          sendInvoiceEmail({email: booking.from.email, booking: booking, charges: charges, taxes: booking.taxes})
           .catch((err) => {
             console.error(`Error sending invoice email: ${err.message}`);
           });
@@ -602,11 +662,17 @@ export const endBookingController = async (req, res)=>{
     }
 
 }
-/*
-    @description function to reviewBooking at particular booking id
-    takes bookingId in the request params
-    returns the updated booking
-*/
+
+
+/**
+ * function to review a booking
+ * @description This function updates the status of a booking to 'reviewed'.
+ * It takes the bookingId from the request parameters and updates the status in the database.
+ * It returns the updated booking information in the response.
+ * @param {Object} req - The request object containing the bookingId in the parameters.
+ * @param {Object} res - The response object used to send the response back to the client.
+ * @returns returns the updated booking information in the response.
+ */
 export const reviewBookingController = async(req, res)=>{
     const bookingId = req.params.bookingId;
     try{
@@ -625,166 +691,19 @@ export const reviewBookingController = async(req, res)=>{
     }
 
 }
-/*
-    @description function to get the booking recommendations for the user
-    returns the top 3 vehicle recommendations for the user
-*/
-export const bookingRecommendationController = async (req, res) => {
-    const userCity = req.user.city;
-   
-    try {
-        const recommendations = await Bidding.aggregate([
-            {
-              $match: {
-                status: { $in: ['approved', 'started', 'ended', 'reviewed'] },
-                'vehicle.city': userCity
-              }
-            },
-            {
-              $group: {
-                _id: '$vehicle._id',
-                bookingCount: { $sum: 1 },
-                vehicleInfo: { $first: '$vehicle' }
-              }
-            },
-            {
-              $lookup: {
-                from: 'reviews', 
-                localField: '_id',
-                foreignField: 'vehicle._id',
-                as: 'reviews'
-              }
-            },
-            {
-              $addFields: {
-                averageRating: { 
-                  $cond: [
-                    { $gt: [{ $size: '$reviews' }, 0] },
-                    { $avg: '$reviews.rating' },
-                    0
-                  ]
-                },
-                totalReviews: { $size: '$reviews' }
-              }
-            },
-            {
-              $addFields: {
-                score: {
-                  $add: [
-                    { $multiply: ['$bookingCount', 1] },   // weight for bookings
-                    { $multiply: ['$averageRating', 2] }   // weight for reviews
-                  ]
-                }
-              }
-            },
-            {
-              $sort: { score: -1 } // Combined score: prioritize well-reviewed AND frequently booked cars
-            },
-            {
-              $limit: 5
-            },
-            {
-              $project: {
-                vehicleId: '$_id',
-                vehicle: '$vehicleInfo',
-                bookingCount: 1,
-                averageRating: 1,
-                totalReviews: 1
-              }
-            }
-          ]);
-          
-     
-        return res.status(200).json({ recommendations });
-    } catch(err) {
-        console.log(`error in the bookingRecommendationController ${err.message}`);
-        return res.status(500).json({error: `error in the bookingRecommendationController ${err.message}`});
-    }
-}
+
+
+
 
 /**
- * Adds a new add-on to the platform
- * @param {Object} req - The request object containing the add-on details
- * @param {Object} res - The response object
- * @returns {Object} The newly created add-on
+ * @description This function retrieves all bids that overlap with a given bid's start and end dates.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns return all the overlapping bids for a particular bid
  */
-export const addAddOnsController = async (req, res) => {
-    const { name, price } = req.body;
-    const owner = {
-        _id: req.user._id,
-        username: req.user.username
-    };
-    try{
-        const addOns = await AddOns.create({ name, price, owner });
-        console.log(addOns);
-        return res.status(200).json({ addOns });
-    }catch(err){
-        console.log(`error in the addAddOnsController ${err.message}`);
-        return res.status(500).json({error: `error in the addAddOnsController ${err.message}`});
-    }
-}
-
-/**
- * Retrieves all add-ons for a specific owner
- * @param {Object} req - The request object
- * @param {Object} res - The response object
- * @returns {Object} The list of add-ons
- */
-export const getAllAddOnsController = async (req, res) => {
-    const ownerId = req.user._id;
-   try{
-    const addOns = await AddOns.find({ "owner._id": ownerId, isDeleted: false });
-    console.log(addOns);
-    return res.status(200).json({ addOns });
-   }catch(err){
-    console.log(`error in the getAllAddOnsController ${err.message}`);
-    return res.status(500).json({error: `error in the getAllAddOnsController ${err.message}`});
-   }
-}
-
-/**
- * Retrieves all add-ons for a specific owner
- * @param {Object} req - The request object
- * @param {Object} res - The response object
- * @returns {Object} The list of add-ons
- */
-export const getAddOnsForUserController = async(req, res)=>{
-    const ownerId = req.params.ownerId;
-    try{
-        const addOns = await AddOns.find({ "owner._id": ownerId, isDeleted: false });
-        return res.status(200).json({ addOns });
-    }catch(err){
-        console.log(`error in the getAddOnsForUserController ${err.message}`);
-        return res.status(500).json({error: `error in the getAddOnsForUserController ${err.message}`});
-    }
-}
-
-/**
- * Deletes an add-on by its ID
- * @param {Object} req - The request object
- * @param {Object} res - The response object
- * @returns {Object} The updated add-on
- */
-export const deleteAddOnsController  = async (req, res) => {
-    const addonId = req.params.addonId;
-    try{
-        const addOns = await AddOns.findByIdAndUpdate(addonId, { isDeleted: true }, { new: true });
-        return res.status(200).json({ addOns });
-    }catch(err){
-        console.log(`error in the deleteAddOnsController ${err.message}`);
-        return res.status(500).json({error: `error in the deleteAddOnsController ${err.message}`});
-    }
-}
-
-/*
- @description: This function will get all overlapping bids for a specific bid
-*/
 export const getOverlappingBidsController = async (req, res) => {
     try {
         const bidding = await Bidding.findById(req.params.id);
-
-        console.log(bidding);
-        
         if (!bidding) {
             return res.status(404).json({ error: "Bidding not found" });
         }

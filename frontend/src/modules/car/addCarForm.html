@@ -1,83 +1,88 @@
 <back-button></back-button>
-<div class="container" ng-app="carApp" ng-controller="addCarCtrl" ng-init="init()">
+<div class="container-fluid" ng-app="carApp" ng-controller="addCarCtrl" ng-init="init()">
   
   <div class="panel panel-default">
     <div class="panel-heading text-center">
       <h3 class="text-primary">Add Your Vehicle</h3>
     </div>
     <div class="panel-body">
-      <!-- Approval Process Section (shown initially) -->
+
       <div ng-show="!showCarForm">
-        <!-- Car Approval Process Information Panel -->
-        <div class="panel panel-info" style="border-color: #bce8f1; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-          <div class="panel-heading" style="background-color: #d9edf7; border-color: #bce8f1; color: #31708f;">
+
+        <div class="panel panel-info">
+          <div class="panel-heading">
             <h3 class="panel-title"><i class="glyphicon glyphicon-info-sign"></i> Become a Seller on Car.com</h3>
           </div>
           <div class="panel-body">
             <div class="row">
-              <div class="col-md-8">
-                <h4 style="color: #31708f; margin-top: 0;"><strong>How the Car Approval Process Works</strong></h4>
+              <div class="col-xs-12 col-md-8">
+                <h4 class="text-info"><strong>How the Car Approval Process Works</strong></h4>
                 <div class="approval-steps">
-                  <div class="media" style="margin-bottom: 15px;">
+                  <div class="media">
                     <div class="media-left">
-                      <span class="label label-primary" style="font-size: 16px; display: inline-block; width: 30px; height: 30px; line-height: 30px; text-align: center; border-radius: 50%;">1</span>
+                      <span class="label label-primary text-center">1</span>
                     </div>
                     <div class="media-body">
-                      <h5 class="media-heading" style="font-weight: bold; color: #333;">Submit Your First Car</h5>
+                      <h5 class="media-heading"><strong>Submit Your First Car</strong></h5>
                       <p>Complete this form with accurate details about your vehicle for review by our administrators.</p>
                     </div>
                   </div>
                   
-                  <div class="media" style="margin-bottom: 15px;">
+                  <div class="media">
                     <div class="media-left">
-                      <span class="label label-primary" style="font-size: 16px; display: inline-block; width: 30px; height: 30px; line-height: 30px; text-align: center; border-radius: 50%;">2</span>
+                      <span class="label label-primary text-center">2</span>
                     </div>
                     <div class="media-body">
-                      <h5 class="media-heading" style="font-weight: bold; color: #333;">Wait for Admin Approval</h5>
+                      <h5 class="media-heading"><strong>Wait for Admin Approval</strong></h5>
                       <p>Our team will review your submission within 24-48 hours to ensure quality standards.</p>
                     </div>
                   </div>
                   
-                  <div class="media" style="margin-bottom: 15px;">
+                  <div class="media">
                     <div class="media-left">
-                      <span class="label label-primary" style="font-size: 16px; display: inline-block; width: 30px; height: 30px; line-height: 30px; text-align: center; border-radius: 50%;">3</span>
+                      <span class="label label-primary text-center">3</span>
                     </div>
                     <div class="media-body">
-                      <h5 class="media-heading" style="font-weight: bold; color: #333;">Become a Verified Seller</h5>
+                      <h5 class="media-heading"><strong>Become a Verified Seller</strong></h5>
                       <p>Once approved, your account will be upgraded to seller status with access to our seller dashboard.</p>
                     </div>
                   </div>
                 </div>
               </div>
               
-              <div class="col-md-4">
-                <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; border-left: 3px solid #31708f;">
-                  <h4 style="margin-top: 0; color: #31708f;"><i class="glyphicon glyphicon-dashboard"></i> Seller Benefits</h4>
-                  <ul style="padding-left: 20px; margin-bottom: 5px;">
-                    <li><strong>Seller Dashboard</strong> - Manage all your car listings</li>
-                    <li><strong>Analytics</strong> - Track rental performance and earnings</li>
-                    <li><strong>Booking Management</strong> - Approve or reject rental requests</li>
-                    <li><strong>Custom Pricing</strong> - Set your own competitive rates</li>
-                    <li><strong>Add-on Services</strong> - Offer extras to increase earnings</li>
+              <div class="col-xs-12 col-md-4">
+                <div class="well">
+                  <h4 class="text-info"><i class="glyphicon glyphicon-dashboard"></i> Seller Benefits</h4>
+                  <ul class="list-unstyled">
+                    <li><span class="glyphicon glyphicon-ok text-success"></span> <strong>Seller Dashboard</strong> - Manage all your car listings</li>
+                    <li><span class="glyphicon glyphicon-ok text-success"></span> <strong>Analytics</strong> - Track rental performance and earnings</li>
+                    <li><span class="glyphicon glyphicon-ok text-success"></span> <strong>Booking Management</strong> - Approve or reject rental requests</li>
+                    <li><span class="glyphicon glyphicon-ok text-success"></span> <strong>Custom Pricing</strong> - Set your own competitive rates</li>
+                    <li><span class="glyphicon glyphicon-ok text-success"></span> <strong>Add-on Services</strong> - Offer extras to increase earnings</li>
                   </ul>
                 </div>
               </div>
             </div>
             
-            <div class="alert alert-warning" style="margin-top: 15px; margin-bottom: 15px;">
+            <div class="alert alert-warning">
               <i class="glyphicon glyphicon-exclamation-sign"></i> <strong>Important:</strong> Please ensure all information and images are accurate. Misrepresentation may result in rejection or future account restrictions.
             </div>
             
-            <div class="text-center" style="margin-top: 20px;">
-              <button class="btn btn-success btn-lg" ng-click="showCarForm = true">
-                <i class="glyphicon glyphicon-ok"></i> I Understand & Agree - Continue to Form
-              </button>
+            <div class="row">
+              <div class="col-xs-12 text-center">
+                <button class="btn btn-success btn-block btn-lg visible-xs-block" ng-click="showCarForm = true">
+                  <i class="glyphicon glyphicon-ok"></i> I Understand & Agree
+                </button>
+                <button class="btn btn-success btn-lg hidden-xs" ng-click="showCarForm = true">
+                  <i class="glyphicon glyphicon-ok"></i> I Understand & Agree - Continue to Form
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
       
-      <!-- Car Form Section (shown after clicking I Understand) -->
+
       <div ng-show="showCarForm">
         <div class="panel panel-primary">
           <div class="panel-heading">
@@ -85,6 +90,7 @@
           </div>
           <div class="panel-body">
             <form id="addCarForm" name="addCarForm" class="form-horizontal" novalidate ng-submit="submitCarForm(addCarForm)">
+              
               <div class="form-group">
                 <label class="col-sm-3 control-label">Car Name:</label>
                 <div class="col-sm-9">
@@ -162,6 +168,18 @@
               </div>
 
               <div class="form-group">
+                <label class="col-sm-3 control-label">Registration Number:</label>
+                <div class="col-sm-9">
+                  <input type="text" class="form-control" ng-model="registrationNumber" name="registrationNumber" placeholder="Enter vehicle registration number (e.g., MP07-DD-4567)" required ng-pattern="/^[A-Z0-9 -]{5,12}$/">
+                  <small class="help-block">Enter the official registration number as it appears on your vehicle documents</small>
+                  <div class="text-danger" ng-show="addCarForm.registrationNumber.$touched && addCarForm.registrationNumber.$invalid">
+                    <span ng-show="addCarForm.registrationNumber.$error.required">Registration number is required.</span>
+                    <span ng-show="addCarForm.registrationNumber.$error.pattern">Please enter a valid registration number format.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
                 <label class="col-sm-3 control-label">Price Per Day:</label>
                 <div class="col-sm-9">
                   <input type="number" class="form-control" ng-model="carPrice" name="carPrice" placeholder="{{minPrice}} - {{maxPrice}}" required ng-min="{{minPrice}}" ng-max="{{maxPrice}}">
@@ -217,7 +235,7 @@
               </div>
 
               <div class="form-group" ng-if="!isLoading">
-                <div class="col-sm-offset-3 col-sm-9">
+                <div class="col-xs-12">
                   <button type="submit" class="btn btn-success btn-block" ng-disabled="addCarForm.$invalid">Add Car</button>
                 </div>
               </div>

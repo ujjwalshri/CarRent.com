@@ -42,7 +42,6 @@ angular.module('myApp').controller('BookingsModalCtrl', [
          */
         CarService.fetchBookingsAtCarId(selectedCar._id)
             .then(function(response) {
-                console.log('Bookings:', response);   
                 if(response.length > 0){
                     $scope.carBookings = response.map(booking =>{
                         return BiddingFactory.createBid(booking, false);

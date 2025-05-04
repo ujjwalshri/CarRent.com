@@ -2,7 +2,7 @@ angular
   .module("myApp")
   .controller(
     "confirmedBookingsCtrl",
-    function ($scope, $state, $uibModal, BiddingFactory, BiddingService, ToastService, $timeout) {
+    function ($scope, $uibModal, BiddingFactory, BiddingService, ToastService, $timeout) {
 
       // Helper function to calculate booking price based on booking details
       $scope.calculateBookingPrice = BiddingFactory.calculate;
@@ -20,8 +20,16 @@ angular
         type: ''
       };
       $scope.sortBy = '';
-      $scope.searchQuery = ''; // Added for car name search
+      $scope.carSearchQuery = ''; // For car name search
+      $scope.usernameSearchQuery = ''; // For username search
       $scope.searchTimeout = null; // For debouncing search
+      
+      // Date filter options
+      $scope.dateFilter = {
+        startDate: null,
+        endDate: null
+      };
+      $scope.dateFilterError = null;
 
       
       /**
@@ -156,7 +164,21 @@ angular
           limit: $scope.pagination.itemsPerPage,
           sort: $scope.sortBy,
           bookingsType: $scope.bookingsType.type,
-          searchQuery: $scope.searchQuery // Added for search functionality
+          carSearchQuery: $scope.carSearchQuery, // Updated for car name search
+          usernameSearchQuery: $scope.usernameSearchQuery // Added for username search
+        }
+
+        // Add date filters if they are set
+        if ($scope.dateFilter.startDate) {
+          const startDate = new Date($scope.dateFilter.startDate);
+          startDate.setHours(0, 0, 0, 0); // Set to beginning of day
+          params.startDate = startDate.toISOString();
+        }
+       // check if the end date is set
+        if ($scope.dateFilter.endDate) {
+          const endDate = new Date($scope.dateFilter.endDate);
+          endDate.setHours(23, 59, 59, 999); // Set to end of day
+          params.endDate = endDate.toISOString();
         }
 
         // Call API to fetch owner's bookings with current parameters
@@ -164,11 +186,12 @@ angular
           .then((bookings) => {
             // Transform raw booking data into proper bidding objects using factory
             $scope.allBookings = bookings.bookings.map(booking => BiddingFactory.createBid(booking, false));
+            
             // Calculate total pages based on total documents and items per page
             $scope.pagination.totalPages = Math.ceil(bookings.totalDocs/$scope.pagination.itemsPerPage);
           })
           .catch((err) => {
-            // Display user-friendly error notification
+            // Display error notification
             ToastService.error(`Error fetching bookings ${err}`);
           })
       }
@@ -213,28 +236,47 @@ angular
       };
       
       /**
-       * Navigates to the detailed booking management page for a specific booking
-       * Validates booking data before navigation
-       * @param {Object} booking - The booking object to manage
+       * Validates that the date range is valid (start date is not after end date)
+       * Sets error message if validation fails
        */
-      $scope.openManageBooking = (booking) => {
-        // Validate booking data before navigation
-        if (!booking || !booking._id) {
-          ToastService.error("Invalid booking data");
-          return;
+      $scope.validateDateRange = function() {
+        $scope.dateFilterError = null;
+        
+        if ($scope.dateFilter.startDate && $scope.dateFilter.endDate) {
+          const startDate = new Date($scope.dateFilter.startDate);
+          const endDate = new Date($scope.dateFilter.endDate);
+          
+          if (startDate > endDate) {
+            $scope.dateFilterError = "Start date cannot be after end date";
+          }
         }
-        // Navigate to manage bookings page with booking ID
-        $state.go("manageBookings", { id: booking._id });
       };
-     
+      
+      /**
+       * Applies the date filters after validation
+       * Called when user clicks apply date filter button
+       */
+      $scope.applyDateFilter = function() {
+        $scope.validateDateRange();
+        
+        if (!$scope.dateFilterError) {
+          $scope.pagination.currentPage = 1;
+          fetchOwnerConfirmedBookings();
+        }
+      };
+
       /**
        * Resets all filtering options to default values
        * Refreshes booking data with cleared filters
        */
       $scope.resetFilter = () => {
-        // Reset booking type filter to empty string
         $scope.bookingsType.type = "";
-        // Fetch bookings with reset filters
+        $scope.carSearchQuery = "";
+        $scope.usernameSearchQuery = "";
+        $scope.dateFilter.startDate = null;
+        $scope.dateFilter.endDate = null;
+        $scope.dateFilterError = null;
+        $scope.pagination.currentPage = 1;
         fetchOwnerConfirmedBookings();
       };
 
@@ -242,7 +284,22 @@ angular
        * Handles search with debouncing for car name
        * Waits 500ms after user stops typing before executing search
        */
-      $scope.searchBookings = function() {
+      $scope.searchCarName = function() {
+        if ($scope.searchTimeout) {
+          $timeout.cancel($scope.searchTimeout);
+        }
+        
+        $scope.searchTimeout = $timeout(function() {
+          $scope.pagination.currentPage = 1;
+          fetchOwnerConfirmedBookings();
+        }, 500);
+      };
+
+      /**
+       * Handles search with debouncing for username
+       * Waits 500ms after user stops typing before executing search
+       */
+      $scope.searchUsername = function() {
         if ($scope.searchTimeout) {
           $timeout.cancel($scope.searchTimeout);
         }

@@ -41,7 +41,7 @@
         </div>
     </div>
 
-    <!-- Date Filter Section -->
+
     <uib-alert type="info" class="mb-3">
         <div class="row">
             <div class="col-md-5">
@@ -83,7 +83,7 @@
     </uib-alert>
 
     <uib-tabset>
-        <!-- Overview Tab -->
+
         <uib-tab heading="Overview" select="onTabSelect('Overview')" active="activeTab === 'Overview'">
             <div class="row">
                
@@ -118,77 +118,112 @@
             </div>
         </uib-tab>
 
-        <!-- Top Performers Tab -->
+
         <uib-tab heading="Top Performers" select="onTabSelect('Top Performers')" active="activeTab === 'Top Performers'">
-            <uib-accordion>
-                <!-- Top Sellers -->
-                <uib-accordion-group heading="Top 10 Sellers with Most Earnings" is-open="true">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Seller Username</th>
-                                    <th>Seller Name</th>
-                                    <th>Total Earnings</th>
-                                    <th>Send Acknowledgement</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr ng-repeat="seller in topSellersWithMostEarnings">
-                                    <td>{{seller.ownerUsername}}</td>
-                                    <td>{{seller.ownerFirstName}} {{seller.ownerLastName}}</td>
-                                    <td>${{seller.totalEarnings + seller.totalFine | number:2}}</td>
-                                    <td>
-                                        <button class="btn btn-success btn-sm" ng-click="sendCongratulationMail(seller)">
-                                            <i class="fa fa-envelope"></i> Send
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+            <div class="row" style="margin-top: 20px;">
+
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+
+                        <div class="panel-heading" style="background: linear-gradient(135deg, #43a047, #2e7d32); color: white; padding: 15px; border-radius: 6px 6px 0 0; cursor: pointer;" ng-click="toggleTopSellers = !toggleTopSellers">
+                            <h3 style="margin: 0; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
+                                <span>
+                                    <i class="fa fa-trophy" style="margin-right: 10px; font-size: 24px; color: #ffd700;"></i>
+                                    Top Earning Sellers
+                                    <span class="badge" style="background: rgba(255,255,255,0.2); margin-left: 10px; font-size: 14px; padding: 5px 10px; border-radius: 20px;">
+                                        {{topSellersWithMostEarnings.length || 0}}
+                                    </span>
+                                </span>
+                                <i class="fa" ng-class="{'fa-chevron-down': !toggleTopSellers, 'fa-chevron-up': toggleTopSellers}"></i>
+                            </h3>
+                        </div>
+                        
+
+                        <div class="panel-body" uib-collapse="!toggleTopSellers">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                        <tr style="background-color: #f8f9fa;">
+                                            <th style="padding: 15px; color: #43a047; font-weight: 600; border-bottom: 2px solid #43a047;">Seller Username</th>
+                                            <th style="padding: 15px; color: #43a047; font-weight: 600; border-bottom: 2px solid #43a047;">Seller Name</th>
+                                            <th style="padding: 15px; color: #43a047; font-weight: 600; border-bottom: 2px solid #43a047;">Total Earnings</th>
+                                            <th style="padding: 15px; color: #43a047; font-weight: 600; border-bottom: 2px solid #43a047;">Send Acknowledgement</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="seller in topSellersWithMostEarnings">
+                                            <td>{{seller.ownerUsername}}</td>
+                                            <td>{{seller.ownerFirstName}} {{seller.ownerLastName}}</td>
+                                            <td>{{seller.totalEarnings + seller.totalFine | currency:'₹':2}}</td>
+                                            <td>
+                                                <button class="btn btn-success btn-sm" ng-click="sendCongratulationMail(seller)" style="border-radius: 20px; padding: 5px 15px;">
+                                                    <i class="fa fa-envelope"></i> Send
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                </uib-accordion-group>
+                </div>
 
 
-                <uib-accordion-group heading="Top 10 Buyers with Most Bookings">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Buyer Username</th>
-                                    <th>Buyer Name</th>
+                <div class="col-md-12" style="margin-top: 20px;">
+                    <div class="panel panel-default">
 
-                                    <th>Total Bookings</th>
-                                    <th>Buyer City</th>
-                                    <th>Send Acknowledgement</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr ng-repeat="buyer in topBuyersWithMostBookings">
-                                    <td>{{buyer.buyerUsername}}</td>
-                                    <td>{{buyer.buyerFirstName}} {{buyer.buyerLastName}}</td>
-                                    <td>{{buyer.count}}</td>
-                                    <td>{{buyer.buyerCity}}</td>
-                                    <td>
-                                        <button class="btn btn-success btn-sm" ng-click="sendCongratulationMail(buyer)">
-                                            <i class="fa fa-envelope"></i> Send
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="panel-heading" style="background: linear-gradient(135deg, #1976d2, #0d47a1); color: white; padding: 15px; border-radius: 6px 6px 0 0; cursor: pointer;" ng-click="toggleTopBuyers = !toggleTopBuyers">
+                            <h3 style="margin: 0; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
+                                <span>
+                                    <i class="fa fa-star" style="margin-right: 10px; font-size: 24px; color: #ffd700;"></i>
+                                    Most Active Buyers
+                                    <span class="badge" style="background: rgba(255,255,255,0.2); margin-left: 10px; font-size: 14px; padding: 5px 10px; border-radius: 20px;">
+                                        {{topBuyersWithMostBookings.length || 0}}
+                                    </span>
+                                </span>
+                                <i class="fa" ng-class="{'fa-chevron-down': !toggleTopBuyers, 'fa-chevron-up': toggleTopBuyers}"></i>
+                            </h3>
+                        </div>
+                        
+
+                        <div class="panel-body" uib-collapse="!toggleTopBuyers">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped">
+                                    <thead>
+                                        <tr style="background-color: #f8f9fa;">
+                                            <th style="padding: 15px; color: #1976d2; font-weight: 600; border-bottom: 2px solid #1976d2;">Buyer Username</th>
+                                            <th style="padding: 15px; color: #1976d2; font-weight: 600; border-bottom: 2px solid #1976d2;">Buyer Name</th>
+                                            <th style="padding: 15px; color: #1976d2; font-weight: 600; border-bottom: 2px solid #1976d2;">Total Bookings</th>
+                                            <th style="padding: 15px; color: #1976d2; font-weight: 600; border-bottom: 2px solid #1976d2;">Send Acknowledgement</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr ng-repeat="buyer in topBuyersWithMostBookings">
+                                            <td>{{buyer.buyerUsername}}</td>
+                                            <td>{{buyer.buyerFirstName}} {{buyer.buyerLastName}}</td>
+                                            <td>{{buyer.count}}</td>
+                                            <td>
+                                                <button class="btn btn-primary btn-sm" ng-click="sendCongratulationMail(buyer)" style="border-radius: 20px; padding: 5px 15px;">
+                                                    <i class="fa fa-envelope"></i> Send
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                </uib-accordion-group>
-            </uib-accordion>
+                </div>
+            </div>
         </uib-tab>
 
-        <!-- Charts Tab -->
+
         <uib-tab heading="Charts" select="onTabSelect('Charts')" active="activeTab === 'Charts'">
             <uib-accordion>
 
                 <uib-accordion-group heading="Time-Based Analytics" is-open="true">
                     <div class="row">
-                        <div class="col-md-6" ng-repeat="chartId in ['top10Cars','userGrowth','topHighestEarningCities', 'top3Sellers', 'carDescription','top5MostReviewedCars','top3CompaniesWithMostNegativeReviews']">
+                        <div class="col-md-4" ng-repeat="chartId in ['top10Cars','userGrowth','topHighestEarningCities', 'top3Sellers', 'carDescription','top5MostReviewedCars','top3CompaniesWithMostNegativeReviews', 'topSellersWithMostNegativeReviews', 'categoryWiseBookings']">
                             <div class="panel panel-default">
                                 <div class="panel-heading">
                                 </div>
@@ -216,7 +251,7 @@
         </uib-tab>
 
 
-        <!-- Maps Tab -->
+
         <uib-tab heading="Maps" select="onTabSelect('Maps')" active="activeTab === 'Maps'">
             <div class="row">
                 <div class="col-md-6">

@@ -13,8 +13,7 @@ import Token from '../models/token.model.js';
 import bcrypt from 'bcryptjs';
 import validateUser from '../validation/user.validate.js';
 import {generateTokenAndSetCookie} from '../utils/gen.token.js';
-import { generateWelcomeMail } from '../utils/gen.mail.js';
-import { sendVerificationEmail } from '../services/email.service.js';
+import { sendVerificationEmail, sendWelcomeEmail } from '../services/email.service.js';
 import crypto from 'crypto';
 
 /**
@@ -38,7 +37,7 @@ import crypto from 'crypto';
  * @returns {Object} JSON response with user details or error message
  */
 export const signupController = async (req, res) => {
-    const { username, password, firstName, lastName, email, city, adhaar } = req.body;
+    const { username, password, firstName, lastName, email, city } = req.body;
     
     try {
         const salt = await bcrypt.genSalt(10);
@@ -50,12 +49,17 @@ export const signupController = async (req, res) => {
             lastName,
             email,
             city,
-            adhaar
         }
 
         const validUser = validateUser(userData);
         if(validUser.error){
             return res.status(400).json({ err: `error ${validUser.error}` });
+        }
+
+        // check if the user is present in the database and if the email is not registered 
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "Username already exists" });
         }
 
         const existingUsername = await User.findOne({ username });
@@ -75,7 +79,6 @@ export const signupController = async (req, res) => {
             lastName,
             email,
             city, 
-            adhaar,
             isEmailVerified: false
         });
 
@@ -177,7 +180,7 @@ export const verifyEmailController = async (req, res) => {
         await Token.deleteOne({ _id: verificationToken._id });
 
         // Now send the welcome email since the account is verified
-        generateWelcomeMail(user).catch((err) => {
+        sendWelcomeEmail(user).catch((err) => {
             console.error(`Error sending welcome email: ${err.message}`);
         });
 
@@ -234,9 +237,8 @@ export const resendVerificationEmailController = async (req, res) => {
             expires: new Date(Date.now() + 24 * 60 * 60 * 1000) 
         });
         
-        await token.save();
+            await token.save();
 
-        try {
             await sendVerificationEmail({
                 email: user.email,
                 firstName: user.firstName,
@@ -246,12 +248,6 @@ export const resendVerificationEmailController = async (req, res) => {
             return res.status(200).json({ 
                 message: "Verification email has been resent successfully" 
             });
-        } catch (err) {
-            console.error(`Error sending verification email: ${err.message}`);
-            return res.status(500).json({ 
-                message: "Error sending verification email" 
-            });
-        }
     } catch (error) {
         console.error('Resend verification error:', error);
         return res.status(500).json({
@@ -288,15 +284,31 @@ export const loginController = async (req, res) => {
             return res.status(401).json({ err: "User is blocked by the admin" });
         }
         
-        // Uncomment in the production environment so that only verified users can login
-        // if(user.isEmailVerified === false){
-        //     return res.status(401).json({ err: "Email is not verified" });
-        // }
+
+        if(user.isEmailVerified === false || user.isEmailVerified === undefined){
+            // If the user is not verified, send a verification email
+            const verificationToken = crypto.randomBytes(32).toString('hex');
+            const token = new Token({
+                userId: user._id,
+                token: verificationToken,
+                type: 'email_verification',
+                expires: new Date(Date.now() + 24 * 60 * 60 * 1000) 
+            });
+            await token.save();
+             sendVerificationEmail({
+                email: user.email,
+                firstName: user.firstName,
+                verificationToken: verificationToken
+            }).catch((err)=>{
+                console.error(`Error sending verification email: ${err.message}`);
+            })
+            return res.status(401).json({ err: "User is not verified. Please check your email to verify your account." });
+        }
 
         const isMatch = await bcrypt.compare(password, user.password);
         
         if(isMatch){
-            await generateTokenAndSetCookie(user, res); // Generate token and set cookie
+            await generateTokenAndSetCookie(user, res); 
             return res.status(200).json({
                 _id: user._id,
                 username: user.username,

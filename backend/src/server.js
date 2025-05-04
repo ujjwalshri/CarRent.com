@@ -25,6 +25,9 @@ import reviewRoutes from "./routes/review.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import sellerRoutes from "./routes/seller.routes.js";
 import conversationRoutes from "./routes/conversation.routes.js";
+import addonRoutes from "./routes/addon.routes.js";
+import taxesRoutes from "./routes/taxes.routes.js";
+import recommedationRoutes from "./routes/recommendation.routes.js";
 
 import passport from "./config/passport.js"
 import cors from "cors";
@@ -103,6 +106,9 @@ app.use('/api/admin', adminAnalyticsRoutes); // Admin dashboard and analytics
 app.use('/api/conversation', conversationRoutes); // Messaging conversations
 app.use('/api/message', messageRoutes);     // Individual messages
 app.use('/api/seller', sellerRoutes); // Seller analytics and dashboard
+app.use('/api/addon', addonRoutes);  // Add-ons functionality
+app.use('/api/taxes', taxesRoutes);  // Taxes management
+app.use('/api/recommendation', recommedationRoutes); // Vehicle recommendations
 
 /**
  * Initialize SQS Worker Thread

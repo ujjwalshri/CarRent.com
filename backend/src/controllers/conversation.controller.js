@@ -52,7 +52,7 @@ export const addConversationController = async(req,res)=>{
         }
 
         const vehicle = await Vehicle.findById(vehicleId).select('_id name company modelYear location');
-        console.log(vehicle);
+
         
         const conversation = new Conversation({
             sender,

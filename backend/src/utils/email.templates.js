@@ -76,7 +76,7 @@ export const topSellerTemplate = (data) => `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
         <h2 style="color: #4CAF50;">Congratulations for becoming one of the top sellers on Car Rental.com!</h2>
         <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <p style="font-size: 16px; margin: 10px 0;">You have earned $${data.amount} between ${data.startDate} and ${data.endDate}</p>
+            <p style="font-size: 16px; margin: 10px 0;">You have earned ₹${data.amount} between ${data.startDate} and ${data.endDate}</p>
         </div>
         <p style="font-size: 16px;">Keep up the excellent work and continue to be one of our top sellers!</p>
         <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
@@ -123,12 +123,13 @@ export const congratulateBecomingSeller = (data) => `
  * @returns {string} HTML template
  */
 export const invoiceTemplate = (data) => {
+    console.log("data ke charges" + data.charges);
     // Calculate number of days (including both start and end dates)
     const startDate = new Date(data.booking.startDate);
     const endDate = new Date(data.booking.endDate);
     const numberOfDays = Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
     
-    // Calculate base price
+    // Calculate base price (rental amount)
     const basePrice = numberOfDays * data.booking.amount;
     
     // Calculate distance fine if applicable
@@ -137,14 +138,44 @@ export const invoiceTemplate = (data) => {
     const distanceFine = extraDistance * 10;
     const addonsTotal = data.booking.selectedAddons.reduce((acc, addon) => acc + addon.price, 0);
 
-    // Calculate subtotal and platform fee
+    // Calculate taxes if available - NOW ONLY APPLIED TO BASE PRICE (not addons or fines)
+    let taxesTotal = 0;
+    let taxDetails = [];
+    
+    if (data.taxes && Array.isArray(data.taxes)) {
+        // Only apply active taxes
+        const activeTaxes = data.taxes.filter(tax => tax.isActive);
+        
+        // Calculate each tax and add to total - ONLY ON BASE PRICE
+        activeTaxes.forEach(tax => {
+            let taxAmount = 0;
+            
+            if (tax.type === 'percentage') {
+                taxAmount = (basePrice * tax.value) / 100;
+            } else { // fixed tax
+                taxAmount = tax.value;
+            }
+            
+            // Round to 2 decimal places
+            taxAmount = Math.round(taxAmount * 100) / 100;
+            taxesTotal += taxAmount;
+            
+            // Store tax details for display
+            taxDetails.push({
+                name: tax.name,
+                value: tax.type === 'percentage' ? `${tax.value}%` : `₹${tax.value.toFixed(2)}`,
+                amount: taxAmount
+            });
+        });
+    }
+    
+    // Calculate platform fee (based on everything: base price + addons + fines)
     const subtotal = basePrice + distanceFine + addonsTotal;
-    console.log("data charges ndshgsdioisgokjdisojsdidsohdsji __________ "  , data.charges);
-    const platformFeePercentage = data.charges?.percentage || 2; 
-    const platformFee = (subtotal * platformFeePercentage) / 100;
+    const platformFeePercentage = data.charges.percentage===undefined ? 2: data.charges.percentage; 
+    const platformFee = ((subtotal-distanceFine) * platformFeePercentage) / 100;
 
-    // Calculate total price
-    const totalPrice = subtotal + platformFee;
+    // Calculate grand total including taxes
+    const totalPrice = subtotal + platformFee + taxesTotal;
 
     return `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; background-color: #f8f9fa; padding: 20px;">
@@ -196,37 +227,69 @@ export const invoiceTemplate = (data) => {
 
             <div style="background-color: #f8f9fa; padding: 25px; border-radius: 8px; margin-top: 20px;">
                 <h3 style="color: #4CAF50; margin-bottom: 20px; font-size: 18px; text-align: center;">Price Breakdown</h3>
+                
+                <!-- Base price section -->
                 <div style="border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 10px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span>Base Price (${numberOfDays} days × $${data.booking.amount})</span>
-                        <span>$ ${basePrice}</span>
+                        <span>Base Price (${numberOfDays} days × ₹${data.booking.amount})</span>
+                        <span>₹ ${basePrice.toFixed(2)}</span>
                     </div>
                     ${distanceFine > 0 ? `
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #dc3545;">
-                        <span>Distance Fine (${extraDistance} km × $10)</span>
-                        <span>$ ${distanceFine}</span>
+                        <span>Distance Fine (${extraDistance} km × ₹10)</span>
+                        <span>₹ ${distanceFine.toFixed(2)}</span>
                     </div>
                     ` : ''}
                     ${data.booking.selectedAddons.length > 0 ? `
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                         <span>Addons (${data.booking.selectedAddons.map(addon => addon.name).join(', ')})</span>
-                        <span>$ ${addonsTotal}</span>
+                        <span>₹ ${addonsTotal.toFixed(2)}</span>
                     </div>
                     ` : ''}
                 </div>
+                
+                <!-- Subtotal section -->
                 <div style="border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 10px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                         <span><strong>Subtotal</strong></span>
-                        <span><strong>$ ${subtotal}</strong></span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #666;">
-                        <span>Platform Fee (${platformFeePercentage}%)</span>
-                        <span>$ ${platformFee.toFixed(2)}</span>
+                        <span><strong>₹ ${subtotal.toFixed(2)}</strong></span>
                     </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; color: #4CAF50;">
+                
+                <!-- Fees and taxes section -->
+                <div style="border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 10px;">
+                    <!-- Platform fee -->
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #666;">
+                        <span>Platform Fee (${platformFeePercentage}%)</span>
+                        <span>₹ ${platformFee.toFixed(2)}</span>
+                    </div>
+                    
+                    <!-- Taxes section with prominent styling - now notes that it's only on base rental amount -->
+                    ${taxDetails.length > 0 ? `
+                    <div style="background-color: #e8f5e9; padding: 10px; border-radius: 5px; margin: 10px 0;">
+                        <div style="font-weight: bold; margin-bottom: 5px; color: #2e7d32;">Taxes (applied on base rental amount only):</div>
+                        ${taxDetails.map(tax => `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px; color: #33691e;">
+                            <span>${tax.name} (${tax.value})</span>
+                            <span>₹ ${tax.amount.toFixed(2)}</span>
+                        </div>
+                        `).join('')}
+                        <div style="display: flex; justify-content: space-between; margin-top: 5px; font-weight: bold; color: #33691e;">
+                            <span>Total Taxes</span>
+                            <span>₹ ${taxesTotal.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    ` : `
+                    <div style="text-align: center; padding: 10px; color: #666; font-style: italic;">
+                        No taxes applicable
+                    </div>
+                    `}
+                </div>
+                
+                <!-- Grand total with prominent styling -->
+                <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; color: white; background-color: #4CAF50; padding: 12px 15px; border-radius: 5px;">
                     <span>Total Amount</span>
-                    <span>$ ${totalPrice.toFixed(2)}</span>
+                    <span>₹ ${totalPrice.toFixed(2)}</span>
                 </div>
             </div>
 
@@ -234,9 +297,11 @@ export const invoiceTemplate = (data) => {
                 <h4 style="color: #4CAF50; margin-bottom: 10px;">Important Notes:</h4>
                 <ul style="list-style-type: none; padding-left: 0; margin: 0;">
                     <li style="margin-bottom: 5px;">• A platform fee of ${platformFeePercentage}% is applied to all bookings</li>
-                    <li style="margin-bottom: 5px;">• Distance charges of $10/km apply beyond 300 kilometers</li>
-                    <li style="margin-bottom: 5px;">• All prices are in US Dollars ($)</li>
-                    <li style="margin-bottom: 5px;">• Platform fee is non-refundable</li>
+                    <li style="margin-bottom: 5px;">• Taxes are applied only to the base rental amount</li>
+                    <li style="margin-bottom: 5px;">• Distance charges of ₹10/km apply beyond 300 kilometers</li>
+                    <li style="margin-bottom: 5px;">• All taxes applicable as per government regulations</li>
+                    <li style="margin-bottom: 5px;">• All prices are in Indian Rupees (₹)</li>
+                    <li style="margin-bottom: 5px;">• Taxes and fees are non-refundable</li>
                 </ul>
             </div>
 

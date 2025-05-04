@@ -18,6 +18,7 @@ angular.module("myApp").controller("adminCtrl", function($scope, $rootScope, Aut
             .then(function() {
                 $rootScope.isLogged = false;
                 $rootScope.adminLogged = false;
+                $rootScope.$emit('admin:loggedOut');
             })
             .catch(function(err) {
               ToastService.error("Logout error:", err);

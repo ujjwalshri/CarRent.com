@@ -74,20 +74,18 @@ const vehicleSchema = new mongoose.Schema({
         city: {
             type: String,
             required: true
-        },
-        adhaar: {
-            type: String,
-            required: true
         }
     },
     vehicleImages: {
         type: Array,
         required: true,
+    },
+    registrationNumber:{
+        type: String,
+        required: true,
     }
 }, {timestamps: true});
 
-vehicleSchema.index({ price: 1 });
-vehicleSchema.index({ city: 1 });
 
 const Vehicle = mongoose.model('Vehicle', vehicleSchema);
 

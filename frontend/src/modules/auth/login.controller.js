@@ -1,4 +1,4 @@
-angular.module("myApp").controller("loginCtrl", function($scope, $state, $rootScope, AuthService, ToastService, SocketService) {
+angular.module("myApp").controller("loginCtrl", function($scope, $state, $rootScope, AuthService, ToastService, SocketService, UserFactory) {
     $scope.username = ""; // variable to hold the username
     $scope.password = ""; // variable to hold the password
     $scope.showPassword = false; // variable to control password visibility
@@ -10,10 +10,10 @@ angular.module("myApp").controller("loginCtrl", function($scope, $state, $rootSc
      */
     $scope.login = function() {
         // Add any additional validation if needed
-        if (!$scope.username || !$scope.password) {
-            ToastService.error("Please enter username and password");
+       if(UserFactory.validateLoginData($scope.username, $scope.password) !== true){
+            ToastService.error("Invalid username or password");
             return;
-        }  
+        }
        // calling auth service to loginUser user
         AuthService.loginUser($scope.username, $scope.password)
             .then(function(user) {
@@ -30,6 +30,9 @@ angular.module("myApp").controller("loginCtrl", function($scope, $state, $rootSc
                     socket.emit('userOnline', user.username);
                     socket.emit('getOnlineUsers');
                 }
+                
+                // Emit login event to update navbar
+                $rootScope.$emit('user:loggedIn', user);
                 
                 // Show success message and redirect
                 ToastService.success("Logged in successfully");

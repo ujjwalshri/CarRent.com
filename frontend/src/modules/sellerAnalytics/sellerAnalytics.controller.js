@@ -1,4 +1,4 @@
-angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, ToastService, ChartService, $timeout) {
+angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, ToastService, ChartService, SellerAnalyticsService, $timeout) {
     let chartInstances = {};
     const initializeDates = () => {
         $scope.startDate = new Date();
@@ -185,20 +185,20 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
 
         // Overview Analytics
         const overviewPromises = [
-            ChartService.getTotalRevenue(params),
-            ChartService.getCarDescription(params),
-            ChartService.getPopularCars(params),
-            ChartService.getTotalRevenueByAddons(params),
-            ChartService.getAverageBidCostPerRental(params),
-            ChartService.getAverageBookingPayment(params)
+            SellerAnalyticsService.getTotalRevenue(params),
+            SellerAnalyticsService.getCarDescription(params),
+            SellerAnalyticsService.getPopularCars(params),
+            SellerAnalyticsService.getTotalRevenueByAddons(params),
+            SellerAnalyticsService.getAverageBidCostPerRental(params),
+            SellerAnalyticsService.getAverageBookingPayment(params)
         ];
 
         // Performance Analytics
         const performancePromises = [
-            ChartService.getCarWiseBookings(params),
-            ChartService.getNegativeReviews(params),
-            ChartService.getTopEarningCars(params),
-            ChartService.getCityWiseNegativeReview(params)
+            SellerAnalyticsService.getCarWiseBookings(params),
+            SellerAnalyticsService.getNegativeReviews(params),
+            SellerAnalyticsService.getTopEarningCars(params),
+            SellerAnalyticsService.getCityWiseNegativeReview(params)
         ];
 
         // Execute promises in parallel
@@ -207,28 +207,22 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             $q.all(performancePromises)
         ])
         .then(([overviewData, performanceData]) => {
-            const [revenue, carDescription, popularCars, totalRevenueByAddons, averageBidCostPerRental, averageBookingPayment] = overviewData;
+            const [revenue, carDescription, popularCars, totalRevenueByAddons, averageBidCostPerRentalData, averageBookingPayment] = overviewData;
             const [carWiseBookings, negativeReviews, topEarningCars, cityWiseNegativeReview] = performanceData;
-            
-            $scope.averageBidCostPerRental = averageBidCostPerRental.averageCostPerRental.averageCostPerRental[0]?.averageCostPerRental || 0;
-            $scope.averageBookingPayment = averageBookingPayment.averageBookingPayment.averageBookingPayment[0]?.averageBookingPayment || 0;
-            $scope.totalRevenueByAddons = totalRevenueByAddons.totalRevenueByAddons.totalRevenueByAddons.reduce((acc, curr) => acc + curr.totalAmount, 0);
-            // Update scope variables
-            // Handle case when revenue is null
-            $scope.totalRevenue = 0;
-            $scope.totalFineCollected = 0;
-            $scope.numberOfBookings = 0;
-            $scope.averageRevenue = 0;
-            
-            if (revenue && revenue.revenue) {
-                $scope.totalRevenue = revenue.revenue.totalRevenue || 0;
-                $scope.totalFineCollected = revenue.revenue.totalFineCollected || 0;
-                $scope.numberOfBookings = revenue.revenue.totalBookings || 0;
-                $scope.averageRevenue = revenue.revenue.averageRevenue || 0;
-            }
 
-            if (negativeReviews?.negativeReviews) {
-                $scope.negativeReviewsCount = negativeReviews.negativeReviews.result.reduce((acc, curr) => acc + curr.count, 0);
+            $scope.averageBidCostPerRental = averageBidCostPerRentalData[0]?.averageCostPerRental || 0;
+            $scope.averageBookingPayment = averageBookingPayment[0]?.averageBookingPayment || 0;
+            $scope.totalRevenueByAddons = totalRevenueByAddons ? 
+                totalRevenueByAddons.reduce((acc, curr) => acc + curr.totalAmount, 0) : 0;
+                
+            // Update scope variables with flattened data
+            $scope.totalRevenue = revenue?.totalRevenue || 0;
+            $scope.totalFineCollected = revenue?.totalFineCollected || 0;
+            $scope.numberOfBookings = revenue?.totalBookings || 0;
+            $scope.averageRevenue = revenue?.averageRevenue || 0;
+
+            if (negativeReviews) {
+                $scope.negativeReviewsCount = negativeReviews.reduce((acc, curr) => acc + curr.count, 0);
             }
 
             // Create performance charts
@@ -238,10 +232,10 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                     popularCars
                 },
                 performance: {
-                    carPerformance: carWiseBookings?.carPerformance,
-                    negativeReviews: negativeReviews?.negativeReviews,
-                    topEarningCars: topEarningCars?.topEarningCars,
-                    cityWiseNegativeReview: cityWiseNegativeReview
+                    carPerformance: carWiseBookings,
+                    negativeReviews,
+                    topEarningCars,
+                    cityWiseNegativeReview
                 }
             });
 
@@ -276,15 +270,15 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
 
         // Booking Analytics
         const bookingPromises = [
-            ChartService.getPeakHours(params),
-            ChartService.getMonthlyBookings(params),
-            ChartService.getTopCustomers(params),
-            ChartService.getAverageRentalDuration(params),
-            ChartService.getRepeatingCustomersPercentage(params),
-            ChartService.getCityWiseBookings(params),
-            ChartService.getSelectedAddonsCount(params),
-            ChartService.getBiddingComparison(params),
-            ChartService.getEarningComparison(params)
+            SellerAnalyticsService.getPeakHours(params),
+            SellerAnalyticsService.getMonthlyBookings(params),
+            SellerAnalyticsService.getTopCustomers(params),
+            SellerAnalyticsService.getAverageRentalDuration(params),
+            SellerAnalyticsService.getRepeatingCustomersPercentage(params),
+            SellerAnalyticsService.getCityWiseBookings(params),
+            SellerAnalyticsService.getSelectedAddonsCount(params),
+            SellerAnalyticsService.getBiddingComparison(params),
+            SellerAnalyticsService.getEarningComparison(params)
         ];
 
         $q.all(bookingPromises)
@@ -299,25 +293,25 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             biddingComparison,
             earningComparison
         ]) => {
-            if (averageRentalDuration?.averageRentalDuration) {
-                $scope.averageRentalDuration = averageRentalDuration.averageRentalDuration.averageRentalDuration[0]?.averageRentalDuration || 0;
+            if (averageRentalDuration && averageRentalDuration.length > 0) {
+                $scope.averageRentalDuration = averageRentalDuration[0]?.averageRentalDuration || 0;
             }
 
-            if (repeatingCustomers?.repeatingCustomersPercentage) {
-                $scope.repeatingCustomersPercentage = repeatingCustomers.repeatingCustomersPercentage.repeatingCustomersPercentage[0]?.repeatingCustomerPercentage || 0;
+            if (repeatingCustomers && repeatingCustomers.length > 0) {
+                $scope.repeatingCustomersPercentage = repeatingCustomers[0]?.repeatingCustomerPercentage || 0;
             }
             // Create booking charts
             createBookingCharts({
                 bookings: {
-                    peakHours: peakHours?.peakHours,
-                    monthlyBookings: monthlyBookings?.monthlyBookings,
-                    topCustomers: topCustomers?.topCustomers,
-                    cityWiseBookings: cityWiseBookings?.cityWiseBookings,
-                    selectedAddonsCount: selectedAddonsCount?.selectedAddonsCount
+                    peakHours: peakHours,
+                    monthlyBookings: monthlyBookings,
+                    topCustomers: topCustomers,
+                    cityWiseBookings: cityWiseBookings,
+                    selectedAddonsCount: selectedAddonsCount
                 },
                 comparisons: {
-                    biddingComparison: biddingComparison?.biddingComparison,
-                    earningComparison: earningComparison?.earningComparison
+                    biddingComparison: biddingComparison,
+                    earningComparison: earningComparison
                 }
             });
 
@@ -341,26 +335,26 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
         const { overview, performance } = data;
 
         // Overview Charts
-        if (overview.carDescription?.carDescription?.suvVsSedan) {
-            console.log(overview.carDescription.carDescription.suvVsSedan);
-            createChartIfCanvasExists("carCategoriesChart", () => 
-                ChartService.createBarChart(
-                    "bar",
-                    overview.carDescription.carDescription.suvVsSedan.map(item => item._id),
-                    overview.carDescription.carDescription.suvVsSedan.map(item => item.count),
-                    'Number of Cars',
-                    "Car Categories Distribution",
-                    "carCategoriesChart"
+        if (overview.carDescription) {
+           
+            
+            // Add pie chart for car categories
+            createChartIfCanvasExists("carCategoriesPieChart", () => 
+                ChartService.createPieChart(
+                    overview.carDescription.map(item => item._id),
+                    overview.carDescription.map(item => item.count),
+                    "Car Categories",
+                    "carCategoriesPieChart"
                 )
             );
         }
 
-        if (overview.popularCars?.popularCars?.top3MostPopularCars) {
+        if (overview.popularCars) {
             createChartIfCanvasExists("myMostPopularCar", () =>
                 ChartService.createBarChart(
                     "bar",
-                    overview.popularCars.popularCars.top3MostPopularCars.map(car => car._id),
-                    overview.popularCars.popularCars.top3MostPopularCars.map(car => car.count),
+                    overview.popularCars.map(car => car._id),
+                    overview.popularCars.map(car => car.count),
                     'Number of Biddings',
                     "Most Popular Cars",
                     "myMostPopularCar"
@@ -369,12 +363,12 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
         }
 
         // Performance Charts
-        if (performance.negativeReviews?.result) {
+        if (performance.negativeReviews) {
             createChartIfCanvasExists("carWiseNegativeReviews", () =>
                 ChartService.createBarChart(
                     "bar",
-                    performance.negativeReviews.result.map(car => car._id),
-                    performance.negativeReviews.result.map(car => car.count),
+                    performance.negativeReviews.map(car => car._id),
+                    performance.negativeReviews.map(car => car.count),
                     'Number of Negative Reviews',
                     "Car-wise Negative Reviews",
                     "carWiseNegativeReviews"
@@ -382,20 +376,33 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             );
         }
 
-        if (performance.topEarningCars?.top3CarsWithMostEarning) {
+        if (performance.topEarningCars) {
+            const rupeesFormat = (value) => {
+                return '₹' + value.toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+            };
+
             createChartIfCanvasExists("top3CarsWithMostEarning", () =>
                 ChartService.createBarChart(
                     "bar",
-                    performance.topEarningCars.top3CarsWithMostEarning.map(car => car._id),
-                    performance.topEarningCars.top3CarsWithMostEarning.map(car => car.totalRevenue),
-                    'Total Revenue ($)',
+                    performance.topEarningCars.map(car => car._id),
+                    performance.topEarningCars.map(car => car.totalRevenue),
+                    'Total Revenue (₹)',
                     "Top 3 Earning Cars",
                     "top3CarsWithMostEarning"
                 )
             );
+            
+            // Add pie chart for revenue distribution
+            createChartIfCanvasExists("revenuePieChart", () =>
+                ChartService.createPieChart(
+                    performance.topEarningCars.map(car => car._id),
+                    performance.topEarningCars.map(car => car.totalRevenue),
+                    "Revenue Distribution",
+                    "revenuePieChart"
+                )
+            );
         }
         
-
         if (performance.cityWiseNegativeReview) {
             createChartIfCanvasExists("cityWiseNegativeReviews", () =>
                 ChartService.createMultilineChart(
@@ -412,23 +419,23 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
     const createBookingCharts = (data) => {
         const { bookings, comparisons } = data;
 
-        if (bookings.peakHours?.peakBiddingHours) {
+        if (bookings.peakHours?.data) {
             createChartIfCanvasExists("hourlyBiddingHeatmap", () =>
                 ChartService.createLineChart("hourlyBiddingHeatmap", {
-                    labels: bookings.peakHours.peakBiddingHours.map(hour => formatHour(hour.hour)),
-                    data: bookings.peakHours.peakBiddingHours.map(hour => hour.count),
+                    labels: bookings.peakHours.data.map(hour => formatHour(hour.hour)),
+                    data: bookings.peakHours.data.map(hour => hour.count),
                     title: "Peak Bidding Hours",
                     label: "Number of Biddings"
                 })
             );
         }
 
-        if (bookings.monthlyBookings?.monthWiseBookings) {
+        if (bookings.monthlyBookings) {
             createChartIfCanvasExists("numberOfBookingsPerMonth", () =>
                 ChartService.createBarChart(
                     "bar",
-                    bookings.monthlyBookings.monthWiseBookings.map(booking => booking._id),
-                    bookings.monthlyBookings.monthWiseBookings.map(booking => booking.count),
+                    bookings.monthlyBookings.map(booking => booking._id),
+                    bookings.monthlyBookings.map(booking => booking.count),
                     'Number of Bookings',
                     "Monthly Booking Trends",
                     "numberOfBookingsPerMonth"
@@ -436,12 +443,12 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             );
         }
 
-        if (bookings.topCustomers?.top3CostumersWithMostBookings) {
+        if (bookings.topCustomers) {
             createChartIfCanvasExists("top3CostumersWithMostBookings", () =>
                 ChartService.createBarChart(
                     "bar",
-                    bookings.topCustomers.top3CostumersWithMostBookings.map(customer => customer._id),
-                    bookings.topCustomers.top3CostumersWithMostBookings.map(customer => customer.count),
+                    bookings.topCustomers.map(customer => customer._id),
+                    bookings.topCustomers.map(customer => customer.count),
                     'Number of Bookings',
                     "Top 3 Customers",
                     "top3CostumersWithMostBookings"
@@ -449,40 +456,52 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             );
         }
 
-        if (bookings.cityWiseBookings?.cityWiseBookings) {
+        if (bookings.cityWiseBookings) {
             createChartIfCanvasExists("cityWiseBooking", () =>
                 ChartService.createBarChart(
                     "bar",
-                    bookings.cityWiseBookings.cityWiseBookings.map(city => city._id),
-                    bookings.cityWiseBookings.cityWiseBookings.map(city => city.count),
+                    bookings.cityWiseBookings.map(city => city._id),
+                    bookings.cityWiseBookings.map(city => city.count),
                     'Number of Bookings',
                     "City-wise Bookings",
                     "cityWiseBooking"
                 )
             );
+            
+            
         }
 
-        if (bookings.selectedAddonsCount?.selectedAddonsCount) {
+        if (bookings.selectedAddonsCount) {
             createChartIfCanvasExists("selectedAddonsCount", () =>
                 ChartService.createBarChart(
                     "bar",
-                    bookings.selectedAddonsCount.selectedAddonsCount.map(addon => addon._id),
-                    bookings.selectedAddonsCount.selectedAddonsCount.map(addon => addon.count),
+                    bookings.selectedAddonsCount.map(addon => addon._id),
+                    bookings.selectedAddonsCount.map(addon => addon.count),
                     'Number of Bookings',
                     "Selected Addons Count",
                     "selectedAddonsCount"
                 )
             );
+            
+            // Add pie chart for addons distribution
+            createChartIfCanvasExists("addonsPieChart", () =>
+                ChartService.createPieChart(
+                    bookings.selectedAddonsCount.map(addon => addon._id),
+                    bookings.selectedAddonsCount.map(addon => addon.count),
+                    "Addons Distribution",
+                    "addonsPieChart"
+                )
+            );
         }
 
-        if (comparisons.biddingComparison?.biddingComparison) {
+        if (comparisons.biddingComparison) {
             createChartIfCanvasExists("myBidsVsOtherSellersAvgBids", () =>
                 ChartService.createBarChart(
                     "line",
                     ["My Bids", "Average Seller Bids"],
                     [
-                        comparisons.biddingComparison.biddingComparison.myBids,
-                        comparisons.biddingComparison.biddingComparison.otherSellersAvgBids
+                        comparisons.biddingComparison.myBids,
+                        comparisons.biddingComparison.otherSellersAvgBids
                     ],
                     'Number of Bids',
                     "Bidding Comparison",
@@ -491,16 +510,16 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             );
         }
 
-        if (comparisons.earningComparison?.earningComparison) {
+        if (comparisons.earningComparison) {
             createChartIfCanvasExists("myEarningVsOtherSellersAvgEarnings", () =>
                 ChartService.createBarChart(
                     "line",
                     ["My Earnings", "Average Seller Earnings"],
                     [
-                        comparisons.earningComparison.earningComparison.myEarnings,
-                        comparisons.earningComparison.earningComparison.otherSellersAvgEarnings
+                        comparisons.earningComparison.myEarnings,
+                        comparisons.earningComparison.otherSellersAvgEarnings
                     ],
-                    'Earnings ($)',
+                    'Earnings (₹)',
                     "Earning Comparison",
                     "myEarningVsOtherSellersAvgEarnings"
                 )

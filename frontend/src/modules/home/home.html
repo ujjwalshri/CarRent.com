@@ -48,11 +48,11 @@
     </div>
 </div>
 
-<div class="panel panel-default" ng-if="user && !user.isSeller && !filteringStarted">
+<div class="panel panel-default" ng-if="user && !user.isSeller">
 
     <div class="panel-heading" ng-if="recommendedCarsGroups.length>0">
       <h3 class="panel-title text-center">
-        <span class="glyphicon glyphicon-thumbs-up"></span> Top Car Recommendations in {{user.city}}
+        <span class="glyphicon glyphicon-thumbs-up"></span> Top Car Recommendations in {{ filteringStarted ? city : user.city}}
       </h3>
     </div>
     <div class="col-12 text-center" ng-if="recommendedCarsGroups.length === 0">
@@ -72,7 +72,7 @@
                   </div>
                   <img ng-src="{{car.vehicleImages[0].url}}" alt="{{car.name}}" class="img-responsive">
                   <h4>{{car.vehicle.company}} {{car.vehicle.name}} {{car.vehicle.modelYear}}</h4>
-                  <p class="text-danger"><strong>${{car.vehicle.price}}</strong> per day</p>
+                  <p class="text-danger"><strong>{{car.vehicle.price | currency:"₹"}}</strong> per day</p>
                   <p>
                     <span class="text-muted"><span class="glyphicon glyphicon-map-marker"></span> {{car.vehicle.city}}</span>
                     <span class="text-muted "><span class="glyphicon glyphicon-tag"></span> {{car.vehicle.category}}</span>
@@ -117,7 +117,7 @@
                             <div class="row">
                                 <div class="col-xs-7">
                                     <h3 class="price-tag" style="margin: 0; color: #2ecc71;">
-                                        <strong>${{ car.price }}</strong>
+                                        <strong>{{ car.price | currency:"₹" }}</strong>
                                         <small class="text-muted" style="font-size: 14px;">per day</small>
                                     </h3>
                                 </div>

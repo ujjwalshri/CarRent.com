@@ -15,13 +15,13 @@ export const createCarValidation = joi.object({
     status: joi.string().valid("pending", "approved", "rejected").default("pending"),
     city: joi.string().min(2).max(50).required(),
     vehicleImages: joi.array().min(1).max(5).required(),
+    registrationNumber: joi.string().min(2).max(50).required(),
     owner: joi.object().keys({
         username: joi.string().min(3).max(30).required(),
         email: joi.string().email().required(),
         firstName: joi.string().min(2).max(30).required(),
         lastName: joi.string().min(2).max(30).required(),
         city: joi.string().min(2).max(50).required(),
-        adhaar: joi.string().regex(/^\d{12}$/).required() // Aadhaar must be a 12-digit number
     }).required(),
 });
 

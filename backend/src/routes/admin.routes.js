@@ -22,7 +22,9 @@ import {
     getUserGrowthStats,
     getHighestEarningCities,
     getNewUsers,
-    getTop3CompaniesWithMostNegativeReviews
+    getTop3CompaniesWithMostNegativeReviews,
+    topSellersWithMostNegativeReviews,
+    getCarCateogoryWiseBookings
 } from '../controllers/admin.controller.js';
 import allowAdmin from '../middlewares/authenticateAdminRole.js';
 const router = express.Router();
@@ -37,6 +39,8 @@ router.get('/analytics/user-growth', protectRoute, allowAdmin, getUserGrowthStat
 router.get('/analytics/highest-earning-cities', protectRoute, allowAdmin, getHighestEarningCities);
 router.get('/analytics/new-users', protectRoute, allowAdmin, getNewUsers);
 router.get('/analytics/top-3-companies-with-most-negative-reviews', protectRoute, allowAdmin, getTop3CompaniesWithMostNegativeReviews);
+router.get('/analytics/top-5-sellers-with-most-negative-reviews', protectRoute, allowAdmin,topSellersWithMostNegativeReviews );
+router.get('/analytics/category-wise-bookings', protectRoute, allowAdmin, getCarCateogoryWiseBookings);
 
 // Existing Routes
 router.get('/getGeneralAnalytics', protectRoute, getGeneralAnalyticsController);

@@ -2,7 +2,7 @@ import { parentPort } from 'worker_threads';
 import AWS from 'aws-sdk';
 import dotenv from 'dotenv';
 import Bidding from '../models/bidding.model.js';
-import { generateAndSendMail } from '../utils/gen.mail.js';
+import { sendGenericEmail } from '../services/email.service.js';
 import connectMongoDB from '../config/db.connection.js';
 
 dotenv.config();
@@ -42,25 +42,45 @@ async function processBidMessage(message) {
             }
         });
 
-        // Send confirmation emails
-        generateAndSendMail({
-            subject: "Bidding Sent",
-            text: `Congrats You have successfully placed a bid on vehicle ${bidData.vehicle.name} the owner of the vehicle is ${bidData.owner.username}, the bid amount is $ ${bidData.amount}, startDate is ${new Date(bidData.startDate).toLocaleDateString()}, endDate is ${new Date(bidData.endDate).toLocaleDateString()}
-               , selected addons : ${bidData.selectedAddons.length > 0 ? bidData.selectedAddons.map(addon => addon.name).join(', ') : 'No addons selected'}
-            `,
-            to: bidData.from.email
+        // Send confirmation email to bidder
+        sendGenericEmail({
+            to: bidData.from.email,
+            subject: "Bidding Sent Successfully",
+            text: `Congratulations! You have successfully placed a bid on ${bidData.vehicle.company} ${bidData.vehicle.name}.
+
+Details:
+- Vehicle: ${bidData.vehicle.company} ${bidData.vehicle.name} (${bidData.vehicle.modelYear})
+- Owner: ${bidData.owner.firstName} ${bidData.owner.lastName} (${bidData.owner.username})
+- Bid amount: ₹${bidData.amount} per day
+- Rental period: ${new Date(bidData.startDate).toLocaleDateString()} to ${new Date(bidData.endDate).toLocaleDateString()}
+- Selected addons: ${bidData.selectedAddons.length > 0 ? bidData.selectedAddons.map(addon => addon.name).join(', ') : 'No addons selected'}
+
+Your booking request has been sent to the vehicle owner. You will receive a notification when the owner approves or rejects your request.
+
+Thank you for using Car Rental.com!`
         }).catch((err) => {
-            console.error(`Error sending bidding email: ${err.message}`);
+            console.error(`Error sending bidder email: ${err.message}`);
         });
 
-        generateAndSendMail({
-            subject: "Bidding Sent",
-            text: `Congrats bid placed on your vehicle ${bidData.vehicle.name} the bid amount is $ ${bidData.amount}, startDate is ${new Date(bidData.startDate).toLocaleDateString()}, endDate is ${new Date(bidData.endDate).toLocaleDateString()} placed by ${bidData.from.username}
-           , selected addons : ${ bidData.selectedAddons.length > 0 ? bidData.selectedAddons.map(addon => addon.name).join(', ') : 'No addons selected'}
-            `,
-            to: bidData.owner.email
+        // Send notification email to vehicle owner
+        sendGenericEmail({
+            to: bidData.owner.email,
+            subject: "New Booking Request Received",
+            text: `Hello ${bidData.owner.firstName},
+
+You have received a new booking request for your vehicle ${bidData.vehicle.company} ${bidData.vehicle.name}.
+
+Booking details:
+- Requested by: ${bidData.from.firstName} ${bidData.from.lastName} (${bidData.from.username})
+- Bid amount: ₹${bidData.amount} per day
+- Rental period: ${new Date(bidData.startDate).toLocaleDateString()} to ${new Date(bidData.endDate).toLocaleDateString()}
+- Selected addons: ${bidData.selectedAddons.length > 0 ? bidData.selectedAddons.map(addon => addon.name).join(', ') : 'No addons selected'}
+
+Please log in to your account to approve or reject this booking request.
+
+Thank you for being a part of Car Rental.com!`
         }).catch((err) => {
-            console.error(`Error sending bidding email: ${err.message}`);
+            console.error(`Error sending owner email: ${err.message}`);
         });
 
         // Delete the processed message
@@ -115,4 +135,4 @@ async function startProcessing() {
 }
 
 // Start processing when the worker is initialized
-startProcessing(); 
+startProcessing();

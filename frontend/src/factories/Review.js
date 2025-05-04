@@ -87,7 +87,7 @@ angular.module('myApp').factory('Review', function() {
         const validation = review.isValid();
         
         if (!validation.status) {
-            throw new Error(validation.message);
+            return validation.message;
         }
         
         return review;

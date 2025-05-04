@@ -180,11 +180,15 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
      * Get Pending Cars
      * Retrieves all vehicles with 'pending' status (for admin approval)
      * 
+     * @param {Object} params - Pagination parameters (page, limit)
      * @returns {Promise} Promise resolving to pending vehicles or error
      */
-    this.getCars = ()=>{
+    this.getCars = (params = {})=>{
         let deferred = $q.defer();
-        $http.get(`${ApiService.baseURL}/api/vehicle/getPendingCars`, { withCredentials: true })
+        $http.get(`${ApiService.baseURL}/api/vehicle/getPendingCars`, { 
+            params: params,
+            withCredentials: true 
+        })
         .then((res)=>{
             deferred.resolve(res.data);
         })
@@ -344,28 +348,6 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
         return deferred.promise;
       }
       
-    /*
-    function to get car recommendations for user
-    @params none
-    @returns promise
-    */
-    /**
-     * Get Car Recommendations For User
-     * Retrieves personalized vehicle recommendations based on user history
-     * 
-     * @returns {Promise} Promise resolving to recommended vehicles or error
-     */
-    this.getCarRecommendationsForUser = (params)=>{
-        let deferred = $q.defer();
-        $http.get(`${ApiService.baseURL}/api/bidding/getCarRecommendation`, { params:params, withCredentials: true })
-        .then((res)=>{
-            deferred.resolve(res.data);
-        })
-        .catch((error)=>{
-            deferred.reject(error);
-        });
-        return deferred.promise;
-    }
     /**
      * Add Car Category
      * Creates a new vehicle category in the system (admin function)

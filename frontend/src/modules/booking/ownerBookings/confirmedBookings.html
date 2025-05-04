@@ -1,39 +1,74 @@
 <back-button></back-button>
 <div ng-controller="confirmedBookingsCtrl" class="container" ng-init="init()">
-    <h1 class="text-center text-primary" ng-if="allBookings.length > 0">Confirmed Bookings</h1>
+    <h1 class="text-center text-primary">Confirmed Bookings</h1>
     
-
-
     <div class="panel panel-default">
         <div class="panel-heading">
             <h3 class="panel-title">Filter Bookings</h3>
         </div>
         <div class="panel-body">
             <div class="row">
-                <div class="col-sm-5">
+                <div class="col-sm-4">
                     <select class="form-control" ng-model="bookingsType.type" ng-change="applyFilter()">
                         <option value="" disabled selected>Select Booking Type</option>
                         <option value="started">Started</option>
                         <option value="ended">Ended</option>
                         <option value="reviewed">Reviewed</option>
-                        <option value="today">Today Bookings</option>
                     </select>
                 </div>
-                <div class="col-sm-5">
+                <div class="col-sm-3">
                     <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Search by car name..." 
-                               ng-model="searchQuery" ng-change="searchBookings()">
-                        <span class="input-group-btn">
-                            <button class="btn btn-default" type="button" ng-click="searchBookings()">
-                                <i class="glyphicon glyphicon-search"></i>
-                            </button>
+                        <span class="input-group-addon">
+                            <i class="fa fa-car"></i>
                         </span>
+                        <input type="text" class="form-control" placeholder="Search by car..." 
+                               ng-model="carSearchQuery" ng-change="searchCarName()">
+                    </div>
+                </div>
+                <div class="col-sm-3">
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                            <i class="fa fa-user"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="Search by username..." 
+                               ng-model="usernameSearchQuery" ng-change="searchUsername()">
                     </div>
                 </div>
                 <div class="col-sm-2">
                     <button class="btn btn-default btn-block" ng-click="resetFilter()">
                         <i class="glyphicon glyphicon-refresh"></i> Reset
                     </button>
+                </div>
+            </div>
+            <div class="row" style="margin-top: 15px;">
+                <div class="col-sm-5">
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                            <i class="fa fa-calendar"></i> Start
+                        </span>
+                        <input type="date" class="form-control" ng-model="dateFilter.startDate" ng-change="validateDateRange()">
+                    </div>
+                </div>
+                <div class="col-sm-5">
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                            <i class="fa fa-calendar"></i> End
+                        </span>
+                        <input type="date" class="form-control" ng-model="dateFilter.endDate" ng-change="validateDateRange()">
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <button class="btn btn-primary btn-block" ng-click="applyDateFilter()">
+                        <i class="fa fa-filter"></i> Apply
+                    </button>
+                </div>
+                <div class="col-sm-12" ng-if="dateFilterError">
+                    <p class="text-danger"><i class="fa fa-exclamation-triangle"></i> {{dateFilterError}}</p>
+                </div>
+                <div class="col-sm-12" ng-if="dateFilter.startDate && dateFilter.endDate && !dateFilterError">
+                    <div class="alert alert-info" style="margin-top: 10px;">
+                        <i class="fa fa-info-circle"></i> Showing bookings starting between <strong>{{dateFilter.startDate | date:'MMM dd, yyyy'}}</strong> and <strong>{{dateFilter.endDate | date:'MMM dd, yyyy'}}</strong>
+                    </div>
                 </div>
             </div>
         </div>
@@ -110,7 +145,7 @@
                                     <ul class="list-unstyled small">
                                         <li ng-repeat="addon in booking.selectedAddons">
                                             <i class="fa fa-check-circle text-success"></i> {{addon.name}} 
-                                            <span class="text-muted">${{addon.price}}</span>
+                                            <span class="text-muted">{{addon.price | currency:"₹"}}</span>
                                         </li>
                                     </ul>
                                 </div>
@@ -131,7 +166,7 @@
                                 </div>
                             </td>
                             <td>
-                                <strong>${{ booking.calculate() }}</strong>
+                                <strong>{{ booking.calculate() | currency:"₹" }}</strong>
                                 <div class="small text-muted" ng-if="booking.daysCount">
                                     <i class="fa fa-calendar"></i> {{booking.daysCount}} days
                                 </div>

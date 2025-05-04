@@ -1,6 +1,6 @@
 angular
   .module("myApp")
-  .controller("addCarCtrl", function ($scope, $timeout,CarFactory, ToastService, CarService, City, $rootScope, $q) {
+  .controller("addCarCtrl", function ($scope, $timeout,CarFactory, ToastService, CarService, City, $rootScope, $q, $state) {
     // Array to store the car images selected by the user
     $scope.images = []; 
     // Flag to track loading state during form submission
@@ -164,11 +164,12 @@ angular
         fuelType: $scope.fuelType,
         location: $scope.location,
         city: $scope.city,
+        registrationNumber: $scope.registrationNumber,
         vehicleImages: $scope.images
       });
       
-      // Validate the car object
-      if(typeof car === 'String'){
+      // check if the car is an error string returned from the factory
+      if(typeof car === "string"){
         ToastService.error(car);
         $scope.isLoading = false;
         return;
@@ -180,11 +181,10 @@ angular
       // Send the car data to the server
       CarService.addCar(formData)
           .then((res) => {
-              if($rootScope.isSeller){
-                ToastService.success("Car added successfully");
-              }else{
+
                 ToastService.success("Car added successfully, please wait for approval");
-              }
+
+              $state.reload();
           })
           .catch((err) => {
               ToastService.error(`Error adding car: ${err}`);
@@ -200,8 +200,10 @@ angular
             $scope.color = "";
             $scope.fuelType = "";
             $scope.city = "";
+            $scope.registrationNumber = "";
             $scope.images = []; 
             $scope.isLoading = false;
+            
           });
   }
 });

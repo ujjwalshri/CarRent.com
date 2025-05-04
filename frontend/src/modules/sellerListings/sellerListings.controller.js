@@ -12,8 +12,8 @@ angular.module('myApp').controller('sellerListingsCtrl', function($scope, $state
     // Loading and state variables
     $scope.loading = false; // Flag to indicate loading state
     $scope.noListings = false; // Flag to indicate if there are no listings
-    $scope.activeButton = 'all'; // Active filter button
-    $scope.status = 'all'; // Filter status for cars (approved, rejected, all)
+    $scope.activeButton = 'approved'; // Active filter button
+    $scope.status = 'approved'; // Filter status for cars (approved, rejected, all)
     
     // Filter and search variables
     $scope.search = {
@@ -45,7 +45,7 @@ angular.module('myApp').controller('sellerListingsCtrl', function($scope, $state
      */
     $scope.init = function() {
         $scope.pagination.currentPage = 1;
-        $scope.status = 'all';
+        $scope.status = 'approved';
         $scope.search.searchQuery = '';
         $scope.userCars = [];
         
@@ -72,17 +72,12 @@ angular.module('myApp').controller('sellerListingsCtrl', function($scope, $state
             priceRange: $scope.filters.priceRange || ''
         };
         
-        console.log('Fetching with params:', params);
-        
         // Get cars, price ranges, and categories
         $q.all([
-            CarService.fetchUserCars($scope.status || 'all', params),
+            CarService.fetchUserCars($scope.status || 'approved', params),
             CarService.getCurrentPriceRanges(),
             CarService.getAllCarCategoriesForAdmin()
         ]).then(function(results) {
-            // Check the structure of the response
-            console.log('Car service response:', results[0]);
-            
             // Update car listings - fix to use the data array from the response
             if (results[0].data && results[0].data.data) {
                 $scope.userCars = results[0].data.data;
@@ -145,8 +140,8 @@ angular.module('myApp').controller('sellerListingsCtrl', function($scope, $state
         $scope.search.searchQuery = '';
         $scope.search.searchTimeout = null;
         $scope.pagination.currentPage = 1;
-        $scope.status = 'all';
-        $scope.activeButton = 'all';
+        $scope.status = 'approved';
+        $scope.activeButton = 'approved';
         fetchCarListings();
     };
     
@@ -184,17 +179,10 @@ angular.module('myApp').controller('sellerListingsCtrl', function($scope, $state
      * Handles pagination page change event
      */
     $scope.pageChanged = function() {
-        console.log('Page changed to: ' + $scope.pagination.currentPage);
         fetchCarListings();
     };
     
-    /**
-     * Navigates to car details page
-     */
-    $scope.viewCar = function(carId) {
-        $state.go('singleCar', { id: carId });
-    };
-    
+  
     /**
      * Navigates to add car page
      */
@@ -298,7 +286,7 @@ angular.module('myApp').controller('sellerListingsCtrl', function($scope, $state
 /**
  * Controller for managing car addons modal
  */
-angular.module("myApp").controller('AddonsModalCtrl', function($scope, $uibModalInstance, userCars, UserService, ToastService) {
+angular.module("myApp").controller('AddonsModalCtrl', function($scope, $uibModalInstance, userCars, AddonService, ToastService) {
     $scope.userCars = userCars;
     $scope.selectedCar = null;
     $scope.newAddon = {
@@ -311,12 +299,12 @@ angular.module("myApp").controller('AddonsModalCtrl', function($scope, $uibModal
     // Load addons for selected car
     $scope.loadCarAddons = function() {
         $scope.isLoading = true;
-        UserService.getCarAddons()
-            .then(function(response) {
-                $scope.addons = response.addOns;
+        AddonService.getOwnAddons()
+            .then(function(addons) {
+                $scope.addons = addons;
             })
             .catch(function(error) {
-                ToastService.error("Error loading addons: " + error.message);
+                ToastService.error("Error loading addons: " + error);
             })
             .finally(function() {
                 $scope.isLoading = false;
@@ -329,14 +317,18 @@ angular.module("myApp").controller('AddonsModalCtrl', function($scope, $uibModal
     // Add new addon
     $scope.addAddon = function() {
         $scope.isLoading = true;
-        UserService.addCarAddon($scope.newAddon)
-            .then(function() {
+        AddonService.addAddon($scope.newAddon)
+            .then(function(addon) {
                 ToastService.success("Addon added successfully");
-                // Close the modal after successful addition
-                $uibModalInstance.close($scope.selectedCar);
+                $scope.newAddon = {
+                    name: '',
+                    price: 0,
+                    description: ''
+                };
+                $scope.loadCarAddons();
             })
             .catch(function(error) {
-                ToastService.error("Error adding addon: " + error.message);
+                ToastService.error("Error adding addon: " + error);
             })
             .finally(function() {
                 $scope.isLoading = false;
@@ -347,13 +339,13 @@ angular.module("myApp").controller('AddonsModalCtrl', function($scope, $uibModal
     $scope.removeAddon = function(addonId) {
         if (confirm('Are you sure you want to remove this addon?')) {
             $scope.isLoading = true;
-            UserService.removeCarAddon(addonId)
+            AddonService.deleteAddon(addonId)
                 .then(function() {
                     ToastService.success("Addon removed successfully");
                     $scope.loadCarAddons();
                 })
                 .catch(function(error) {
-                    ToastService.error("Error removing addon: " + error.message);
+                    ToastService.error("Error removing addon: " + error);
                 })
                 .finally(function() {
                     $scope.isLoading = false;

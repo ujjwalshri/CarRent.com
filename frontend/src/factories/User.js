@@ -24,10 +24,9 @@ angular.module('myApp').factory('UserFactory', function () {
         password = null,
         confirmPassword = null,
         city = null,
-        adhaar = null
     ) {
         if (!(this instanceof User)) {
-            return new User(_id, firstName, lastName, email, username, isBlocked,isSeller, isAdmin,password, confirmPassword,  city, adhaar);
+            return new User(_id, firstName, lastName, email, username, isBlocked,isSeller, isAdmin,password, confirmPassword,  city);
         }
         this._id = _id;
         this.firstName = firstName;
@@ -40,7 +39,6 @@ angular.module('myApp').factory('UserFactory', function () {
         this.password = password;
         this.confirmPassword = confirmPassword;
         this.city = city;
-        this.adhaar = adhaar;
     }
 
     /**
@@ -48,12 +46,10 @@ angular.module('myApp').factory('UserFactory', function () {
      * @returns {boolean} - Returns true if valid, false otherwise.
      */
     User.prototype.validate = function () {
-        console.log(this);
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const usernameRegex = /^[a-zA-Z0-9_!@#$%^&*()-+=]{3,20}$/;
         const nameRegex = /^[A-Za-z]{2,50}$/;
         const cityRegex = /^[A-Za-z ]{2,100}$/;
-        const adhaarRegex = /^[0-9]{12}$/;
 
         if (!this.firstName || !nameRegex.test(this.firstName)) {
             return "invalid first name";
@@ -79,9 +75,6 @@ angular.module('myApp').factory('UserFactory', function () {
         if(this.password !== this.confirmPassword){
             return "password and confirm password must be same";
         }
-        if (this.adhaar && !adhaarRegex.test(this.adhaar)) {
-            return "invalid adhaar";
-        }
         return this;
     };
 
@@ -94,21 +87,18 @@ angular.module('myApp').factory('UserFactory', function () {
         */
         create: function (data, validate=true) {
             
-            console.log(data);
             var user =  new User(
                 data._id,
                 data.firstName,
                 data.lastName,
                 data.email,
                 data.username,
-                
                 data.isBlocked,
                 data.isSeller,
                 data.isAdmin,
                 data.password,
                 data.confirmPassword,
                 data.city,
-                data.adhaar
             );
             if(validate){
                 return user.validate();
@@ -128,6 +118,12 @@ angular.module('myApp').factory('UserFactory', function () {
                 return "first name and last name must be atleast 3 to 50 characters long";
             }
           
+            return true;
+        },
+        validateLoginData: function (username, password){
+            if (!username || !password) {
+                return false;
+            }
             return true;
         }
     };

@@ -1,5 +1,3 @@
-<back-button></back-button>
-
 <style>
   @media (max-width: 768px) {
     .chat-list-col {
@@ -21,11 +19,8 @@
     }
   }
 </style>
-
 <div ng-init="init()" class="container-fluid" style="background: linear-gradient(135deg, #dcf8c6, #e5e5e5); height: 100vh; padding: 10px">
   <div class="row">
-
-
     <div
       class="col-md-4 panel panel-default chat-list-col"
       ng-class="{'hide-on-mobile': selectedConversation}"
@@ -38,7 +33,6 @@
       <div class="list-group">
         <loading-component is-loading="isLoading" loading-text="Loading chats..."></loading-component>
 
-        <!-- No Conversations Message -->
         <div class="text-center" ng-if="!isLoading && (!myConversations || myConversations.length === 0)" style="padding: 30px 20px;">
           <div style="background-color: #f8f9fa; border-radius: 10px; padding: 20px; margin: 10px;">
             <i class="glyphicon glyphicon-comment" style="font-size: 48px; color: #075E54; margin-bottom: 15px;"></i>
@@ -144,7 +138,7 @@
   
           <span ng-show="image" style="color: #25D366; margin-right: 10px;">Image Selected</span>
         
-          <!-- Message Input -->
+
           <input type="text"
                  class="form-control"
                  placeholder="Type a message..."
@@ -158,7 +152,7 @@
                    padding: 0 15px;
                  ">
         
-          <!-- Image Upload Button -->
+
           <label for="file"
                  class="btn"
                  style="
@@ -183,7 +177,7 @@
                    style="display: none;">
           </label>
         
-          <!-- Send Button -->
+
           <button class="btn"
                   ng-click="sendMessage()"
                   style="

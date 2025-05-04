@@ -3,7 +3,7 @@
  * 
  * This controller manages the individual car details page functionality.
  * It handles displaying car information, reviews, date selection for booking,
- * and placing bids for car rentals. It also manages the chat functionality 
+ * and opening the bid modal for car rentals. It also manages the chat functionality 
  * between potential renters and car owners.
  */
 angular
@@ -21,12 +21,13 @@ angular
       ChatService,
       BiddingFactory,
       RouteProtection,
-      UserService
+      UserService,
+      AddonService,
+      $uibModal
     ) {
     
       // Utility function to calculate booking price based on date range
       $scope.calculateBookingPrice = BiddingFactory.calculate;
-      $scope.initializeFlatpickr = BiddingFactory.initializeFlatpickr;
       $scope.totalAddonPrice = 0;
       
       // Initialize view model properties
@@ -43,6 +44,7 @@ angular
       $scope.platformFeePercentage = 0; // Platform fee percentage
       $scope.selectedAddons = []; // selected Addons state
       $scope.sellerRating = 0; // seller rating
+      $scope.addOns = []; // Available add-ons for this car/seller
 
       /**
        * Function to initialize the car details page
@@ -81,27 +83,27 @@ angular
         ])
           .then((results) => {
             $scope.blockedDates = BiddingFactory.calculateBlockedDates(results);
-            $scope.initializeFlatpickr($scope.blockedDates, "#dateRangePicker", $scope);
+
             $scope.car = results[0].data;
             $scope.LoggedinUser = results[2];
             $scope.platformFeePercentage = results[3][0].percentage;
-            return BiddingService.getAddOnsForUser($scope.car.owner._id); 
+            return AddonService.getOwnerAddons($scope.car.owner._id); 
           })
-          .then(({addOns})=>{
+          .then((addOns) => {
+            // Directly using the addOns array returned by the service
             $scope.addOns = addOns;
             return UserService.getSellerRating($scope.car.owner._id);
           })
-          .then(({sellerRating})=>{
+          .then(({sellerRating}) => {
             $scope.sellerRating = sellerRating[0]?.averageRating;
           })
           .catch((error) => {
             ToastService.error(`error fetching the car data ${error}`);
-          }).finally(()=>{
+          }).finally(() => {
             $scope.isLoading = false;
           });
       }
 
-      // Function to handle addon selection
       $scope.toggleAddon = function(addon) {
         const index = $scope.selectedAddons.findIndex(a => a._id === addon._id);
         if (index === -1) {
@@ -117,6 +119,47 @@ angular
       $scope.isAddonSelected = function(addonId) {
         return $scope.selectedAddons.some(addon => addon._id === addonId);
       }
+
+      /**
+       * Opens the place bid modal
+       * Passes car data, addons, and other necessary information to the modal
+       */
+      $scope.openBidModal = function() {
+        const modalInstance = $uibModal.open({
+          templateUrl: 'modules/car/placeBidModal.html',
+          controller: 'placeBidModalCtrl',
+          size: 'lg',
+          backdrop: 'static',
+          keyboard: false,
+          resolve: {
+            car: function() {
+              return $scope.car;
+            },
+            addOns: function() {
+              return $scope.addOns;
+            },
+            blockedDates: function() {
+              return $scope.blockedDates;
+            },
+            platformFeePercentage: function() {
+              return $scope.platformFeePercentage;
+            }
+          }
+        });
+
+        modalInstance.result.then(
+          function(success) {
+            if (success) {
+              // Refresh car data after successful bid
+              fetchCarData();
+            }
+          },
+          function() {
+            // Modal dismissed
+            console.log('Bid modal dismissed');
+          }
+        );
+      };
 
       /**
        * @description Makes API call to get paginated reviews for the current car.
@@ -161,80 +204,7 @@ angular
         $scope.loadReviews();
       }
 
-      /**
-       * @description Places a bid for renting the car. Validates the bid amount and date range 
-       * before submitting. Creates a bidding object and sends it to the server.
-       * @function placeBid
-       * @memberof singleCarCtrl
-       * @instance
-       * 
-       * @uses BiddingFactory.createBid
-       * @uses BiddingService.addBid
-       * @uses ToastService.error
-       * @uses ToastService.info
-       * 
-       * @param {void}
-       * @returns {void}
-       * 
-       * @example
-       * $scope.placeBid();
-       */
-      $scope.placeBid = async () => {
-
-        $scope.processingBid = true;
-        
-        if($scope.amount < $scope.car.price) {
-          ToastService.error("Bid amount should be greater than the car price");
-          $scope.isLoading = false;
-          return;
-        }
-
-
-        const ownerObj = {
-          _id: $scope.car.owner._id,
-          username: $scope.car.owner.username,
-          email: $scope.car.owner.email, 
-          firstName: $scope.car.owner.firstName,
-          lastName: $scope.car.owner.lastName,
-          city: $scope.car.owner.city
-        }
-
-
-
-        const bid = BiddingFactory.createBid({
-          amount: $scope.amount, 
-          startDate: $scope.startDate, 
-          endDate: $scope.endDate, 
-          owner: ownerObj,
-          selectedAddons: $scope.selectedAddons
-        });
-        
-
-
-        if(bid.error) {
-          ToastService.error(bid.error);
-          $scope.isLoading = false;
-          $scope.processingBid = false;
-          return;
-        }
-
-        BiddingService.addBid($stateParams.id, bid)
-          .then((res) => {
-            ToastService.info("Bid processing started wait for the bid to get saved");
-          })
-          .catch((err) => {
-            ToastService.error(`Error placing the bid ${err}`);
-          })
-          .finally(() => {
-            $scope.processingBid = false;
-            $scope.amount = "";
-            $scope.startDate = "";
-            $scope.endDate = "";
-            $scope.selectedAddons = [];
-            $scope.initializeFlatpickr($scope.blockedDates, "#dateRangePicker", $scope);
-          });
-      };
-
+    
       /**
        * Start a conversation with the car owner
        * Creates or accesses an existing chat conversation and navigates to it

@@ -13,7 +13,7 @@ router.post('/addVehicle', protectRoute,uploadMultipleImages, addCarController )
 router.get('/getAllCars',getAllCarController ); // get all vehicles
 router.post('/getCarsByStatus', getVehicleByStatus); // get vehicles by status
 router.patch('/toggleVehicleStatus/:id',protectRoute,allowAdmin,toggleVehicleStatusController ); // approve a vehicle 
-router.patch('/updateVehicle/:id', protectRoute,allowSeller, uploadMultipleImages, updateVehicleController); // update a vehicle
+router.patch('/updateVehicle/:id', protectRoute,allowSeller, updateVehicleController); // update a vehicle
 router.get('/getVehicle/:id',protectRoute, getVehicleByIdController ); // get a vehicle by id
 router.get('/getAllCarsByUser/:userId?', protectRoute, getAllCarsByUser);
 router.get('/getPendingCars', protectRoute,  getPendingCars) // get all pending vehicles

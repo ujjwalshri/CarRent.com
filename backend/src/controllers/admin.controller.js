@@ -4,7 +4,7 @@ import Review from "../models/review.model.js";
 import User from "../models/user.model.js";
 import Price from "../models/price.model.js";
 import CarCategory from "../models/car.category.model.js";
-import { generateCongratulationMail,generateCongratulationMailToBuyer } from "../utils/gen.mail.js";
+import { sendTopSellerEmail, sendTopBuyerEmail } from "../services/email.service.js";
 import { getCachedData, setCachedData } from "../services/redis.service.js";
 import Charges from "../models/charges.model.js";
 
@@ -864,11 +864,11 @@ export const sendCongratulationMailController = async (req, res) => {
             const formattedEndDate = endDate ? new Date(endDate).toLocaleDateString() : 'till now';
             
             // Send congratulation email to buyer
-            generateCongratulationMailToBuyer(
-                email,
-                totalBookings,
-                formattedStartDate, 
-                formattedEndDate
+            sendTopBuyerEmail(
+               { email: email,
+                totalBookings: totalBookings,
+               startDate: formattedStartDate, 
+               endDate: formattedEndDate}
             ).catch((err) => {
                 console.error(`Error sending congratulation email to buyer: ${err.message}`);
             });
@@ -888,11 +888,11 @@ export const sendCongratulationMailController = async (req, res) => {
         const formattedEndDate = endDate ? new Date(endDate).toLocaleDateString() : 'till now';
         
         // Send congratulation email to seller
-        generateCongratulationMail(
-            email, 
-            formattedAmount,
-            formattedStartDate, 
-            formattedEndDate
+        sendTopSellerEmail(
+           { email: email, 
+            amount:formattedAmount,
+           startDate: formattedStartDate, 
+           endDate: formattedEndDate}
         ).catch((err) => {
             console.error(`Error sending congratulation email to seller: ${err.message}`);
         });
@@ -1056,111 +1056,13 @@ export const updateChargesController = async (req, res)=>{
 }
 
 
-// /**
-//  * Retrieves the platform revenue for a given date range
-//  * @param {Object} req - Express request object
-//  * @param {Object} res - Express response object
-//  * @returns {Object} - Object containing the platform revenue
-//  */ 
-// export const getPlatformRevenueForAdminController = async (req, res)=>{
-//     try{
-//         const {startDate, endDate} = req.query;
-//         if(!startDate || !endDate){
-//             return res.status(400).json({message: "startDate and endDate are required"});
-//         }
-
-//         const platformRevenue = await Bidding.aggregate([
-//             {
-//                 $match: {
-//                     status: { $in: ["ended", "reviewed"] },
-//                     endDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
-//                 }
-//             },
-//             {
-//                 $addFields: {
-
-//                     numberOfDays: {
-//                         $add: [
-//                             {
-//                                 $divide: [
-//                                     { $subtract: ["$endDate", "$startDate"] },
-//                                     1000 * 60 * 60 * 24
-//                                 ]
-//                             },
-//                             1
-//                         ]
-//                     },
-//                     // Calculate total addons price
-//                     addonsTotal: {
-//                         $reduce: {
-//                             input: "$selectedAddons",
-//                             initialValue: 0,
-//                             in: { $add: ["$$value", "$$this.price"] }
-//                         }
-//                     }
-//                 }
-//             },
-//             {
-//                 $addFields: {
-//                     // Calculate base price (days * amount)
-//                     basePrice: { $multiply: ["$numberOfDays", "$amount"] },
-//                     // Calculate total booking price (base price + addons + distance fine)
-//                     totalBookingPrice: {
-//                         $add: [
-//                             { $multiply: ["$numberOfDays", "$amount"] },
-//                             "$addonsTotal",
-//                         ]
-//                     }
-//                 }
-//             },
-//             {
-//                 $addFields: {
-//                     platformFee: {
-//                         $cond: {
-//                             if: { $gt: [{ $ifNull: ["$platformFeePercentage", 0] }, 0] },
-//                             then: {
-//                                 $multiply: [
-//                                     "$totalBookingPrice",
-//                                     { $divide: [{ $ifNull: ["$platformFeePercentage", 0] }, 100] }
-//                                 ]
-//                             },
-//                             else: 0
-//                         }
-//                     }
-//                 }
-//             },
-//             {
-//                 $group: {
-//                     _id: null,
-//                     totalPlatformRevenue: { $sum: "$platformFee" },
-//                     totalBookings: { $sum: 1 },
-//                     totalBaseRevenue: { $sum: "$basePrice" },
-//                     totalAddonsRevenue: { $sum: "$addonsTotal" },
-//                 }
-//             },
-//             {
-//                 $project: {
-//                     _id: 0,
-//                     totalPlatformRevenue: { $round: ["$totalPlatformRevenue", 2] },
-//                     totalBookings: 1,
-//                     totalBaseRevenue: { $round: ["$totalBaseRevenue", 2] },
-//                     totalAddonsRevenue: { $round: ["$totalAddonsRevenue", 2] },
-//                     totalDistanceFines: { $round: ["$totalDistanceFines", 2] },
-//                     totalGrossRevenue: {
-//                         $round: [{
-//                             $add: ["$totalBaseRevenue", "$totalAddonsRevenue", "$totalDistanceFines"]
-//                         }, 2]
-//                     }
-//                 }
-//             }
-//         ]);
-//         return res.status(200).json(platformRevenue);
-//     }catch(err){
-//         console.log(`error in the getPlatformRevenueForAdminController ${err}`);
-//         return res.status(500).json({message: "Internal server error"});
-//     }
-// }
-
+/**
+ * funcition to get the number of new users in a given date range
+ * @description: function to get the number of new users in a given date range
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} - Object containing the number of new users
+ */
 export const getNewUsers = async(req, res)=>{
     try{
         const {startDate, endDate} = req.query;
@@ -1247,4 +1149,102 @@ export const getTop3CompaniesWithMostNegativeReviews = async(req, res)=>{
 }
 
 
+/**
+ * Fucntion to get the top sellers with most negative reviews
+ * @description: function to get the top sellers with most negative reviews
+ * @param {*} req 
+ * @param {*} res 
+ * returns {Object} - Object containing the top sellers with most negative reviews
+ */
+export const topSellersWithMostNegativeReviews = async(req, res)=>{
+    try{
+        const {startDate, endDate} = req.query;
+        if(!startDate || !endDate){
+            return res.status(400).json({message: "startDate and endDate are required"});
+        }
+        const cacheKey = `top-sellers-with-most-negative-reviews-${startDate}-${endDate}`;
+        const cachedData = await getCachedData(cacheKey);
+        if(cachedData){
+            return res.status(200).json(cachedData);
+        }
+        const sellers = await Review.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
+                }
+            },
+            {
+                $project: {
+                    seller: "$owner.username",
+                    rating: 1,
+                    createdAt: 1
+                }
+            },
+            {
+                $group: {
+                    _id: "$seller",
+                    totalNegativeReviews: { $sum: { $cond: [{ $lt: ["$rating", 3] }, 1, 0] } }
+                }
+            },
+            {
+                $sort: {
+                    totalNegativeReviews: -1
+                }
+            },
+            {
+                $limit: 5
+            }
+        ]);
+        await setCachedData(cacheKey, sellers);
+        return res.status(200).json(sellers);
+    }catch(err){
+        console.log(`error in the topSellersWithMostNegativeReviewsController ${err}`);
+        return res.status(500).json({message: "Internal server error"});
+    }
 
+}
+
+
+/**
+ * function to get the car category wise bookings from the database 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns response with the car category wise bookings
+ */
+export const getCarCateogoryWiseBookings = async(req, res)=>{
+    const {startDate, endDate} = req.query;
+    if(!startDate || !endDate){
+        return res.status(400).json({message: "startDate and endDate are required"});
+    }
+    const cacheKey = `car-category-wise-bookings-${startDate}-${endDate}`;
+    const cachedData = await getCachedData(cacheKey);
+    if(cachedData){
+        return res.status(200).json(cachedData);
+    }
+    try{
+        const bookings = await Bidding.aggregate([
+            {
+                $match: {
+                    status : { $in: ["approved", "started", "ended", "reviewed"] },
+                    startDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
+                }
+            },
+            {
+                $group: {
+                    _id: "$vehicle.category",
+                    totalBookings: { $sum: 1 }
+                }
+            },
+            {
+                $sort: {
+                    totalBookings: -1
+                }
+            }
+        ]);
+        await setCachedData(cacheKey, bookings);
+        return res.status(200).json(bookings);
+    }catch(err){
+        console.log(`error in the getCarCateogoryWiseBookingsController ${err}`);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}

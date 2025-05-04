@@ -7,7 +7,7 @@ import User from "../models/user.model.js";
 import Vehicle from "../models/vehicle.model.js"; 
 import Bidding from "../models/bidding.model.js";
 import { createCarValidation } from "../validation/car.validation.js";
-import { generateCongratulationMailToSeller, generateCarRejectionMail } from "../utils/gen.mail.js";
+import { sendCongratulationEmail, sendCarRejectionEmail } from "../services/email.service.js";
 import { getCachedData, setCachedData, deleteCachedData} from "../services/redis.service.js";
 import {Types} from 'mongoose';
 
@@ -37,7 +37,7 @@ import {Types} from 'mongoose';
  */
 export const addCarController = async (req, res) => {
     const {
-        name, company, modelYear, price, color, mileage, fuelType, category, city, location
+        name, company, modelYear, price, color, mileage, fuelType, category, city, location, registrationNumber
     } = req.body;
     try {
         const user = req.user;
@@ -49,17 +49,17 @@ export const addCarController = async (req, res) => {
         }));
 
         const carData = {
-            name, company, modelYear, price, color, mileage,vehicleImages:images, fuelType,location, category, city, owner:{
+            name, company, modelYear, price, color, mileage,vehicleImages:images, registrationNumber, fuelType,location, category, city, owner:{
                 username: user.username,
                 email: user.email,
                 firstName: user.firstName,
                 lastName: user.lastName,
                 city: user.city,
-                adhaar: user.adhaar,
             }
         }
         const isValidCar = createCarValidation.validate(carData);
         if(isValidCar.error){
+            console.log(isValidCar.error);
             return res.status(400).json({error: isValidCar.error.details[0].message});
         }
 
@@ -75,6 +75,7 @@ export const addCarController = async (req, res) => {
             category,
             city,
             vehicleImages: images,
+            registrationNumber: registrationNumber,
             owner: {
                 _id: user._id,
                 username: user.username,
@@ -82,12 +83,9 @@ export const addCarController = async (req, res) => {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 city: user.city,
-                adhaar: user.adhaar,
             },
         });
-        if(user.isSeller ){ // if the user is already a seller then the set the car as approved initially
-            newCar.status = 'approved';
-        }
+       
         await newCar.save();
         // invalidate the redis cache for this user
         const cacheKey = `userCars:${req.user._id}:all`;
@@ -275,15 +273,19 @@ export const toggleVehicleStatusController = async (req, res) => {
         
         if(vehicleStatus === 'approved') {
             // Update user to be a seller
-            await User.updateOne({ _id: ownerId }, { isSeller: true });
-            // Send congratulation email to the seller for becoming a seller
-            generateCongratulationMailToSeller(vehicle.owner.email, vehicle.company, vehicle.name, vehicle.modelYear)
+            const owner = await User.findById(ownerId);
+            // Send congratulation email to the seller for becoming a seller if he is adding the vehicle for the first time
+            if(owner.isSeller === false){
+                sendCongratulationEmail({ email : vehicle.owner.email, company: vehicle.company, name: vehicle.name, modelYear: vehicle.modelYear})
                 .catch((err) => {
                     console.error(`Error sending approval email: ${err.message}`);
                 });
+                await User.updateOne({ _id: ownerId }, { isSeller: true });
+            }
+            
         } else if(vehicleStatus === 'rejected') {
             // Send rejection email to the seller for not becoming a seller
-            generateCarRejectionMail({
+            sendCarRejectionEmail({
                 email: vehicle.owner.email,
                 seller: vehicle.owner,
                 vehicle: vehicle
@@ -327,8 +329,7 @@ export const updateVehicleController = async (req, res)=>{
                 { _id: id }, 
                 { price: price } 
             );
-            const cacheKey = `userCars:${req.user._id}:all`;
-            await deleteCachedData(cacheKey);
+            
             res.status(200).json({ message: 'Car updated successfully' });
         }catch(err){
             console.log(`error in the updateCarController ${err.message}`);
@@ -360,8 +361,7 @@ export const getVehicleByIdController = async (req, res) => {
     }
     try{
       
-        const car = await Vehicle.findById(id);
-
+        const car = await Vehicle.findById(id).select('-registrationNumber');
        // cache the data 
         await setCachedData(cacheKey, car);
        return res.status(200).json(car);
@@ -443,13 +443,18 @@ export const getAllCarsByUser = async (req, res) => {
                 $match: matchQuery
             },
             {
+                $sort: { createdAt: -1 }  // Sort before pagination
+            },
+            {
                 $skip: parseInt(skip)
             },
             {
                 $limit: parseInt(limit)
             },
             {
-                $sort: { createdAt: -1 }
+                $project:{
+                    registrationNumber: 0,
+                }
             }
         );
 
@@ -483,7 +488,6 @@ export const getAllCarsByUser = async (req, res) => {
  * @param {Object} req.query - Query parameters
  * @param {number} [req.query.page=1] - Page number for pagination
  * @param {number} [req.query.limit=10] - Number of results per page
- * @param {Object} [req.query.sort={createdAt: -1}] - Sort criteria
  * @param {Object} res - Express response object
  * @returns {Object} JSON response with pending vehicles or error
  * @description
@@ -491,7 +495,12 @@ export const getAllCarsByUser = async (req, res) => {
  * according to the provided parameters.
  */
 export const getPendingCars = async (req, res) => {
-   const  {page=1, limit=10, sort={createdAt: -1}}  = req.query;
+   let { page=1, limit=10 } = req.query;
+   // Parse parameters as integers to avoid MongoDB "Expected a number" error
+   page = parseInt(page);
+   limit = parseInt(limit);
+   const sort = { createdAt: -1 };
+   
     try {
         const aggregationPipeline = [
             { $match: { status: 'pending' } },
@@ -500,7 +509,19 @@ export const getPendingCars = async (req, res) => {
             { $limit: limit }
         ]
         const cars = await Vehicle.aggregate(aggregationPipeline);
-        res.status(200).json(cars);
+        
+        // Count total documents for pagination metadata
+        const totalCount = await Vehicle.countDocuments({ status: 'pending' });
+        
+        res.status(200).json({
+            cars,
+            pagination: {
+                total: totalCount,
+                page,
+                limit,
+                pages: Math.ceil(totalCount / limit)
+            }
+        });
       
     } catch (error) {
         console.error('Get pending cars error:', error);
@@ -525,7 +546,6 @@ export const getPendingCars = async (req, res) => {
  */
 export const listUnlistCarController = async (req, res)=>{
     const {vehicleId} = req.params;
-
     try{
         const vehicle = await Vehicle.findByIdAndUpdate(vehicleId, {deleted: !deleted});
         res.status(200).json({message: 'Car updated successfully', vehicle});
@@ -555,7 +575,11 @@ export const getCarsWithBids = async(req, res)=>{
         {
             $match : {
                 'owner._id' : ownerId,
-                status: 'pending'
+                status: 'pending',
+                startDate:{
+                    $gte: new Date(new Date().setHours(0, 0, 0, 0)), // making sure user dont see the past bids that cant be accepted
+                }
+                
             }
         },
         {

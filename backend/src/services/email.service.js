@@ -1,7 +1,3 @@
-/**
- * Email Service
- * @module utils/email.service
- */
 import nodemailer from 'nodemailer';
 import dotenv from "dotenv";
 import {
@@ -17,10 +13,6 @@ import {
 
 dotenv.config();
 
-/**
- * Nodemailer transporter object configured with Gmail service
- * @constant {Object} transporter
- */
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -29,15 +21,6 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-/**
- * Send an email using the provided template and data
- * @param {Object} options - Email options
- * @param {string} options.to - Recipient email address
- * @param {string} options.subject - Email subject
- * @param {string} options.template - Template name to use
- * @param {Object} options.data - Data to be used in the template
- * @returns {Promise<void>}
- */
 const sendEmail = async (options) => {
     const templates = {
         generic: genericTemplate,
@@ -72,14 +55,6 @@ const sendEmail = async (options) => {
     }
 };
 
-/**
- * Send a generic email
- * @param {Object} data - Email data
- * @param {string} data.to - Recipient email
- * @param {string} data.subject - Email subject
- * @param {string} data.text - Email content
- * @returns {Promise<void>}
- */
 export const sendGenericEmail = async (data) => {
     return sendEmail({
         to: data.to,
@@ -92,13 +67,6 @@ export const sendGenericEmail = async (data) => {
     });
 };
 
-/**
- * Send a welcome email to a new user
- * @param {Object} user - User data
- * @param {string} user.email - User's email address
- * @param {string} user.firstName - User's first name
- * @returns {Promise<void>}
- */
 export const sendWelcomeEmail = async (user) => {
     return sendEmail({
         to: user.email,
@@ -110,15 +78,6 @@ export const sendWelcomeEmail = async (user) => {
     });
 };
 
-/**
- * Send a congratulation email to top sellers
- * @param {Object} data - Seller data
- * @param {string} data.email - Seller's email
- * @param {number} data.amount - Earnings amount
- * @param {string} data.startDate - Start date
- * @param {string} data.endDate - End date
- * @returns {Promise<void>}
- */
 export const sendTopSellerEmail = async (data) => {
     return sendEmail({
         to: data.email,
@@ -132,15 +91,6 @@ export const sendTopSellerEmail = async (data) => {
     });
 };
 
-/**
- * Send a congratulation email to a seller who has become a seller
- * @param {Object} data - Seller data
- * @param {string} data.email - Seller's email
- * @param {string} data.company - Company name
- * @param {string} data.name - Car name
- * @param {string} data.modelYear - Car model year
- * @returns {Promise<void>}
- */
 export const sendCongratulationEmail = async (data) => {
 
     return sendEmail({
@@ -150,15 +100,7 @@ export const sendCongratulationEmail = async (data) => {
         data: data
     });
 };
-/**
- * Send a thank you email to top buyers
- * @param {Object} data - Buyer data
- * @param {string} data.email - Buyer's email
- * @param {number} data.totalBookings - Total number of bookings
- * @param {string} data.startDate - Start date
- * @param {string} data.endDate - End date
- * @returns {Promise<void>}
- */
+
 export const sendTopBuyerEmail = async (data) => {
     return sendEmail({
         to: data.email,

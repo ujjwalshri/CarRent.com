@@ -58,7 +58,6 @@ angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, Biddi
         if ($scope.isLoading) return; // Prevent multiple simultaneous requests
 
         $scope.isLoading = true;
-        
         const sortObj = {};
         sortObj[$scope.selectedSort.field] = $scope.selectedSort.order;
         const params = {
@@ -135,9 +134,14 @@ angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, Biddi
                     };
 
                     try {
-                        const reviewData = Review.createValidatedReview(review);
                         $scope.isLoading = true;
-
+                        const reviewData = Review.createValidatedReview(review);
+                        if( typeof reviewData === 'string' ) {
+                            ToastService.error(reviewData);
+                            $scope.isLoading = false;
+                            return;
+                        }
+                       
                         CarService.addReview(carId, reviewData, bookingId)
                             .then(() => {
                                 ToastService.success("Review added successfully");

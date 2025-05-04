@@ -107,6 +107,7 @@ export const addReviewController = async (req, res) => {
         
         // Find the vehicle being reviewed
         const vehicle = await Vehicle.findById(id).session(session);
+        const booking = await Bidding.findById(bookingId).session(session);
         
       
        
@@ -128,6 +129,14 @@ export const addReviewController = async (req, res) => {
             owner : {
                 _id : vehicle.owner._id,
                 username : vehicle.owner.username
+            },
+            booking: {
+                _id: booking._id,
+                amount : booking.amount,
+                startDate: booking.startDate,
+                endDate: booking.endDate,
+                startOdometerValue: booking.startOdometerValue,
+                endOdometerValue: booking.endOdometerValue,
             }
         });
 

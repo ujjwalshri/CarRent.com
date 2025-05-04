@@ -34,6 +34,7 @@ const validateBiddingData = (data) => {
         status: Joi.string().valid('pending', 'approved', 'rejected', 'ended', 'reviewed'),
         selectedAddons: Joi.array().max(10).required(),
         platformFeePercentage: Joi.number().min(0).max(100).required(),
+        taxes: Joi.array().max(20).required(),
         from: Joi.object({
             _id: Joi.required(),
             username: Joi.string().required(),

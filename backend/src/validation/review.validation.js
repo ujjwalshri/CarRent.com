@@ -12,8 +12,8 @@ export const addReviewValidation = Joi.object({
             'any.required': 'Rating is required'
         }),
     review: Joi.string()
-        .allow('')  // Allow empty strings
-        .optional() // Make the field optional
+        .allow('')  
+        .optional()
         .max(500)
         .trim()
         .messages({
@@ -21,5 +21,6 @@ export const addReviewValidation = Joi.object({
         }),
     owner: Joi.object().unknown(true),
     vehicle: Joi.object().unknown(true),
-    reviewer: Joi.object().unknown(true)
+    reviewer: Joi.object().unknown(true),
+    booking: Joi.object().unknown(true)
 }).unknown(true);

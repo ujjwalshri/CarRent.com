@@ -15,7 +15,7 @@ app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService
     $scope.resendDisabled = false; // variable to control resend button state
     $scope.cooldownTime = 30; // cooldown time for resend button
     
-    // Initialize form variables
+    
     $scope.formData = {
       firstName: '',
       lastName: '',
@@ -34,11 +34,9 @@ app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService
       return;
     }
     
-    // Disable the resend button
     $scope.resendDisabled = true;
     $scope.cooldownTime = 30;
 
-    // Start the cooldown timer using $interval which will automatically trigger digest
     const timer = $interval(() => {
       $scope.cooldownTime--;
       if ($scope.cooldownTime <= 0) {
@@ -64,7 +62,7 @@ app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService
    */
   $scope.signup = function () {
     $scope.isLoading = true;
-    // creating the user object using the UserFactory template
+    // creating a validated user object using the UserFactory
     let user = UserFactory.create({
       firstName: $scope.formData.firstName,
       lastName: $scope.formData.lastName,
@@ -76,7 +74,7 @@ app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService
       adhaar: $scope.formData.adhaar
     });
     
-    // function to validate the user object and then making sure that we register the user
+     // if user is a string, it means there is an error in the user validation
     if(typeof user === "string"){
       ToastService.error(user);
       $scope.isLoading = false;
@@ -91,7 +89,6 @@ app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService
         
         const socket = SocketService.getSocket();
         if (socket) {
-          // Force socket to join room and set user online
           socket.emit('joinUserRoom', user.username);
           socket.emit('userOnline', user.username);
           socket.emit('getOnlineUsers');

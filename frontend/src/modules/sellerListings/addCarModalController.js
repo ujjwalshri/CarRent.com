@@ -25,11 +25,14 @@ angular.module('myApp').controller('AddCarModalCtrl', function($scope, $uibModal
             $scope.carCategories = results[0];
             $scope.minPrice = results[1][0].min;
             $scope.maxPrice = results[1][0].max;
+        })
+        .catch(function(err) {
+            ToastService.error("Error fetching car categories or price ranges: " + err);
         });
     };
     
     // Initialize when the controller loads
-    $scope.init();
+    
     
     /**
      * Handle image file selection and prepare for upload
@@ -148,6 +151,7 @@ angular.module('myApp').controller('AddCarModalCtrl', function($scope, $uibModal
             fuelType: $scope.fuelType,
             location: $scope.location,
             city: $scope.city,
+            registrationNumber: $scope.registrationNumber,
             vehicleImages: $scope.images
         });
         
@@ -164,11 +168,7 @@ angular.module('myApp').controller('AddCarModalCtrl', function($scope, $uibModal
         // Send the car data to the server
         CarService.addCar(formData)
             .then(function(res) {
-                if ($rootScope.isSeller) {
-                    ToastService.success("Car added successfully");
-                } else {
-                    ToastService.success("Car added successfully, please wait for approval");
-                }
+                 ToastService.success("Car added successfully, please wait for approval");
                 $uibModalInstance.close(res);
             })
             .catch(function(err) {

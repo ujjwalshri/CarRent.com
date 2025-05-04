@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+
 const reviewSchema = new mongoose.Schema(
     {
         vehicle: {
@@ -61,6 +62,32 @@ const reviewSchema = new mongoose.Schema(
             },
             username: {
                 type: String,
+                required: true,
+            }
+        },
+        booking: {
+            _id: {
+                type: mongoose.Schema.Types.ObjectId,
+                required: true,
+            },
+            startDate: {
+                type: Date,
+                required: true,
+            },
+            endDate: {
+                type: Date,
+                required: true,
+            },
+            amount: {
+                type: Number,
+                required: true,
+            }, 
+            startOdometerValue: {
+                type: Number,
+                required: true,
+            },
+            endOdometerValue: {
+                type: Number,
                 required: true,
             }
         },

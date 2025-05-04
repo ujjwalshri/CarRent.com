@@ -27,8 +27,8 @@
                                     <div class="row">
                                         <div class="col-sm-6">
                                             <p><span class="label label-warning">Rating: {{averageRating==='0.0' ? 'No reviews yet' : averageRating + "⭐"}} </span></p>
-                                            <p><strong>Price:</strong> ${{ car.price }} per day</p>
-                                            <p class="text-warning"><small>$10 per kms after 300km</small></p>
+                                            <p><strong>Price:</strong> {{ car.price  | currency:"₹"  }} per day</p>
+                                            <p class="text-warning"><small> ₹10 per kms after 300km</small></p>
                                             <p class="text-warning">Platform fee of {{ platformFeePercentage }}% will be added to the total price for using our services and platform</p>
                                             <p><strong>Category:</strong> {{ car.category }}</p>
                                             <p><strong>Mileage:</strong> {{ car.mileage }} kmpl</p>
@@ -39,14 +39,13 @@
                                             </p>
                                             <p><strong>Fuel Type:</strong> {{ car.fuelType }}</p>
                                             <p><strong>Location:</strong> {{ car.city }} {{car.location==='undefined' ? '' : "("+ car.location + ")"}}</p>
-                                            <p>
-                                                <strong>Rating:</strong>
-                                                <span ng-if="averageRating==='0.0'">No reviews yet</span>
-                                                <span ng-if="averageRating!=='0.0'">
-                                                    <i class="fa" ng-class="{'fa-star': $index+1 <= averageRating, 'fa-star-half-o': $index + 0.5 == averageRating, 'fa-star-o': $index >= averageRating}" ng-style="{'color': $index < averageRating ? '#ffd700' : '#ccc'}" ng-repeat="_ in [0,1,2,3,4]"></i>
-                                                    <span class="badge">{{averageRating | number:1}}</span>
-                                                </span>
-                                            </p>
+                                            
+
+                                            <div class="text-center" ng-hide="isSeller || LoggedinUser.username === car.owner.username">
+                                                <button class="btn btn-success btn-lg btn-block" ng-click="openBidModal()">
+                                                    <i class="glyphicon glyphicon-usd"></i> Place Bid
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -73,135 +72,6 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-
-            <div class="panel panel-success" ng-hide="isSeller">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Book This Car</h3>
-                </div>
-                <div class="panel-body">
-                    <div class="row">
-                        <div class="col-md-6">
-
-                            <div class="booking-details">
-                                <h4><i class="glyphicon glyphicon-calendar"></i> Select Dates</h4>
-                                <div class="form-group">
-                                    <input type="text" 
-                                           id="dateRangePicker" 
-                                           class="form-control input-lg" 
-                                           placeholder="Select Start & End Date" 
-                                           required>
-                                    <small class="text-muted">Select your rental period</small>
-                                </div>
-
-                                <h4><i class="glyphicon glyphicon-usd"></i> Your Bid</h4>
-                                <div class="form-group">
-                                    <div class="input-group input-group-lg">
-                                        <span class="input-group-addon">$</span>
-                                        <input type="number" 
-                                               class="form-control" 
-                                               ng-model="amount" 
-                                               min="{{car.price}}" 
-                                               max="10000" 
-                                               placeholder="Enter your bid amount"
-                                               required>
-
-                                    </div>
-                                    <small class="text-muted">Minimum bid: ${{car.price}}</small>
-                                    <div class="text-danger" ng-if="amount < car.price">
-                                        <small>Bid must be at least ${{car.price}}</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6" >
-
-                            <div ng-if="addOns && addOns.length > 0">
-                                <h4><i class="glyphicon glyphicon-plus"></i> Available Add-ons</h4>
-                                <div class="addon-list">
-                                    <div class="addon-item" ng-repeat="addon in addOns">
-                                        <div class="checkbox">
-                                            <label>
-                                                <input type="checkbox" 
-                                                       ng-checked="isAddonSelected(addon._id)"
-                                                       ng-click="toggleAddon(addon)">
-                                                <strong>{{addon.name}}</strong>
-                                                <span class="text-primary pull-right">${{addon.price}}</span>
-                                            </label>
-                                            <p class="text-muted"><small>{{addon.description}}</small></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    <div class="booking-summary" ng-if="startDate && endDate && amount && amount >= car.price">
-                        <hr>
-                        <div class="row">
-                            <div class="col-md-8 col-md-offset-2">
-                                <div class="panel panel-info">
-                                    <div class="panel-heading">
-                                        <h4 class="panel-title text-center">Booking Summary</h4>
-                                    </div>
-                                    <div class="panel-body">
-                                        <div class="row">
-                                            <div class="col-sm-6">
-                                                <p><strong>Base Price:</strong> ${{car.price}}/day</p>
-                                                <p><strong>Your Bid:</strong> ${{amount}}/day</p>
-                                                <p ng-if="selectedAddons.length > 0">
-                                                    <strong>Add-ons:</strong>
-                                                    <span class="badge badge-info" ng-repeat="addon in selectedAddons">
-                                                        {{addon.name}}
-                                                    </span>
-                                                </p>
-                                            </div>
-                                            <div class="col-sm-6">
-                                                <div class="price-breakdown">
-                                                    <p>
-                                                        <span>Base Total:</span>
-                                                        <span class="pull-right">${{calculateBookingPrice(startDate, endDate, amount)}}</span>
-                                                    </p>
-                                                    <p ng-if="selectedAddons.length > 0">
-                                                        <span>Add-ons Total:</span>
-                                                        <span class="pull-right">${{totalAddonPrice}}</span>
-                                                    </p>
-                                                    <p ng-if="platformFeePercentage > 0">
-                                                        <span>Platform Fee:</span>
-                                                        <span class="pull-right">${{ ((calculateBookingPrice(startDate, endDate, amount) + totalAddonPrice) * platformFeePercentage / 100).toFixed(2) }}</span>
-                                                    </p>
-                                                    <hr>
-                                                    <p class="total-price">
-                                                        <strong>Total Amount:</strong>
-                                                        <span class="pull-right">${{calculateBookingPrice(startDate, endDate, amount) + totalAddonPrice + (calculateBookingPrice(startDate, endDate, amount) + totalAddonPrice) * platformFeePercentage / 100 }}</span>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <div class="text-center">
-                            <button type="submit" 
-                                    class="btn btn-success btn-lg" 
-                                    ng-disabled="processingBid"
-                                    ng-click="placeBid()">
-                                <i class="glyphicon glyphicon-check"></i>
-                                Place Bid at ${{calculateBookingPrice(startDate, endDate, amount) + totalAddonPrice}}/day
-                            </button>
-                            <div class="loading-spinner" ng-show="processingBid">
-                                <i class="fa fa-spinner fa-spin fa-2x"></i>
-                                <p class="text-muted">Processing your bid...</p>
                             </div>
                         </div>
                     </div>

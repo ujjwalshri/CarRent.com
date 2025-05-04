@@ -1,16 +1,14 @@
 <back-button></back-button>
-<div ng-controller="ownerBiddingsCtrl" class="owner-bookings" ng-init="init()">
+<div ng-controller="ownerBiddingsCtrl" class="owner-bookings container-fluid" ng-init="init()">
     <h1 class="text-center" ng-if="bookings.length > 0">Bidding Requests</h1>
 
-
-    <div class="panel panel-default" style="margin: 20px;">
+    <div class="panel panel-default" style="margin: 10px 0;">
         <div class="panel-heading">
             <h3 class="panel-title">Filter and Sort</h3>
         </div>
         <div class="panel-body">
             <div class="row">
-
-                <div class="col-sm-5">
+                <div class="col-xs-12 col-sm-5">
                     <div class="form-group">
                         <label class="control-label">Filter by Car:</label>
                         <select class="form-control" ng-model="filters.selectedCar" ng-change="fetchBookings()">
@@ -22,8 +20,7 @@
                     </div>
                 </div>
 
-
-                <div class="col-sm-5">
+                <div class="col-xs-12 col-sm-5">
                     <div class="form-group">
                         <label class="control-label">Sort By:</label>
                         <select class="form-control" ng-model="sort.sortBy" ng-change="fetchBookings()">
@@ -34,25 +31,24 @@
                     </div>
                 </div>
 
-
-                <div class="col-sm-2 text-center">
-                    <button class="btn btn-default btn-block" 
-                            ng-click="resetFilters()" 
-                            style="margin-top: 25px;"
-                            ng-disabled="!filters.selectedCar && !sort.sortBy">
-                        <i class="glyphicon glyphicon-refresh"></i> Reset Filters
-                    </button>
+                <div class="col-xs-12 col-sm-2">
+                    <div class="form-group">
+                        <label class="control-label">&nbsp;</label>
+                        <button class="btn btn-default btn-block form-control" 
+                                ng-click="resetFilters()" 
+                                ng-disabled="!filters.selectedCar && !sort.sortBy">
+                            <i class="glyphicon glyphicon-refresh"></i> Reset
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-
     <div class="text-center" ng-show="isLoading">
         <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
         <span>Loading...</span>
     </div>
-
 
     <div ng-if="bookings.length === 0">
         <div class="alert alert-info text-center">
@@ -61,7 +57,7 @@
     </div>
 
 
-    <div class="table-responsive" ng-if="bookings.length > 0" style="margin: 20px;">
+    <div class="table-responsive hidden-xs" ng-if="bookings.length > 0" style="margin: 10px 0;">
         <table class="table table-striped table-bordered table-hover">
             <thead>
                 <tr class="text-center">
@@ -71,7 +67,7 @@
                     <th>Bid Amount</th>
                     <th>Start Date</th>
                     <th>End Date</th>
-                    <th>Total Payable Price</th>
+                    <th>Total Payable</th>
                     <th>User Details</th>
                     <th>Addons</th>
                     <th>Actions</th>
@@ -81,11 +77,11 @@
                 <tr ng-repeat="booking in bookings">
                     <td>{{booking.vehicle.company}} {{ booking.vehicle.name }}</td>
                     <td>{{ booking.vehicle.modelYear }}</td>
-                    <td>${{ booking.vehicle.price }}</td>
-                    <td>${{ booking.amount }}</td>
+                    <td>{{ booking.vehicle.price | currency:"₹" }}</td>
+                    <td>{{ booking.amount | currency:"₹" }}</td>
                     <td>{{ booking.startDate | date:'yyyy-MM-dd' }}</td>
                     <td>{{ booking.endDate | date:'yyyy-MM-dd' }}</td>
-                    <td>${{ booking.calculate() }}</td>
+                    <td>{{ booking.calculate() | currency:"₹" }}</td>
                     <td>
                         <p><strong>First Name:</strong> {{ booking.from.firstName }}</p>
                         <p><strong>Last Name:</strong> {{ booking.from.lastName }}</p>
@@ -112,16 +108,84 @@
                 </tr>
             </tbody>
         </table>
+    </div>
+    
 
+    <div class="visible-xs" ng-if="bookings.length > 0">
+        <div class="panel panel-default" ng-repeat="booking in bookings" style="margin: 15px 5px;">
+            <div class="panel-heading">
+                <h4 class="panel-title">{{booking.vehicle.company}} {{ booking.vehicle.name }} ({{ booking.vehicle.modelYear }})</h4>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-xs-6"><strong>Price per Day:</strong></div>
+                    <div class="col-xs-6">{{ booking.vehicle.price | currency:"₹" }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-6"><strong>Bid Amount:</strong></div>
+                    <div class="col-xs-6">{{ booking.amount | currency:"₹" }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-6"><strong>Start Date:</strong></div>
+                    <div class="col-xs-6">{{ booking.startDate | date:'yyyy-MM-dd' }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-6"><strong>End Date:</strong></div>
+                    <div class="col-xs-6">{{ booking.endDate | date:'yyyy-MM-dd' }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-6"><strong>Total Payable:</strong></div>
+                    <div class="col-xs-6">{{ booking.calculate() | currency:"₹" }}</div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-xs-12"><strong>User Details:</strong></div>
+                    <div class="col-xs-12">
+                        {{ booking.from.firstName }} {{ booking.from.lastName }} ({{ booking.from.username }})
+                    </div>
+                </div>
+                <hr>
+                <div class="row" ng-if="booking.selectedAddons && booking.selectedAddons.length > 0">
+                    <div class="col-xs-12"><strong>Addons:</strong></div>
+                    <div class="col-xs-12">
+                        <span ng-repeat="addon in booking.selectedAddons" class="label label-info" style="margin-right: 5px; display: inline-block; margin-bottom: 5px;">
+                            {{ addon.name }}
+                        </span>
+                    </div>
+                </div>
+                <div class="row" ng-if="!booking.selectedAddons || booking.selectedAddons.length === 0">
+                    <div class="col-xs-12"><strong>Addons:</strong> N/A</div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-xs-12 text-center">
+                        <button ng-click="approveBidding(booking._id)" 
+                                ng-if="!checkApproved(booking)" 
+                                class="btn btn-success">
+                            <i class="glyphicon glyphicon-ok"></i> Approve
+                        </button>
+                        <button ng-click="rejectBidding(booking._id)" 
+                                ng-if="!checkApproved(booking)" 
+                                class="btn btn-danger">
+                            <i class="glyphicon glyphicon-remove"></i> Reject
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <div class="text-center">
+    <div class="text-center" style="margin: 15px 0;">
+        <div class="btn-group">
             <button class="btn btn-primary" 
                     ng-disabled="pagination.currentPage === 1" 
                     ng-click="prevPage()">
                 &laquo; Previous
             </button>
 
-            <span class="mx-3">Page {{ pagination.currentPage }} of {{ pagination.totalPages }}</span>
+            <span class="btn btn-default disabled">
+                Page {{ pagination.currentPage }} of {{ pagination.totalPages }}
+            </span>
 
             <button class="btn btn-primary" 
                     ng-disabled="pagination.currentPage === pagination.totalPages" 

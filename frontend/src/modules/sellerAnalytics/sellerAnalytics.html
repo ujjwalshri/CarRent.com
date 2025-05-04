@@ -41,7 +41,6 @@
     <uib-alert type="info" ng-if="startDate && endDate">
         Showing analytics from <strong>{{startDate | date:'MMM d, yyyy'}}</strong> to <strong>{{endDate | date:'MMM d, yyyy'}}</strong>
     </uib-alert>
-
     <uib-tabset>
         <uib-tab heading="Performance Analytics" select="onTabSelect('performance')" active="true">
             <loading-component is-loading="isPerformanceLoading" loading-text="Loading performance analytics..."></loading-component>
@@ -62,7 +61,7 @@
                             </div>
                             <div class="panel-body text-center">
                                 <h3 ng-if="metric.title === 'Total no. of bookings'">{{metric.value }}</h3>
-                                <h3 ng-if="metric.title !== 'Total no. of bookings' && metric.title !== 'Negative Reviews'">${{metric.value | number:2}}</h3>
+                                <h3 ng-if="metric.title !== 'Total no. of bookings' && metric.title !== 'Negative Reviews'">{{metric.value | currency:'₹':2}}</h3>
                                 <h3 ng-if="metric.title === 'Negative Reviews'">{{metric.value}}</h3>
                                 <p class="text-success" ng-if="metric.title !== 'Negative Reviews'">
                                     <i class="fas fa-chart-pie"></i> {{metric.desc}}
@@ -74,19 +73,18 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-xs-12 col-md-6" ng-repeat="chart in [
-                        { title: 'Car Categories Distribution', id: 'carCategoriesChart' },
-                        { title: 'Most Popular Cars', id: 'myMostPopularCar' },
-                        { title: 'Car Wise Negative Reviews', id: 'carWiseNegativeReviews' },
-                        { title: 'Top 3 Cars by Earnings', id: 'top3CarsWithMostEarning' },
-                        {
-                            title: ' Top City Wise Negative Reviews', id: 'cityWiseNegativeReviews'
-                        }
+                    <div class="col-xs-12 col-md-4" ng-repeat="chart in [
+                        { title: 'Most Popular Cars', id: 'myMostPopularCar', chartType: 'bar' },
+                        { title: 'Car Categories (Pie)', id: 'carCategoriesPieChart', chartType: 'pie' },
+                        { title: 'Car Wise Negative Reviews', id: 'carWiseNegativeReviews', chartType: 'bar' },
+                        { title: 'Top 3 Cars by Earnings', id: 'top3CarsWithMostEarning', chartType: 'bar' },
+                        { title: 'Revenue Distribution (Pie)', id: 'revenuePieChart', chartType: 'pie' },
+                        { title: 'Top City Wise Negative Reviews', id: 'cityWiseNegativeReviews', chartType: 'line' }
                     ]">
                         <div class="panel panel-default">
                             <div class="panel-heading">{{chart.title}}</div>
                             <div class="panel-body">
-                                <canvas id="{{chart.id}}"  width="400" height="400"></canvas>
+                                <canvas id="{{chart.id}}" width="400" height="300"></canvas>
                             </div>
                         </div>
                     </div>
@@ -125,27 +123,26 @@
                                 <i class="fas fa-dollar-sign"></i> Average Booking Payment
                             </div>
                             <div class="panel-body text-center">
-                                <h3>${{averageBookingPayment | number:2}}</h3>
+                                <h3>{{averageBookingPayment | currency:'₹':2}}</h3>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="row">
-                    <div class="col-xs-12 col-md-6" ng-repeat="chart in [
-                        { title: 'Peak Bidding Hours', id: 'hourlyBiddingHeatmap' },
-                        { title: 'Monthly Bookings', id: 'numberOfBookingsPerMonth' },
-                        { title: 'Top 3 Customers', id: 'top3CostumersWithMostBookings' },
-                        { title: 'Biddings comparison', id: 'myBidsVsOtherSellersAvgBids' },
-                        { title: 'Earning comparison', id: 'myEarningVsOtherSellersAvgEarnings' },
-                        { title: 'Selected Addons Count', id: 'selectedAddonsCount' }
-
-
+                    <div class="col-xs-12 col-md-4" ng-repeat="chart in [
+                        { title: 'Peak Bidding Hours', id: 'hourlyBiddingHeatmap', chartType: 'line' },
+                        { title: 'Monthly Bookings', id: 'numberOfBookingsPerMonth', chartType: 'bar' },
+                        { title: 'City-wise Bookings', id: 'cityWiseBooking', chartType: 'bar' },
+                        { title: 'Top 3 Customers', id: 'top3CostumersWithMostBookings', chartType: 'bar' },
+                        { title: 'Biddings comparison', id: 'myBidsVsOtherSellersAvgBids', chartType: 'line' },
+                        { title: 'Earning comparison', id: 'myEarningVsOtherSellersAvgEarnings', chartType: 'line' },
+                        { title: 'Addons Distribution (Pie)', id: 'addonsPieChart', chartType: 'pie' },
                     ]">
                         <div class="panel panel-default">
                             <div class="panel-heading">{{chart.title}}</div>
                             <div class="panel-body">
-                                <canvas id="{{chart.id}}"  width="400" height="400"></canvas>
+                                <canvas id="{{chart.id}}" width="400" height="300"></canvas>
                             </div>
                         </div>
                     </div>

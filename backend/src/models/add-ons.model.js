@@ -17,5 +17,4 @@ const addOnsSchema = new mongoose.Schema({
 });
 
 const AddOns = mongoose.model("AddOns", addOnsSchema);
-
 export default AddOns;

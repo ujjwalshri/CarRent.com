@@ -114,6 +114,10 @@ const biddingSchema = new mongoose.Schema({
         type:Number,
         required:true
     },
+    taxes : {
+        type:Array,
+        default:[]
+    },
     status:{
         type:String,
         enum:["pending", "approved", "rejected", "reviewed", "ended"],
@@ -121,9 +125,7 @@ const biddingSchema = new mongoose.Schema({
     }
 }, {timestamps:true});
 
-biddingSchema.index({ "vehicle._id": 1});
-biddingSchema.index({ "from._id": 1});
-biddingSchema.index({ "owner._id": 1});
+
 
 const Bidding = mongoose.model('Bidding', biddingSchema);
 

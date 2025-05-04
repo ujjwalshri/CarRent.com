@@ -12,7 +12,7 @@
                     <span class="glyphicon glyphicon-plus"></span> Add Vehicle
                 </button>
                 <button class="btn btn-success" ng-click="openAddonsModal()" >
-                    <span class="glyphicon glyphicon-cog"></span> Manage Addons
+                    <span class="glyphicon glyphicon-cog"></span> Manage One-Time Addons
                 </button>
             </div>
             <div class="input-group pull-right m-t-10" style="width: 250px;">
@@ -64,7 +64,7 @@
                         <div class="col-md-3">
                             <select class="form-control" ng-model="filters.priceRange" ng-change="filterCars()">
                                 <option value="">All Prices</option>
-                                <option ng-repeat="priceRange in priceRanges" value="{{priceRange}}">{{priceRange}}</option>
+                                <option ng-repeat="priceRange in priceRanges" value="{{priceRange }}">{{priceRange }}</option>
                             </select>
                         </div>
                         <div class="col-md-1 text-right">
@@ -89,7 +89,7 @@
     <div class="row" ng-show="!loading && noListings">
         <div class="col-md-12">
             <div class="alert alert-info">
-                <span class="glyphicon glyphicon-info-sign"></span> No listings found. Add a vehicle to get started.
+                <span class="glyphicon glyphicon-info-sign"></span> No listings found
             </div>
         </div>
     </div>
@@ -114,7 +114,7 @@
                 <div class="panel-body p-0">
 
                     <div class="text-right p-1" style="background-color: #f8f8f8; padding: 5px 10px; border-bottom: 1px solid #eee;">
-                        <h4 class="m-0 text-primary">${{ car.price }} <small style="color: #777;">/day</small></h4>
+                        <h4 class="m-0 text-primary">{{ car.price | currency:"₹" }} <small style="color: #777;">/day</small></h4>
                     </div>
                     
 
@@ -153,9 +153,6 @@
                         </button>
                         <button class="btn btn-sm btn-info" ng-if="car.status === 'approved'" ng-click="viewCarBookings(car)" title="View Bookings">
                             <span class="glyphicon glyphicon-list"></span> Bookings
-                        </button>
-                        <button class="btn btn-sm btn-success" ng-click="viewCar(car._id)" title="View Details">
-                            <span class="glyphicon glyphicon-eye-open"></span> Details
                         </button>
                     </div>
                 </div>
@@ -199,7 +196,7 @@
         <div class="modal-body">
             <form class="form-horizontal">
                 <div class="form-group">
-                    <label for="newPrice" class="col-sm-4 control-label">New Daily Rate ($)</label>
+                    <label for="newPrice" class="col-sm-4 control-label">New Daily Rate (₹)</label>
                     <div class="col-sm-8">
                         <input type="number" id="newPrice" class="form-control" placeholder="Enter new price" ng-model="selectedCarPrice.price">
                     </div>
@@ -217,7 +214,7 @@
             <button type="button" class="close" ng-click="cancel()" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>
-            <h3 class="modal-title">Manage Cars Addons</h3>
+            <h3 class="modal-title">Manage One-time Addons</h3>
         </div>
         <div class="modal-body">
             <uib-tabset active="activeTab">
@@ -235,7 +232,7 @@
                                 <tbody>
                                     <tr ng-repeat="addon in addons">
                                         <td>{{addon.name}}</td>
-                                        <td>${{addon.price}}</td>
+                                        <td>₹{{addon.price}}</td>
                                         <td>
                                             <button class="btn btn-danger btn-sm" ng-click="removeAddon(addon._id)">
                                                 <span class="glyphicon glyphicon-trash"></span>
@@ -266,15 +263,10 @@
                                             ng-minlength="3"
                                             ng-maxlength="50"
                                             required>
-                                        <div class="help-block" ng-messages="addonForm.addonName.$error" ng-if="addonForm.addonName.$touched">
-                                            <div ng-message="required">Name is required.</div>
-                                            <div ng-message="minlength">Name must be at least 3 characters.</div>
-                                            <div ng-message="maxlength">Name cannot exceed 50 characters.</div>
-                                        </div>
                                     </div>
                                 
                                     <div class="form-group" ng-class="{'has-error': addonForm.addonPrice.$touched && addonForm.addonPrice.$invalid}">
-                                        <label for="addonPrice">Price ($ per day) *</label>
+                                        <label for="addonPrice">Price</label>
                                         <input type="number" 
                                             class="form-control" 
                                             id="addonPrice" 
@@ -283,14 +275,9 @@
                                             ng-min="0" 
                                             step="0.01" 
                                             ng-max="100000"
+                                            placeholder="Enter price between 0 and 100000"
                                             required>
-                                        <div class="help-block" ng-messages="addonForm.addonPrice.$error" ng-if="addonForm.addonPrice.$touched">
-                                            <div ng-message="required">Price is required.</div>
-                                            <div ng-message="min">Price must be at least $0.</div>
-                                            <div ng-message="max">Price cannot exceed $100,000.</div>
-                                        </div>
                                     </div>
-                                    
                                     <button type="submit" 
                                             class="btn btn-primary" 
                                             ng-disabled="addonForm.$invalid || isLoading">

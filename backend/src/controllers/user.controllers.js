@@ -2,8 +2,6 @@ import mongoose from "mongoose";
 import User from "../models/user.model.js"; 
 import Vehicle from "../models/vehicle.model.js";
 
-
-
 /**
  * Retrieves all users from the database, excluding the admin user
  * @param {Object} req - Express request object
@@ -11,7 +9,7 @@ import Vehicle from "../models/vehicle.model.js";
  * @returns {Object} JSON response with users and pagination details
  */
 export const getAllUsers = async (req, res) => {
-    const { city, search, skip=0, limit=10 } = req.query;
+    const { city, search, skip=0, limit=10, userType='seller' } = req.query;
     const adminId = req.user._id;
     
     try {
@@ -19,10 +17,22 @@ export const getAllUsers = async (req, res) => {
 
         // Build match conditions
         let matchConditions = { _id: { $ne: adminId } };
+        
+        // Add city filter if provided
         if (city) {
             matchConditions.city = city;
         }
-
+        
+        // Add user type filter
+        if (userType === 'seller') {
+            matchConditions.isSeller = true;
+        } else if (userType === 'buyer') {
+            matchConditions.isSeller = false;
+        } else {
+            // Default to seller if an invalid value is provided
+            matchConditions.isSeller = true;
+        }
+        
         // Add search stage if search query exists
         if (search) {
             pipeline.push({
@@ -97,8 +107,6 @@ export const blockUser = async (req, res) => {
             { new: true, session }
         );
 
-       
-
         // Fetch all cars belonging to the user and set `deleted = true`
         await Vehicle.updateMany(
             { 'owner._id' : userId },
@@ -120,7 +128,6 @@ export const blockUser = async (req, res) => {
         return res.status(500).json({ error: `Error in blockUser: ${err.message}` });
     }
 };
-
 
 /**
  * Makes a user a seller
@@ -155,11 +162,9 @@ export const updateUserProfileController = async (req, res) => {
    
     const { firstName, lastName, city } = req.body;
 
-
     if (!firstName || !lastName || !city) {
         return res.status(400).json({ message: 'All fields (firstName, lastName, city) are required' });
     }
-
 
     try {
         const updatedUser = await User.findByIdAndUpdate(
@@ -178,14 +183,12 @@ export const updateUserProfileController = async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-
         return res.status(200).json({ message: 'User profile updated successfully', user: updatedUser });
     } catch (err) {
         console.log(`Error in the updateUserProfileController: ${err.message}`);
         return res.status(500).json({ message: `Error in the updateUserProfileController: ${err.message}` });
     }
 };
-
 
 /**
  * @description: function to get the user at the userId

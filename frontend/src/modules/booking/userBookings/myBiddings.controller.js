@@ -33,7 +33,7 @@ angular.module('myApp').controller('myBiddingsCtrl', function($scope, BiddingFac
 
         BiddingService.getBiddingsForUser(params) // fetching the biddings for the user
             .then((biddings) => {
-                console.log(biddings);
+
                 $scope.bookings = biddings.bids.map((bid) => {
                    return BiddingFactory.createBid(bid, false);
                 });
@@ -55,8 +55,6 @@ angular.module('myApp').controller('myBiddingsCtrl', function($scope, BiddingFac
      * @returns none
      */
     $scope.pageChanged = function () {
-        console.log('Page changed to: ' + $scope.pagination.currentPage);
-        $timeout();
         fetchAllBiddings();
     };
 

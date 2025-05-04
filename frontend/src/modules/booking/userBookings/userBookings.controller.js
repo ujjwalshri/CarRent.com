@@ -3,6 +3,8 @@ angular
   .controller("userBookingsCtrl", function ($scope, BiddingFactory, ToastService, BiddingService, $timeout) {
     $scope.bookings = []; // array to hold the bookings
     $scope.sortBy = ''; // setting the sortBy to an empty string
+    $scope.ownerNameQuery = ''; // added for owner name search
+    $scope.isLoading = false;
     
     // initializing the pagination variables
     $scope.pagination = {
@@ -22,7 +24,6 @@ angular
     
     // function to handle the page changed event
     $scope.pageChanged = function() {
-      console.log('Page changed to: ' + $scope.pagination.currentPage);
       getAllBookings();
     };
 
@@ -31,8 +32,15 @@ angular
       getAllBookings();
     };
 
+    // Function to search bookings by owner name
+    $scope.searchByOwnerName = () => {
+      $scope.pagination.currentPage = 1;
+      getAllBookings();
+    };
+
     $scope.resetFilters = () => {
       $scope.sortBy = '';
+      $scope.ownerNameQuery = ''; // Clear owner name search
       $scope.pagination.currentPage = 1;
       getAllBookings();
     };
@@ -42,12 +50,13 @@ angular
      * @returns {void}
      */
     function getAllBookings() {
-      if ($scope.isLoading) return;
+      $scope.isLoading = true;
 
       const params = {
         page: $scope.pagination.currentPage,
         limit: $scope.pagination.itemsPerPage,
-        sort: $scope.sortBy ? { [$scope.sortBy]: 1 } : undefined
+        sort: $scope.sortBy ? { [$scope.sortBy]: 1 } : undefined,
+        ownerName: $scope.ownerNameQuery || undefined // Added owner name parameter
       };
 
       BiddingService.getBookingsForUser(params)

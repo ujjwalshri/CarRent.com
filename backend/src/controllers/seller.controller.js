@@ -1,4 +1,3 @@
-
 /**
  * Seller Analytics Controller
  * This controller handles all analytics-related operations for sellers including revenue calculations,
@@ -60,16 +59,7 @@ const pipelines = {
                     }
             }
             },
-            {
-                $lookup: {
-                    from: "vehicles",
-                    localField: "vehicle._id",
-                    foreignField: "_id",
-                    as: "vehicleData"
-                }
-            },
-            { $unwind: "$vehicleData" },
-            { $match: { "vehicleData.owner._id": userId, rating: { $lt: 3 } } },
+            { $match: { "owner._id": userId, rating: { $lt: 3 } } },
             { $count: "negativeCount" }
         ]
     ),
@@ -84,16 +74,8 @@ const pipelines = {
                     }
                 }
             },
-            {
-                $lookup: {
-                    from: "vehicles",
-                    localField: "vehicle._id",
-                    foreignField: "_id",
-                    as: "vehicleData"
-                }
-            },
-            { $unwind: "$vehicleData" },
-            { $match: { "vehicleData.owner._id": userId, ...matchFilter } },
+            
+            { $match: { "owner._id": userId } },
             { $count: "totalCount" }
         ]
     ),
@@ -303,63 +285,13 @@ const pipelines = {
             },
           ]
     ),
-    nagativeReviewsCount: (userId, startDate, endDate) => (
-
-        [
-            {
-                $match: {
-                    createdAt: {
-                        $gte: new Date(startDate),
-                        $lte: new Date(endDate)
-                    }
-                }
-            },
-            {
-                $lookup: {
-                    from: "vehicles",
-                    localField: "vehicle._id",
-                    foreignField: "_id",
-                    as: "vehicleData"
-                }
-            },
-            { $unwind: "$vehicleData" },
-            { $match: { "vehicleData.owner._id": userId, rating: { $lt: 3 } } },
-            { $count: "negativeCount" }
-        ]
-    ),
-
-    totalReviewsCount: (userId, startDate, endDate) => (
-        [
-            {
-                $match: {
-                    'owner._id': userId,
-                    createdAt: {
-                        $gte: new Date(startDate),
-                        $lte: new Date(endDate)
-                    }
-                }
-            },
-            {
-                $lookup: {
-                    from: "vehicles",
-                    localField: "vehicle._id",
-                    foreignField: "_id",
-                    as: "vehicleData"
-                }
-            },
-            { $unwind: "$vehicleData" }, 
-            { $match: { "vehicleData.owner._id": userId } },
-            { $count: "totalCount" }
-        ]
-    ),  
+ 
+   
     negativeReviews: (userId, startDate, endDate) => ([
         {
             $match: {
-                rating: { $lt: 3 }
-            }
-        },
-        {
-            $match: {
+                rating: { $lt: 3 },
+                'owner._id': userId,
                 createdAt: {
                     $gte: new Date(startDate),
                     $lte: new Date(endDate)
@@ -367,28 +299,14 @@ const pipelines = {
             }
         },
         {
-            $lookup: {
-                from: "vehicles",
-                localField: "vehicle._id",
-                foreignField: "_id",
-                as: "vehicleData"
-            }
-        },
-        { $unwind: "$vehicleData" },
-        {
-            $match: {
-                "vehicleData.owner._id": userId
-            }
-        },
-        {
             $group: {
                 _id: {
                     $concat: [
-                        { "$toLower": "$vehicleData.company" },
+                        { "$toLower": "$vehicle.company" },
                         " ",
-                        { "$toLower": "$vehicleData.name" },
+                        { "$toLower": "$vehicle.name" },
                         " ",
-                        { "$toString": "$vehicleData.modelYear" }
+                        { "$toString": "$vehicle.modelYear" }
                     ]
                 },
                 count: { $sum: 1 }
@@ -975,8 +893,14 @@ export const getTotalRevenue = async (req, res) => {
 
     try {
         const revenueData = await Bidding.aggregate(pipelines.totalRevenue(userId, startDate, endDate));
-        await setCachedData(cacheKey, { revenue: revenueData[0] || null });
-        return handleResponse(res, 200, { revenue: revenueData[0] || null });
+        const result = revenueData[0] || { 
+            totalRevenue: 0, 
+            totalFineCollected: 0, 
+            totalBookings: 0,
+            averageRevenue: 0
+        };
+        await setCachedData(cacheKey, result);
+        return handleResponse(res, 200, result);
     } catch (error) {
         console.error('Error in getTotalRevenue:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch revenue data' });
@@ -999,8 +923,8 @@ export const getCarDescription = async (req, res) => {
 
     try {
         const carDescriptionData = await Vehicle.aggregate(pipelines.carDescription(userId, startDate, endDate));
-        await setCachedData(cacheKey, { carDescription: { suvVsSedan: carDescriptionData } });
-        return handleResponse(res, 200, { carDescription: { suvVsSedan: carDescriptionData } });
+        await setCachedData(cacheKey, carDescriptionData);
+        return handleResponse(res, 200, carDescriptionData);
     } catch (error) {
         console.error('Error in getCarDescription:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch car description data' });
@@ -1021,10 +945,10 @@ export const getPopularCars = async (req, res) => {
         return handleResponse(res, 200, cachedData);
     }
 
-     try {
+    try {
         const popularCarsData = await Bidding.aggregate(pipelines.popularCars(userId, startDate, endDate));
-        await setCachedData(cacheKey, { popularCars: { top3MostPopularCars: popularCarsData } });
-        return handleResponse(res, 200, { popularCars: { top3MostPopularCars: popularCarsData } });
+        await setCachedData(cacheKey, popularCarsData);
+        return handleResponse(res, 200, popularCarsData);
     } catch (error) {
         console.error('Error in getPopularCars:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch popular cars data' });
@@ -1047,9 +971,9 @@ export const getCarWiseBookings = async (req, res) => {
     }
 
     try {
-        const carPerformanceData = await Bidding.aggregate(pipelines.carWiseBookings(userId, startDate, endDate));
-        await setCachedData(cacheKey, { carPerformance: { carWiseBookings: carPerformanceData } });
-        return handleResponse(res, 200, { carPerformance: { carWiseBookings: carPerformanceData } });
+        const carWiseBookingsData = await Bidding.aggregate(pipelines.carWiseBookings(userId, startDate, endDate));
+        await setCachedData(cacheKey, carWiseBookingsData);
+        return handleResponse(res, 200, carWiseBookingsData);
     } catch (error) {
         console.error('Error in getCarWiseBookings:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch car-wise bookings data' });
@@ -1072,8 +996,8 @@ export const getNegativeReviews = async (req, res) => {
 
     try {
         const negativeReviewsData = await Review.aggregate(pipelines.negativeReviews(userId, startDate, endDate));
-        await setCachedData(cacheKey, { negativeReviews: { result: negativeReviewsData } });
-        return handleResponse(res, 200, { negativeReviews: { result: negativeReviewsData } });
+        await setCachedData(cacheKey, negativeReviewsData);
+        return handleResponse(res, 200, negativeReviewsData);
     } catch (error) {
         console.error('Error in getNegativeReviews:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch negative reviews data' });
@@ -1096,8 +1020,8 @@ export const getTopEarningCars = async (req, res) => {
 
     try {
         const topEarningCarsData = await Bidding.aggregate(pipelines.topEarningCars(userId, startDate, endDate));
-        await setCachedData(cacheKey, { topEarningCars: { top3CarsWithMostEarning: topEarningCarsData } });
-        return handleResponse(res, 200, { topEarningCars: { top3CarsWithMostEarning: topEarningCarsData } });
+        await setCachedData(cacheKey, topEarningCarsData);
+        return handleResponse(res, 200, topEarningCarsData);
     } catch (error) {
         console.error('Error in getTopEarningCars:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch top earning cars data' });
@@ -1121,12 +1045,15 @@ export const getPeakHours = async (req, res) => {
 
     try {
         const peakHoursData = await Bidding.aggregate(pipelines.peakHours(userId, startDate, endDate));
-        const completeHoursData = Array.from({ length: 24 }, (_, i) => {
-            const existingHour = peakHoursData.find(r => r.hour === i);
-            return existingHour || { hour: i, count: 0 };
-        });
-        await setCachedData(cacheKey, { peakHours: { peakBiddingHours: completeHoursData, timeZone: "Asia/Kolkata" } });
-        return handleResponse(res, 200, { peakHours: { peakBiddingHours: completeHoursData, timeZone: "Asia/Kolkata" } });
+        const result = {
+            data: Array.from({ length: 24 }, (_, i) => {
+                const existingHour = peakHoursData.find(r => r.hour === i);
+                return existingHour || { hour: i, count: 0 };
+            }),
+            timeZone: "Asia/Kolkata"
+        };
+        await setCachedData(cacheKey, result);
+        return handleResponse(res, 200, result);
     } catch (error) {
         console.error('Error in getPeakHours:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch peak hours data' });
@@ -1149,8 +1076,8 @@ export const getMonthlyBookings = async (req, res) => {
 
     try {
         const monthlyBookingsData = await Bidding.aggregate(pipelines.monthlyBookings(userId, startDate, endDate));
-        await setCachedData(cacheKey, { monthlyBookings: { monthWiseBookings: monthlyBookingsData } });
-        return handleResponse(res, 200, { monthlyBookings: { monthWiseBookings: monthlyBookingsData } });
+        await setCachedData(cacheKey, monthlyBookingsData);
+        return handleResponse(res, 200, monthlyBookingsData);
     } catch (error) {
         console.error('Error in getMonthlyBookings:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch monthly bookings data' });
@@ -1173,8 +1100,8 @@ export const getTopCustomers = async (req, res) => {
 
     try {
         const topCustomersData = await Bidding.aggregate(pipelines.topCustomers(userId, startDate, endDate));
-        await setCachedData(cacheKey, { topCustomers: { top3CostumersWithMostBookings: topCustomersData } });
-        return handleResponse(res, 200, { topCustomers: { top3CostumersWithMostBookings: topCustomersData } });
+        await setCachedData(cacheKey, topCustomersData);
+        return handleResponse(res, 200, topCustomersData);
     } catch (error) {
         console.error('Error in getTopCustomers:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch top customers data' });
@@ -1197,8 +1124,8 @@ export const getAverageRentalDuration = async (req, res) => {
 
     try {
         const avgRentalDurationData = await Bidding.aggregate(pipelines.averageRentalDuration(userId, startDate, endDate));
-        await setCachedData(cacheKey, { averageRentalDuration: { averageRentalDuration: avgRentalDurationData } });
-        return handleResponse(res, 200, { averageRentalDuration: { averageRentalDuration: avgRentalDurationData } });
+        await setCachedData(cacheKey, avgRentalDurationData);
+        return handleResponse(res, 200, avgRentalDurationData);
     } catch (error) {
         console.error('Error in getAverageRentalDuration:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch average rental duration data' });
@@ -1221,8 +1148,8 @@ export const getRepeatingCustomersPercentage = async (req, res) => {
 
     try {
         const repeatingCustomersData = await Bidding.aggregate(pipelines.repeatingCustomersPercentage(userId, startDate, endDate));
-        await setCachedData(cacheKey, { repeatingCustomersPercentage: { repeatingCustomersPercentage: repeatingCustomersData } });
-        return handleResponse(res, 200, { repeatingCustomersPercentage: { repeatingCustomersPercentage: repeatingCustomersData } });
+        await setCachedData(cacheKey, repeatingCustomersData);
+        return handleResponse(res, 200, repeatingCustomersData);
     } catch (error) {
         console.error('Error in getRepeatingCustomersPercentage:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch repeating customers percentage data' });
@@ -1245,8 +1172,8 @@ export const getCityWiseBookings = async (req, res) => {
 
     try {
         const cityWiseBookingsData = await Bidding.aggregate(pipelines.cityWiseBookings(userId, startDate, endDate));
-        await setCachedData(cacheKey, { cityWiseBookings: { cityWiseBookings: cityWiseBookingsData } });
-        return handleResponse(res, 200, { cityWiseBookings: { cityWiseBookings: cityWiseBookingsData } });
+        await setCachedData(cacheKey, cityWiseBookingsData);
+        return handleResponse(res, 200, cityWiseBookingsData);
     } catch (error) {
         console.error('Error in getCityWiseBookings:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch city-wise bookings data' });
@@ -1272,13 +1199,13 @@ export const getBiddingComparison = async (req, res) => {
         const [myBidsData] = await Bidding.aggregate(pipelines.sellerBids(userId, startDate, endDate));
         const [otherSellersData] = await Bidding.aggregate(pipelines.otherSellersAvgBids(userId, startDate, endDate));
 
-        const biddingComparison = {
+        const result = {
             myBids: myBidsData?.totalBids || 0,
             otherSellersAvgBids: otherSellersData?.avgBids || 0
         };
 
-        await setCachedData(cacheKey, { biddingComparison: { biddingComparison } });
-        return handleResponse(res, 200, { biddingComparison: { biddingComparison } });
+        await setCachedData(cacheKey, result);
+        return handleResponse(res, 200, result);
     } catch (error) {
         console.error('Error in getBiddingComparison:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch bidding comparison data' });
@@ -1302,13 +1229,13 @@ export const getEarningComparison = async (req, res) => {
     try {
         const [comparisonData] = await Bidding.aggregate(pipelines.myEarningVsOtherSellersAvgEarnings(userId, startDate, endDate));
         
-        const earningComparison = {
+        const result = {
             myEarnings: comparisonData?.myEarnings || 0,
             otherSellersAvgEarnings: comparisonData?.otherSellersAvgEarnings || 0
         };
 
-        await setCachedData(cacheKey, { earningComparison: { earningComparison } });
-        return handleResponse(res, 200, { earningComparison: { earningComparison } });
+        await setCachedData(cacheKey, result);
+        return handleResponse(res, 200, result);
     } catch (error) {
         console.error('Error in getEarningComparison:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch earning comparison data' });
@@ -1324,16 +1251,16 @@ export const getTotalRevenueByAddons = async (req, res) => {
         return handleResponse(res, 400, { error: "startDate and endDate are required" });
     }
 
-    const cacheKey = `seller-total-revenue-by-addons-${userId}-${startDate}-${endDate}`; // Cache key for total revenue by addons
-    const cachedData = await getCachedData(cacheKey); // Check if data is cached
+    const cacheKey = `seller-total-revenue-by-addons-${userId}-${startDate}-${endDate}`; 
+    const cachedData = await getCachedData(cacheKey); 
     if (cachedData) {
-        return handleResponse(res, 200, cachedData); // Return cached data if available
+        return handleResponse(res, 200, cachedData); 
     }
 
     try {
         const totalRevenueByAddonsData = await Bidding.aggregate(pipelines.totalRevenueByAddons(userId, startDate, endDate));
-        await setCachedData(cacheKey, { totalRevenueByAddons: { totalRevenueByAddons: totalRevenueByAddonsData } });
-        return handleResponse(res, 200, { totalRevenueByAddons: { totalRevenueByAddons: totalRevenueByAddonsData } });
+        await setCachedData(cacheKey, totalRevenueByAddonsData);
+        return handleResponse(res, 200, totalRevenueByAddonsData);
     } catch (error) {
         console.error('Error in getTotalRevenueByAddons:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch total revenue by addons data' });
@@ -1366,8 +1293,8 @@ export const getAverageBidCostPerRental = async (req, res) => {
 
     try {
         const averageCostPerRentalData = await Bidding.aggregate(pipelines.averageBidCostPerRental(userId, startDate, endDate));
-        await setCachedData(cacheKey, { averageCostPerRental: { averageCostPerRental: averageCostPerRentalData } });
-        return handleResponse(res, 200, { averageCostPerRental: { averageCostPerRental: averageCostPerRentalData } });
+        await setCachedData(cacheKey,    averageCostPerRentalData );
+        return handleResponse(res, 200,   averageCostPerRentalData  );
     } catch (error) {
         console.error('Error in getAverageCostPerRental:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch average cost per rental data' });
@@ -1390,8 +1317,8 @@ export const getAverageBookingPayment = async (req, res) => {
 
     try {
         const averageBookingPaymentData = await Bidding.aggregate(pipelines.averageBookingPayment(userId, startDate, endDate));
-        await setCachedData(cacheKey, { averageBookingPayment: { averageBookingPayment: averageBookingPaymentData } });
-        return handleResponse(res, 200, { averageBookingPayment: { averageBookingPayment: averageBookingPaymentData } });
+        await setCachedData(cacheKey, averageBookingPaymentData);
+        return handleResponse(res, 200, averageBookingPaymentData);
     } catch (error) {
         console.error('Error in getAverageBookingPayment:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch average booking payment data' });
@@ -1408,7 +1335,7 @@ export const getSelectedAddonsCount = async (req, res) => {
 
     try {
         const selectedAddonsCountData = await Bidding.aggregate(pipelines.selectedAddonsCount(userId, startDate, endDate));
-        return handleResponse(res, 200, { selectedAddonsCount: { selectedAddonsCount: selectedAddonsCountData } });
+        return handleResponse(res, 200, selectedAddonsCountData);
     } catch (error) {
         console.error('Error in getSelectedAddonsCount:', error);
         return handleResponse(res, 500, { error: 'Failed to fetch selected addons count data' });

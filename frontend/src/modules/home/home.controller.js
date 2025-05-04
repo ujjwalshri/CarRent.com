@@ -2,7 +2,7 @@
  * Home Controller - Main controller for the application landing page
  * Manages car listings, filtering, search, recommendations, and user interactions
  */
-angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastService, CarService, $timeout, UserService, UserFactory, $q, $rootScope, City, CarFactory) {
+angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastService, CarService, $timeout, UserService, UserFactory, $q, $rootScope, City, CarFactory, RecommendationService) {
 
     // Initialize scope variables
     $scope.allCars = []; // Array to store all cars
@@ -52,9 +52,10 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
     */
     $scope.init = function() {
         $scope.loadingCars = true;
-        
+        $rootScope.$on('user:loggedOut', function() {
+           $rootScope.isLogged = false;
+        })
         let promises = [];
-        
         if ($rootScope.isLogged === false) {
             promises = [
                 CarService.getAllApprovedCars($scope.search, $scope.priceFilter, $scope.city, $scope.category, $scope.skip),
@@ -62,13 +63,14 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
                 CarService.getCurrentPriceRanges()
             ];
         } else {
-            const params = {
-                city: $scope.city,
-            }
+            // Create params object with explicit city parameter to fix undefined city issue
+            let params = {
+                city: $scope.city || undefined
+            };
             promises = [
                 UserService.getUserProfile(),
                 CarService.getAllApprovedCars($scope.search, $scope.priceFilter, $scope.city, $scope.category, $scope.skip),
-                CarService.getCarRecommendationsForUser(params),
+                RecommendationService.getVehicleRecommendation(params),
                 CarService.getAllCarCategoriesForAdmin(),
                 CarService.getCurrentPriceRanges()
             ];
@@ -153,6 +155,7 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
     $scope.filterCars = () => {
         $scope.filteringStarted = true;
         fetchAllCars(0);
+        $scope.init();
     };
 
     /**
@@ -203,7 +206,8 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
         $scope.search = '';
         $scope.category = '';
         $scope.city = '';
-        fetchAllCars(0);
+        $scope.skip = 0;
+        $scope.init();
     };
 
     /**

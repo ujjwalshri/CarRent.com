@@ -19,10 +19,10 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q) {
      * @param {Array} images - Array of image URLs for the car
      * @returns {Car} - New Car instance
      */
-    function Car(carName, company, carModel, category, carPrice, mileage, color, fuelType,location, city, images) {
+    function Car(carName, company, carModel, category, carPrice, mileage, color, fuelType,location, city, images, registrationNumber) {
         // Ensure the function is called with 'new' operator
         if (!(this instanceof Car)) {
-            return new Car(carName, company, carModel, category, carPrice, mileage, color, fuelType,location, city, images);
+            return new Car(carName, company, carModel, category, carPrice, mileage, color, fuelType,location, city, images, registrationNumber);
         }
 
         // Initialize car properties
@@ -37,6 +37,7 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q) {
         this.location = location ? location.trim() : null;
         this.city = city ? city : null;
         this.images = Array.isArray(images) ? images : [];
+        this.registrationNumber = registrationNumber ? registrationNumber : null;
     }
 
 
@@ -52,6 +53,7 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q) {
      */
     Car.prototype.validate = function() {
         console.log(this);
+        const registrationNumberRegex = "^[A-Z]{2}\d{2} [A-Z]{2} \d{4}$";
 
         // Validate each property with specific rules
         if (!this.name || typeof this.name !== 'string') {
@@ -84,7 +86,13 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q) {
         if (!Array.isArray(this.images) || this.images.length === 0 || this.images.length>5) {
             return "Images can be in 1 to 5 range";
         }
-
+        if(this.registrationNumber && typeof this.registrationNumber !== 'string'){
+            return "Registration number is required and must be a string.";
+        }
+        if(this.registrationNumber && this.registrationNumber.length !== 10){
+            return "Registration number is not valid";
+        }
+       
         // Return errors if any, otherwise return the car object
         return this;
     };
@@ -104,6 +112,7 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q) {
       formData.append('color', this.color);
       formData.append('fuelType', this.fuelType);
       formData.append('city', this.city);
+      formData.append('registrationNumber', this.registrationNumber);
       for(let image of this.images){
         formData.append('images', image);
       }
@@ -143,7 +152,7 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q) {
             // Create new car instance with provided data
             var car = new Car(
                 data.name, data.company, data.modelYear, data.category,
-                data.price, data.mileage, data.color, data.fuelType, data.location, data.city, data.vehicleImages
+                data.price, data.mileage, data.color, data.fuelType, data.location, data.city, data.vehicleImages, data.registrationNumber
             );
             
             console.log("Created car object:", car);
@@ -195,7 +204,6 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q) {
         locationTypes: [
             'Local',
             'Outstation',
-            'Both',
         ],
 
     
@@ -212,7 +220,8 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q) {
                 priceRangeArray.push(`${i}-${Math.min(i + step, max)}`);
             }
             return priceRangeArray;
-        }
+        },
+
     };
 
 

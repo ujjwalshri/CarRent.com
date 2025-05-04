@@ -37,25 +37,29 @@ angular.module('myApp').service('UserService', function($http, ApiService, $q) {
     }
     /**
      * Function to get all users
-     * @param {*} city 
-     * @param {*} search 
-     * @param {*} skip 
-     * @param {*} limit 
+     * @param {*} city - City filter
+     * @param {*} search - Search query
+     * @param {*} skip - Number of records to skip (pagination)
+     * @param {*} limit - Number of records to return
+     * @param {*} userType - Type of users to filter (seller, buyer, or all)
      * @returns all users
      */
-    this.getAllUsers = (city, search, skip, limit)=>{
-        console.log(city);
+    this.getAllUsers = (city, search, skip, limit, userType = 'seller') => {
         let deferred = $q.defer();
-        $http.get(`${ApiService.baseURL}/api/user/getAllUsers`, { params: {
-            city: city, 
-            search: search, 
-            skip: skip, 
-            limit: limit
-        } , withCredentials: true })
-        .then((res)=>{
+        $http.get(`${ApiService.baseURL}/api/user/getAllUsers`, { 
+            params: {
+                city: city, 
+                search: search, 
+                skip: skip, 
+                limit: limit,
+                userType: userType
+            }, 
+            withCredentials: true 
+        })
+        .then((res) => {
             deferred.resolve(res.data);
         })
-        .catch(err=>{
+        .catch(err => {
             deferred.reject("Error fetching users");
         })
         return deferred.promise;

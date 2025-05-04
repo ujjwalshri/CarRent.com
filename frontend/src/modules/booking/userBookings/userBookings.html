@@ -3,20 +3,12 @@
 
     <div class="row">
         <div class="col-md-12">
-            <div class="page-header text-center small-header" ng-show="bookings.length > 0">
+            <div class="page-header text-center small-header">
                 <h3><i class="glyphicon glyphicon-calendar"></i> Your Bookings</h3>
                 <p class="text-muted small">Manage and track all your car rental bookings</p>
             </div>
-            <div class="alert alert-info" ng-show="bookings.length === 0 && !isLoading">
-                <div class="text-center">
-                    <i class="fa fa-info-circle fa-2x margin-bottom-10"></i>
-                    <h4>No Active Bookings</h4>
-                    <p class="small">You haven't made any bookings yet. Start exploring cars to rent!</p>
-                </div>
-            </div>
         </div>
     </div>
-
 
     <div class="row" ng-show="isLoading">
         <div class="col-md-12">
@@ -27,10 +19,10 @@
         </div>
     </div>
 
-
-    <div class="row" ng-show="bookings.length > 0">
+    <!-- Filter Panel - Always visible regardless of bookings -->
+    <div class="row" ng-show="!isLoading">
         <div class="col-md-12">
-            <div class="panel panel-primary compact-panel">
+            <div class="panel panel-primary compact-panel filter-panel">
                 <div class="panel-heading">
                     <h3 class="panel-title small"><i class="glyphicon glyphicon-filter"></i> Sort & Filter</h3>
                 </div>
@@ -46,9 +38,22 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="col-md-2">
-                            <button class="btn btn-default btn-sm btn-block" style="margin-top: 20px;" ng-click="resetFilters()">
-                                <i class="glyphicon glyphicon-refresh"></i> Reset
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="ownerSearch" class="control-label small"><i class="glyphicon glyphicon-search"></i> Search by Owner:</label>
+                                <div class="input-group">
+                                    <input type="text" id="ownerSearch" class="form-control input-sm" ng-model="ownerNameQuery" placeholder="Type owner's name...">
+                                    <span class="input-group-btn">
+                                        <button class="btn btn-primary btn-sm" ng-click="searchByOwnerName()">
+                                            <i class="glyphicon glyphicon-search"></i>
+                                        </button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-default btn-sm btn-block filter-btn" ng-click="resetFilters()">
+                                <i class="glyphicon glyphicon-refresh"></i> Reset Filters
                             </button>
                         </div>
                     </div>
@@ -57,7 +62,20 @@
         </div>
     </div>
 
+    <!-- No bookings alert - moved here to appear after the filters -->
+    <div class="row" ng-show="bookings.length === 0 && !isLoading">
+        <div class="col-md-12">
+            <div class="alert alert-info">
+                <div class="text-center">
+                    <i class="fa fa-info-circle fa-2x margin-bottom-10"></i>
+                    <h4>No Active Bookings</h4>
+                    <p class="small">You haven't made any bookings yet. Start exploring cars to rent!</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Bookings Table - Only visible when bookings exist -->
     <div class="row" ng-show="bookings.length > 0">
         <div class="col-md-12">
             <div class="panel panel-default">
@@ -83,8 +101,8 @@
                                         <small class="text-muted smaller">{{booking._id}}</small>
                                     </td>
                                     <td class="text-center">
-                                        <p class="text-success margin-0 medium">${{booking.calculate()}}</p>
-                                        <small class="text-muted smaller">${{booking.amount}}/day</small>
+                                        <p class="text-success margin-0 medium">{{booking.calculate() | currency:"₹"}}</p>
+                                        <small class="text-muted smaller">{{booking.amount | currency:"₹"}}/day</small>
                                     </td>
                                     <td class="text-center">
                                         <p class="margin-bottom-5">
@@ -145,7 +163,7 @@
         </div>
     </div>
 
-
+    <!-- Pagination - Only visible when bookings exist -->
     <div class="row" ng-show="pagination.totalItems > 0">
         <div class="col-md-12">
             <div class="text-center">
@@ -170,7 +188,6 @@
     </div>
 </div>
 
-
 <style>
 .margin-0 { margin: 0; }
 .margin-top-5 { margin-top: 5px; }
@@ -192,4 +209,66 @@
 .pagination > li > a { padding: 4px 8px; font-size: 12px; }
 .form-control { font-size: 12px; }
 .btn { font-size: 12px; }
+
+/* Enhanced filter styling */
+.filter-panel {
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 4px;
+  border: none;
+}
+
+.filter-panel .panel-heading {
+  background: linear-gradient(135deg, #3498db, #2c3e50);
+  color: white;
+  border-radius: 4px 4px 0 0;
+  padding: 8px 15px;
+}
+
+.filter-panel .panel-body {
+  background-color: #f8f9fa;
+  padding: 15px;
+}
+
+.filter-btn {
+  margin-top: 24px;
+  transition: all 0.3s ease;
+  background-color: #f5f5f5;
+  border-color: #ddd;
+}
+
+.filter-btn:hover {
+  background-color: #e5e5e5;
+}
+
+.input-group-btn .btn-primary {
+  background-color: #337ab7;
+  border-color: #2e6da4;
+}
+
+.input-group-btn .btn-primary:hover {
+  background-color: #286090;
+}
+
+.form-control:focus {
+  border-color: #66afe9;
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);
+}
+
+.form-group label {
+  margin-bottom: 5px;
+  color: #555;
+  font-weight: 600;
+}
+
+/* Improved responsive layout */
+@media (max-width: 767px) {
+  .filter-btn {
+    margin-top: 10px;
+  }
+  
+  .col-md-4 {
+    margin-bottom: 10px;
+  }
+}
 </style>

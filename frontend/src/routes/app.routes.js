@@ -271,8 +271,6 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
                         if(user && user.isAdmin){
                             $state.go('admin');
                         }
-
-                        
                     }).catch((err)=>{
                         $state.go('login');
                     })

@@ -77,7 +77,7 @@
                             <tbody>
                                 <tr ng-repeat="booking in bookings" class="text-center">
                                     <td>{{$index + 1}}</td>
-                                    <td>${{booking.calculate()}}</td>
+                                    <td>{{booking.calculate() | currency:"₹"}}</td>
                                     <td>{{booking.startDate | date: 'yyyy-MM-dd'}}</td>
                                     <td>{{booking.endDate | date: 'yyyy-MM-dd'}}</td>
                                     <td>{{booking.owner.firstName}} {{booking.owner.lastName}}</td>
@@ -140,7 +140,6 @@
         <div class="modal-body">
             <div class="well well-sm">
                 <h4>{{booking.vehicle.company}} {{booking.vehicle.name}}</h4>
-                <p><small class="text-muted">Booking ID: {{booking._id}}</small></p>
             </div>
 
             <form name="reviewForm" ng-submit="addReview()" class="form-horizontal" novalidate>
