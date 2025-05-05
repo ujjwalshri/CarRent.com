@@ -13,6 +13,10 @@ const messageSchema = new mongoose.Schema(
             type: String,
         },
         sender:{
+            _id: {
+                type: mongoose.Schema.Types.ObjectId,
+                required: [true, "Sender ID is required"],
+            },
             username:{
                 type:String,
                 required:[true, "Username is required"],

@@ -153,9 +153,9 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
      * @returns {Promise<void>}
      */
     $scope.filterCars = () => {
-        $scope.filteringStarted = true;
+        // Set filtering started flag when any filter is applied
+        $scope.filteringStarted = !!($scope.search || $scope.priceFilter || $scope.city || $scope.category);
         fetchAllCars(0);
-        $scope.init();
     };
 
     /**
@@ -163,6 +163,9 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
      * @returns {void} 
      */
     $scope.filterCarsWithDelay = () => {
+        // Set filtering started flag immediately when user types
+        $scope.filteringStarted = !!$scope.search;
+        
         if (searchTimeout) {
             $timeout.cancel(searchTimeout);
         }

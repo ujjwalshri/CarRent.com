@@ -48,11 +48,11 @@
     </div>
 </div>
 
-<div class="panel panel-default" ng-if="user && !user.isSeller">
+<div class="panel panel-default" ng-if="user && !user.isSeller && !filteringStarted">
 
     <div class="panel-heading" ng-if="recommendedCarsGroups.length>0">
       <h3 class="panel-title text-center">
-        <span class="glyphicon glyphicon-thumbs-up"></span> Top Car Recommendations in {{ filteringStarted ? city : user.city}}
+        <span class="glyphicon glyphicon-thumbs-up"></span> Top Car Recommendations in {{ user.city }}
       </h3>
     </div>
     <div class="col-12 text-center" ng-if="recommendedCarsGroups.length === 0">

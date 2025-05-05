@@ -13,9 +13,7 @@
            
           </h3>
           <p class="profile-username">@{{ user.username }}</p>
-          <button class="btn btn-primary btn-edit" ng-click="openUpdateModal(user)" ng-if="showingSeller">
-            <span class="glyphicon glyphicon-edit"></span> Edit Profile
-          </button>
+        
         </div>
         
         <div class="profile-details">
@@ -38,6 +36,9 @@
               <label>City</label>
               <p>{{ user.city }}</p>
             </div>
+            <button class="btn btn-sm btn-outline-primary btn-edit-city" ng-click="openEditCityModal(user)" ng-if="showingSeller">
+              <span class="glyphicon glyphicon-pencil"></span> Edit
+            </button>
           </div>
         </div>
       </div>
@@ -57,52 +58,30 @@
     
   </div>
 
-  <script type="text/ng-template" id="updateUserModal.html">
+  
+  <script type="text/ng-template" id="editCityModal.html">
     <div class="modal-header">
       <button type="button" class="close" ng-click="cancel()">&times;</button>
-      <h4 class="modal-title">Update Profile</h4>
+      <h4 class="modal-title">Update City</h4>
     </div>
     <div class="modal-body">
-      <form name="updateUserForm" novalidate>
-        <div class="form-group">
-          <label>First Name</label>
-          <input type="text"
-                 name="firstName"
-                 class="form-control"
-                 placeholder="Enter first name"
-                 ng-model="updatedUser.firstName"
-                 required
-                 ng-minlength="3"
-                 ng-maxlength="50">
-        </div>
-      
-        <div class="form-group">
-          <label>Last Name</label>
-          <input type="text"
-                 name="lastName"
-                 class="form-control"
-                 placeholder="Enter last name"
-                 ng-model="updatedUser.lastName"
-                 required
-                 ng-minlength="3"
-                 ng-maxlength="50">
-        </div>
-      
+      <form name="editCityForm" novalidate>
         <div class="form-group">
           <label>City</label>
           <select class="form-control"
                   name="city"
-                  ng-model="updatedUser.city"
+                  ng-model="cityData.city"
                   required>
             <option value="" disabled>Please select your city</option>
             <option ng-repeat="city in cities" value="{{city}}">{{city}}</option>
           </select>
+          <small class="text-muted">Changing your city will affect what cars are recommended to you.</small>
         </div>
       </form>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-default" ng-click="cancel()">Cancel</button>
-      <button type="submit" class="btn btn-primary" ng-click="saveUser()">Save Changes</button>
+      <button type="submit" class="btn btn-primary" ng-click="updateCity()" ng-disabled="editCityForm.$invalid">Save Changes</button>
     </div>
   </script>
 </div>

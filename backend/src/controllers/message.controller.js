@@ -33,7 +33,6 @@ import Attachment from "../models/chat.Attachments.model.js";
  * emits a socket event to notify participants of the new message.
  */
 export const addMessageController = async(req,res)=>{
-    console.log(req.attachment);
     const conversationId = req.params.conversationId;
     const {message} = req.body;
     let image = req.attachment;
@@ -41,6 +40,7 @@ export const addMessageController = async(req,res)=>{
         const newMessage = new Message({
             conversation: conversationId,
             sender: {
+                _id: req.user._id,
                 username: req.user.username,
             },
             message: message,

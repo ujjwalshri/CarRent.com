@@ -184,13 +184,6 @@ angular.module('myApp').controller('sellerListingsCtrl', function($scope, $state
     
   
     /**
-     * Navigates to add car page
-     */
-    $scope.addNewCar = function() {
-        $state.go('car');
-    };
-    
-    /**
      * Opens modal for updating car price
      */
     $scope.openPriceModal = function(car) {

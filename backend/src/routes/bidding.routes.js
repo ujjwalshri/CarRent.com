@@ -1,6 +1,18 @@
 import express from "express";
 import protectRoute from "../middlewares/protectRoute.js";
-import {addBidController, updateBidStatusController, getBidForOwnerController, getBidForUserController, getBookingsAtCarIdController, getAllBookingsAtOwnerIdController ,getAllBookingsAtUserIdController, getUserBookingHistory, getBookingAtBookingIdController, startBookingController, endBookingController , reviewBookingController, bookingRecommendationController, getOverlappingBidsController} from "../controllers/bidding.controller.js";
+import {addBidController,
+     updateBidStatusController,
+     getBidForOwnerController,
+     getBidForUserController,
+     getBookingsAtCarIdController,
+     getAllBookingsAtOwnerIdController,
+     getAllBookingsAtUserIdController,
+     getUserBookingHistory,
+     getBookingAtBookingIdController,
+     startBookingController,
+     endBookingController, 
+     reviewBookingController, 
+     getOverlappingBidsController} from "../controllers/bidding.controller.js";
 import allowUser from "../middlewares/authenticateUser.js";
 import allowSeller from "../middlewares/authenticateSeller.js";
 const router = express.Router();
@@ -17,7 +29,7 @@ router.get('/getBid/:bookingId', protectRoute, allowSeller, getBookingAtBookingI
 router.patch('/startBooking/:bookingId', protectRoute, allowSeller, startBookingController); // start the booking
 router.patch('/endBooking/:bookingId', protectRoute, allowSeller, endBookingController); // end the booking
 router.patch('/reviewBooking/:bookingId',reviewBookingController) // review the booking  
-router.get('/getCarRecommendation', protectRoute, bookingRecommendationController) // get the car recommendation
+
 
 router.get('/getOverlappingBids/:id', protectRoute, allowSeller, getOverlappingBidsController) // get the overlapping bids
 export default router;

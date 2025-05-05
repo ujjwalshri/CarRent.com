@@ -191,6 +191,43 @@ export const updateUserProfileController = async (req, res) => {
 };
 
 /**
+ * Updates only the user's city
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.city - New city value
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with updated user data
+ */
+export const updateUserCityController = async (req, res) => {
+    const userId = req.user._id;
+    const { city } = req.body;
+
+    if (!city) {
+        return res.status(400).json({ message: 'City is required' });
+    }
+
+    try {
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { city },
+            { new: true, runValidators: true }
+        ).select('-password');
+        
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        return res.status(200).json({ 
+            message: 'User city updated successfully', 
+            user: updatedUser 
+        });
+    } catch (err) {
+        console.log(`Error updating user city: ${err.message}`);
+        return res.status(500).json({ message: `Error updating user city: ${err.message}` });
+    }
+};
+
+/**
  * @description: function to get the user at the userId
  * @param {string} userId - the userId of the user to get   
  * @returns {object} - the user object

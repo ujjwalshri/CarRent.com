@@ -17,24 +17,26 @@ angular.module('myApp').service('UserService', function($http, ApiService, $q) {
         return deferred.promise;
     }
 
-   /**
-    * Function to update user profile
-    * @param {*} data 
-    * @returns 
-    */
-    this.updateUserProfile = (data)=>{
+  
+
+    /**
+     * Function to update only user city
+     * @param {string} city - The new city value
+     * @returns {Promise} Promise resolving with updated user data
+     */
+    this.updateUserCity = (city) => {
         let deferred = $q.defer();
-        $http.patch(`${ApiService.baseURL}/api/user/updateUserProfile`, data, { withCredentials: true })
-        .then((res)=>{
+        $http.patch(`${ApiService.baseURL}/api/user/updateUserCity`, { city }, { withCredentials: true })
+        .then((res) => {
             deferred.resolve(res);
         })
-        .catch(err=>{
-            deferred.reject("Error updating user profile");
+        .catch(err => {
+            deferred.reject("Error updating user city");
             console.log(err);
-        })
+        });
         return deferred.promise;
-
     }
+
     /**
      * Function to get all users
      * @param {*} city - City filter

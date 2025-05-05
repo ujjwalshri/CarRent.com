@@ -44,7 +44,7 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
     }
   
     /**
-     * Navigates to car listing page
+     * goes to the become seller page
      */
     $scope.navigate = () => {
         $state.go('car');
@@ -57,14 +57,17 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
         $state.go('sellerListings');
     }
     
+  
     /**
-     * Opens modal for updating user profile information
+     * Opens modal for updating just the user's city
      */
-    $scope.openUpdateModal = () => {
+    $scope.openEditCityModal = () => {
         var modalInstance = $uibModal.open({
-            templateUrl: 'updateUserModal.html',
-            controller: function($scope, $uibModalInstance, userData, UserService, ToastService, UserFactory) {
-                $scope.updatedUser = angular.copy(userData); // creating a deep copy of the user data
+            templateUrl: 'editCityModal.html',
+            controller: function($scope, $uibModalInstance, userData, UserService, ToastService, City) {
+                $scope.cityData = {
+                    city: userData.city
+                };
                 $scope.cities = City.getCities();
                 
                 /**
@@ -75,29 +78,21 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
                 };
                 
                 /**
-                 * Saves user profile updates
-                 * Validates form data before submitting
+                 * Updates only the user's city
                  */
-                $scope.saveUser = function() {
-                    const data = {
-                        firstName: $scope.updatedUser.firstName,
-                        lastName: $scope.updatedUser.lastName,
-                        city: $scope.updatedUser.city
-                    };
-
-                   const validateionResult = UserFactory.validateUpdateUserData(data);
-                   if(validateionResult !== true){
-                        ToastService.error(validateionResult);
+                $scope.updateCity = function() {
+                    if (!$scope.cityData.city) {
+                        ToastService.error("Please select a city");
                         return;
                     }
                     
-                    UserService.updateUserProfile(data)
+                    UserService.updateUserCity($scope.cityData.city)
                         .then(function(response) {
-                            ToastService.success("User profile updated successfully");
+                            ToastService.success("City updated successfully");
                             $uibModalInstance.close(response.data.user);
                         })
                         .catch(function(err) {
-                            ToastService.error("Error updating user profile: " + err);
+                            ToastService.error("Error updating city: " + err);
                         });
                 };
             },
