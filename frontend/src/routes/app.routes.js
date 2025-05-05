@@ -63,9 +63,9 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
                     })
                 }]}
         })
-        .state('car', {
-            url: '/car',
-            templateUrl: 'modules/car/addCarForm.html',
+        .state('becomeSeller', {
+            url: '/becomeSeller',
+            templateUrl: 'modules/car/addCar.html',
             controller: 'addCarCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
@@ -170,9 +170,9 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
                 }]
             }
         })
-        .state('userBookings', {
-            url: '/userBookings',
-            templateUrl: 'modules/booking/userBookings/userBookings.html',
+        .state('myBookings', {
+            url: '/myBookings',
+            templateUrl: 'modules/booking/userBookings/myBookings.html',
             controller: 'userBookingsCtrl',
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
@@ -219,6 +219,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
                     if(user && user.isAdmin){
                         $state.go('admin');
                     }
+                    
                    }).catch((err)=>{
                     $state.go('login'); 
                 })

@@ -1,226 +1,615 @@
 <loading-component is-loading="isLoading" loading-text="Loading Car Details..."></loading-component>
 <back-button></back-button>
-<div class="container-fluid" ng-init="init()">
+<div class="container-fluid car-details-container" ng-init="init()">
     <div class="row">
         <div class="col-md-12">
-
-            <div class="panel panel-default" ng-if="car">
-                <div class="panel-heading">
-                    <h3 class="panel-title text-center">{{ car.company }}  {{ car.name }} ({{ car.modelYear }})</h3>
+            <div class="panel panel-default main-car-panel" ng-if="car">
+                <div class="panel-heading car-panel-heading">
+                    <h2 class="panel-title text-center">{{ car.company }} {{ car.name }} <span class="model-year">({{ car.modelYear }})</span></h2>
                 </div>
                 
                 <div class="panel-body">
                     <div class="row">
 
                         <div class="col-md-6">
-                            <div uib-carousel active="activeSlide" interval="5000" no-wrap="false" >
-                                <div uib-slide ng-repeat="slide in car.vehicleImages track by $index" index="$index" >
-                                    <img ng-src="{{slide.url}}" class="img-responsive center-block" style="height: 400px; width: 500px;" alt="Car Image">
+                            <div class="image-gallery-wrapper">
+                                <div uib-carousel active="activeSlide" interval="5000" no-wrap="false" class="car-carousel">
+                                    <div uib-slide ng-repeat="slide in car.vehicleImages track by $index" index="$index">
+                                        <img ng-src="{{slide.url}}" class="img-responsive center-block car-image" alt="Car Image">
+                                    </div>
+                                </div>
+                                <div class="carousel-indicators-custom" ng-if="car.vehicleImages.length > 1">
+                                    <span ng-repeat="slide in car.vehicleImages track by $index" 
+                                          class="indicator" 
+                                          ng-class="{'active': activeSlide === $index}">
+                                    </span>
                                 </div>
                             </div>
                         </div>
 
+
                         <div class="col-md-6">
-                            <div class="panel panel-default">
+                            <div class="panel panel-default details-panel">
                                 <div class="panel-body">
-                                    <h4 class="text-primary">Car Details</h4>
+                                    <div class="car-rating-badge" ng-if="averageRating!=='0.0'">
+                                        <span class="rating-value">{{averageRating}}</span>
+                                        <i class="fa fa-star star-icon"></i>
+                                    </div>
+                                    <div class="car-rating-badge no-rating" ng-if="averageRating==='0.0'">
+                                        <span class="rating-text">New</span>
+                                    </div>
+                                    
+                                    <h3 class="details-title">Car Details</h3>
+                                    <div class="row details-grid">
+                                        <div class="col-sm-6">
+                                            <div class="detail-item">
+                                                <div class="detail-icon">
+                                                    <i class="fa fa-money"></i>
+                                                </div>
+                                                <div class="detail-content">
+                                                    <div class="detail-label">Price</div>
+                                                    <div class="detail-value price-value">{{ car.price | currency:"₹" }} <span class="per-day">per day</span></div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="detail-item">
+                                                <div class="detail-icon">
+                                                    <i class="fa fa-tag"></i>
+                                                </div>
+                                                <div class="detail-content">
+                                                    <div class="detail-label">Category</div>
+                                                    <div class="detail-value">{{ car.category }}</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="detail-item">
+                                                <div class="detail-icon">
+                                                    <i class="fa fa-dashboard"></i>
+                                                </div>
+                                                <div class="detail-content">
+                                                    <div class="detail-label">Mileage</div>
+                                                    <div class="detail-value">{{ car.mileage }} kmpl</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-sm-6">
+                                            <div class="detail-item">
+                                                <div class="detail-icon">
+                                                    <i class="fa fa-tint"></i>
+                                                </div>
+                                                <div class="detail-content">
+                                                    <div class="detail-label">Color</div>
+                                                    <div class="detail-value">
+                                                        <span class="color-swatch" ng-style="{'background-color': car.color}"></span>
+                                                        {{ car.color }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="detail-item">
+                                                <div class="detail-icon">
+                                                    <i class="fa fa-fire"></i>
+                                                </div>
+                                                <div class="detail-content">
+                                                    <div class="detail-label">Fuel Type</div>
+                                                    <div class="detail-value">{{ car.fuelType }}</div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="detail-item">
+                                                <div class="detail-icon">
+                                                    <i class="fa fa-map-marker"></i>
+                                                </div>
+                                                <div class="detail-content">
+                                                    <div class="detail-label">Location</div>
+                                                    <div class="detail-value">{{ car.city }} {{car.location==='undefined' ? '' : "("+ car.location + ")"}}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="additional-info">
+                                        <p class="text-warning distance-note"><i class="fa fa-info-circle"></i> ₹10 per km after 300km</p>
+                                        <p class="text-warning platform-fee-note"><i class="fa fa-info-circle"></i> Platform fee of {{ platformFeePercentage }}% will be added to the total</p>
+                                    </div>
+
+                                    <div class="bid-action text-center" ng-hide="isSeller || LoggedinUser.username === car.owner.username">
+                                        <button class="btn btn-success btn-lg bid-button pulse-btn" ng-click="openBidModal()">
+                                            <i class="glyphicon glyphicon-usd"></i> Place Bid
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="panel panel-info owner-panel">
+                                <div class="panel-heading">
+                                    <h3 class="panel-title"><i class="fa fa-user"></i> Owner Information</h3>
+                                </div>
+                                <div class="panel-body">
                                     <div class="row">
                                         <div class="col-sm-6">
-                                            <p><span class="label label-warning">Rating: {{averageRating==='0.0' ? 'No reviews yet' : averageRating + "⭐"}} </span></p>
-                                            <p><strong>Price:</strong> {{ car.price  | currency:"₹"  }} per day</p>
-                                            <p class="text-warning"><small> ₹10 per kms after 300km</small></p>
-                                            <p class="text-warning">Platform fee of {{ platformFeePercentage }}% will be added to the total price for using our services and platform</p>
-                                            <p><strong>Category:</strong> {{ car.category }}</p>
-                                            <p><strong>Mileage:</strong> {{ car.mileage }} kmpl</p>
+                                            <div class="owner-detail">
+                                                <span class="owner-label">Username:</span>
+                                                <span class="owner-value">{{ car.owner.username }}</span>
+                                            </div>
+                                            <div class="owner-detail" ng-if="sellerRating">
+                                                <span class="owner-label">Rating:</span>
+                                                <span class="owner-value seller-rating">
+                                                    {{ sellerRating | number:1 }}
+                                                    <i class="fa fa-star rating-star"></i>
+                                                </span>
+                                            </div>
                                         </div>
                                         <div class="col-sm-6">
-                                            <p><strong>Color:</strong> 
-                                                <span class="label" ng-style="{'background-color': car.color}">{{ car.color }}</span>
-                                            </p>
-                                            <p><strong>Fuel Type:</strong> {{ car.fuelType }}</p>
-                                            <p><strong>Location:</strong> {{ car.city }} {{car.location==='undefined' ? '' : "("+ car.location + ")"}}</p>
-                                            
-
-                                            <div class="text-center" ng-hide="isSeller || LoggedinUser.username === car.owner.username">
-                                                <button class="btn btn-success btn-lg btn-block" ng-click="openBidModal()">
-                                                    <i class="glyphicon glyphicon-usd"></i> Place Bid
+                                            <div class="mt-10" ng-hide="LoggedinUser.username === car.owner.username">
+                                                <button class="btn btn-primary btn-block chat-btn" ng-click="chatWithOwner(car.owner)">
+                                                    <i class="glyphicon glyphicon-comment"></i> Chat with Owner
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-
-                            <div class="panel panel-info">
-                                <div class="panel-heading">
-                                    <h3 class="panel-title">Owner Information</h3>
-                                </div>
-                                <div class="panel-body">
-                                    <div class="row">
-                                        <div class="col-sm-6">
-                                            <p><strong>Username:</strong> {{ car.owner.username }}</p> 
-                                            <p ng-if="sellerRating"><strong>Rating:</strong> {{ sellerRating | number:1 }} <i class="fa fa-star"></i></p>
-                                        </div>
-                                        <div class="col-sm-6">
-                                            <p><strong>Email:</strong> {{ car.owner.email }}</p>
-                                            <p ng-hide="LoggedinUser.username === car.owner.username">
-                                                <button class="btn btn-primary btn-block" ng-click="chatWithOwner(car.owner)">
-                                                    <i class="glyphicon glyphicon-comment"></i> Chat with Owner
-                                                </button>
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="panel panel-default">
+
+            <div class="panel panel-default review-panel">
                 <div class="panel-heading">
-                    <h3 class="panel-title">Customer Reviews</h3>
+                    <h3 class="panel-title"><i class="fa fa-comments"></i> Customer Reviews</h3>
                 </div>
                 <div class="panel-body">
                     <div class="row">
                         <div class="col-md-12">
-                            <div class="panel panel-warning" ng-repeat="review in carReviews">
-                                <div class="panel-heading clearfix">
-                                    <div class="pull-left">
-                                        <strong>{{ review.reviewer.username || 'Anonymous' }}</strong>
+                            <div class="review-container">
+                                <div class="review-item" ng-repeat="review in carReviews">
+                                    <div class="review-header">
+                                        <div class="reviewer-info">
+                                            <i class="fa fa-user-circle reviewer-icon"></i>
+                                            <span class="reviewer-name">{{ review.reviewer.username || 'Anonymous' }}</span>
+                                        </div>
+                                        <div class="review-rating">
+                                            <span class="rating-badge">
+                                                {{ review.rating }}/5 <i class="fa fa-star"></i>
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div class="pull-right">
-                                        <span class="label label-warning">⭐ {{ review.rating }} / 5</span>
+                                    <div class="review-content">
+                                        <p class="review-text">{{ review.review }}</p>
+                                        <div class="review-date">
+                                            <i class="fa fa-calendar"></i> {{ review.createdAt | date:'medium' }}
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="panel-body">
-                                    <blockquote>
-                                        <p>{{ review.review }}</p>
-                                        <footer>Posted on <cite>{{ review.createdAt | date:'medium' }}</cite></footer>
-                                    </blockquote>
+                            
+                                <div class="no-reviews" ng-if="!carReviews.length">
+                                    <i class="fa fa-info-circle fa-3x"></i>
+                                    <h4>No reviews yet</h4>
+                                    <p>Be the first to review this car!</p>
                                 </div>
-                            </div>
-                            
-                            <div class="alert alert-info text-center" ng-if="!carReviews.length">
-                                No reviews yet. Be the first to review!
-                            </div>
-                            
-                            <div class="text-center" ng-if="hasMoreReviews">
-                                <button class="btn btn-primary btn-lg" ng-click="loadMoreReviews()">
-                                    <i class="glyphicon glyphicon-chevron-down"></i> Load More Reviews
-                                </button>
+                                
+                                <div class="load-more text-center" ng-if="hasMoreReviews">
+                                    <button class="btn btn-primary" ng-click="loadMoreReviews()">
+                                        <i class="glyphicon glyphicon-chevron-down"></i> Load More Reviews
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-          
+        </div>
     </div>
 </div>
 
 <style>
-.addon-list {
-    max-height: 300px;
-    overflow-y: auto;
-    padding: 10px;
-    border: 1px solid #eee;
-    border-radius: 4px;
-    background-color: #f9f9f9;
+/* Base Styling */
+.car-details-container {
+    padding: 20px 10px;
+    background-color: #f7f9fc;
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
-.addon-item {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
+/* Main Car Panel */
+.main-car-panel {
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 25px;
+    border: none;
 }
 
-.addon-item:last-child {
-    border-bottom: none;
+.car-panel-heading {
+    background-color: #3c4b64;
+    color: white;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    padding: 15px;
 }
 
-.checkbox {
+.car-panel-heading h2 {
+    font-size: 24px;
+    font-weight: 500;
     margin: 0;
 }
 
-.checkbox label {
+.model-year {
+    color: #010409;
+    font-weight: 400;
+}
+
+/* Car Image Section */
+.image-gallery-wrapper {
+    position: relative;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.car-carousel {
+    background-color: #f1f1f1;
+    border-radius: 8px;
+}
+
+.car-image {
+    height: 400px;
     width: 100%;
-    font-weight: normal;
+    object-fit: cover;
+    border-radius: 8px;
 }
 
-.selected-addons {
-    margin-top: 15px;
-    padding-top: 15px;
-    border-top: 1px solid #eee;
+.carousel-indicators-custom {
+    text-align: center;
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
 }
 
-.badge {
-    margin: 2px;
+.indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: rgba(255,255,255,0.5);
+    margin: 0 3px;
+    cursor: pointer;
+}
+
+.indicator.active {
+    background-color: white;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+/* Car Details Section */
+.details-panel {
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    height: 100%;
+    border: none;
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.car-rating-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #ffb400;
+    color: white;
     padding: 5px 10px;
-    font-size: 12px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.car-rating-badge.no-rating {
     background-color: #2196F3;
 }
 
-.badge-info {
-    background-color: #5bc0de;
+.rating-value {
+    margin-right: 3px;
 }
 
-.total-price {
-    font-size: 18px;
-    color: #2196F3;
-    margin-bottom: 0;
+.star-icon {
+    color: #fff;
+    font-size: 12px;
 }
 
-.price-breakdown {
-    background-color: #f9f9f9;
-    padding: 15px;
-    border-radius: 4px;
+.rating-text {
+    font-size: 12px;
 }
 
-.price-breakdown p {
-    margin-bottom: 8px;
-}
-
-.loading-spinner {
-    margin-top: 15px;
-}
-
-.booking-details h4 {
+.details-title {
+    color: #3c4b64;
+    margin-top: 5px;
     margin-bottom: 20px;
-    color: #333;
+    font-size: 22px;
+    font-weight: 500;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
 }
 
-.input-group-addon {
-    background-color: #f5f5f5;
+.details-grid {
+    margin-bottom: 20px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.detail-icon {
+    flex: 0 0 40px;
+    height: 40px;
+    background-color: #e9f5fe;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2196F3;
+    margin-right: 10px;
+}
+
+.detail-content {
+    flex: 1;
+}
+
+.detail-label {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 2px;
+}
+
+.detail-value {
+    font-weight: 500;
+    color: #344767;
+}
+
+.price-value {
+    color: #2e7d32;
+    font-size: 18px;
     font-weight: bold;
 }
 
-hr {
-    margin: 30px 0;
-    border-color: #eee;
+.per-day {
+    font-size: 12px;
+    font-weight: normal;
+    color: #6c757d;
 }
 
-.panel-info > .panel-heading {
-    background-color: #2196F3;
-    color: white;
-    border-color: #2196F3;
+.color-swatch {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    margin-right: 5px;
+    vertical-align: middle;
+    border: 1px solid #ddd;
 }
 
-.btn-success {
+.additional-info {
+    background-color: #fff8e1;
+    border-left: 4px solid #ffc107;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin: 15px 0;
+}
+
+.distance-note, .platform-fee-note {
+    color: #856404;
+    margin-bottom: 5px;
+    font-size: 13px;
+}
+
+.bid-action {
+    margin-top: 20px;
+}
+
+.bid-button {
+    background-color: #28a745;
+    border: none;
     padding: 12px 30px;
     font-size: 16px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    border-radius: 30px;
+    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+    transition: all 0.3s ease;
 }
 
-.btn-success:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
+.bid-button:hover {
+    background-color: #218838;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(40, 167, 69, 0.4);
 }
 
-.text-muted {
-    font-size: 12px;
+.pulse-btn {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+    }
+}
+
+/* Owner Panel */
+.owner-panel {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    border: none;
+}
+
+.owner-panel .panel-heading {
+    background-color: #2196F3;
+    color: white;
+    font-weight: 500;
+    padding: 12px 15px;
+}
+
+.owner-detail {
+    margin-bottom: 10px;
+}
+
+.owner-label {
+    font-weight: 600;
+    color: #3c4b64;
+    margin-right: 5px;
+}
+
+.owner-value {
+    color: #505a6e;
+}
+
+.seller-rating {
+    color: #ff9800;
+}
+
+.rating-star {
+    color: #ff9800;
+    margin-left: 3px;
+}
+
+.chat-btn {
     margin-top: 5px;
+    border-radius: 4px;
+    background-color: #3c4b64;
+    border-color: #3c4b64;
+    padding: 8px 15px;
+    transition: all 0.3s ease;
+}
+
+.chat-btn:hover {
+    background-color: #2c3a50;
+    border-color: #2c3a50;
+    transform: translateY(-2px);
+}
+
+.mt-10 {
+    margin-top: 10px;
+}
+
+/* Reviews Section */
+.review-panel {
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: none;
+}
+
+.review-panel .panel-heading {
+    background-color: #3c4b64;
+    color: white;
+    border-radius: 8px 8px 0 0;
+    padding: 12px 15px;
+}
+
+.review-container {
+    padding: 10px 0;
+}
+
+.review-item {
+    background-color: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    border-left: 3px solid #2196F3;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.reviewer-info {
+    display: flex;
+    align-items: center;
+}
+
+.reviewer-icon {
+    color: #6c757d;
+    font-size: 18px;
+    margin-right: 8px;
+}
+
+.reviewer-name {
+    font-weight: 500;
+    color: #3c4b64;
+}
+
+.rating-badge {
+    background-color: #ffb400;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.review-content {
+    padding: 5px 0;
+}
+
+.review-text {
+    color: #505a6e;
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.review-date {
+    color: #a1a5b7;
+    font-size: 12px;
+}
+
+.no-reviews {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+.no-reviews i {
+    color: #e9ecef;
+    margin-bottom: 15px;
+}
+
+.no-reviews h4 {
+    font-weight: 500;
+    margin-bottom: 10px;
+    color: #3c4b64;
+}
+
+.load-more {
+    margin-top: 20px;
+}
+
+.load-more button {
+    border-radius: 30px;
+    padding: 8px 20px;
+    background-color: #2196F3;
+    border-color: #2196F3;
+    transition: all 0.3s ease;
+}
+
+.load-more button:hover {
+    background-color: #0d8aee;
+    border-color: #0d8aee;
 }
 </style>
 

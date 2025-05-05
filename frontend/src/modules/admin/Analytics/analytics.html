@@ -1,290 +1,292 @@
-<loading-component is-loading="isLoading" loading-text="Loading Analytics..."></loading-component>
-<div ng-init="init()" class="container-fluid">
-    <div class="page-header">
-        <h1 class="text-center"><i class="fas fa-chart-line"></i> Analytics Dashboard</h1>
-    </div>
-    <div class="col-md-4">
-        <div class="panel panel-success">
-            <div class="panel-heading">
-                <i class="fas fa-users"></i> User Engagement
-            </div>
-            <div class="panel-body text-center">
-                <h3>{{userEngagementPercentage}}%</h3>
-                <small>users with at least 1 bid are engaged users</small>
-            </div>
+<div class="admin-page-container" style="padding-top: 20px;">
+    <loading-component is-loading="isLoading" loading-text="Loading Analytics..."></loading-component>
+    <div ng-init="init()" class="container-fluid">
+        <div class="page-header">
+            <h1 class="text-center"><i class="fas fa-chart-line"></i> Analytics Dashboard</h1>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="panel panel-warning">
-            <div class="panel-heading">
-                <i class="fas fa-ban"></i> Blocked Users
-            </div>
-            <div class="panel-body text-center">
-                <h3>{{blockedUsers}}</h3>
-            </div>
-            <div class="panel-body text-center">
-                <small>users blocked by the admin</small>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="panel panel-info">
-            <div class="panel-heading">
-                <i class="fas fa-clock"></i> Ongoing Bookings
-            </div>
-            <div class="panel-body text-center">
-                <h3>{{ongoingBookings}}</h3>
-            </div>
-            <div class="panel-body text-center">
-                <small>ongoing bookings on the platform</small>
-            </div>
-        </div>
-    </div>
-
-
-    <uib-alert type="info" class="mb-3">
-        <div class="row">
-            <div class="col-md-5">
-                <div class="form-group">
-                    <label class="control-label">
-                        <i class="fas fa-calendar-alt"></i> Start Date
-                    </label>
-                    <input type="date" 
-                           class="form-control" 
-                           ng-model="startDate"
-                           placeholder="Select start date">
+        <div class="col-md-4">
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <i class="fas fa-users"></i> User Engagement
+                </div>
+                <div class="panel-body text-center">
+                    <h3>{{userEngagementPercentage}}%</h3>
+                    <small>users with at least 1 bid are engaged users</small>
                 </div>
             </div>
-            <div class="col-md-5">
-                <div class="form-group">
-                    <label class="control-label">
-                        <i class="fas fa-calendar-alt"></i> End Date
-                    </label>
-                    <input type="date" 
-                           class="form-control" 
-                           ng-model="endDate"
-                           placeholder="Select end date">
+        </div>
+        <div class="col-md-4">
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <i class="fas fa-ban"></i> Blocked Users
+                </div>
+                <div class="panel-body text-center">
+                    <h3>{{blockedUsers}}</h3>
+                </div>
+                <div class="panel-body text-center">
+                    <small>users blocked by the admin</small>
                 </div>
             </div>
-            <div class="col-md-2">
-                <div class="form-group">
-                    <label class="control-label">&nbsp;</label>
-                    <div class="btn-group btn-block">
-                        <button class="btn btn-primary" ng-click="filter()">
-                            <i class="fas fa-sync"></i> Apply
-                        </button>
-                        <button class="btn btn-default" ng-click="resetAnalytics()">
-                            <i class="fa fa-rotate-left"></i> Reset
-                        </button>
+        </div>
+        <div class="col-md-4">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <i class="fas fa-clock"></i> Ongoing Bookings
+                </div>
+                <div class="panel-body text-center">
+                    <h3>{{ongoingBookings}}</h3>
+                </div>
+                <div class="panel-body text-center">
+                    <small>ongoing bookings on the platform</small>
+                </div>
+            </div>
+        </div>
+
+
+        <uib-alert type="info" class="mb-3">
+            <div class="row">
+                <div class="col-md-5">
+                    <div class="form-group">
+                        <label class="control-label">
+                            <i class="fas fa-calendar-alt"></i> Start Date
+                        </label>
+                        <input type="date" 
+                               class="form-control" 
+                               ng-model="startDate"
+                               placeholder="Select start date">
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="form-group">
+                        <label class="control-label">
+                            <i class="fas fa-calendar-alt"></i> End Date
+                        </label>
+                        <input type="date" 
+                               class="form-control" 
+                               ng-model="endDate"
+                               placeholder="Select end date">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label class="control-label">&nbsp;</label>
+                        <div class="btn-group btn-block">
+                            <button class="btn btn-primary" ng-click="filter()">
+                                <i class="fas fa-sync"></i> Apply
+                            </button>
+                            <button class="btn btn-default" ng-click="resetAnalytics()">
+                                <i class="fa fa-rotate-left"></i> Reset
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </uib-alert>
+        </uib-alert>
 
-    <uib-tabset>
+        <uib-tabset>
 
-        <uib-tab heading="Overview" select="onTabSelect('Overview')" active="activeTab === 'Overview'">
-            <div class="row">
-               
-               
-                <div class="col-md-6">
-                    <div class="panel panel-primary">
-                        <div class="panel-heading">
-                            <i class="fas fa-chart-line"></i> Bidding Conversion
+            <uib-tab heading="Overview" select="onTabSelect('Overview')" active="activeTab === 'Overview'">
+                <div class="row">
+                   
+                   
+                    <div class="col-md-6">
+                        <div class="panel panel-primary">
+                            <div class="panel-heading">
+                                <i class="fas fa-chart-line"></i> Bidding Conversion
+                            </div>
+                            <div class="panel-body text-center">
+                                <h3>{{biddingConversionRate}}%</h3>
+                                <small>approved bids / total bids</small>
+                            </div>
                         </div>
-                        <div class="panel-body text-center">
-                            <h3>{{biddingConversionRate}}%</h3>
-                            <small>approved bids / total bids</small>
-                        </div>
+                       
                     </div>
                    
-                </div>
-               
-                <div class="col-md-6">
-                    <div class="panel panel-primary">
-                        <div class="panel-heading">
-                            <i class="fas fa-chart-line"></i> New Users 
+                    <div class="col-md-6">
+                        <div class="panel panel-primary">
+                            <div class="panel-heading">
+                                <i class="fas fa-chart-line"></i> New Users 
+                            </div>
+                            <div class="panel-body text-center">
+                                <h3>{{newUsers}} people</h3>
+                                <small>users added within date range</small>
+                            </div>
                         </div>
-                        <div class="panel-body text-center">
-                            <h3>{{newUsers}} people</h3>
-                            <small>users added within date range</small>
-                        </div>
+                       
                     </div>
                    
+                   
                 </div>
-               
-               
-            </div>
-        </uib-tab>
+            </uib-tab>
 
 
-        <uib-tab heading="Top Performers" select="onTabSelect('Top Performers')" active="activeTab === 'Top Performers'">
-            <div class="row" style="margin-top: 20px;">
+            <uib-tab heading="Top Performers" select="onTabSelect('Top Performers')" active="activeTab === 'Top Performers'">
+                <div class="row" style="margin-top: 20px;">
 
-                <div class="col-md-12">
-                    <div class="panel panel-default">
+                    <div class="col-md-12">
+                        <div class="panel panel-default">
 
-                        <div class="panel-heading" style="background: linear-gradient(135deg, #43a047, #2e7d32); color: white; padding: 15px; border-radius: 6px 6px 0 0; cursor: pointer;" ng-click="toggleTopSellers = !toggleTopSellers">
-                            <h3 style="margin: 0; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
-                                <span>
-                                    <i class="fa fa-trophy" style="margin-right: 10px; font-size: 24px; color: #ffd700;"></i>
-                                    Top Earning Sellers
-                                    <span class="badge" style="background: rgba(255,255,255,0.2); margin-left: 10px; font-size: 14px; padding: 5px 10px; border-radius: 20px;">
-                                        {{topSellersWithMostEarnings.length || 0}}
+                            <div class="panel-heading" style="background: linear-gradient(135deg, #43a047, #2e7d32); color: white; padding: 15px; border-radius: 6px 6px 0 0; cursor: pointer;" ng-click="toggleTopSellers = !toggleTopSellers">
+                                <h3 style="margin: 0; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
+                                    <span>
+                                        <i class="fa fa-trophy" style="margin-right: 10px; font-size: 24px; color: #ffd700;"></i>
+                                        Top Earning Sellers
+                                        <span class="badge" style="background: rgba(255,255,255,0.2); margin-left: 10px; font-size: 14px; padding: 5px 10px; border-radius: 20px;">
+                                            {{topSellersWithMostEarnings.length || 0}}
+                                        </span>
                                     </span>
-                                </span>
-                                <i class="fa" ng-class="{'fa-chevron-down': !toggleTopSellers, 'fa-chevron-up': toggleTopSellers}"></i>
-                            </h3>
-                        </div>
-                        
+                                    <i class="fa" ng-class="{'fa-chevron-down': !toggleTopSellers, 'fa-chevron-up': toggleTopSellers}"></i>
+                                </h3>
+                            </div>
+                            
 
-                        <div class="panel-body" uib-collapse="!toggleTopSellers">
-                            <div class="table-responsive">
-                                <table class="table table-hover table-striped">
-                                    <thead>
-                                        <tr style="background-color: #f8f9fa;">
-                                            <th style="padding: 15px; color: #43a047; font-weight: 600; border-bottom: 2px solid #43a047;">Seller Username</th>
-                                            <th style="padding: 15px; color: #43a047; font-weight: 600; border-bottom: 2px solid #43a047;">Seller Name</th>
-                                            <th style="padding: 15px; color: #43a047; font-weight: 600; border-bottom: 2px solid #43a047;">Total Earnings</th>
-                                            <th style="padding: 15px; color: #43a047; font-weight: 600; border-bottom: 2px solid #43a047;">Send Acknowledgement</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr ng-repeat="seller in topSellersWithMostEarnings">
-                                            <td>{{seller.ownerUsername}}</td>
-                                            <td>{{seller.ownerFirstName}} {{seller.ownerLastName}}</td>
-                                            <td>{{seller.totalEarnings + seller.totalFine | currency:'₹':2}}</td>
-                                            <td>
-                                                <button class="btn btn-success btn-sm" ng-click="sendCongratulationMail(seller)" style="border-radius: 20px; padding: 5px 15px;">
-                                                    <i class="fa fa-envelope"></i> Send
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div class="panel-body" uib-collapse="!toggleTopSellers">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-striped">
+                                        <thead>
+                                            <tr style="background-color: #f8f9fa;">
+                                                <th style="padding: 15px; color: #43a047; font-weight: 600; border-bottom: 2px solid #43a047;">Seller Username</th>
+                                                <th style="padding: 15px; color: #43a047; font-weight: 600; border-bottom: 2px solid #43a047;">Seller Name</th>
+                                                <th style="padding: 15px; color: #43a047; font-weight: 600; border-bottom: 2px solid #43a047;">Total Earnings</th>
+                                                <th style="padding: 15px; color: #43a047; font-weight: 600; border-bottom: 2px solid #43a047;">Send Acknowledgement</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr ng-repeat="seller in topSellersWithMostEarnings">
+                                                <td>{{seller.ownerUsername}}</td>
+                                                <td>{{seller.ownerFirstName}} {{seller.ownerLastName}}</td>
+                                                <td>{{seller.totalEarnings + seller.totalFine | currency:'₹':2}}</td>
+                                                <td>
+                                                    <button class="btn btn-success btn-sm" ng-click="sendCongratulationMail(seller)" style="border-radius: 20px; padding: 5px 15px;">
+                                                        <i class="fa fa-envelope"></i> Send
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
 
-                <div class="col-md-12" style="margin-top: 20px;">
-                    <div class="panel panel-default">
+                    <div class="col-md-12" style="margin-top: 20px;">
+                        <div class="panel panel-default">
 
-                        <div class="panel-heading" style="background: linear-gradient(135deg, #1976d2, #0d47a1); color: white; padding: 15px; border-radius: 6px 6px 0 0; cursor: pointer;" ng-click="toggleTopBuyers = !toggleTopBuyers">
-                            <h3 style="margin: 0; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
-                                <span>
-                                    <i class="fa fa-star" style="margin-right: 10px; font-size: 24px; color: #ffd700;"></i>
-                                    Most Active Buyers
-                                    <span class="badge" style="background: rgba(255,255,255,0.2); margin-left: 10px; font-size: 14px; padding: 5px 10px; border-radius: 20px;">
-                                        {{topBuyersWithMostBookings.length || 0}}
+                            <div class="panel-heading" style="background: linear-gradient(135deg, #1976d2, #0d47a1); color: white; padding: 15px; border-radius: 6px 6px 0 0; cursor: pointer;" ng-click="toggleTopBuyers = !toggleTopBuyers">
+                                <h3 style="margin: 0; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
+                                    <span>
+                                        <i class="fa fa-star" style="margin-right: 10px; font-size: 24px; color: #ffd700;"></i>
+                                        Most Active Buyers
+                                        <span class="badge" style="background: rgba(255,255,255,0.2); margin-left: 10px; font-size: 14px; padding: 5px 10px; border-radius: 20px;">
+                                            {{topBuyersWithMostBookings.length || 0}}
+                                        </span>
                                     </span>
-                                </span>
-                                <i class="fa" ng-class="{'fa-chevron-down': !toggleTopBuyers, 'fa-chevron-up': toggleTopBuyers}"></i>
-                            </h3>
-                        </div>
-                        
-
-                        <div class="panel-body" uib-collapse="!toggleTopBuyers">
-                            <div class="table-responsive">
-                                <table class="table table-hover table-striped">
-                                    <thead>
-                                        <tr style="background-color: #f8f9fa;">
-                                            <th style="padding: 15px; color: #1976d2; font-weight: 600; border-bottom: 2px solid #1976d2;">Buyer Username</th>
-                                            <th style="padding: 15px; color: #1976d2; font-weight: 600; border-bottom: 2px solid #1976d2;">Buyer Name</th>
-                                            <th style="padding: 15px; color: #1976d2; font-weight: 600; border-bottom: 2px solid #1976d2;">Total Bookings</th>
-                                            <th style="padding: 15px; color: #1976d2; font-weight: 600; border-bottom: 2px solid #1976d2;">Send Acknowledgement</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr ng-repeat="buyer in topBuyersWithMostBookings">
-                                            <td>{{buyer.buyerUsername}}</td>
-                                            <td>{{buyer.buyerFirstName}} {{buyer.buyerLastName}}</td>
-                                            <td>{{buyer.count}}</td>
-                                            <td>
-                                                <button class="btn btn-primary btn-sm" ng-click="sendCongratulationMail(buyer)" style="border-radius: 20px; padding: 5px 15px;">
-                                                    <i class="fa fa-envelope"></i> Send
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                    <i class="fa" ng-class="{'fa-chevron-down': !toggleTopBuyers, 'fa-chevron-up': toggleTopBuyers}"></i>
+                                </h3>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </uib-tab>
+                            
 
-
-        <uib-tab heading="Charts" select="onTabSelect('Charts')" active="activeTab === 'Charts'">
-            <uib-accordion>
-
-                <uib-accordion-group heading="Time-Based Analytics" is-open="true">
-                    <div class="row">
-                        <div class="col-md-4" ng-repeat="chartId in ['top10Cars','userGrowth','topHighestEarningCities', 'top3Sellers', 'carDescription','top5MostReviewedCars','top3CompaniesWithMostNegativeReviews', 'topSellersWithMostNegativeReviews', 'categoryWiseBookings']">
-                            <div class="panel panel-default">
-                                <div class="panel-heading">
-                                </div>
-                                <div class="panel-body">
-                                    <canvas id="{{chartId}}" width="400" height="400"></canvas>
+                            <div class="panel-body" uib-collapse="!toggleTopBuyers">
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-striped">
+                                        <thead>
+                                            <tr style="background-color: #f8f9fa;">
+                                                <th style="padding: 15px; color: #1976d2; font-weight: 600; border-bottom: 2px solid #1976d2;">Buyer Username</th>
+                                                <th style="padding: 15px; color: #1976d2; font-weight: 600; border-bottom: 2px solid #1976d2;">Buyer Name</th>
+                                                <th style="padding: 15px; color: #1976d2; font-weight: 600; border-bottom: 2px solid #1976d2;">Total Bookings</th>
+                                                <th style="padding: 15px; color: #1976d2; font-weight: 600; border-bottom: 2px solid #1976d2;">Send Acknowledgement</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr ng-repeat="buyer in topBuyersWithMostBookings">
+                                                <td>{{buyer.buyerUsername}}</td>
+                                                <td>{{buyer.buyerFirstName}} {{buyer.buyerLastName}}</td>
+                                                <td>{{buyer.count}}</td>
+                                                <td>
+                                                    <button class="btn btn-primary btn-sm" ng-click="sendCongratulationMail(buyer)" style="border-radius: 20px; padding: 5px 15px;">
+                                                        <i class="fa fa-envelope"></i> Send
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </uib-accordion-group>
+                </div>
+            </uib-tab>
 
 
-                <uib-accordion-group heading="General Statistics">
-                    <div class="row">
-                        <div class="col-md-6" ng-repeat="chartId in ['ownersPerCity', 'buyersPerCity']">
-                            <div class="panel panel-default">
-                                <div class="panel-body">
-                                    <canvas id="{{chartId}}" width="400" height="400"></canvas>
+            <uib-tab heading="Charts" select="onTabSelect('Charts')" active="activeTab === 'Charts'">
+                <uib-accordion>
+
+                    <uib-accordion-group heading="Time-Based Analytics" is-open="true">
+                        <div class="row">
+                            <div class="col-md-4" ng-repeat="chartId in ['top10Cars','userGrowth','topHighestEarningCities', 'top3Sellers', 'carDescription','top3MostReviewedCars','top3CompaniesWithMostNegativeReviews', 'topSellersWithMostNegativeReviews', 'categoryWiseBookings']">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                    </div>
+                                    <div class="panel-body">
+                                        <canvas id="{{chartId}}" width="400" height="400"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </uib-accordion-group>
-            </uib-accordion>
-        </uib-tab>
+                    </uib-accordion-group>
+
+
+                    <uib-accordion-group heading="General Statistics">
+                        <div class="row">
+                            <div class="col-md-6" ng-repeat="chartId in ['ownersPerCity', 'buyersPerCity']">
+                                <div class="panel panel-default">
+                                    <div class="panel-body">
+                                        <canvas id="{{chartId}}" width="400" height="400"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </uib-accordion-group>
+                </uib-accordion>
+            </uib-tab>
 
 
 
-        <uib-tab heading="Maps" select="onTabSelect('Maps')" active="activeTab === 'Maps'">
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title text-center">Owner HeatMap</h4>
+            <uib-tab heading="Maps" select="onTabSelect('Maps')" active="activeTab === 'Maps'">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title text-center">Owner HeatMap</h4>
+                            </div>
+                            <div class="panel-body">
+                                <div id="map" style="width: 100%; height: 400px;"></div>
+                            </div>
                         </div>
-                        <div class="panel-body">
-                            <div id="map" style="width: 100%; height: 400px;"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title text-center">Buyer Heatmap</h4>
+                            </div>
+                            <div class="panel-body">
+                                <div id="buyerHeatMap" style="width: 100%; height: 400px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h4 class="panel-title text-center">city wise biddings heatmap</h4>
+                            </div>
+                            <div class="panel-body">
+                                <div id="cityWiseBookings" style="width: 100%; height: 400px;"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title text-center">Buyer Heatmap</h4>
-                        </div>
-                        <div class="panel-body">
-                            <div id="buyerHeatMap" style="width: 100%; height: 400px;"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title text-center">city wise biddings heatmap</h4>
-                        </div>
-                        <div class="panel-body">
-                            <div id="cityWiseBookings" style="width: 100%; height: 400px;"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </uib-tab>
-    </uib-tabset>
+            </uib-tab>
+        </uib-tabset>
+    </div>
 </div>

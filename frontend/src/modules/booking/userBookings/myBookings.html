@@ -3,9 +3,9 @@
 
     <div class="row">
         <div class="col-md-12">
-            <div class="page-header text-center small-header">
-                <h3><i class="glyphicon glyphicon-calendar"></i> Your Bookings</h3>
-                <p class="text-muted small">Manage and track all your car rental bookings</p>
+            <div class="page-header">
+                <h3 class="text-primary"><i class="glyphicon glyphicon-calendar"></i> My Bookings</h3>
+                <p class="text-muted">Manage and track all your car rental bookings</p>
             </div>
         </div>
     </div>
@@ -13,8 +13,8 @@
     <div class="row" ng-show="isLoading">
         <div class="col-md-12">
             <div class="text-center">
-                <i class="fa fa-spinner fa-spin fa-2x margin-bottom-10"></i>
-                <p class="text-muted small">Loading your bookings...</p>
+                <i class="fa fa-spinner fa-spin fa-3x fa-fw text-primary"></i>
+                <p class="text-muted">Loading your bookings...</p>
             </div>
         </div>
     </div>
@@ -195,7 +195,8 @@
 .margin-bottom-10 { margin-bottom: 10px; }
 .well { background-color: #f9f9f9; }
 .page-header { border-bottom: 1px solid #eee; margin: 20px 0 15px; padding-bottom: 5px; }
-.small-header h3 { font-size: 20px; margin: 10px 0; }
+.page-header h3 { font-size: 24px; margin: 10px 0; }
+.page-header h3.text-primary { color: #337ab7; }
 .panel-title { margin: 0; }
 .compact-panel .panel-body { padding: 10px; }
 .compact-well { padding: 5px 8px; }

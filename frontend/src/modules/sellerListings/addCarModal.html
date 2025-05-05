@@ -117,7 +117,7 @@
     <div class="form-group">
       <label class="col-sm-3 control-label">Car Images:</label>
       <div class="col-sm-9">
-        <input type="file" class="form-control" accept=".jpg, .jpeg, .png, .webp" multiple onchange="angular.element(this).scope().previewImages(this)" id="imageModalInput">
+        <input type="file" class="form-control" accept=".jpg, .jpeg, .png, .webp" multiple onchange="angular.element(this).scope().showPreview(this)" id="imageModalInput">
         <small class="help-block">Select up to 5 images (JPG, JPEG, PNG, WEBP)</small>
         <div class="text-danger" ng-if="imageError">{{ imageError }}</div>
 

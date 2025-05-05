@@ -14,7 +14,7 @@ angular.module('myApp').service('SocketService', function($timeout, ApiService) 
     // Online users list
     let onlineUsers = [];
     
-    // Custom event callbacks storage
+    // Custom event callbacks
     const eventListeners = {
         newMessage: [],
         newConversation: [],

@@ -1,0 +1,83 @@
+<div class="modal-header">
+    <button type="button" class="close" ng-click="cancel()" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+    </button>
+    <h3 class="modal-title">Manage One-time Addons</h3>
+</div>
+<div class="modal-body">
+    <uib-tabset active="activeTab">
+        <uib-tab index="0" heading="Current Addons">
+            <div style="margin-top: 15px;">
+                <div class="table-responsive" ng-if="addons && addons.length > 0">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="addon in addons">
+                                <td>{{addon.name}}</td>
+                                <td>₹{{addon.price}}</td>
+                                <td>
+                                    <button class="btn btn-danger btn-sm" ng-click="removeAddon(addon._id)">
+                                        <span class="glyphicon glyphicon-trash"></span>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p ng-if="!addons || addons.length === 0" class="text-muted" style="padding: 15px 0; font-style: italic;">
+                    <span class="glyphicon glyphicon-info-sign"></span> No addons added for this car yet.
+                </p>
+            </div>
+        </uib-tab>
+        
+        <uib-tab index="1" heading="Add New Addon">
+            <div style="margin-top: 15px;">
+                <div class="panel panel-default">
+                    <div class="panel-body">
+                        <form name="addonForm" ng-submit="addAddon()" novalidate>
+                            <div class="form-group" ng-class="{'has-error': addonForm.addonName.$touched && addonForm.addonName.$invalid}">
+                                <label for="addonName">Name *</label>
+                                <input type="text" 
+                                    class="form-control" 
+                                    id="addonName" 
+                                    name="addonName"
+                                    ng-model="newAddon.name" 
+                                    ng-minlength="3"
+                                    ng-maxlength="50"
+                                    required>
+                            </div>
+                        
+                            <div class="form-group" ng-class="{'has-error': addonForm.addonPrice.$touched && addonForm.addonPrice.$invalid}">
+                                <label for="addonPrice">Price</label>
+                                <input type="number" 
+                                    class="form-control" 
+                                    id="addonPrice" 
+                                    name="addonPrice"
+                                    ng-model="newAddon.price" 
+                                    ng-min="0" 
+                                    step="0.01" 
+                                    ng-max="100000"
+                                    placeholder="Enter price between 0 and 100000"
+                                    required>
+                            </div>
+                            <button type="submit" 
+                                    class="btn btn-primary" 
+                                    ng-disabled="addonForm.$invalid || isLoading">
+                                <span class="glyphicon glyphicon-plus"></span> Add Addon
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </uib-tab>
+    </uib-tabset>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-default" ng-click="cancel()">Close</button>
+</div>

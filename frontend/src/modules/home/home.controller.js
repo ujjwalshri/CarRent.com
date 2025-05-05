@@ -37,7 +37,7 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
     * - For logged in users:
     *   1. Gets user profile data
     *   2. Loads approved cars with current filters  
-    *   3. Gets personalized car recommendations based on user's city
+    *   3. Gets personalized car recommendations based on user's city or on the basis of the user's selected city
     *   4. Gets all car categories
     *   5. Gets price range configuration
     * 
@@ -154,7 +154,7 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
      */
     $scope.filterCars = () => {
         // Set filtering started flag when any filter is applied
-        $scope.filteringStarted = !!($scope.search || $scope.priceFilter || $scope.city || $scope.category);
+        $scope.filteringStarted = ($scope.search || $scope.priceFilter || $scope.city || $scope.category);
         fetchAllCars(0);
     };
 
@@ -164,7 +164,7 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
      */
     $scope.filterCarsWithDelay = () => {
         // Set filtering started flag immediately when user types
-        $scope.filteringStarted = !!$scope.search;
+        $scope.filteringStarted = $scope.search?true:false;
         
         if (searchTimeout) {
             $timeout.cancel(searchTimeout);

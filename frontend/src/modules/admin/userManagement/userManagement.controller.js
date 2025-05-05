@@ -13,7 +13,7 @@ angular
       // Pagination configuration
       $scope.pagination = {
         currentPage: 1,
-        itemsPerPage: 10,
+        itemsPerPage: 5,
         totalItems: 0,
         maxSize: 5,
       };

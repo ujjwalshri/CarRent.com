@@ -29,11 +29,9 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
         $http.get(`${ApiService.baseURL}/api/vehicle/allApprovedVehicles?search=${search===undefined?'':search}&priceRange=${price}&city=${city}&category=${category}&skip=${skip}`, { withCredentials: true })
         .then((res)=>{
             deferred.resolve(res);
-            console.log(res);
         })
         .catch(err=>{
             deferred.reject("Error fetching cars");
-            console.log(err);
         })
         return deferred.promise;
     }
@@ -57,7 +55,6 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
         })
         .catch(err=>{
             deferred.reject("Error fetching car");
-            console.log(err);
         })
         return deferred.promise;
     }
@@ -75,7 +72,6 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
      * @returns {Promise} Promise resolving to the reviews data or error
      */
     this.getReviewsByCarId = (carId, params)=>{
-
         let deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/review/getAllReviews/car/${carId}`, { params:params, withCredentials: true })
         .then((res)=>{
@@ -83,7 +79,6 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
         })
         .catch(err=>{
             deferred.reject("Error fetching reviews");
-            console.log(err);
         })
         return deferred.promise;
     }
@@ -99,7 +94,6 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
     this.fetchBookingsAtCarId = (carId)=>{
         let deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/bidding/getBookings/car/${carId}`, { withCredentials: true }).then((res)=>{
-            console.log("bookings", res.data.bookings);
             deferred.resolve(res.data.bookings);
         }).catch(err=>{
             deferred.reject(`error fetching the bookings ${err}`);
@@ -183,7 +177,7 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
      * @param {Object} params - Pagination parameters (page, limit)
      * @returns {Promise} Promise resolving to pending vehicles or error
      */
-    this.getCars = (params = {})=>{
+    this.getPendingCars = (params = {})=>{
         let deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/vehicle/getPendingCars`, { 
             params: params,

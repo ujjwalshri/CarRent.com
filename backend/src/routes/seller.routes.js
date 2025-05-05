@@ -21,7 +21,8 @@ import {
     getAverageBookingPayment,
     getSelectedAddonsCount,
     getSellerRating,
-    topCitiesWithMostNegativeReviews
+    topCitiesWithMostNegativeReviews,
+    cityWiseEarnings
 } from '../controllers/seller.controller.js';
 
 const router = express.Router(); 
@@ -40,6 +41,7 @@ router.get('/analytics/car-wise-bookings', protectRoute, allowSeller, getCarWise
 router.get('/analytics/negative-reviews', protectRoute, allowSeller, getNegativeReviews);
 router.get('/analytics/top-earning-cars', protectRoute, allowSeller, getTopEarningCars);
 router.get('/analytics/top-city-most-negative-reviews', protectRoute, allowSeller, topCitiesWithMostNegativeReviews);
+router.get('/analytics/city-wise-earning', protectRoute, allowSeller, cityWiseEarnings);
 
 // Booking Analytics Routes
 router.get('/analytics/peak-hours', protectRoute, allowSeller, getPeakHours);

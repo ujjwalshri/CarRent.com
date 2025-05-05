@@ -117,16 +117,25 @@ export const addBidController = async (req, res) => {
     }
 }
 
-/*
- @description: This function will update bids at a particular status and reject overlapping bids
-*/
+/**
+ * @description This function updates the bidding status of a bid.
+ * It takes the bidding status from the request body and updates the bidding status in the database.
+ * It also rejects any overlapping bids and sends an email to the user.
+ * It returns the updated bidding information in the response.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the updated bidding information in the response.
+ */
 export const updateBidStatusController = async (req, res) => {
     const { biddingStatus } = req.body;
 
     if (!biddingStatus) {
         return res.status(400).json({ error: 'Bidding status is required' });
     }
-    
+    // implementing transaction to make sure that the bidding status is updated and the overlapping bids are rejected
+    // and the email is sent to the user
+    // if any of the above fails then the transaction will be aborted
+    // and the overlapping bids will not be rejected
     let session; 
     try {
         session = await mongoose.startSession();
@@ -185,9 +194,15 @@ export const updateBidStatusController = async (req, res) => {
         return res.status(500).json({ error: err.message });
     }
 };
-/*
- @description function to get the bids according to the search query from the request.query
-*/
+/**
+ * function to get the bids for the owner
+ * @description This function retrieves all bids for the logged-in owner.
+ * It takes pagination and sorting parameters from the request query.
+ * It returns the bids along with metadata such as total number of documents.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the bids for the owner
+ */
 export const getBidForOwnerController = async (req, res) => {
     const user = req.user;
 
@@ -240,9 +255,15 @@ export const getBidForOwnerController = async (req, res) => {
     }
 }
 
-/*
- @description function to get the  bids for the user according to the search query from the request.query
-*/
+/**
+ * @description This function retrieves all bids for the logged-in user.
+ * It takes pagination and sorting parameters from the request query.
+ * It also filters the bids based on the status provided in the request query.
+ * It defaults to 'pending' if no status is provided.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the bids along with metadata such as total number of documents.
+ */
 export const getBidForUserController = async (req, res) => {
 
     let { page = 1, limit = 10, sort = {}, status="pending" } = req.query;
@@ -279,9 +300,15 @@ export const getBidForUserController = async (req, res) => {
     }
 }
 
-/*
-    @description function to get the bid by the car id
-*/
+/**
+ * function to get the bookings at a particular car id
+ * @description This function retrieves all bookings for a specific car.
+ * It takes the carId from the request parameters and filters the bookings based on the status.
+ * It returns the bookings along with metadata such as total number of documents.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the bookings for the car
+ */
 export const getBookingsAtCarIdController = async (req, res)=>{
     const {carId} = req.params;
     const objectIdCarId = new mongoose.Types.ObjectId(String(carId)); 
@@ -304,9 +331,16 @@ export const getBookingsAtCarIdController = async (req, res)=>{
     }
 }
 
-/*
-    @description function to get the bookings by the owner id
-*/
+/**
+ * @description This function retrieves all bookings for a specific owner.
+ * It takes pagination and sorting parameters from the request query.
+ * It also filters the bookings based on the status provided in the request query.
+ * It defaults to 'approved' if no status is provided.
+ * It also allows filtering based on car name, company, and username.
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the bookings along with metadata such as total number of documents.
+ */
 export const getAllBookingsAtOwnerIdController = async (req, res) => {
     const { page = 1, limit = 10, sort = {}, bookingsType = '', carSearchQuery = '', usernameSearchQuery = '', startDate = null, endDate = null } = req.query;
     const userId = req.user._id;
@@ -332,6 +366,7 @@ export const getAllBookingsAtOwnerIdController = async (req, res) => {
     }
 
     // Apply date range filter if both startDate and endDate are provided
+    // filters out the bookings that are gonna start in the given date range
     if (startDate && endDate) {
        matchStage.startDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
@@ -727,3 +762,4 @@ export const getOverlappingBidsController = async (req, res) => {
         return res.status(500).json({ error: err.message });
     }
 };
+

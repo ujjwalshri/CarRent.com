@@ -47,24 +47,16 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
      * goes to the become seller page
      */
     $scope.navigate = () => {
-        $state.go('car');
+        $state.go('becomeSeller');
     }
     
-    /**
-     * Navigates to seller listings page
-     */
-    $scope.goToSellerListings = () => {
-        $state.go('sellerListings');
-    }
-    
-  
     /**
      * Opens modal for updating just the user's city
      */
     $scope.openEditCityModal = () => {
         var modalInstance = $uibModal.open({
             templateUrl: 'editCityModal.html',
-            controller: function($scope, $uibModalInstance, userData, UserService, ToastService, City) {
+            controller: function($scope, $uibModalInstance, userData, UserService, ToastService, City, CarFactory) {
                 $scope.cityData = {
                     city: userData.city
                 };
@@ -81,8 +73,8 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
                  * Updates only the user's city
                  */
                 $scope.updateCity = function() {
-                    if (!$scope.cityData.city) {
-                        ToastService.error("Please select a city");
+                    if(!CarFactory.validateUpdateCity($scope.cityData.city)) {
+                        ToastService.error("Please select a valid city");
                         return;
                     }
                     

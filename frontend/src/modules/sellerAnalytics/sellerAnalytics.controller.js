@@ -8,8 +8,11 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
     $scope.isLoading = false;
     $scope.isPerformanceLoading = false;
     $scope.isBookingLoading = false;
+    $scope.isAiInsightsLoading = false;
     $scope.performanceLoaded = false;
     $scope.bookingLoaded = false;
+    $scope.aiInsightsLoaded = false;
+
     const initializeAnalyticsData = () => {
         $scope.totalRevenue = 0;
         $scope.averageRentalDuration = 0;
@@ -19,6 +22,7 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
         $scope.repeatingCustomersPercentage = 0;
         $scope.averageRevenue = 0;
         $scope.totalRevenueByAddons = 0;
+        $scope.reviewInsights = null;
     };
 
     /**
@@ -55,12 +59,15 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
         destroyAllCharts();
         $scope.performanceLoaded = false;
         $scope.bookingLoaded = false;
+        $scope.aiInsightsLoaded = false;
         
         // Load data based on current tab
         if ($scope.currentTab === 'performance') {
             $scope.loadPerformanceAnalytics();
-        } else {
+        } else if ($scope.currentTab === 'booking') {
             $scope.loadBookingAnalytics();
+        } else if ($scope.currentTab === 'aiInsights') {
+            $scope.loadAiInsights();
         }
     };
 
@@ -76,8 +83,10 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
         
         if (tab === 'performance') {
             $scope.loadPerformanceAnalytics();
-        } else {
+        } else if (tab === 'booking') {
             $scope.loadBookingAnalytics();
+        } else if (tab === 'aiInsights') {
+            $scope.loadAiInsights();
         }
     };
 
@@ -190,7 +199,7 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             SellerAnalyticsService.getPopularCars(params),
             SellerAnalyticsService.getTotalRevenueByAddons(params),
             SellerAnalyticsService.getAverageBidCostPerRental(params),
-            SellerAnalyticsService.getAverageBookingPayment(params)
+           
         ];
 
         // Performance Analytics
@@ -198,7 +207,8 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             SellerAnalyticsService.getCarWiseBookings(params),
             SellerAnalyticsService.getNegativeReviews(params),
             SellerAnalyticsService.getTopEarningCars(params),
-            SellerAnalyticsService.getCityWiseNegativeReview(params)
+            SellerAnalyticsService.getCityWiseNegativeReview(params),
+            SellerAnalyticsService.getCityWiseEarnings(params)
         ];
 
         // Execute promises in parallel
@@ -208,10 +218,12 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
         ])
         .then(([overviewData, performanceData]) => {
             const [revenue, carDescription, popularCars, totalRevenueByAddons, averageBidCostPerRentalData, averageBookingPayment] = overviewData;
-            const [carWiseBookings, negativeReviews, topEarningCars, cityWiseNegativeReview] = performanceData;
+            const [carWiseBookings, negativeReviews, topEarningCars, cityWiseNegativeReview, cityWiseEarnings] = performanceData;
+            
 
             $scope.averageBidCostPerRental = averageBidCostPerRentalData[0]?.averageCostPerRental || 0;
-            $scope.averageBookingPayment = averageBookingPayment[0]?.averageBookingPayment || 0;
+           
+            console.log(averageBookingPayment);
             $scope.totalRevenueByAddons = totalRevenueByAddons ? 
                 totalRevenueByAddons.reduce((acc, curr) => acc + curr.totalAmount, 0) : 0;
                 
@@ -235,7 +247,8 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                     carPerformance: carWiseBookings,
                     negativeReviews,
                     topEarningCars,
-                    cityWiseNegativeReview
+                    cityWiseNegativeReview,
+                    cityWiseEarnings
                 }
             });
 
@@ -278,7 +291,8 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             SellerAnalyticsService.getCityWiseBookings(params),
             SellerAnalyticsService.getSelectedAddonsCount(params),
             SellerAnalyticsService.getBiddingComparison(params),
-            SellerAnalyticsService.getEarningComparison(params)
+            SellerAnalyticsService.getEarningComparison(params),
+            SellerAnalyticsService.getAverageBookingPayment(params)
         ];
 
         $q.all(bookingPromises)
@@ -291,8 +305,11 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             cityWiseBookings,
             selectedAddonsCount,
             biddingComparison,
-            earningComparison
+            earningComparison,
+            averageBookingPayment
         ]) => {
+
+            $scope.averageBookingPayment = averageBookingPayment[0]?.averageBookingPayment || 0;
             if (averageRentalDuration && averageRentalDuration.length > 0) {
                 $scope.averageRentalDuration = averageRentalDuration[0]?.averageRentalDuration || 0;
             }
@@ -329,6 +346,39 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
     };
 
     /**
+     * Loads AI insights based on reviews within the selected date range
+     * @returns {Promise} - Returns the AI-generated review insights
+     */
+    $scope.loadAiInsights = () => {
+        if (!validateDateRange()) return;
+
+        $scope.isLoading = true;
+        $scope.isAiInsightsLoading = true;
+        $scope.aiInsightsLoaded = false;
+        $scope.reviewInsights = null;
+
+        const params = {
+            startDate: $scope.startDate.toISOString(),
+            endDate: $scope.endDate.toISOString()
+        };
+
+        SellerAnalyticsService.getReviewInsights(params)
+            .then(response => {
+                $scope.reviewInsights = response;
+                $scope.aiInsightsLoaded = true;
+            })
+            .catch(error => {
+                console.error('Error loading AI review insights:', error);
+                ToastService.error('Failed to load AI review insights');
+            })
+            .finally(() => {
+                $scope.isAiInsightsLoading = false;
+                $scope.isLoading = false;
+                $timeout();
+            });
+    };
+
+    /**
      * Creates performance charts
      */
     const createPerformanceCharts = (data) => {
@@ -345,6 +395,19 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                     overview.carDescription.map(item => item.count),
                     "Car Categories",
                     "carCategoriesPieChart"
+                )
+            );
+        }
+
+        if(performance.cityWiseEarnings) {
+            createChartIfCanvasExists("cityWiseEarnings", () =>
+                ChartService.createBarChart(
+                    "bar",
+                    performance.cityWiseEarnings.map(city => city._id),
+                    performance.cityWiseEarnings.map(city => city.totalRevenue),
+                    'Total Revenue (₹)',
+                    "City-wise Earnings",
+                    "cityWiseEarnings"
                 )
             );
         }
@@ -392,15 +455,7 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                 )
             );
             
-            // Add pie chart for revenue distribution
-            createChartIfCanvasExists("revenuePieChart", () =>
-                ChartService.createPieChart(
-                    performance.topEarningCars.map(car => car._id),
-                    performance.topEarningCars.map(car => car.totalRevenue),
-                    "Revenue Distribution",
-                    "revenuePieChart"
-                )
-            );
+          
         }
         
         if (performance.cityWiseNegativeReview) {

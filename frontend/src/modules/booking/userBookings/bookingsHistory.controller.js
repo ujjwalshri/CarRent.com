@@ -116,6 +116,11 @@ angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, Biddi
                     newReview: ""
                 };
 
+                // Function to handle star rating selection
+                $scope.setRating = function(rating) {
+                    $scope.review.rating = rating;
+                };
+
                 $scope.close = function() {
                     $uibModalInstance.dismiss('cancel');
                 };

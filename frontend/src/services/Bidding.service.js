@@ -1,4 +1,4 @@
-angular.module('myApp').service('BiddingService', function($q, BiddingFactory, ApiService, $http, SocketService) {
+angular.module('myApp').service('BiddingService', function($q, ApiService, $http) {
    /**
     * Add a bid
     * @param {string} carId - The ID of the car
@@ -11,7 +11,6 @@ angular.module('myApp').service('BiddingService', function($q, BiddingFactory, A
         // Send the bid to the server
         $http.post(`${ApiService.baseURL}/api/bidding/addBid/${(carId).toString()}`, bid, { withCredentials: true })
             .then((res) => {
-                console.log(res);
                 // Don't show success message here, wait for socket notification
                 deferred.resolve({ status: 'pending', message: 'Processing bid...' });
             })
@@ -27,7 +26,6 @@ angular.module('myApp').service('BiddingService', function($q, BiddingFactory, A
      * @returns promise
      */
     this.getOwnerBids = function(params){
-        console.log(params);
         params.sortBy = JSON.stringify(params.sortBy);
         let deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/bidding/getBids/owner`, {params:params, withCredentials: true })
@@ -224,7 +222,6 @@ angular.module('myApp').service('BiddingService', function($q, BiddingFactory, A
      * @returns promise
      */
     this.getAddOnsForUser = function(ownerId){
-        console.log(ownerId);
         let deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/bidding/getAddOnsForUser/${ownerId}`, { withCredentials: true })
         .then((res)=>{
@@ -241,7 +238,6 @@ angular.module('myApp').service('BiddingService', function($q, BiddingFactory, A
      * @returns promise
      */
     this.recommendBidding = function(vehicleId){
-        console.log(vehicleId);
         let deferred = $q.defer();
         $http.post(`${ApiService.baseURL}/api/gemini/getOptimalBids/${vehicleId}`, { withCredentials: true })
         .then((res)=>{

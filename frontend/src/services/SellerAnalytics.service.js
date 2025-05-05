@@ -340,5 +340,36 @@ angular.module('myApp').service('SellerAnalyticsService', function($http, $q, Ap
       return deferred.promise;
   };
 
+  /**
+   * Function to get AI-generated review insights based on the date range
+   * @param {Object} params - Parameters containing startDate and endDate
+   * @returns {Promise} Promise that resolves with AI-generated review insights
+   */
+  this.getReviewInsights = (params) => {
+      const deferred = $q.defer();
+      $http.get(`${ApiService.baseURL}/api/gemini/review-summary`, { params, withCredentials: true })
+          .then(response => {
+              deferred.resolve(response.data);
+          })
+          .catch(error => {
+              console.error('Error fetching AI review insights:', error);
+              deferred.reject(error);
+          });
+      return deferred.promise;
+  };
+
+  this.getCityWiseEarnings = (params)=>{
+    const deferred = $q.defer();
+    $http.get(`${ApiService.baseURL}/api/seller/analytics/city-wise-earning`, { params, withCredentials: true })
+        .then(response => {
+            deferred.resolve(response.data);
+        })
+        .catch(error => {
+            console.error('Error fetching city wise earnings data:', error);
+            deferred.reject(error);
+        });
+    return deferred.promise;
+  }
+
   
 });

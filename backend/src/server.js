@@ -28,6 +28,7 @@ import conversationRoutes from "./routes/conversation.routes.js";
 import addonRoutes from "./routes/addon.routes.js";
 import taxesRoutes from "./routes/taxes.routes.js";
 import recommedationRoutes from "./routes/recommendation.routes.js";
+import geminiRoutes from "./routes/gemini.routes.js";
 
 import passport from "./config/passport.js"
 import cors from "cors";
@@ -109,6 +110,7 @@ app.use('/api/seller', sellerRoutes); // Seller analytics and dashboard
 app.use('/api/addon', addonRoutes);  // Add-ons functionality
 app.use('/api/taxes', taxesRoutes);  // Taxes management
 app.use('/api/recommendation', recommedationRoutes); // Vehicle recommendations
+app.use('/api/gemini', geminiRoutes); // Gemini AI integration for review analysis
 
 /**
  * Initialize SQS Worker Thread

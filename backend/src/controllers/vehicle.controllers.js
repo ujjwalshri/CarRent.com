@@ -59,7 +59,6 @@ export const addCarController = async (req, res) => {
         }
         const isValidCar = createCarValidation.validate(carData);
         if(isValidCar.error){
-            console.log(isValidCar.error);
             return res.status(400).json({error: isValidCar.error.details[0].message});
         }
 
@@ -87,9 +86,6 @@ export const addCarController = async (req, res) => {
         });
        
         await newCar.save();
-        // invalidate the redis cache for this user
-        const cacheKey = `userCars:${req.user._id}:all`;
-        await deleteCachedData(cacheKey);
         res.status(201).json({
             message: 'Car added successfully',
         });

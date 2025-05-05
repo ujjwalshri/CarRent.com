@@ -47,7 +47,7 @@ angular.module("myApp").component("dynamicNavbar", {
         mainLinks: [
           { href: "conversations({id: undefined})", icon: "glyphicon-comment", text: "Chats" },
           { dropdown: true, icon: "glyphicon-calendar", text: "Bookings", items: [
-            { href: "userBookings", icon: "glyphicon-list", text: "My Bookings" },
+            { href: "myBookings", icon: "glyphicon-list", text: "My Bookings" },
             { href: "bookingHistory", icon: "glyphicon-time", text: "Booking History" },
             { href: "myBiddings", icon: "glyphicon-bookmark", text: "My Biddings" }
           ]}

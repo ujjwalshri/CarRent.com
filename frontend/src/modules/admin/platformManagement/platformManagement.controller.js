@@ -54,7 +54,7 @@ angular
         limit: $scope.pagination.itemsPerPage,
       };
 
-      CarService.getCars(params)
+      CarService.getPendingCars(params)
         .then((response) => {
           // Handle the new response format that includes cars array and pagination metadata
           if (response.cars && Array.isArray(response.cars)) {

@@ -122,7 +122,8 @@ export const getTop3MostReviewedCars = async (req, res) => {
                     createdAt: {
                         $gte: new Date(startDate),
                         $lte: new Date(endDate)
-                    }
+                    },
+                    rating: { $gte: 3 } // Only include reviews with rating >= 3 (positive ratings)
                 }
             },
             {
@@ -132,18 +133,18 @@ export const getTop3MostReviewedCars = async (req, res) => {
                     name : { $toLower: "$vehicle.name" },
                     modelYear : 1
                 },
-                
-               
+                rating: 1 
                }
             },
             {
                 $group: {
                     _id: { $concat: ["$vehicle.company", " ", "$vehicle.name", " ", { "$toString": "$vehicle.modelYear" }] },
-                    count: { $sum: 1 }
+                    count: { $sum: 1 },
+                    averageRating: { $avg: "$rating" } // Calculate average positive rating as well
                 }
             },
             {
-                $sort: { count: -1 }
+                $sort: { count: -1 } // Sort by number of positive reviews
             },
             {
                 $limit: 3

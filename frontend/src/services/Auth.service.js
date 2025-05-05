@@ -42,8 +42,6 @@ angular.module('myApp').service('AuthService', function($q, ApiService, $http, $
             },
             withCredentials: true})
             .then(function(response) {
-                console.log('User logged in:', response.data);
-                
                 try {
                     // Initialize socket immediately after login - this will
                     // automatically set the user as online when connected
@@ -69,7 +67,6 @@ angular.module('myApp').service('AuthService', function($q, ApiService, $http, $
      * @returns promise
      */
 this.registerUser = function(user) {
-    console.log(user);
     let deffered = $q.defer();
     $http.post(`${ApiService.baseURL}/api/auth/signup`, {
         username: user.username,
@@ -81,7 +78,6 @@ this.registerUser = function(user) {
         adhaar: user.adhaar
     }, { withCredentials: true })
         .then(function(response) {
-            console.log('User registered:', response.data);
             deffered.resolve(response.data);
             return response.data; // Return the response data from the server
         })

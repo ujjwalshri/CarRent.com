@@ -78,8 +78,8 @@
                         { title: 'Car Categories (Pie)', id: 'carCategoriesPieChart', chartType: 'pie' },
                         { title: 'Car Wise Negative Reviews', id: 'carWiseNegativeReviews', chartType: 'bar' },
                         { title: 'Top 3 Cars by Earnings', id: 'top3CarsWithMostEarning', chartType: 'bar' },
-                        { title: 'Revenue Distribution (Pie)', id: 'revenuePieChart', chartType: 'pie' },
-                        { title: 'Top City Wise Negative Reviews', id: 'cityWiseNegativeReviews', chartType: 'line' }
+                        { title: 'Top City Wise Negative Reviews', id: 'cityWiseNegativeReviews', chartType: 'line' },
+                        { title: 'Top City Wise earnings', id: 'cityWiseEarnings', chartType: 'bar' },
                     ]">
                         <div class="panel panel-default">
                             <div class="panel-heading">{{chart.title}}</div>
@@ -143,6 +143,152 @@
                             <div class="panel-heading">{{chart.title}}</div>
                             <div class="panel-body">
                                 <canvas id="{{chart.id}}" width="400" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </uib-tab>
+
+        <uib-tab heading="AI Insights On Your Reviews" select="onTabSelect('aiInsights')">
+            <loading-component is-loading="isAiInsightsLoading" loading-text="Loading AI-powered insights..."></loading-component>
+            
+            <div ng-if="!isAiInsightsLoading && aiInsightsLoaded">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div class="panel panel-primary">
+                            <div class="panel-heading">
+                                <h3 class="panel-title"><i class="fas fa-robot"></i> AI-Powered Review Analysis</h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="alert alert-info" ng-if="!reviewInsights">
+                                    <i class="fas fa-info-circle"></i> Select a date range and click "Apply" to generate AI insights from your customer reviews.
+                                </div>
+                                
+                                <div ng-if="reviewInsights">
+                                    <div class="row">
+                                        <div class="col-xs-12 col-md-4">
+                                            <div class="panel panel-default">
+                                                <div class="panel-heading"><i class="fas fa-chart-pie"></i> Review Stats</div>
+                                                <div class="panel-body">
+                                                    <p><strong>Total Reviews:</strong> {{reviewInsights.totalReviews}}</p>
+                                                    <p><strong>Average Rating:</strong> {{reviewInsights.averageRating}} / 5</p>
+                                                    <p><strong>Positive Reviews:</strong> {{reviewInsights.reviewDistribution.positive}}</p>
+                                                    <p><strong>Neutral Reviews:</strong> {{reviewInsights.reviewDistribution.neutral}}</p>
+                                                    <p><strong>Negative Reviews:</strong> {{reviewInsights.reviewDistribution.negative}}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-xs-12 col-md-8">
+                                            <div class="panel panel-default">
+                                                <div class="panel-heading"><i class="fas fa-lightbulb"></i> Executive Summary</div>
+                                                <div class="panel-body">
+                                                    <p>{{reviewInsights.analysis.summary}}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-xs-12 col-sm-6">
+                                            <div class="panel panel-success">
+                                                <div class="panel-heading"><i class="fas fa-thumbs-up"></i> Your Strengths</div>
+                                                <div class="panel-body">
+                                                    <ul>
+                                                        <li ng-repeat="strength in reviewInsights.analysis.strengths">{{strength}}</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-xs-12 col-sm-6">
+                                            <div class="panel panel-warning">
+                                                <div class="panel-heading"><i class="fas fa-wrench"></i> Areas for Improvement</div>
+                                                <div class="panel-body">
+                                                    <ul>
+                                                        <li ng-repeat="area in reviewInsights.analysis.improvementAreas">{{area}}</li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-xs-12 col-sm-6">
+                                            <div class="panel panel-info">
+                                                <div class="panel-heading"><i class="fas fa-car"></i> Vehicle Insights</div>
+                                                <div class="panel-body">
+                                                    <p>{{reviewInsights.analysis.vehicleInsights}}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-xs-12 col-sm-6">
+                                            <div class="panel panel-info">
+                                                <div class="panel-heading"><i class="fas fa-map-marker-alt"></i> Geographical Insights</div>
+                                                <div class="panel-body">
+                                                    <p>{{reviewInsights.analysis.geographicalInsights}}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-xs-12 col-sm-6">
+                                            <div class="panel panel-primary">
+                                                <div class="panel-heading"><i class="fas fa-list-ol"></i> Actionable Recommendations</div>
+                                                <div class="panel-body">
+                                                    <ol>
+                                                        <li ng-repeat="recommendation in reviewInsights.analysis.recommendations">{{recommendation}}</li>
+                                                    </ol>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-xs-12 col-sm-6">
+                                            <div class="panel panel-info">
+                                                <div class="panel-heading"><i class="fas fa-chart-line"></i> Trends</div>
+                                                <div class="panel-body">
+                                                    <p>{{reviewInsights.analysis.trends}}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row" ng-if="reviewInsights.reviews.length > 0">
+                                        <div class="col-xs-12">
+                                            <div class="panel panel-default">
+                                                <div class="panel-heading"><i class="fas fa-comments"></i> Recent Reviews (Sample)</div>
+                                                <div class="panel-body">
+                                                    <div class="review-item" ng-repeat="review in reviewInsights.reviews">
+                                                        <div class="media">
+                                                            <div class="media-left">
+                                                                <span class="badge" ng-class="{
+                                                                    'badge-success': review.rating >= 4,
+                                                                    'badge-warning': review.rating == 3,
+                                                                    'badge-danger': review.rating < 3
+                                                                }">{{review.rating}}/5</span>
+                                                            </div>
+                                                            <div class="media-body">
+                                                                <h5 class="media-heading">
+                                                                    <strong>{{review.vehicle.company}} {{review.vehicle.name}}</strong>
+                                                                    <small class="text-muted">{{review.createdAt | date:'MMM d, yyyy'}}</small>
+                                                                </h5>
+                                                                <p>{{review.review}}</p>
+                                                                <small class="text-muted">
+                                                                    <i class="fas fa-map-marker-alt"></i> {{review.vehicle.city}}
+                                                                    <i class="fas fa-tag ml-2"></i> {{review.vehicle.category}}
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                        <hr ng-if="!$last">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>

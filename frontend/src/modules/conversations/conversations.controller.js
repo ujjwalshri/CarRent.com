@@ -41,10 +41,10 @@ angular
             ? ChatService.getConversationsAtCarId($stateParams.id)
             :  ChatService.getAllConversations(),
         ])
-          .then(([user, conversations]) => {
+          .then(([user, conversationsData]) => {
             // Store user data and conversation list
             $scope.loggedInUser = user;
-            $scope.myConversations = conversations.conversations;
+            $scope.myConversations = conversationsData.conversations;
             
             // Initialize socket service with current user
             SocketService.initialize(user);

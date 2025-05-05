@@ -873,7 +873,63 @@ const pipelines = {
         {
           $limit: 5 
         }
-      ])
+      ]),
+      cityWiseEarnings: (userId, startDate, endDate) => ([
+        {
+            $match: {
+                'owner._id': userId,
+                status: { $in: ["ended", "reviewed"] },
+                endDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
+            }
+        },
+        {
+            $addFields: {
+                bookingDays: {
+                    $divide: [
+                        { $subtract: ["$endDate", "$startDate"] },
+                        1000 * 60 * 60 * 24
+                    ]
+                },
+                exceededKm: {
+                    $max: [
+                        0,
+                        { $subtract: ["$endOdometerValue", "$startOdometerValue"] }
+                    ]
+                },
+                exceededKmCharge: {
+                    $multiply: [
+                        {
+                            $max: [
+                                0,
+                                { $subtract: [{ $subtract: ["$endOdometerValue", "$startOdometerValue"] }, kilometersLimit] }
+                            ]
+                        },
+                        finePerKilometer
+                    ]
+                }
+            }
+        },
+        {
+            $group: {
+                _id: "$vehicle.city",
+                totalRevenue: {
+                    $sum: {
+                        $add: [
+                            {
+                                "$multiply": [
+                                    { "$add": ["$bookingDays", 1] },
+                                    "$amount"
+                                ]
+                            },
+                            "$exceededKmCharge"
+                        ]
+                    }
+                }
+            }
+        },
+        { $sort: { totalRevenue: -1 } },
+        { $limit: 10 }
+    ]),
 };
 
 // Individual API Endpoints for Overview Analytics
@@ -1383,5 +1439,33 @@ export const topCitiesWithMostNegativeReviews = async (req, res)=>{
     } catch (error) {
         console.error('Error in getTopCitiesWithMostNegativeReviews:', error);
         return handleResponse(res, 500, {error: 'Failed to fetch top cities with most negative reviews data'});
+    }
+}
+
+
+/**
+ * function to get the city wise earnings for a seller
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns map of city wise earnings for a seller
+ */
+export const cityWiseEarnings = async (req, res) => {
+    const {startDate, endDate} = req.query;
+    const userId = req.user._id;
+    if (!startDate || !endDate) {
+        return handleResponse(res, 400, { error: "startDate and endDate are required" });
+    }
+    const cacheKey = `seller-city-wise-earnings-${userId}-${startDate}-${endDate}`;
+    const cachedData = await getCachedData(cacheKey);
+    if (cachedData) {
+        return handleResponse(res, 200, cachedData);
+    }
+    try {
+        const cityWiseEarningsData = await Bidding.aggregate(pipelines.cityWiseEarnings(userId, startDate, endDate));
+        await setCachedData(cacheKey, cityWiseEarningsData);
+        return handleResponse(res, 200, cityWiseEarningsData);
+    } catch (error) {
+        console.error('Error in getCityWiseEarnings:', error);
+        return handleResponse(res, 500, { error: 'Failed to fetch city-wise earnings data' });
     }
 }

@@ -9,7 +9,8 @@ angular
       BiddingService,
       $window,
       CarService,
-      $uibModal
+      $uibModal,
+      RecommendationService
     ) {
       $scope.bookings = []; // array to hold the bookings of the logged in user
       $scope.bookingsType = { type: "pending" }; // variable to hold the booking type
@@ -34,6 +35,10 @@ angular
         selectedCar: "", // Initialize with empty string for no car filter
       };
       $scope.myCars = []; // Array to store cars with bids
+
+      $scope.optimalBids = []; // Array to store optimal bid IDs
+      $scope.optimalBidsActive = false; // Flag to track if optimal bid mode is active
+      $scope.isLoadingOptimal = false; // Flag to track if optimal bids are loading
 
       /*
       function to initialize the controller 
@@ -130,6 +135,82 @@ angular
       $scope.applyFilter = function () {
         $scope.pagination.currentPage = 1;
         $scope.fetchBookings();
+      };
+
+      /**
+       * Function to fetch and show optimal bid recommendations
+       * Uses the recommendation service to get the optimal combination of bids
+       * that maximize revenue
+       */
+      $scope.showOptimalBids = function () {
+        $scope.isLoadingOptimal = true;
+
+        RecommendationService.optimalBidsRecommendationForSeller()
+          .then((response) => {
+            // Reset any previous optimal bids
+            $scope.optimalBids = [];
+
+            // Process the optimal bid sets from all vehicles
+            if (response && response.optimalBidSets && response.optimalBidSets.length > 0) {
+              // Extract all optimal bid IDs from all vehicle recommendations
+              response.optimalBidSets.forEach((vehicleSet) => {
+                if (vehicleSet.optimalBidIds && vehicleSet.optimalBidIds.length > 0) {
+                  $scope.optimalBids = [...$scope.optimalBids, ...vehicleSet.optimalBidIds];
+                }
+              });
+
+              $scope.optimalBidsActive = true;
+
+              // Show summary toast with recommendation stats
+              const totalVehicles = response.optimalBidSets.length;
+              const totalBids = $scope.optimalBids.length;
+              const totalRevenue = response.optimalBidSets.reduce(
+                (sum, v) => sum + v.totalRevenue,
+                0
+              );
+
+              ToastService.success(
+                `Found ${totalBids} optimal bids across ${totalVehicles} vehicles that would maximize your revenue}`
+              );
+            } else {
+              ToastService.info("No optimal bid recommendations found");
+            }
+          })
+          .catch((err) => {
+            ToastService.error(`Error fetching optimal bids: ${err}`);
+          })
+          .finally(() => {
+            $scope.isLoadingOptimal = false;
+          });
+      };
+
+      /**
+       * Function to check if a bid is in the optimal set
+       * @param {string} bidId - The ID of the bid to check
+       * @returns {boolean} - True if the bid is in the optimal set
+       */
+      $scope.isOptimalBid = function (bidId) {
+        if (!$scope.optimalBidsActive || !$scope.optimalBids.length) {
+          return false;
+        }
+        return $scope.optimalBids.includes(bidId.toString());
+      };
+
+      /**
+       * Function to clear optimal bid highlights
+       */
+      $scope.clearOptimalBids = function () {
+        $scope.optimalBids = [];
+        $scope.optimalBidsActive = false;
+      };
+
+      /**
+       * Function to check if a bid is already approved
+       * @param {Object} booking - The booking object to check
+       * @returns {boolean} - True if the booking is approved
+       */
+      $scope.checkApproved = function (booking) {
+        return booking.status !== "pending";
       };
 
       /*

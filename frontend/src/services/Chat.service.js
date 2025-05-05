@@ -1,4 +1,3 @@
-
 angular.module('myApp').service('ChatService', function($q, ApiService, $http) {    
     /**
      * Creates a conversation

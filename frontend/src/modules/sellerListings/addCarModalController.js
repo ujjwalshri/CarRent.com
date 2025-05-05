@@ -2,7 +2,7 @@
  * Controller for the add car modal in seller listings
  * Based on the same functionality as the addCarController but adapted for modal use
  */
-angular.module('myApp').controller('AddCarModalCtrl', function($scope, $uibModalInstance, $timeout, CarFactory, ToastService, CarService, City, $rootScope, $q) {
+angular.module('myApp').controller('AddCarModalCtrl', function($scope, $uibModalInstance, CarFactory, ToastService, CarService, City, $rootScope, $q) {
     // Initialize variables
     $scope.images = []; // Array to store the car images selected by the user
     $scope.isLoading = false;
@@ -13,10 +13,11 @@ angular.module('myApp').controller('AddCarModalCtrl', function($scope, $uibModal
     $scope.minPrice = 0;
     $scope.maxPrice = 0;
     $scope.currentYear = new Date().getFullYear();
+    const rgbToHex = CarFactory.rgbToHex;
     
-    /**
-     * Initializes the modal controller by fetching required data
-     */
+   /**
+    * Initializes the add car modal by fetching required configuration data
+    */
     $scope.init = function() {
         $q.all([
             CarService.getAllCarCategoriesForAdmin(),
@@ -31,106 +32,18 @@ angular.module('myApp').controller('AddCarModalCtrl', function($scope, $uibModal
         });
     };
     
-    // Initialize when the controller loads
-    
+
     
     /**
      * Handle image file selection and prepare for upload
      * Creates the dominant color of the car from the car images to use in the car card
      * @param {Object} input - The file input DOM element 
      */
-    $scope.previewImages = function(input) {
-        if (input.files) {
-            let files = Array.from(input.files);
-            
-            // Validation: Max 5 files
-            if (files.length > 5) {
-                $scope.imageError = 'You can only upload 1 to 5 images';
-                input.value = '';
-                $scope.images = [];
-                $scope.imagePreviews = [];
-                $scope.imageColor = null;
-                $timeout();
-                return;
-            }
-            
-            // Validation: Allowed types
-            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
-            const invalidFiles = files.filter(file => !allowedTypes.includes(file.type));
-            
-            if (invalidFiles.length > 0) {
-                $scope.imageError = 'Only JPG, JPEG, PNG and WebP images are allowed';
-                input.value = '';
-                $scope.images = [];
-                $scope.imagePreviews = [];
-                $scope.imageColor = null;
-                $timeout();
-                return;
-            }
-            
-            // Validation: File size < 5MB
-            const maxSize = 5 * 1024 * 1024;
-            const oversizedFiles = files.filter(file => file.size > maxSize);
-            
-            if (oversizedFiles.length > 0) {
-                $scope.imageError = 'Each image must be less than 5MB';
-                input.value = '';
-                $scope.images = [];
-                $scope.imagePreviews = [];
-                $scope.imageColor = null;
-                $timeout();
-                return;
-            }
-            
-            // Clear errors and initialize
-            $scope.imageError = null;
-            $scope.images = files;
-            $scope.imagePreviews = [];
-            $scope.imageColor = null;
-            
-            // Handle image previews
-            files.forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    $scope.imagePreviews[index] = e.target.result;
-                    
-                    // calculating the color from the first image
-                    if (index === 0) {
-                        const img = new Image();
-                        img.crossOrigin = 'anonymous';
-                        img.src = e.target.result;
-                        
-                        img.onload = function() {
-                            const canvas = document.createElement('canvas');
-                            const ctx = canvas.getContext('2d');
-                            
-                            canvas.width = img.naturalWidth;
-                            canvas.height = img.naturalHeight;
-                            
-                            ctx.drawImage(img, 0, 0);
-                            const centerX = Math.floor(canvas.width / 2);
-                            const centerY = Math.floor(canvas.height / 2);
-                            const pixelData = ctx.getImageData(centerX, centerY, 1, 1).data;
-                            $scope.color = rgbToHex(pixelData[0], pixelData[1], pixelData[2]);
-                            $timeout();
-                        };
-                    }
-                };
-                
-                reader.readAsDataURL(file);
-            });
-            
-            $timeout(); // Trigger digest
-        }
+    $scope.showPreview = function (input) {
+        // Use CarFactory's previewCarImages function to process the images
+        CarFactory.previewCarImages(input, $scope, rgbToHex);
     };
-    
-    // Utility: RGB to HEX
-    function rgbToHex(r, g, b) {
-        return "#" + [r, g, b].map(x => {
-            const hex = x.toString(16);
-            return hex.length === 1 ? "0" + hex : hex;
-        }).join('');
-    }
+   
     
     /**
      * Submit the car form and create a new car listing

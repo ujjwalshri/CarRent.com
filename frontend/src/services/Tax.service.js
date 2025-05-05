@@ -15,7 +15,6 @@ angular.module('myApp').service('TaxService', function($http, $q, ApiService) {
         
         $http.get(`${ApiService.baseURL}/api/taxes/getAllTaxes`)
             .then((response) => {
-                console.log(response.data);
                 deferred.resolve(response.data);
             })
             .catch((error) => {

@@ -2,7 +2,7 @@
  * Angular factory module for handling Car-related operations
  * This factory provides methods for creating and validating car objects
  */
-angular.module('myApp').factory('CarFactory', function(CarService, $q) {
+angular.module('myApp').factory('CarFactory', function(CarService, $q, $timeout) {
     /**
      * Car Constructor Function
      * Creates a new Car object with the specified properties
@@ -141,6 +141,7 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q) {
             });
             return deferred.promise;
         },
+  
 
         /**
          * Creates and validates a new Car instance from provided data
@@ -221,6 +222,106 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q) {
             }
             return priceRangeArray;
         },
+
+        validateUpdateCity: function(city){
+            if(!city || typeof city !== 'string'){
+                return "City is required and must be a string.";
+            }
+            return true;
+        },
+
+         rgbToHex(r, g, b) {
+            return "#" + [r, g, b].map(x => {
+              const hex = x.toString(16);
+              return hex.length === 1 ? "0" + hex : hex;
+            }).join('');
+          },
+
+        previewCarImages: function(input, $scope, rgbToHex) {
+            if (input.files) {
+                let files = Array.from(input.files);
+              
+        
+                // Validation: Max 5 files
+                if (files.length > 5 ) {
+                  $scope.imageError = 'You can only upload 1 to 5 images';
+                  input.value = '';
+                  $scope.images = [];
+                  $scope.imagePreviews = [];
+                  $scope.imageColor = null;
+                  $timeout();
+                  return;
+                }
+            
+                // Validation: Allowed types
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+                const invalidFiles = files.filter(file => !allowedTypes.includes(file.type));
+            
+                if (invalidFiles.length > 0) {
+                  $scope.imageError = 'Only JPG, JPEG, PNG and WebP images are allowed';
+                  input.value = '';
+                  $scope.images = [];
+                  $scope.imagePreviews = [];
+                  $scope.imageColor = null;
+                  $timeout();
+                  return;
+                }
+            
+                // Validation: File size < 5MB
+                const maxSize = 5 * 1024 * 1024;
+                const oversizedFiles = files.filter(file => file.size > maxSize);
+            
+                if (oversizedFiles.length > 0) {
+                  $scope.imageError = 'Each image must be less than 5MB';
+                  input.value = '';
+                  $scope.images = [];
+                  $scope.imagePreviews = [];
+                  $scope.imageColor = null;
+                  $timeout();
+                  return;
+                }
+            
+                // Clear errors and initialize
+                $scope.imageError = null;
+                $scope.images = files;
+                $scope.imagePreviews = [];
+                $scope.imageColor = null;
+            
+                // Handle image previews
+                files.forEach((file, index) => {
+                  const reader = new FileReader();
+                  reader.onload = function (e) {
+                      $scope.imagePreviews[index] = e.target.result;
+                      
+                    // calculating the color from the first image
+                    if (index === 0) {
+                      const img = new Image();
+                      img.crossOrigin = 'anonymous';
+                      img.src = e.target.result;
+            
+                      img.onload = function () {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+            
+                        canvas.width = img.naturalWidth;  // Set the width of the canvas to the natural width of the image
+                        canvas.height = img.naturalHeight; // Set the height of the canvas to the natural height of the image
+            
+                        ctx.drawImage(img, 0, 0); // Draw the image on the canvas
+                        const centerX = Math.floor(canvas.width / 2); // Calculate the center of the canvas
+                        const centerY = Math.floor(canvas.height / 2); // Calculate the center of the canvas
+                        const pixelData = ctx.getImageData(centerX, centerY, 1, 1).data; // Get the pixel data of the center of the image
+                        $scope.color = rgbToHex(pixelData[0], pixelData[1], pixelData[2]); // Convert the pixel data to a hex color
+                        $timeout();
+                      };
+                    }
+                  };
+            
+                  reader.readAsDataURL(file);
+                });
+            
+                $timeout(); // Trigger digest
+              }
+        }
 
     };
 

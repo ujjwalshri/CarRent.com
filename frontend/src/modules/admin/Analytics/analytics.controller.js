@@ -365,8 +365,8 @@ angular
                 mostReviewedCars.map((car) => car._id),
                 mostReviewedCars.map((car) => car.count),
                 "Number of Reviews",
-                "Top 3 most reviewed cars",
-                "top5MostReviewedCars"
+                "Top 3 cars with good rating (rating more than 2)",
+                "top3MostReviewedCars"
               );
 
               ChartService.createBarChart(

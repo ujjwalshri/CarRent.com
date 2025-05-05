@@ -328,9 +328,12 @@ export const carRejectionMailTemplate = (data) => {
         <p>Dear ${sellerFirstName} ${sellerLastName},</p>
         <p>We regret to inform you that your car ${vehicleCompany} ${vehicleName} ${vehicleModelYear} has been rejected for one of the following reasons:</p>
         <ul>
+            <li>The car images are not real</li>
+            <li>The car registration number is not valid</li>
             <li>The car details are not correct</li>
             <li>We dont allow cars from your country</li>
             <li>The owner details are not correct</li>
+            
         </ul>
         <p>Please review the feedback and make the necessary changes to your car listing.</p>
         <p>Thank you for your understanding.</p>

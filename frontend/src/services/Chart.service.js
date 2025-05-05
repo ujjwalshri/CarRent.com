@@ -59,7 +59,7 @@ angular.module('myApp').service('ChartService', function() {
   @returns creates bar chart
   */
   this.createBarChart = (type, labels, data, label, text, htmlElementId) => {
-    console.log(data, htmlElementId, labels);
+
     // Store chart instances in a map to manage multiple charts
     if (!this.chartInstances) {
         this.chartInstances = {};
@@ -190,7 +190,6 @@ angular.module('myApp').service('ChartService', function() {
    * @returns {Chart} Chart instance
    */
   this.createLineChart = function(canvasId, chartData) {
-      console.log(canvasId);
       // Set default colors if not provided
       const colors = chartData.colors || {
           backgroundColor: [
