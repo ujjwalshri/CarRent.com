@@ -74,7 +74,6 @@ this.registerUser = function(user) {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
-        city: user.city,
         adhaar: user.adhaar
     }, { withCredentials: true })
         .then(function(response) {

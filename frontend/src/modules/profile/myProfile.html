@@ -13,6 +13,7 @@
            
           </h3>
           <p class="profile-username">@{{ user.username }}</p>
+          <p class="profile-user-since">User since {{ user.createdAt | date: 'MMMM yyyy' }}</p>
         
         </div>
         
@@ -30,16 +31,7 @@
             </span>
           </div>
           
-          <div class="detail-item">
-            <span class="glyphicon glyphicon-map-marker detail-icon"></span>
-            <div class="detail-content">
-              <label>City</label>
-              <p>{{ user.city }}</p>
-            </div>
-            <button class="btn btn-sm btn-outline-primary btn-edit-city" ng-click="openEditCityModal(user)" ng-if="showingSeller">
-              <span class="glyphicon glyphicon-pencil"></span> Edit
-            </button>
-          </div>
+          
         </div>
       </div>
     </div>
@@ -139,6 +131,12 @@
   .profile-username {
     color: #6c757d;
     font-size: 1.1em;
+    margin-bottom: 1.5rem;
+  }
+
+  .profile-user-since {
+    color: #6c757d;
+    font-size: 1em;
     margin-bottom: 1.5rem;
   }
 

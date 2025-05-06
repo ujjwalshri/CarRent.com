@@ -8,7 +8,6 @@ import {
     deleteCarCategoryController, 
     topPerformersController, 
     sendCongratulationMailController, 
-    usersPerCityController, 
     getCustomerSatisfactionScoreController, 
     updatePriceRangeController, 
     getCurrentPriceRangesController, 
@@ -45,7 +44,7 @@ router.get('/analytics/category-wise-bookings', protectRoute, allowAdmin, getCar
 // Existing Routes
 router.get('/getGeneralStats', protectRoute, getGeneralAnalyticsController);
 router.get('/getOverviewStats', protectRoute, getOverviewStatsController);
-router.get('/numberOfUsersPerCity', protectRoute, usersPerCityController);
+
 router.post('/addCarCategory', protectRoute, allowAdmin, addCarCategoryController);
 router.get('/getAllCarCategories', getAllCarCategoriesController);
 router.delete('/deleteCarCategory/:categoryID', protectRoute, allowAdmin, deleteCarCategoryController);

@@ -49,55 +49,5 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
         $state.go('becomeSeller');
     }
     
-    /**
-     * Opens modal for updating just the user's city
-     */
-    $scope.openEditCityModal = () => {
-        var modalInstance = $uibModal.open({
-            templateUrl: 'editCityModal.html',
-            controller: function($scope, $uibModalInstance, userData, UserService, ToastService, City, CarFactory) {
-                $scope.cityData = {
-                    city: userData.city
-                };
-                $scope.cities = City.getCities();
-                
-                /**
-                 * Closes the modal without saving
-                 */
-                $scope.cancel = function() {
-                    $uibModalInstance.dismiss('cancel');
-                };
-                
-                /**
-                 * Updates only the user's city
-                 */
-                $scope.updateCity = function() {
-                    if(!CarFactory.validateUpdateCity($scope.cityData.city)) {
-                        ToastService.error("Please select a valid city");
-                        return;
-                    }
-                    
-                    UserService.updateUserCity($scope.cityData.city)
-                        .then(function(response) {
-                            ToastService.success("City updated successfully");
-                            $uibModalInstance.close(response.data.user);
-                        })
-                        .catch(function(err) {
-                            ToastService.error("Error updating city: " + err);
-                        });
-                };
-            },
-            resolve: {
-                userData: function() {
-                    return $scope.user;
-                }
-            }
-        });
-        
-        modalInstance.result.then(function(updatedUser) {
-            $scope.user = updatedUser;
-        }, function() {
-            console.log('Modal dismissed');
-        });
-    };
+
 });

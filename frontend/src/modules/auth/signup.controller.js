@@ -23,7 +23,6 @@ app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService
       username: '',
       password: '',
       confirmPassword: '',
-      city: '',
       adhaar: ''
     };
   }
@@ -70,7 +69,6 @@ app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService
       username: $scope.formData.username,
       password: $scope.formData.password,
       confirmPassword: $scope.formData.confirmPassword,
-      city: $scope.formData.city,
       adhaar: $scope.formData.adhaar
     });
     

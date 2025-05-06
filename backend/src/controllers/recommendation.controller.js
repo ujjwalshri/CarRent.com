@@ -4,7 +4,6 @@
  * @async
  * @param {Object} req - Express request object
  * @param {Object} req.user - Authenticated user object
- * @param {string} req.user.city - City of the authenticated user
  * @param {Object} req.query - Query parameters
  * @param {string} req.query.city - Optional city filter
  * @param {Object} res - Express response object
@@ -31,19 +30,13 @@ import Bidding from "../models/bidding.model.js";
 
 
 export const getVehicleRecommendationController = async (req, res) => {
-    let userCity = req.user.city;
-    const city = req.query.city;
-
-    if(city){
-        userCity = city;
-    }
-   
+    const selectedCity = req.query.city;
     try {
         const recommendations = await Bidding.aggregate([
             {
               $match: {
                 status: { $in: ['approved', 'started', 'ended', 'reviewed'] },
-                'vehicle.city': userCity
+                'vehicle.city': selectedCity
               }
             },
             {
@@ -51,6 +44,14 @@ export const getVehicleRecommendationController = async (req, res) => {
                 _id: '$vehicle._id',
                 bookingCount: { $sum: 1 },
                 vehicleInfo: { $first: '$vehicle' }
+              }
+            },
+            {
+              $lookup: {
+                from: 'vehicles',
+                localField: '_id', 
+                foreignField: '_id',
+                as: 'vehicleDetails'
               }
             },
             {
@@ -92,7 +93,16 @@ export const getVehicleRecommendationController = async (req, res) => {
             {
               $project: {
                 vehicleId: '$_id',
-                vehicle: '$vehicleInfo',
+                vehicle: {
+                  $mergeObjects: [
+                    '$vehicleInfo',
+                    {
+                      vehicleImages: {
+                        $ifNull: [{ $arrayElemAt: ['$vehicleDetails.vehicleImages', 0] }, []]
+                      }
+                    }
+                  ]
+                },
                 bookingCount: 1,
                 averageRating: 1,
                 totalReviews: 1

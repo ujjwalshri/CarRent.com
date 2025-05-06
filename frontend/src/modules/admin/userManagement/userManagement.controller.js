@@ -5,9 +5,7 @@ angular
     function ($scope, ToastService, UserService, $timeout, City, $window) {
       $scope.allUsers = []; // Collection of all loaded users
       $scope.isLoading = false; // Loading state indicator
-      $scope.city = ""; // City filter
       $scope.search = ""; // Search query filter
-      $scope.cities = City.getCities(); // Available cities for filtering
       $scope.userType = "seller"; // Default to showing sellers
 
       // Pagination configuration
@@ -76,7 +74,6 @@ angular
 
       // function to reset the filter
       $scope.resetFilter = () => {
-        $scope.city = "";
         $scope.search = "";
         $scope.userType = "seller"; // Reset to default of showing sellers
         $scope.pagination.currentPage = 1; // Reset to first page

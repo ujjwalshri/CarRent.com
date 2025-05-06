@@ -1,70 +1,90 @@
-<div class="hero-section" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1494976388531-d1058494cdd8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'); background-size: cover; background-position: center; height: 500px; color: white; margin-bottom: 30px; position: relative; display: flex; align-items: center; justify-content: center; text-align: center;">
+
+<div class="hero-section" style="background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1494976388531-d1058494cdd8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'); background-size: cover; background-position: center; min-height: 500px; color: white; margin-bottom: 40px; position: relative; padding: 40px 0 60px 0; margin-top: 0;">
   <div class="container">
-    <h1 style="font-size: 48px; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); margin-bottom: 20px;">Find Your Perfect Drive</h1>
-    <p style="font-size: 20px; max-width: 600px; margin: 0 auto 30px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">Discover the best car rental deals with our extensive fleet of premium vehicles available across India</p>
-  </div>
-  <div class="hero-overlay" style="position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.8));"></div>
-</div>
+    <div class="text-center" style="margin-bottom: 20px;">
+      <h1 style="font-size: 48px; font-weight: 700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Find Your Perfect Drive</h1>
+      <p style="font-size: 20px; max-width: 600px; margin: 0 auto 15px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">Discover the best car rental deals with our extensive fleet of premium vehicles available across India</p>
+      <loading-component is-loading="loadingCars" loading-text="Loading cars..."></loading-component>
 
-<loading-component is-loading="loadingCars" loading-text="Loading cars..."></loading-component>
-
-
-<div class="container" ng-if="user && !user.isSeller && !filteringStarted && recommendedCarsGroups.length > 0" style="margin-bottom: 40px;">
-  <div class="row">
-    <div class="col-xs-12">
-      <div class="section-header" style="text-align: center; margin-bottom: 30px;">
-        <h2 style="font-size: 32px; font-weight: 700; margin-bottom: 10px;">Recommended For You</h2>
-        <p class="text-muted">in {{ user.city }}</p>
-        <hr style="width: 70px; height: 3px; background: #e74c3c; margin: 20px auto; border: none;">
+      <div class="hero-top-city-filter" style="max-width: 300px; margin: 0 auto 25px;">
+        <div class="city-selector-wrapper" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 30px; padding: 5px 15px;">
+          <select class="form-control" ng-model="city" ng-change="filterCars()" style="border: none; background: transparent; color: white; font-weight: 600; text-align: center; text-align-last: center; appearance: none; -webkit-appearance: none; cursor: pointer; font-size: 16px;">
+            <option value="" disabled>Select City</option>
+            <option ng-repeat="cityOption in cities" value="{{cityOption}}">{{cityOption}}</option>
+          </select>
+          <div style="text-align: center; margin-top: 5px;">
+            <span style="color: rgba(255,255,255,0.8); font-size: 12px; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">
+              <i class="glyphicon glyphicon-map-marker"></i> Currently showing cars in {{city || 'All Cities'}}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-  
-  <div class="carousel-container" style="position: relative; background: #f9f9f9; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-    <div uib-carousel active="active" interval="5000" no-wrap="false" style="margin-bottom: 10px;">
-      <div uib-slide ng-repeat="slideGroup in recommendedCarsGroups" index="$index" style="padding: 15px;">
-        <div class="row">
-          <div class="col-xs-12 col-sm-4" ng-repeat="car in slideGroup">
-            <div class="panel panel-default recommended-car-panel" ng-click="redirectCarPage(car._id)" style="cursor: pointer; border-radius: 8px; overflow: hidden; transition: all 0.3s ease; height: 250px; border-left: 4px solid #e74c3c;">
-              <div class="panel-body" style="padding: 20px; height: 100%; display: flex; flex-direction: column;">
+    
 
-                <div class="car-header" style="margin-bottom: 15px;">
-                  <span class="label label-danger" ng-if="car.isPopular" style="margin-bottom: 10px; display: inline-block;">
-                    <span class="glyphicon glyphicon-fire"></span> Popular
-                  </span>
-                  <h4 style="margin-top: 5px; font-weight: 600; font-size: 18px;">
-                    {{car.vehicle.company}} {{car.vehicle.name}} 
-                    <small>{{car.vehicle.modelYear}}</small>
-                  </h4>
-                  <p class="text-success" style="font-size: 18px; margin-bottom: 15px; font-weight: 600;">
-                    {{car.vehicle.price | currency:"₹"}}
-                    <small class="text-muted" style="font-size: 12px;">per day</small>
-                  </p>
-                </div>
-                
-                <div class="car-details-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                  <div class="detail-item" style="display: flex; align-items: center;">
-                    <span class="glyphicon glyphicon-map-marker text-primary"></span>
-                    <span style="margin-left: 5px;">{{car.vehicle.city}}</span>
+    <div ng-if="user && !user.isSeller && recommendedCarsGroups.length > 0" style="margin-bottom: 30px;">
+      <h2 style="text-align: center; font-size: 28px; font-weight: 600; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
+        Top Cars in {{ city || 'Delhi' }}
+      </h2>
+      
+      <div class="carousel-container" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 20px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.3);">
+        <div uib-carousel active="active" interval="5000" no-wrap="false" style="margin-bottom: 10px;">
+          <div uib-slide ng-repeat="slideGroup in recommendedCarsGroups" index="$index">
+            <div class="row">
+              <div class="col-xs-12 col-sm-4" ng-repeat="car in slideGroup">
+                <div class="panel panel-default" ng-click="redirectCarPage(car._id)" style="cursor: pointer; border-radius: 8px; overflow: hidden; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.2); background-color: rgba(255,255,255,0.9); border: none; height: 220px; margin-bottom: 15px;">
+                  <div class="panel-body" style="padding: 0; height: 100%; position: relative;">
+
+                    <div class="car-image-background" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; opacity: 0.15; filter: blur(1px);" ng-style="{'background-image': 'url(' + (car.vehicle.vehicleImages && car.vehicle.vehicleImages.length > 0 ? car.vehicle.vehicleImages[0].url : 'https://via.placeholder.com/300x200?text=No+Image') + ')'}"></div>
+                    
+
+                    <div style="position: relative; z-index: 2; padding: 15px; height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+                      <div>
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                          <h4 style="color: #333; margin-top: 0; font-weight: 600; font-size: 16px; margin-bottom: 5px;">
+                            {{car.vehicle.company}} {{car.vehicle.name}}
+                          </h4>
+                          <span class="label label-danger" ng-if="car.isPopular">
+                            <i class="glyphicon glyphicon-fire"></i> Popular
+                          </span>
+                        </div>
+                        
+                        <p style="color: #27ae60; font-size: 16px; font-weight: 600; margin-bottom: 5px;">
+                          {{car.vehicle.price | currency:"₹"}} <small style="color: #666; font-size: 12px;">per day</small>
+                        </p>
+                      </div>
+                      
+                      <div style="display: flex; flex-wrap: wrap; margin-bottom: 10px;">
+                        <div style="width: 50%; margin-bottom: 8px; display: flex; align-items: center;">
+                          <i class="glyphicon glyphicon-map-marker text-primary"></i>
+                          <span style="margin-left: 5px; color: #333; font-size: 13px;">{{car.vehicle.city}}</span>
+                        </div>
+                        <div style="width: 50%; margin-bottom: 8px; display: flex; align-items: center;">
+                          <i class="glyphicon glyphicon-tag text-primary"></i>
+                          <span style="margin-left: 5px; color: #333; font-size: 13px;">{{car.vehicle.category}}</span>
+                        </div>
+                        <div style="width: 50%; margin-bottom: 8px; display: flex; align-items: center;">
+                          <i class="glyphicon glyphicon-dashboard text-primary"></i>
+                          <span style="margin-left: 5px; color: #333; font-size: 13px;">{{car.vehicle.mileage}} kmpl</span>
+                        </div>
+                        <div style="width: 50%; margin-bottom: 8px; display: flex; align-items: center;">
+                          <i class="glyphicon glyphicon-tint text-primary"></i>
+                          <span style="margin-left: 5px; color: #333; font-size: 13px;">{{car.vehicle.fuelType}}</span>
+                        </div>
+                      </div>
+                      
+                      <div class="text-center">
+                        <button class="btn btn-sm btn-primary" style="border-radius: 4px; padding: 4px 10px;">
+                          View Details
+                        </button>
+                      </div>
+                    </div>
+                    
+
+                    <div style="position: absolute; top: 10px; right: 10px; width: 60px; height: 60px; border-radius: 4px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 3;">
+                      <img ng-src="{{car.vehicle.vehicleImages && car.vehicle.vehicleImages.length > 0 ? car.vehicle.vehicleImages[0].url : 'https://via.placeholder.com/60x60?text=No+Image'}}" style="width: 100%; height: 100%; object-fit: cover;" alt="{{car.vehicle.company}} {{car.vehicle.name}}">
+                    </div>
                   </div>
-                  <div class="detail-item" style="display: flex; align-items: center;">
-                    <span class="glyphicon glyphicon-tag text-primary"></span>
-                    <span style="margin-left: 5px;">{{car.vehicle.category}}</span>
-                  </div>
-                  <div class="detail-item" style="display: flex; align-items: center;">
-                    <span class="glyphicon glyphicon-dashboard text-primary"></span>
-                    <span style="margin-left: 5px;">{{car.vehicle.mileage}} kmpl</span>
-                  </div>
-                  <div class="detail-item" style="display: flex; align-items: center;">
-                    <span class="glyphicon glyphicon-tint text-primary"></span>
-                    <span style="margin-left: 5px;">{{car.vehicle.fuelType}}</span>
-                  </div>
-                </div>
-                
-                <div class="text-center" style="margin-top: auto;">
-                  <button class="btn btn-primary btn-sm" style="border-radius: 4px; padding: 5px 15px;">
-                    View Details
-                  </button>
                 </div>
               </div>
             </div>
@@ -72,11 +92,17 @@
         </div>
       </div>
     </div>
+    
+    <div class="text-center">
+      <button ng-click="scrollToSection('explore-cars')" class="btn btn-lg btn-primary" style="padding: 12px 30px; border-radius: 30px; transition: all 0.3s ease; box-shadow: 0 3px 10px rgba(0,0,0,0.2);">
+        Explore Our Cars <i class="glyphicon glyphicon-chevron-down"></i>
+      </button>
+    </div>
   </div>
 </div>
 
 
-<div id="cars-listing" class="container" style="margin-bottom: 40px; padding-top: 40px;">
+<div id="explore-cars" class="container" style="margin-bottom: 40px; padding-top: 40px; scroll-margin-top: 80px;">
   <div class="row">
     <div class="col-xs-12">
       <div class="section-header" style="text-align: center; margin-bottom: 30px;">
@@ -94,7 +120,7 @@
     </div>
     <div class="panel-body" style="padding: 20px;">
       <div class="row">
-        <div class="col-md-4 col-sm-6">
+        <div class="col-md-3 col-sm-3">
           <label>Search:</label>
           <div class="input-group">
             <span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>
@@ -104,7 +130,7 @@
           </div>
         </div>
 
-        <div class="col-md-4 col-sm-6">
+        <div class="col-md-3 col-sm-3">
           <label>Price Range:</label>
           <select class="form-control" ng-model="priceFilter" ng-change="filterCars()">
             <option value="">All</option>
@@ -112,17 +138,7 @@
           </select>
         </div>
 
-        <div class="col-md-4 col-sm-6">
-          <label>City:</label>
-          <select class="form-control" ng-model="city" ng-change="filterCars()">
-            <option value="">Select City</option>
-            <option ng-repeat="cityOption in cities" value="{{cityOption}}">{{cityOption}}</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="row" style="margin-top: 20px;">
-        <div class="col-md-4 col-sm-6">
+        <div class="col-md-3 col-sm-3">
           <label>Category:</label>
           <select class="form-control" ng-model="category" ng-change="filterCars()">
             <option value="">Select Category</option>
@@ -130,7 +146,8 @@
           </select>
         </div>
 
-        <div class="col-md-4 col-sm-6" style="margin-top: 25px;"> 
+        <div class="col-md-3 col-sm-3">
+          <label>&nbsp;</label> <!-- Empty label to align with other elements -->
           <button class="btn btn-warning btn-block" ng-click="resetFilters()">
             <span class="glyphicon glyphicon-refresh"></span> Reset Filters
           </button>
@@ -241,45 +258,43 @@
     </button>
   </div>
 
-  <div class="text-center" ng-show="isLoading" style="margin: 30px 0;">
+  <div class="text-center" ng-show="isLoading" style="margin: 10px 0;">
     <span class="glyphicon glyphicon-refresh spin" style="font-size: 30px; color: #3498db; margin-bottom: 15px; display: block;"></span>
     <p>Loading cars...</p>
   </div>
 </div>
 
 
-<div class="container-fluid" style="background: #f8f9fa; padding: 60px 0; margin-top: 20px;">
+
+<div class="container-fluid" style="background: #2c3e50; padding: 20px 0; margin-top: 20px; color: white;">
   <div class="container">
     <div class="row">
-      <div class="col-xs-12">
-        <div class="section-header" style="text-align: center; margin-bottom: 40px;">
-          <h2 style="font-size: 32px; font-weight: 700; margin-bottom: 10px;">Why Choose Us</h2>
-          <p class="text-muted">The perfect car rental experience awaits you</p>
-          <hr style="width: 70px; height: 3px; background: #9b59b6; margin: 20px auto; border: none;">
-        </div>
+      <div class="col-xs-12 text-center" style="margin-bottom: 15px;">
+        <h3 style="font-size: 24px; font-weight: 600; margin-top: 0; margin-bottom: 5px;">Why Choose Us</h3>
+        <p class="text-muted" style="color: #bdc3c7; font-size: 14px;">The perfect car rental experience awaits you</p>
       </div>
     </div>
     
     <div class="row text-center">
-      <div class="col-md-4 col-sm-6" style="margin-bottom: 30px;">
-        <div style="background: white; padding: 30px 20px; border-radius: 8px; height: 250px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
-          <span class="glyphicon glyphicon-thumbs-up" style="font-size: 50px; color: #3498db; margin-bottom: 20px; display: block;"></span>
-          <h3 style="margin-bottom: 15px; font-weight: 600;">Quality Vehicles</h3>
-          <p>Our fleet includes only well-maintained and regularly serviced vehicles to ensure your safety and comfort.</p>
+      <div class="col-md-4 col-sm-4 col-xs-12" style="margin-bottom: 15px;">
+        <div style="padding: 10px;">
+          <span class="glyphicon glyphicon-thumbs-up" style="font-size: 22px; color: #3498db; margin-bottom: 8px; display: block;"></span>
+          <h4 style="margin: 0 0 5px 0; font-size: 16px; font-weight: 600;">Quality Vehicles</h4>
+          <p style="color: #bdc3c7; font-size: 12px; margin: 0;">Well-maintained and regularly serviced</p>
         </div>
       </div>
-      <div class="col-md-4 col-sm-6" style="margin-bottom: 30px;">
-        <div style="background: white; padding: 30px 20px; border-radius: 8px; height: 250px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
-          <span class="glyphicon glyphicon-usd" style="font-size: 50px; color: #2ecc71; margin-bottom: 20px; display: block;"></span>
-          <h3 style="margin-bottom: 15px; font-weight: 600;">Best Prices</h3>
-          <p>We offer competitive pricing with no hidden charges, ensuring you get the best value for your money.</p>
+      <div class="col-md-4 col-sm-4 col-xs-12" style="margin-bottom: 15px;">
+        <div style="padding: 10px;">
+          <span class="glyphicon glyphicon-usd" style="font-size: 22px; color: #2ecc71; margin-bottom: 8px; display: block;"></span>
+          <h4 style="margin: 0 0 5px 0; font-size: 16px; font-weight: 600;">Best Prices</h4>
+          <p style="color: #bdc3c7; font-size: 12px; margin: 0;">No hidden charges, great value</p>
         </div>
       </div>
-      <div class="col-md-4 col-sm-6" style="margin-bottom: 30px;">
-        <div style="background: white; padding: 30px 20px; border-radius: 8px; height: 250px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
-          <span class="glyphicon glyphicon-time" style="font-size: 50px; color: #e74c3c; margin-bottom: 20px; display: block;"></span>
-          <h3 style="margin-bottom: 15px; font-weight: 600;">24/7 Support</h3>
-          <p>Our customer service team is available round the clock to assist you with any queries or concerns.</p>
+      <div class="col-md-4 col-sm-4 col-xs-12" style="margin-bottom: 15px;">
+        <div style="padding: 10px;">
+          <span class="glyphicon glyphicon-time" style="font-size: 22px; color: #e74c3c; margin-bottom: 8px; display: block;"></span>
+          <h4 style="margin: 0 0 5px 0; font-size: 16px; font-weight: 600;">24/7 Support</h4>
+          <p style="color: #bdc3c7; font-size: 12px; margin: 0;">Always available to help you</p>
         </div>
       </div>
     </div>
@@ -287,6 +302,7 @@
 </div>
 
 <style>
+
     .car-panel {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
         border: 1px solid #ddd;
@@ -319,61 +335,111 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
-
-    .well {
-        padding: 10px;
-        margin-bottom: 0;
-    }
-
-    .label {
-        display: inline-block;
-        padding: 5px 10px;
-    }
-
-    .glyphicon {
-        margin-right: 5px;
-    }
-
-    .spec-item {
-        transition: background-color 0.2s ease;
-    }
-
-    .spec-item:hover {
-        background-color: #f0f0f0 !important;
-    }
-
-    .car-image-container {
-        position: relative;
-        overflow: hidden;
-    }
-
-    .car-image-container img {
-        transition: transform 0.3s ease;
-    }
-
-    .car-panel:hover .car-image-container img {
-        transform: scale(1.05);
-    }
     
-    .featured-car {
-        border: none;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    }
-
-    .btn-outline:hover {
-        background: #3498db;
-        color: white;
-    }
-    
+    /* Enhanced responsive styles */
     @media (max-width: 767px) {
         .hero-section {
-            height: 350px;
+            min-height: 400px !important;
+            padding: 30px 0 50px 0 !important;
         }
+        
         .hero-section h1 {
-            font-size: 32px;
+            font-size: 32px !important;
         }
+        
         .hero-section p {
+            font-size: 16px !important;
+            padding: 0 15px;
+        }
+        
+        .carousel-container {
+            padding: 10px !important;
+        }
+        
+        .recommended-car-panel {
+            height: auto !important;
+            margin-bottom: 15px !important;
+        }
+        
+        .car-panel {
+            height: auto !important;
+            min-height: 450px;
+        }
+        
+        .car-image-container {
+            height: 180px !important;
+        }
+        
+        .car-details {
+            height: auto !important;
+        }
+        
+        .car-specs-grid {
+            grid-template-columns: 1fr !important;
+        }
+        
+        .filter-container .panel-body {
+            padding: 15px !important;
+        }
+        
+        .panel-heading {
+            padding: 10px !important;
+        }
+        
+        .btn {
+            white-space: normal;
+        }
+    }
+    
+    @media (min-width: 768px) and (max-width: 991px) {
+        .hero-section {
+            min-height: 450px !important;
+        }
+        
+        .car-panel {
+            height: 550px !important;
+        }
+        
+        .car-image-container {
+            height: 200px !important;
+        }
+    }
+    
+    /* Additional responsive utilities */
+    .img-responsive {
+        display: block;
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .text-ellipsis {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    /* Fix for panels on small screens */
+    .panel-body {
+        word-wrap: break-word;
+    }
+    
+    /* Fix for buttons on small screens */
+    @media (max-width: 767px) {
+        .btn {
+            margin-bottom: 5px;
+        }
+        
+        .btn-lg {
             font-size: 16px;
+            padding: 8px 16px !important;
+        }
+        
+        .form-group {
+            margin-bottom: 10px;
+        }
+        
+        .col-xs-12, .col-sm-6, .col-md-4 {
+            padding-bottom: 10px;
         }
     }
 </style>

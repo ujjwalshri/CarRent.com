@@ -571,66 +571,6 @@ export const getOverviewStatsController = async (req, res) => {
 
 
 
-/*
-@description: function to get the number of owners per city from the database
-returns the count of owners per city
-*/
-export const usersPerCityController = async (req, res) => {
-    try {
-        const cacheKey = `admin-users-per-city`;
-        const cachedData = await getCachedData(cacheKey);
-        if(cachedData){
-            console.log("serving data from cache");
-            return res.status(200).json(cachedData);
-        }
-        const aggregationPipelineForSellers = [
-            {
-                $match: {
-                    isSeller: true,
-                    isBlocked: false
-                }
-            },
-            {
-                $group: {
-                    _id: "$city",
-                    count: { $sum: 1 }
-                }
-            }
-        ];
-        const aggregationPipelineForBuyers = [
-            {
-                $match: {
-                    isSeller: false,
-                    isBlocked: false
-                }
-            },
-            {
-                $group: {
-                    _id: "$city",
-                    count: { $sum: 1 }
-                }
-            }
-        ]
-        const [sellersResult, buyersResult] = await Promise.allSettled([    
-            User.aggregate(aggregationPipelineForSellers),
-            User.aggregate(aggregationPipelineForBuyers)
-        ]);
-        const sellers = getValue(sellersResult,[]);
-        const buyers = getValue(buyersResult,[]);
-
-        await setCachedData(cacheKey, {
-            sellers,
-            buyers
-        });
-        // serving data from cache
-        console.log("serving data from database");
-        return res.status(200).json({ sellers, buyers });
-    } catch (err) {
-        console.error(`Error in numberOfOwnersPerCityController: ${err}`);
-        return res.status(500).json({ message: "Internal server error" });
-    }
-    
-}
 
 
 /*

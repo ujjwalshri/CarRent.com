@@ -102,8 +102,6 @@ angular
        * @param {String} htmlElementId - DOM element ID where the map will be rendered
        */
       window.initMap = function (heatmapData, htmlElementId) {
-        console.log($scope.indianCitiesAndLongitudeAndLatitudeMap);
-
         // Create a new Google Map centered on India
         var map = new google.maps.Map(document.getElementById(htmlElementId), {
           center: { lat: 20.5937, lng: 78.9629 }, // Indian map center
@@ -257,7 +255,6 @@ angular
           AdminAnalyticsService.getTop3OwnersWithMostCars(params),
           AdminAnalyticsService.getUserGrowthStats(params),
           AdminAnalyticsService.getHighestEarningCities(params),
-          AdminAnalyticsService.numberOfUsersPerCityForAdmin(),
           AdminAnalyticsService.getTop3CompaniesWithMostNegativeReviews(params),
           AdminAnalyticsService.getTopSellersWithMostNegativeReviews(params), 
           AdminAnalyticsService.getCategoryWiseBookings(params),
@@ -270,7 +267,6 @@ angular
               topOwners,
               userGrowth,
               highestEarningCities,
-              usersPerCity,
               top3CompaniesWithMostNegativeReviews,
               topSellersWithMostNegativeReviews,
               categoryWiseBookings,
@@ -302,14 +298,7 @@ angular
                 "userGrowth"
               );
 
-              ChartService.createBarChart(
-                "bar",
-                usersPerCity.sellers.map((owner) => owner._id),
-                usersPerCity.sellers.map((owner) => owner.count),
-                "Number of Owner per city",
-                "number of owners per city",
-                "ownersPerCity"
-              );
+              
 
               ChartService.createPieChart(
                 categoryWiseBookings.map((category) => category._id),
@@ -333,15 +322,7 @@ angular
                 );
               }
 
-              ChartService.createBarChart(
-                "bar",
-                usersPerCity.buyers.map((buyer) => buyer._id),
-                usersPerCity.buyers.map((buyer) => buyer.count),
-                "Number of Buyers per city",
-                "number of buyers per city",
-                "buyersPerCity"
-              );
-
+             
               ChartService.createBarChart(
                 "bar",
                 popularCarModels.map((car) => car._id),
@@ -365,7 +346,7 @@ angular
                 mostReviewedCars.map((car) => car._id),
                 mostReviewedCars.map((car) => car.count),
                 "Number of Reviews",
-                "Top 3 cars with good rating (rating more than 2)",
+                "Top 3 cars with most no. of good rating (rating more than 2)",
                 "top3MostReviewedCars"
               );
 
@@ -411,48 +392,9 @@ angular
         };
 
         $q.all([
-          AdminAnalyticsService.numberOfUsersPerCityForAdmin(),
           AdminAnalyticsService.getBiddingsPerCity(params),
         ])
-          .then(([usersPerCity, biddingsPerCity]) => {
-            // Prepare heatmap data for owners
-            let ownerHeatmapData = usersPerCity.sellers
-              .map((item) => {
-                if ($scope.indianCitiesAndLongitudeAndLatitudeMap[item._id]) {
-                  return {
-                    location: new google.maps.LatLng(
-                      $scope.indianCitiesAndLongitudeAndLatitudeMap[
-                        item._id
-                      ].lat,
-                      $scope.indianCitiesAndLongitudeAndLatitudeMap[
-                        item._id
-                      ].lng
-                    ),
-                    weight: item.count,
-                  };
-                }
-              })
-              .filter(Boolean);
-
-            // Prepare heatmap data for buyers
-            let buyerHeatmapData = usersPerCity.buyers
-              .map((buyer) => {
-                if ($scope.indianCitiesAndLongitudeAndLatitudeMap[buyer._id]) {
-                  return {
-                    location: new google.maps.LatLng(
-                      $scope.indianCitiesAndLongitudeAndLatitudeMap[
-                        buyer._id
-                      ].lat,
-                      $scope.indianCitiesAndLongitudeAndLatitudeMap[
-                        buyer._id
-                      ].lng
-                    ),
-                    weight: buyer.count,
-                  };
-                }
-              })
-              .filter(Boolean);
-
+          .then(([biddingsPerCity]) => {
             // Prepare heatmap data for biddings
             let biddingHeatmapData = biddingsPerCity
               .map((city) => {
@@ -472,8 +414,6 @@ angular
               })
               .filter(Boolean);
 
-            window.initMap(ownerHeatmapData, "map");
-            window.initMap(buyerHeatmapData, "buyerHeatMap");
             window.initMap(biddingHeatmapData, "cityWiseBookings");
           })
           .catch((err) => {

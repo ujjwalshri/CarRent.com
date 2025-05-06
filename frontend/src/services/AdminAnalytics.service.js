@@ -34,21 +34,7 @@ angular.module('myApp').service('AdminAnalyticsService', function($http, $q, Api
     return deffered.promise;
   }
   
-  /**
-   * Get number of users per city for admin dashboard
-   * @returns {Promise} Promise with the users per city data
-   */
-  this.numberOfUsersPerCityForAdmin = async () => {
-    let deffered = $q.defer();
-    $http.get(`${ApiService.baseURL}/api/admin/numberOfUsersPerCity`, { withCredentials:true})
-    .then((response)=>{
-      deffered.resolve(response.data);
-    })
-    .catch((error)=>{
-      deffered.reject(error);
-    });
-    return deffered.promise;
-  }
+
   
   /**
    * Get customer satisfaction score for admin dashboard

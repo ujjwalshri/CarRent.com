@@ -23,10 +23,9 @@ angular.module('myApp').factory('UserFactory', function () {
         isAdmin = false,
         password = null,
         confirmPassword = null,
-        city = null,
     ) {
         if (!(this instanceof User)) {
-            return new User(_id, firstName, lastName, email, username, isBlocked,isSeller, isAdmin,password, confirmPassword,  city);
+            return new User(_id, firstName, lastName, email, username, isBlocked,isSeller, isAdmin,password, confirmPassword);
         }
         this._id = _id;
         this.firstName = firstName;
@@ -38,7 +37,6 @@ angular.module('myApp').factory('UserFactory', function () {
         this.isAdmin = isAdmin;
         this.password = password;
         this.confirmPassword = confirmPassword;
-        this.city = city;
     }
 
     /**
@@ -63,9 +61,7 @@ angular.module('myApp').factory('UserFactory', function () {
         if (!this.username || !usernameRegex.test(this.username)) {
             return "invalid username";
         }
-        if (this.city && !cityRegex.test(this.city)) {
-            return "invalid city";
-        }
+     
         if(!this.password || this.password.length < 6){
             return "password must be atleast 6 characters long";
         }
@@ -98,7 +94,6 @@ angular.module('myApp').factory('UserFactory', function () {
                 data.isAdmin,
                 data.password,
                 data.confirmPassword,
-                data.city,
             );
             if(validate){
                 return user.validate();

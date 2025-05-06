@@ -551,33 +551,29 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
 
         if (comparisons.biddingComparison) {
             createChartIfCanvasExists("myBidsVsOtherSellersAvgBids", () =>
-                ChartService.createBarChart(
-                    "line",
-                    ["My Bids", "Average Seller Bids"],
-                    [
+                ChartService.createLineChart("myBidsVsOtherSellersAvgBids", {
+                    labels: ["My Bids", "Average Seller Bids"],
+                    data: [
                         comparisons.biddingComparison.myBids,
                         comparisons.biddingComparison.otherSellersAvgBids
                     ],
-                    'Number of Bids',
-                    "Bidding Comparison",
-                    "myBidsVsOtherSellersAvgBids"
-                )
+                    title: "Bidding Comparison",
+                    label: "Number of Bids"
+                })
             );
         }
 
         if (comparisons.earningComparison) {
             createChartIfCanvasExists("myEarningVsOtherSellersAvgEarnings", () =>
-                ChartService.createBarChart(
-                    "line",
-                    ["My Earnings", "Average Seller Earnings"],
-                    [
+                ChartService.createLineChart("myEarningVsOtherSellersAvgEarnings", {
+                    labels: ["My Earnings", "Average Seller Earnings"],
+                    data: [
                         comparisons.earningComparison.myEarnings,
                         comparisons.earningComparison.otherSellersAvgEarnings
                     ],
-                    'Earnings (₹)',
-                    "Earning Comparison",
-                    "myEarningVsOtherSellersAvgEarnings"
-                )
+                    title: "Earning Comparison",
+                    label: "Earnings (₹)"
+                })
             );
         }
     };

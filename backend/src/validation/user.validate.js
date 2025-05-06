@@ -12,7 +12,6 @@ function validateUser(user){
         password: joi.string().min(6).max(30).required(),
         firstName: joi.string().min(3).max(30).required(),
         lastName: joi.string().min(3).max(30).required(),
-        city: joi.string().min(3).max(30).required(),
     });
     return validateUserSchema.validate(user);
 }

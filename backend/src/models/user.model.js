@@ -27,10 +27,6 @@ const userSchema = new mongoose.Schema({
         type:Boolean,
         default:false
     },
-    city:{
-        type:String,
-        required:true
-    },
     isSeller:{
         type:Boolean,
         default:false

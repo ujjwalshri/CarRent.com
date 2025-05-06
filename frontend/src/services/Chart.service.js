@@ -78,6 +78,10 @@ angular.module('myApp').service('ChartService', function() {
                            label.toLowerCase().includes('₹') ||
                            label.toLowerCase().includes('earning') ||
                            label.toLowerCase().includes('revenue');
+                           
+    // Check if this is the car-wise negative reviews chart that has overlapping issues
+    const isNegativeReviewsChart = htmlElementId === 'carWiseNegativeReviews' || 
+                                 text.toLowerCase().includes('negative reviews');
 
     var chartConfig = {
         type: type,
@@ -123,6 +127,10 @@ angular.module('myApp').service('ChartService', function() {
                             beginAtZero: true,
                             fontColor: "#555",
                             fontSize: 14,
+                            // Special handling for negative reviews chart to prevent overlapping
+                            padding: isNegativeReviewsChart ? 10 : 0,
+                            // Increase max width for negative reviews chart
+                            maxTicksLimit: isNegativeReviewsChart ? 5 : undefined,
                             callback: function(value) {
                                 if (isEarningsChart) {
                                     return '₹' + value.toLocaleString('en-IN', {
@@ -133,7 +141,18 @@ angular.module('myApp').service('ChartService', function() {
                                 return value;
                             }
                         },
-                        gridLines: { color: "rgba(200, 200, 200, 0.3)" }
+                        // Add left padding for negative reviews chart
+                        gridLines: { 
+                            color: "rgba(200, 200, 200, 0.3)",
+                            drawBorder: true
+                        },
+                        // Add more space on the left for the negative reviews chart
+                        afterFit: function(scaleInstance) {
+                            if (isNegativeReviewsChart) {
+                                // Increase left padding to prevent label overlap
+                                scaleInstance.width = 60; // Ensure enough width for labels
+                            }
+                        }
                     },
                 ],
                 xAxes: [
@@ -156,6 +175,12 @@ angular.module('myApp').service('ChartService', function() {
                         }
                         return tooltipItem.value;
                     }
+                }
+            },
+            // Add extra margin if it's the negative reviews chart
+            layout: {
+                padding: {
+                    left: isNegativeReviewsChart ? 15 : 0
                 }
             }
         }

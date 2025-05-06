@@ -48,7 +48,6 @@ export const signupController = async (req, res) => {
             firstName,
             lastName,
             email,
-            city,
         }
 
         const validUser = validateUser(userData);
@@ -78,7 +77,6 @@ export const signupController = async (req, res) => {
             firstName,
             lastName,
             email,
-            city, 
             isEmailVerified: false
         });
 
@@ -114,7 +112,6 @@ export const signupController = async (req, res) => {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 email: user.email,
-                city: user.city,
                 isAdmin: user.isAdmin,
                 isSeller: user.isSeller,
                 isBlocked: user.isBlocked,

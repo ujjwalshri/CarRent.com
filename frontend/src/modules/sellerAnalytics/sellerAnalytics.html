@@ -74,12 +74,12 @@
 
                 <div class="row">
                     <div class="col-xs-12 col-md-4" ng-repeat="chart in [
+                    { title: 'Car Categories (Pie)', id: 'carCategoriesPieChart', chartType: 'pie' },
+                     { title: 'Top City Wise earnings', id: 'cityWiseEarnings', chartType: 'bar' },
+                    { title: 'Top City Wise Negative Reviews(ratings less than 3)', id: 'cityWiseNegativeReviews', chartType: 'line' },
                         { title: 'Most Popular Cars', id: 'myMostPopularCar', chartType: 'bar' },
-                        { title: 'Car Categories (Pie)', id: 'carCategoriesPieChart', chartType: 'pie' },
                         { title: 'Car Wise Negative Reviews (ratings less than 3)', id: 'carWiseNegativeReviews', chartType: 'bar' },
                         { title: 'Top 3 Cars by Earnings', id: 'top3CarsWithMostEarning', chartType: 'bar' },
-                        { title: 'Top City Wise Negative Reviews(ratings less than 3)', id: 'cityWiseNegativeReviews', chartType: 'line' },
-                        { title: 'Top City Wise earnings', id: 'cityWiseEarnings', chartType: 'bar' },
                     ]">
                         <div class="panel panel-default">
                             <div class="panel-heading">{{chart.title}}</div>
@@ -151,145 +151,161 @@
         </uib-tab>
 
         <uib-tab heading="AI Insights On Your Reviews" select="onTabSelect('aiInsights')">
-            <loading-component is-loading="isAiInsightsLoading" loading-text="Loading AI-powered insights..."></loading-component>
-            
-            <div ng-if="!isAiInsightsLoading && aiInsightsLoaded">
-                <div class="row">
-                    <div class="col-xs-12">
-                        <div class="panel panel-primary">
-                            <div class="panel-heading">
-                                <h3 class="panel-title"><i class="glyphicon glyphicon-education"></i> AI-Powered Review Analysis</h3>
-                            </div>
-                            <div class="panel-body">
-                                <div class="alert alert-info" ng-if="!reviewInsights">
-                                    <i class="glyphicon glyphicon-info-sign"></i> Select a date range and click "Apply" to generate AI insights from your customer reviews.
+            <div class="container-fluid">
+                <!-- Loading indicator -->
+                <loading-component is-loading="isAiInsightsLoading" loading-text="Loading AI-powered insights..."></loading-component>
+                
+                <!-- No insights message -->
+                <div ng-if="!isAiInsightsLoading && aiInsightsLoaded && !reviewInsights" class="alert alert-info">
+                    <i class="glyphicon glyphicon-info-sign"></i> Select a date range and click "Apply" to generate AI insights from your customer reviews.
+                </div>
+                
+                <!-- AI Insights Content -->
+                <div ng-if="!isAiInsightsLoading && aiInsightsLoaded && reviewInsights">
+                    <!-- Header Panel -->
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-6">
+                                    <h4><i class="glyphicon glyphicon-education"></i> AI Review Analysis</h4>
                                 </div>
-                                
-                                <div ng-if="reviewInsights">
-                                    <div class="row">
-                                        <div class="col-xs-12 col-md-4">
-                                            <div class="panel panel-default">
-                                                <div class="panel-heading"><i class="glyphicon glyphicon-stats"></i> Review Stats</div>
-                                                <div class="panel-body">
-                                                    <p><strong>Total Reviews:</strong> {{reviewInsights.totalReviews}}</p>
-                                                    <p><strong>Average Rating:</strong> {{reviewInsights.averageRating}} / 5</p>
-                                                    <p><strong>Positive Reviews:</strong> {{reviewInsights.reviewDistribution.positive}}</p>
-                                                    <p><strong>Neutral Reviews:</strong> {{reviewInsights.reviewDistribution.neutral}}</p>
-                                                    <p><strong>Negative Reviews:</strong> {{reviewInsights.reviewDistribution.negative}}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="col-xs-12 col-md-8">
-                                            <div class="panel panel-default">
-                                                <div class="panel-heading"><i class="glyphicon glyphicon-flash"></i> Executive Summary</div>
-                                                <div class="panel-body">
-                                                    <p>{{reviewInsights.analysis.summary}}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-xs-12 col-sm-6">
-                                            <div class="panel panel-success">
-                                                <div class="panel-heading"><i class="glyphicon glyphicon-thumbs-up"></i> Your Strengths</div>
-                                                <div class="panel-body">
-                                                    <ul>
-                                                        <li ng-repeat="strength in reviewInsights.analysis.strengths">{{strength}}</li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="col-xs-12 col-sm-6">
-                                            <div class="panel panel-warning">
-                                                <div class="panel-heading"><i class="glyphicon glyphicon-wrench"></i> Areas for Improvement</div>
-                                                <div class="panel-body">
-                                                    <ul>
-                                                        <li ng-repeat="area in reviewInsights.analysis.improvementAreas">{{area}}</li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-xs-12 col-sm-6">
-                                            <div class="panel panel-info">
-                                                <div class="panel-heading"><i class="glyphicon glyphicon-road"></i> Vehicle Insights</div>
-                                                <div class="panel-body">
-                                                    <p>{{reviewInsights.analysis.vehicleInsights}}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="col-xs-12 col-sm-6">
-                                            <div class="panel panel-info">
-                                                <div class="panel-heading"><i class="glyphicon glyphicon-map-marker"></i> Geographical Insights</div>
-                                                <div class="panel-body">
-                                                    <p>{{reviewInsights.analysis.geographicalInsights}}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="row">
-                                        <div class="col-xs-12 col-sm-6">
-                                            <div class="panel panel-primary">
-                                                <div class="panel-heading"><i class="glyphicon glyphicon-list"></i> Actionable Recommendations</div>
-                                                <div class="panel-body">
-                                                    <ol>
-                                                        <li ng-repeat="recommendation in reviewInsights.analysis.recommendations">{{recommendation}}</li>
-                                                    </ol>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="col-xs-12 col-sm-6">
-                                            <div class="panel panel-info">
-                                                <div class="panel-heading"><i class="glyphicon glyphicon-signal"></i> Trends</div>
-                                                <div class="panel-body">
-                                                    <p>{{reviewInsights.analysis.trends}}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="row" ng-if="reviewInsights.reviews.length > 0">
-                                        <div class="col-xs-12">
-                                            <div class="panel panel-default">
-                                                <div class="panel-heading"><i class="glyphicon glyphicon-comment"></i> Recent Reviews (Sample)</div>
-                                                <div class="panel-body">
-                                                    <div class="review-item" ng-repeat="review in reviewInsights.reviews">
-                                                        <div class="media">
-                                                            <div class="media-left">
-                                                                <span class="badge" ng-class="{
-                                                                    'badge-success': review.rating >= 4,
-                                                                    'badge-warning': review.rating == 3,
-                                                                    'badge-danger': review.rating < 3
-                                                                }">{{review.rating}}/5</span>
-                                                            </div>
-                                                            <div class="media-body">
-                                                                <h5 class="media-heading">
-                                                                    <strong>{{review.vehicle.company}} {{review.vehicle.name}}</strong>
-                                                                    <small class="text-muted">{{review.createdAt | date:'MMM d, yyyy'}}</small>
-                                                                </h5>
-                                                                <p>{{review.review}}</p>
-                                                                <small class="text-muted">
-                                                                    <i class="glyphicon glyphicon-map-marker"></i> {{review.vehicle.city}}
-                                                                    <i class="glyphicon glyphicon-tag"></i> {{review.vehicle.category}}
-                                                                </small>
-                                                            </div>
-                                                        </div>
-                                                        <hr ng-if="!$last">
+                                <div class="col-xs-6 text-right">
+                                    <span class="label label-default">{{reviewInsights.totalReviews}} Reviews</span>
+                                    <span class="label label-xinfo">{{reviewInsights.averageRating}}/5 Avg</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <!-- Review Distribution -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="well well-sm">
+                                        <div class="row">
+                                            <div class="col-xs-12">
+                                                <h5 class="text-center"><strong>Review Distribution</strong></h5>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-bar-success" ng-style="{'width': (reviewInsights.reviewDistribution.positive / reviewInsights.totalReviews * 100) + '%'}">
+                                                        {{reviewInsights.reviewDistribution.positive}} Positive
+                                                    </div>
+                                                    <div class="progress-bar progress-bar-warning" ng-style="{'width': (reviewInsights.reviewDistribution.neutral / reviewInsights.totalReviews * 100) + '%'}">
+                                                        {{reviewInsights.reviewDistribution.neutral}} Neutral
+                                                    </div>
+                                                    <div class="progress-bar progress-bar-danger" ng-style="{'width': (reviewInsights.reviewDistribution.negative / reviewInsights.totalReviews * 100) + '%'}">
+                                                        {{reviewInsights.reviewDistribution.negative}} Negative
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                                <div class="col-md-8">
+                                    <blockquote>
+                                        <p><small>{{reviewInsights.analysis.summary}}</small></p>
+                                    </blockquote>
+                                </div>
                             </div>
+                            
+                            <!-- Insights Collapsible Panels -->
+                            <uib-accordion close-others="false">
+                                <!-- Strengths & Areas for Improvement -->
+                                <div uib-accordion-group class="panel-success" heading="Strengths & Areas for Improvement">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="panel panel-success">
+                                                <div class="panel-heading">
+                                                    <i class="glyphicon glyphicon-thumbs-up"></i> Key Strengths
+                                                </div>
+                                                <ul class="list-group">
+                                                    <li class="list-group-item" ng-repeat="strength in reviewInsights.analysis.strengths | limitTo:3">
+                                                        {{strength}}
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="panel panel-warning">
+                                                <div class="panel-heading">
+                                                    <i class="glyphicon glyphicon-wrench"></i> Improvement Areas
+                                                </div>
+                                                <ul class="list-group">
+                                                    <li class="list-group-item" ng-repeat="area in reviewInsights.analysis.improvementAreas | limitTo:3">
+                                                        {{area}}
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Detailed Insights -->
+                                <div uib-accordion-group class="panel-info">
+                                    <uib-accordion-heading>
+                                        <i class="glyphicon glyphicon-dashboard"></i> Detailed Insights
+                                    </uib-accordion-heading>
+                                    <uib-tabset>
+                                        <uib-tab heading="Vehicle">
+                                            <p>{{reviewInsights.analysis.vehicleInsights}}</p>
+                                        </uib-tab>
+                                        <uib-tab heading="Geographical">
+                                            <p>{{reviewInsights.analysis.geographicalInsights}}</p>
+                                        </uib-tab>
+                                        <uib-tab heading="Trends">
+                                            <p>{{reviewInsights.analysis.trends}}</p>
+                                        </uib-tab>
+                                    </uib-tabset>
+                                </div>
+                                
+                                <!-- Actionable Recommendations -->
+                                <div uib-accordion-group class="panel-primary">
+                                    <uib-accordion-heading>
+                                        <i class="glyphicon glyphicon-list-alt"></i> Actionable Recommendations
+                                    </uib-accordion-heading>
+                                    <ol>
+                                        <li ng-repeat="recommendation in reviewInsights.analysis.recommendations">
+                                            {{recommendation}}
+                                        </li>
+                                    </ol>
+                                </div>
+                                
+                                <!-- Sample Reviews -->
+                                <div uib-accordion-group class="panel-default" ng-if="reviewInsights.reviews.length > 0">
+                                    <uib-accordion-heading>
+                                        <i class="glyphicon glyphicon-comment"></i> Sample Reviews 
+                                        <span class="badge">{{reviewInsights.reviews.length}}</span>
+                                    </uib-accordion-heading>
+                                    <div class="list-group">
+                                        <div class="list-group-item" ng-repeat="review in reviewInsights.reviews">
+                                            <div class="row">
+                                                <div class="col-xs-1">
+                                                    <span class="badge" ng-class="{
+                                                        'alert-success': review.rating >= 4,
+                                                        'alert-warning': review.rating == 3,
+                                                        'alert-danger': review.rating < 3
+                                                    }">{{review.rating}}</span>
+                                                </div>
+                                                <div class="col-xs-11">
+                                                    <div class="pull-right text-muted">
+                                                        <small>{{review.createdAt | date:'MMM d, yyyy'}}</small>
+                                                    </div>
+                                                    <h5 class="list-group-item-heading">
+                                                        {{review.vehicle.company}} {{review.vehicle.name}}
+                                                    </h5>
+                                                    <p class="list-group-item-text">{{review.review}}</p>
+                                                    <div class="text-muted">
+                                                        <small>
+                                                            <i class="glyphicon glyphicon-map-marker"></i> {{review.vehicle.city}} 
+                                                            <i class="glyphicon glyphicon-tag"></i> {{review.vehicle.category}}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </uib-accordion>
+                        </div>
+                        <div class="panel-footer text-right text-muted">
+                            <small><i class="glyphicon glyphicon-info-sign"></i> Generated using AI analysis of customer feedback</small>
                         </div>
                     </div>
                 </div>

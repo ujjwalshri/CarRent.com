@@ -103,14 +103,12 @@ export const addReviewController = async (req, res) => {
     try {
         // Extract reviewer information from authenticated user
         const { _id, username, email, firstName, lastName, city } = req.user; 
-        const reviewer = { _id, username, email, city }; 
+        const reviewer = { _id, username, email }; 
         
         // Find the vehicle being reviewed
         const vehicle = await Vehicle.findById(id).session(session);
         const booking = await Bidding.findById(bookingId).session(session);
         
-      
-       
         // Create new review document
         const reviewData = new Review({ 
             rating,

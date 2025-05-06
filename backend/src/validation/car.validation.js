@@ -21,7 +21,6 @@ export const createCarValidation = joi.object({
         email: joi.string().email().required(),
         firstName: joi.string().min(2).max(30).required(),
         lastName: joi.string().min(2).max(30).required(),
-        city: joi.string().min(2).max(50).required(),
     }).required(),
 });
 

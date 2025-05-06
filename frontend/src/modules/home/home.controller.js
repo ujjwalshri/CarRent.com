@@ -11,7 +11,7 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
     $scope.category = ''; // Current category filter
     $scope.cities = City.getCities(); // Array of all cities
     $scope.user = false; // User object
-    $scope.city = ''; // Current city filter
+    $scope.city = ''; // Default city set to Delhi
     $scope.skip = 0; // Number of cars to skip
     $scope.isLoading = false;
     $scope.limit = 5; // Number of cars to load per page
@@ -51,6 +51,10 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
     * - recommendedCarsGroups: Personalized recommendations (if authenticated)
     */
     $scope.init = function() {
+        fetchCarsAndRecommendations();
+    };
+
+    function fetchCarsAndRecommendations() {
         $scope.loadingCars = true;
         $rootScope.$on('user:loggedOut', function() {
            $rootScope.isLogged = false;
@@ -100,6 +104,7 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
                     }
                     
                     if (responses[2] && responses[2] && responses[2].recommendations) {
+                        console.log(responses[2].recommendations);
                         const recommendations = responses[2].recommendations;
                         $scope.recommendedCarsGroups = [];
                         for (let i = 0; i < recommendations.length; i += 3) {
@@ -123,30 +128,8 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
             .finally(function() {
                 $scope.loadingCars = false;
             });
-    };
-
-
-
-
-    /**
-     * Fetches filtered cars from the database
-     * @param {number} skip - Number of cars to skip
-     * @returns {Promise<void>}
-     */
-    function fetchAllCars(skip) {
-        $scope.loadingCars = true;
-        CarService.getAllApprovedCars($scope.search, $scope.priceFilter, $scope.city, $scope.category, skip)
-            .then((res) => {
-                $scope.allCars = res.data;
-                $scope.hasMoreCars = res.data.length > $scope.limit;
-            })
-            .catch(err => {
-                ToastService.error(err);
-            })
-            .finally(() => {
-                $scope.loadingCars = false;
-            });
     }
+
 
     /**
      * Filters cars based on the current filters
@@ -154,8 +137,7 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
      */
     $scope.filterCars = () => {
         // Set filtering started flag when any filter is applied
-        $scope.filteringStarted = ($scope.search || $scope.priceFilter || $scope.city || $scope.category);
-        fetchAllCars(0);
+        fetchCarsAndRecommendations();
     };
 
     /**
@@ -163,9 +145,6 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
      * @returns {void} 
      */
     $scope.filterCarsWithDelay = () => {
-        // Set filtering started flag immediately when user types
-        $scope.filteringStarted = $scope.search?true:false;
-        
         if (searchTimeout) {
             $timeout.cancel(searchTimeout);
         }
@@ -210,7 +189,7 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
         $scope.category = '';
         $scope.city = '';
         $scope.skip = 0;
-        $scope.init();
+        fetchCarsAndRecommendations();
     };
 
     /**

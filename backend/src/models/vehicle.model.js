@@ -70,10 +70,6 @@ const vehicleSchema = new mongoose.Schema({
         lastName: {
             type: String,
             required: true
-        },
-        city: {
-            type: String,
-            required: true
         }
     },
     vehicleImages: {

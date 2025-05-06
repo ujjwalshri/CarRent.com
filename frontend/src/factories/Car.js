@@ -53,6 +53,7 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q, $timeout)
      */
     Car.prototype.validate = function() {
         console.log(this);
+        const registrationNumberRegex = /^[A-Z|a-z]{2}\s?[0-9]{1,2}\s?[A-Z|a-z]{0,3}\s?[0-9]{4}$/;
 
         // Validate each property with specific rules
         if (!this.name || typeof this.name !== 'string') {
@@ -70,8 +71,8 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q, $timeout)
         if (isNaN(this.mileage) || this.mileage <= 0) {
             return "Mileage must be a positive number.";
         }
-        if (!Array.isArray(this.images) || this.images.length === 0 || this.images.length>5) {
-            return "Images can be in 1 to 5 range";
+        if (!Array.isArray(this.images) || this.images.length === 0 ) {
+            return "At least one image is required.";
         }
         if (!this.color || typeof this.color !== 'string') {
             return "Color is required and must be a string.";
@@ -89,7 +90,8 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q, $timeout)
         if(this.registrationNumber && typeof this.registrationNumber !== 'string'){
             return "Registration number is required and must be a string.";
         }
-        if(this.registrationNumber && this.registrationNumber.length !== 10){
+       
+        if(this.registrationNumber && !registrationNumberRegex.test(this.registrationNumber)){
             return "Registration number is not valid";
         }
        
@@ -168,33 +170,50 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q, $timeout)
             return car;
         },
         companies: [
-            'Toyota',
-            'Honda',
-            'Ford',
-            'Chevrolet',
-            'Nissan',
-            'Hyundai',
-            'Kia',
-            'Mercedes-Benz',
-            'Volkswagen',
-            'Volvo',
-            'Mahindra',
-            'Land Rover',
-            'Lexus',
-            'Mazda',
-            'BMW',
-            'Audi',
-            'Tesla',
-            'Porsche',
-            'Lamborghini',
-            'Ferrari',
-            'McLaren',
-            'Aston Martin',
-            'Bentley',
-            'Bugatti',
-            'Rolls-Royce',
-            'Jaguar'
-        ],
+            "Maruti Suzuki",
+            "Hyundai",
+            "Tata Motors",
+            "Mahindra",
+            "Honda",
+            "Toyota",
+            "Kia",
+            "Skoda",
+            "Volkswagen",
+            "Renault",
+            "Nissan",
+            "MG (Morris Garages)",
+            "Citroën",
+            "Jeep",
+            "Ford" , 
+            "Fiat", 
+            "Datsun", 
+            "Lexus",
+            "Mercedes-Benz",
+            "BMW",
+            "Audi",
+            "Jaguar",
+            "Land Rover",
+            "Porsche",
+            "Volvo",
+            "Mini",
+            "Rolls-Royce",
+            "Bentley",
+            "Lamborghini",
+            "Ferrari",
+            "Aston Martin",
+            "Isuzu",
+            "BYD",
+            "Tesla", 
+            "Force Motors",
+            "Ashok Leyland", 
+            "Eicher Motors",
+            "Premier", 
+            "Hindustan Motors",
+            "Opel", 
+            "Daewoo", 
+            "SsangYong",
+            "Reva", 
+        ].sort(),
         fuelTypes: [
             'Petrol',
             'Diesel',

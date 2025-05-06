@@ -239,17 +239,6 @@
                     </uib-accordion-group>
 
 
-                    <uib-accordion-group heading="General Statistics">
-                        <div class="row">
-                            <div class="col-md-6" ng-repeat="chartId in ['ownersPerCity', 'buyersPerCity']">
-                                <div class="panel panel-default">
-                                    <div class="panel-body">
-                                        <canvas id="{{chartId}}" width="400" height="400"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </uib-accordion-group>
                 </uib-accordion>
             </uib-tab>
 
@@ -257,26 +246,6 @@
 
             <uib-tab heading="Maps" select="onTabSelect('Maps')" active="activeTab === 'Maps'">
                 <div class="row">
-                    <div class="col-md-6">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h4 class="panel-title text-center">Owner HeatMap</h4>
-                            </div>
-                            <div class="panel-body">
-                                <div id="map" style="width: 100%; height: 400px;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="panel panel-default">
-                            <div class="panel-heading">
-                                <h4 class="panel-title text-center">Buyer Heatmap</h4>
-                            </div>
-                            <div class="panel-body">
-                                <div id="buyerHeatMap" style="width: 100%; height: 400px;"></div>
-                            </div>
-                        </div>
-                    </div>
                     <div class="col-md-6">
                         <div class="panel panel-default">
                             <div class="panel-heading">

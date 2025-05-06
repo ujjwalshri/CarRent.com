@@ -248,18 +248,34 @@
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    width: 100%;
 }
 
 .car-carousel {
     background-color: #f1f1f1;
     border-radius: 8px;
+    width: 100%;
 }
 
 .car-image {
-    height: 400px;
     width: 100%;
-    object-fit: cover;
+    object-fit: contain;
     border-radius: 8px;
+    max-height: 400px;
+    min-height: 200px;
+    height: auto;
+}
+
+@media (max-width: 768px) {
+    .car-image {
+        max-height: 300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .car-image {
+        max-height: 250px;
+    }
 }
 
 .carousel-indicators-custom {
@@ -268,21 +284,6 @@
     bottom: 10px;
     left: 0;
     right: 0;
-}
-
-.indicator {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background-color: rgba(255,255,255,0.5);
-    margin: 0 3px;
-    cursor: pointer;
-}
-
-.indicator.active {
-    background-color: white;
-    box-shadow: 0 0 5px rgba(0,0,0,0.5);
 }
 
 /* Car Details Section */

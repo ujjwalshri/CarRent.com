@@ -1,7 +1,7 @@
 <style>
   html, body {
     height: 100%;
-    overflow: hidden;
+    /* Removed overflow: hidden to allow hamburger menu to open */
   }
   
   .chat-container {
@@ -14,6 +14,12 @@
     margin: 0;
     overflow: hidden;
     background: linear-gradient(135deg, #dcf8c6, #e5e5e5);
+    z-index: 99; /* Lower than navbar dropdown z-index */
+  }
+  
+  /* Ensure navbar menu appears above chat container */
+  .navbar-collapse {
+    z-index: 1050 !important;
   }
   
   .chat-row {
@@ -22,6 +28,14 @@
   }
   
   @media (max-width: 768px) {
+    /* Additional space for navbar dropdown */
+    .navbar-collapse {
+      position: absolute;
+      width: 100%;
+      background-color: #222;
+      z-index: 1050;
+    }
+    
     .chat-list-col {
       display: block !important;
       width: 100% !important;

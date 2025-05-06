@@ -124,6 +124,28 @@
   <body ng-controller="appCtrl" ng-init="init()">
     <dynamic-navbar></dynamic-navbar>
     <div id="main-view" ui-view></div>
+    
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      
+      .navbar {
+        margin-bottom: 0 !important; 
+      }
+      
+      #main-view {
+        padding-top: 0;
+        margin-top: 0;
+      }
+      
+      @media (max-width: 768px) {
+        .navbar {
+          margin-bottom: 0 !important;
+        }
+      }
+    </style>
 </body>
 
 </html>
