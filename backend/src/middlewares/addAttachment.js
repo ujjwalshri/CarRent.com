@@ -24,7 +24,14 @@ export const addAttachment = async (req, res, next) => {
                 filename: req.file.originalname,
                 mimeType: req.file.mimetype,
                 size: req.file.size,
-                conversationId: conversationId
+                conversationId: conversationId,
+                message : {
+                    sender: {
+                        _id : req.user._id,
+                        username: req.user.username,
+                    },
+                    messageContent: req.body.message || "Shared an attachment", // Provide default message if none is provided
+                },
             };
 
             // Create a new attachment document and save it to the database

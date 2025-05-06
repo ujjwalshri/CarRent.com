@@ -8,6 +8,7 @@ angular.module('myApp').controller('sellerListingsCtrl', function($scope, $state
     $scope.selectedCarPrice = { price: 0 }; // Object to hold selected car price
     $scope.priceRanges = [];
     $scope.categories = [];
+
     
     // Loading and state variables
     $scope.loading = false; // Flag to indicate loading state
@@ -166,6 +167,16 @@ angular.module('myApp').controller('sellerListingsCtrl', function($scope, $state
     };
     
     /**
+     * Filters car list to show only pending cars
+     */
+    $scope.showPending = function() {
+        $scope.activeButton = 'pending';
+        $scope.status = 'pending';
+        $scope.pagination.currentPage = 1;
+        fetchCarListings();
+    };
+    
+    /**
      * Shows all cars regardless of status
      */
     $scope.showAll = function() {
@@ -261,10 +272,11 @@ angular.module('myApp').controller('sellerListingsCtrl', function($scope, $state
      * Opens modal for adding a new car directly from the seller listings page
      */
     $scope.openAddCarModal = function() {
+        $scope.addCarLoading = true;
         var modalInstance = $uibModal.open({
             templateUrl: 'modules/sellerListings/addCarModal.html',
             controller: 'AddCarModalCtrl',
-            size: 'lg',
+            size: 'md',
             backdrop: 'static'
         });
 

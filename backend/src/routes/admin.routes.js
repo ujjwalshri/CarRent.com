@@ -43,7 +43,7 @@ router.get('/analytics/top-5-sellers-with-most-negative-reviews', protectRoute, 
 router.get('/analytics/category-wise-bookings', protectRoute, allowAdmin, getCarCateogoryWiseBookings);
 
 // Existing Routes
-router.get('/getGeneralAnalytics', protectRoute, getGeneralAnalyticsController);
+router.get('/getGeneralStats', protectRoute, getGeneralAnalyticsController);
 router.get('/getOverviewStats', protectRoute, getOverviewStatsController);
 router.get('/numberOfUsersPerCity', protectRoute, usersPerCityController);
 router.post('/addCarCategory', protectRoute, allowAdmin, addCarCategoryController);

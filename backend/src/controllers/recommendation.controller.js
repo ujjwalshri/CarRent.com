@@ -122,7 +122,7 @@ export const getOptimalBidRecommendationsController = async(req, res) => {
           startDate: {
               $gte: new Date(new Date().setHours(0, 0, 0, 0)), // Only consider future bids
           }
-      }).sort({ startDate: 1 }); 
+      }).sort({ startDate: 1 });  // sort by start date initially 
       
       if (pendingBids.length === 0) {
           return res.status(200).json({ 

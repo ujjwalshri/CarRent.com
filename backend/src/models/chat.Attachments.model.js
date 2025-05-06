@@ -26,6 +26,25 @@ const attachmentSchema = new mongoose.Schema({
         ref: "Conversation",
         required: true
     },
+    message: {
+        type: {
+            sender: {
+                _id: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "User",
+                    required: true
+                },
+                username: {
+                    type: String,
+                    required: true
+                }
+            },
+            messageContent: {
+                type: String,
+                required: true
+            }
+        }
+    }
 }, { timestamps: true });
 
 const Attachment = mongoose.model("Attachment", attachmentSchema);

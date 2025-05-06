@@ -266,6 +266,7 @@ angular
     // Load images when modal opens
     ChatService.getAllAttachments(conversationId)
       .then((response) => {
+        console.log('Fetched images:', response.attachments);
         $scope.images = response.attachments;
       })
       .catch((err) => {

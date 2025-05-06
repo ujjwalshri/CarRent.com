@@ -1,4 +1,3 @@
-import Charges from '../models/charges.model.js';
 
 /**
  * Email Templates

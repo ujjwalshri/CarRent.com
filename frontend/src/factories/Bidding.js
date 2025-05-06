@@ -558,12 +558,13 @@ angular.module('myApp').factory('BiddingFactory', function($timeout, CarService,
                         dateFormat: "Y-m-d",
                         disable: blockedDates,
                         onChange: function(selectedDates) {
-                            (function() {
-                                if (selectedDates.length === 2) {
+                            if (selectedDates.length === 2) {
+                                // Use $timeout to ensure we trigger Angular's digest cycle
+                                $timeout(function() {
                                     $scope.startDate = selectedDates[0];
                                     $scope.endDate = selectedDates[1];
-                                }
-                            })();
+                                });
+                            }
                         }
                     });
                 }

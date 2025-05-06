@@ -18,7 +18,7 @@ export async function generateText(prompt, options = {}) {
       throw new Error('GEMINI_API_KEY environment variable not set');
     }
 
-    // Default model name (Note: The model name has changed to gemini-1.5-pro)
+
     const modelName = 'gemini-1.5-pro';
     
     // Get the generative model

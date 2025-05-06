@@ -49,7 +49,7 @@ const pipelines = {
         }
     ]),
 
-    negativeReviews: (userId, startDate, endDate) => (
+    negativeReviews: (userId, startDate, endDate) => ( // reviews having ratings less than 3
         [
             {
                 $match : {
@@ -172,7 +172,7 @@ const pipelines = {
         }
     ]),
 
-    popularCars: (userId, startDate, endDate) => ([
+    popularCars: (userId, startDate, endDate) => ([ // getting cars with most bidings 
         {
             $match: {
                 'owner._id': userId,
@@ -287,7 +287,7 @@ const pipelines = {
     ),
  
    
-    negativeReviews: (userId, startDate, endDate) => ([
+    negativeReviews: (userId, startDate, endDate) => ([ //  aggregation pipeline for getting the negative reviews for a seller grouped by vehicle names
         {
             $match: {
                 rating: { $lt: 3 },
@@ -313,6 +313,7 @@ const pipelines = {
             }
         }
     ]),
+
     sellerBids: (userId, startDate, endDate) => (
         [
             {
@@ -478,7 +479,7 @@ const pipelines = {
         }
     ]),
     
-    topEarningCars: (userId, startDate, endDate) => ([
+    topEarningCars: (userId, startDate, endDate) => ([ // getting top 3 most earning cars
         {
             $match: {
                 'owner._id': userId,
@@ -549,9 +550,7 @@ const pipelines = {
             $match: {
                 'owner._id': userId,
                 status: { $in: ["pending", "approved", "started", "ended", "reviewed"] },
-                ...(startDate && endDate && {
-                    createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
-                })
+                createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
             }
         },
         {
@@ -582,9 +581,7 @@ const pipelines = {
             $match: {
                 'owner._id': userId,
                 status: { $in: ["approved", "started", "ended", "reviewed"] },
-                ...(startDate && endDate && {
-                    startDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
-                })
+                startDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
             }
         },
         {

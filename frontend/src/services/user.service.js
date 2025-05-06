@@ -17,8 +17,6 @@ angular.module('myApp').service('UserService', function($http, ApiService, $q) {
         return deferred.promise;
     }
 
-  
-
     /**
      * Function to update only user city
      * @param {string} city - The new city value
@@ -99,39 +97,6 @@ angular.module('myApp').service('UserService', function($http, ApiService, $q) {
         return deferred.promise
     }
 
-    // Get car addons
-    this.getCarAddons = function() {
-        return $http.get(`${ApiService.baseURL}/api/bidding/getAllAddons`, { withCredentials: true })
-            .then(function(response) {
-                return response.data;
-            })
-            .catch(function(error) {
-                return error
-            });
-    }
-
-    // Add car addon
-    this.addCarAddon = function(addon) {
-        return $http.post(`${ApiService.baseURL}/api/bidding/addAddon`, addon, { withCredentials: true })
-            .then(function(response) {
-                return response.data;
-            })
-            .catch(function(error) {
-                return error
-            });
-    }
-
-    // Remove car addon
-    this.removeCarAddon = function(addonId) {
-        return $http.delete(`${ApiService.baseURL}/api/bidding/deleteAddon/${addonId}` , { withCredentials: true })
-            .then(function(response) {
-                console.log(response);
-                return response.data;
-            })
-            .catch(function(error) {
-                return error
-            });
-    }
     /**
      * Function to get the user at the userId
      * @param {string} userId - the userId of the user to get

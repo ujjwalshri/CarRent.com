@@ -317,7 +317,7 @@ export const getBookingsAtCarIdController = async (req, res)=>{
            {
             $match: {
                 "vehicle._id": objectIdCarId,
-                status: { $in: ['approved'] },
+                status: { $in: ['approved', 'started'] },
                 startDate: {
                     $gte: new Date(new Date().setHours(0, 0, 0, 0)), 
                 }

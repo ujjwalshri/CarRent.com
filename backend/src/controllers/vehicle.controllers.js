@@ -57,6 +57,12 @@ export const addCarController = async (req, res) => {
                 city: user.city,
             }
         }
+
+        const vehicle = await Vehicle.findOne({ registrationNumber });
+        if(vehicle){
+            return res.status(400).json({message: 'Car with this registration number already exists'});
+        }
+
         const isValidCar = createCarValidation.validate(carData);
         if(isValidCar.error){
             return res.status(400).json({error: isValidCar.error.details[0].message});

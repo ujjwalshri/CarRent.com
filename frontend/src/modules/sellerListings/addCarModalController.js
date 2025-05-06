@@ -5,7 +5,8 @@
 angular.module('myApp').controller('AddCarModalCtrl', function($scope, $uibModalInstance, CarFactory, ToastService, CarService, City, $rootScope, $q) {
     // Initialize variables
     $scope.images = []; // Array to store the car images selected by the user
-    $scope.isLoading = false;
+    $scope.loadingAddCar = false;
+    $scope.loadingText = "Saving car...";
     $scope.cities = City.getCities();
     $scope.companies = CarFactory.companies;
     $scope.fuelTypes = CarFactory.fuelTypes;
@@ -50,7 +51,7 @@ angular.module('myApp').controller('AddCarModalCtrl', function($scope, $uibModal
      * Validates inputs, creates a car object, and sends to server
      */
     $scope.submitCarForm = function() {
-        $scope.isLoading = true;
+        $scope.loadingAddCar = true;
         
         // Create a car object using the factory with form field values
         const car = CarFactory.createCar({
@@ -71,7 +72,7 @@ angular.module('myApp').controller('AddCarModalCtrl', function($scope, $uibModal
         // Validate the car object
         if (typeof car === 'string') {
             ToastService.error(car);
-            $scope.isLoading = false;
+            $scope.loadingAddCar = false;
             return;
         }
         
@@ -85,10 +86,10 @@ angular.module('myApp').controller('AddCarModalCtrl', function($scope, $uibModal
                 $uibModalInstance.close(res);
             })
             .catch(function(err) {
-                ToastService.error(`Error adding car: ${err}`);
+                ToastService.error(` ${err}`);
             })
             .finally(function() {
-                $scope.isLoading = false;
+                $scope.loadingAddCar = false;
             });
     };
     

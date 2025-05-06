@@ -17,7 +17,6 @@ angular
       $stateParams,
       ToastService,
       CarService,
-      BiddingService,
       ChatService,
       BiddingFactory,
       RouteProtection,

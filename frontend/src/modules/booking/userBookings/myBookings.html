@@ -1,8 +1,8 @@
 <back-button></back-button>
-<div class="container-fluid" ng-init="init()">
+<div class="container" ng-init="init()">
 
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-10 col-md-offset-1">
             <div class="page-header">
                 <h3 class="text-primary"><i class="glyphicon glyphicon-calendar"></i> My Bookings</h3>
                 <p class="text-muted">Manage and track all your car rental bookings</p>
@@ -11,7 +11,7 @@
     </div>
 
     <div class="row" ng-show="isLoading">
-        <div class="col-md-12">
+        <div class="col-md-10 col-md-offset-1">
             <div class="text-center">
                 <i class="fa fa-spinner fa-spin fa-3x fa-fw text-primary"></i>
                 <p class="text-muted">Loading your bookings...</p>
@@ -21,16 +21,16 @@
 
     <!-- Filter Panel - Always visible regardless of bookings -->
     <div class="row" ng-show="!isLoading">
-        <div class="col-md-12">
-            <div class="panel panel-primary compact-panel filter-panel">
+        <div class="col-md-10 col-md-offset-1">
+            <div class="panel panel-primary">
                 <div class="panel-heading">
-                    <h3 class="panel-title small"><i class="glyphicon glyphicon-filter"></i> Sort & Filter</h3>
+                    <h3 class="panel-title"><i class="glyphicon glyphicon-filter"></i> Sort & Filter</h3>
                 </div>
                 <div class="panel-body">
                     <div class="row">
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="sortBy" class="control-label small"><i class="glyphicon glyphicon-sort"></i> Sort By:</label>
+                                <label for="sortBy" class="control-label"><i class="glyphicon glyphicon-sort"></i> Sort By:</label>
                                 <select id="sortBy" class="form-control input-sm" ng-model="sortBy" ng-change="handleSorting()">
                                     <option value="" disabled selected>Select Sorting Option</option>
                                     <option value="amount">Price (High to Low)</option>
@@ -40,7 +40,7 @@
                         </div>
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="ownerSearch" class="control-label small"><i class="glyphicon glyphicon-search"></i> Search by Owner:</label>
+                                <label for="ownerSearch" class="control-label"><i class="glyphicon glyphicon-search"></i> Search by Owner:</label>
                                 <div class="input-group">
                                     <input type="text" id="ownerSearch" class="form-control input-sm" ng-model="ownerNameQuery" placeholder="Type owner's name...">
                                     <span class="input-group-btn">
@@ -52,7 +52,7 @@
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <button class="btn btn-default btn-sm btn-block filter-btn" ng-click="resetFilters()">
+                            <button class="btn btn-default btn-sm btn-block" style="margin-top: 24px;" ng-click="resetFilters()">
                                 <i class="glyphicon glyphicon-refresh"></i> Reset Filters
                             </button>
                         </div>
@@ -64,12 +64,12 @@
 
     <!-- No bookings alert - moved here to appear after the filters -->
     <div class="row" ng-show="bookings.length === 0 && !isLoading">
-        <div class="col-md-12">
+        <div class="col-md-10 col-md-offset-1">
             <div class="alert alert-info">
                 <div class="text-center">
-                    <i class="fa fa-info-circle fa-2x margin-bottom-10"></i>
+                    <i class="fa fa-info-circle fa-2x" style="margin-bottom: 10px;"></i>
                     <h4>No Active Bookings</h4>
-                    <p class="small">You haven't made any bookings yet. Start exploring cars to rent!</p>
+                    <p>You haven't made any bookings yet. Start exploring cars to rent!</p>
                 </div>
             </div>
         </div>
@@ -77,51 +77,47 @@
 
     <!-- Bookings Table - Only visible when bookings exist -->
     <div class="row" ng-show="bookings.length > 0">
-        <div class="col-md-12">
+        <div class="col-md-10 col-md-offset-1">
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title small"><i class="glyphicon glyphicon-list"></i> Booking Details</h3>
+                    <h3 class="panel-title"><i class="glyphicon glyphicon-list"></i> Booking Details</h3>
                 </div>
-                <div class="panel-body compact-panel">
+                <div class="panel-body">
                     <div class="table-responsive">
-                        <table class="table table-hover table-striped table-condensed">
+                        <table class="table table-hover table-striped">
                             <thead>
                                 <tr>
-                                    <th class="text-center small">Booking ID</th>
-                                    <th class="text-center small">Amount</th>
-                                    <th class="text-center small">Duration</th>
-                                    <th class="text-center small">Car Details</th>
-                                    <th class="text-center small">Owner Details</th>
-                                    <th class="text-center small">Status</th>
+                                    <th class="text-center">Amount</th>
+                                    <th class="text-center">Duration</th>
+                                    <th class="text-center">Car Details</th>
+                                    <th class="text-center">Owner Details</th>
+                                    <th class="text-center">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr ng-repeat="booking in bookings">
                                     <td class="text-center">
-                                        <small class="text-muted smaller">{{booking._id}}</small>
+                                        <p class="text-success" style="margin: 0;"><strong>{{booking.calculate() | currency:"₹"}}</strong></p>
+                                        <small class="text-muted">{{booking.amount | currency:"₹"}}/day</small>
                                     </td>
                                     <td class="text-center">
-                                        <p class="text-success margin-0 medium">{{booking.calculate() | currency:"₹"}}</p>
-                                        <small class="text-muted smaller">{{booking.amount | currency:"₹"}}/day</small>
-                                    </td>
-                                    <td class="text-center">
-                                        <p class="margin-bottom-5">
-                                            <span class="label label-primary small-label">
+                                        <p style="margin-bottom: 5px;">
+                                            <span class="label label-primary">
                                                 <i class="glyphicon glyphicon-calendar"></i> 
                                                 {{booking.startDate | date: 'MMM dd, yyyy'}}
                                             </span>
                                         </p>
-                                        <p class="margin-0">
-                                            <span class="label label-info small-label">
+                                        <p style="margin: 0;">
+                                            <span class="label label-info">
                                                 <i class="glyphicon glyphicon-calendar"></i> 
                                                 {{booking.endDate | date: 'MMM dd, yyyy'}}
                                             </span>
                                         </p>
                                     </td>
                                     <td>
-                                        <div class="well well-sm margin-0 compact-well">
-                                            <p class="margin-0 medium">{{booking.vehicle.company}} {{booking.vehicle.name}}</p>
-                                            <p class="text-muted margin-top-5 smaller">
+                                        <div class="well well-sm" style="margin: 0; padding: 5px 8px;">
+                                            <p style="margin: 0;">{{booking.vehicle.company}} {{booking.vehicle.name}}</p>
+                                            <p class="text-muted" style="margin-top: 5px; font-size: 12px;">
                                                 <i class="glyphicon glyphicon-calendar"></i> {{booking.vehicle.modelYear}} |
                                                 <i class="glyphicon glyphicon-tag"></i> {{booking.vehicle.category}} |
                                                 <i class="glyphicon glyphicon-tint"></i> {{booking.vehicle.fuelType}} |
@@ -130,16 +126,16 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <div class="well well-sm margin-0 compact-well">
-                                            <p class="margin-0 small">{{booking.owner.firstName}} {{booking.owner.lastName}}</p>
-                                            <p class="margin-0 smaller">@{{booking.owner.username}}</p>
-                                            <p class="margin-0 smaller text-muted">
+                                        <div class="well well-sm" style="margin: 0; padding: 5px 8px;">
+                                            <p style="margin: 0; font-size: 12px;">{{booking.owner.firstName}} {{booking.owner.lastName}}</p>
+                                            <p style="margin: 0; font-size: 11px;">@{{booking.owner.username}}</p>
+                                            <p style="margin: 0; font-size: 11px;" class="text-muted">
                                                 <i class="glyphicon glyphicon-envelope"></i> {{booking.owner.email}}
                                             </p>
                                         </div>
                                     </td>
                                     <td class="text-center">
-                                        <span class="label small-label" ng-class="{
+                                        <span class="label" ng-class="{
                                             'label-success': booking.status === 'started',
                                             'label-warning': booking.status === 'approved',
                                             'label-info': booking.status === 'ended',
@@ -165,7 +161,7 @@
 
     <!-- Pagination - Only visible when bookings exist -->
     <div class="row" ng-show="pagination.totalItems > 0">
-        <div class="col-md-12">
+        <div class="col-md-10 col-md-offset-1">
             <div class="text-center">
                 <ul uib-pagination
                     total-items="pagination.totalItems"
@@ -182,94 +178,8 @@
                     next-text="&rsaquo;"
                     direction-links="true">
                 </ul>
-                <p class="text-muted smaller">Page {{pagination.currentPage}} of {{pagination.totalPages}}</p>
+                <p class="text-muted" style="font-size: 12px;">Page {{pagination.currentPage}} of {{pagination.totalPages}}</p>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-.margin-0 { margin: 0; }
-.margin-top-5 { margin-top: 5px; }
-.margin-bottom-5 { margin-bottom: 5px; }
-.margin-bottom-10 { margin-bottom: 10px; }
-.well { background-color: #f9f9f9; }
-.page-header { border-bottom: 1px solid #eee; margin: 20px 0 15px; padding-bottom: 5px; }
-.page-header h3 { font-size: 24px; margin: 10px 0; }
-.page-header h3.text-primary { color: #337ab7; }
-.panel-title { margin: 0; }
-.compact-panel .panel-body { padding: 10px; }
-.compact-well { padding: 5px 8px; }
-.small-label { padding: 4px 8px; font-size: 11px; }
-.smaller { font-size: 11px; }
-.small { font-size: 12px; }
-.medium { font-size: 13px; }
-.panel-primary > .panel-heading { background-color: #337ab7; padding: 5px 10px; }
-.table > thead > tr > th { background-color: #f5f5f5; padding: 8px; }
-.table > tbody > tr > td { padding: 8px; }
-.pagination > li > a { padding: 4px 8px; font-size: 12px; }
-.form-control { font-size: 12px; }
-.btn { font-size: 12px; }
-
-/* Enhanced filter styling */
-.filter-panel {
-  margin-bottom: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  border-radius: 4px;
-  border: none;
-}
-
-.filter-panel .panel-heading {
-  background: linear-gradient(135deg, #3498db, #2c3e50);
-  color: white;
-  border-radius: 4px 4px 0 0;
-  padding: 8px 15px;
-}
-
-.filter-panel .panel-body {
-  background-color: #f8f9fa;
-  padding: 15px;
-}
-
-.filter-btn {
-  margin-top: 24px;
-  transition: all 0.3s ease;
-  background-color: #f5f5f5;
-  border-color: #ddd;
-}
-
-.filter-btn:hover {
-  background-color: #e5e5e5;
-}
-
-.input-group-btn .btn-primary {
-  background-color: #337ab7;
-  border-color: #2e6da4;
-}
-
-.input-group-btn .btn-primary:hover {
-  background-color: #286090;
-}
-
-.form-control:focus {
-  border-color: #66afe9;
-  box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);
-}
-
-.form-group label {
-  margin-bottom: 5px;
-  color: #555;
-  font-weight: 600;
-}
-
-/* Improved responsive layout */
-@media (max-width: 767px) {
-  .filter-btn {
-    margin-top: 10px;
-  }
-  
-  .col-md-4 {
-    margin-bottom: 10px;
-  }
-}
-</style>

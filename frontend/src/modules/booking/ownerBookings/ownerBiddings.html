@@ -1,16 +1,18 @@
 <back-button></back-button>
-<div ng-controller="ownerBiddingsCtrl" class="owner-bookings container-fluid" ng-init="init()">
-    <h1 class="text-center" ng-if="bookings.length > 0">Bidding Requests</h1>
-
-    <div class="panel panel-default" style="margin: 10px 0;">
+<div ng-controller="ownerBiddingsCtrl" class="container" ng-init="init()">
+    <h1 class="text-center text-primary">Bidding Requests</h1>
+    
+    <div class="panel panel-default">
         <div class="panel-heading">
-            <h3 class="panel-title">Filter and Sort</h3>
+            <h3 class="panel-title">Filter Biddings</h3>
         </div>
         <div class="panel-body">
             <div class="row">
-                <div class="col-xs-12 col-sm-4">
-                    <div class="form-group">
-                        <label class="control-label">Filter by Car:</label>
+                <div class="col-sm-4">
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                            <i class="fa fa-car"></i>
+                        </span>
                         <select class="form-control" ng-model="filters.selectedCar" ng-change="fetchBookings()">
                             <option value="">All Cars</option>
                             <option ng-repeat="car in myCars" value="{{car._id}}">
@@ -20,9 +22,11 @@
                     </div>
                 </div>
 
-                <div class="col-xs-12 col-sm-4">
-                    <div class="form-group">
-                        <label class="control-label">Sort By:</label>
+                <div class="col-sm-4">
+                    <div class="input-group">
+                        <span class="input-group-addon">
+                            <i class="fa fa-sort"></i>
+                        </span>
                         <select class="form-control" ng-model="sort.sortBy" ng-change="fetchBookings()">
                             <option value="">Default (Latest First)</option>
                             <option value="amount">Price (High to Low)</option>
@@ -31,28 +35,25 @@
                     </div>
                 </div>
 
-                <div class="col-xs-12 col-sm-4">
-                    <div class="form-group">
-                        <label class="control-label">Actions:</label>
-                        <div class="btn-group btn-group-sm btn-block">
-                            <button class="btn btn-primary" 
-                                    ng-click="showOptimalBids()" 
-                                    ng-disabled="isLoadingOptimal">
-                                <i class="glyphicon glyphicon-star"></i> 
-                                <span ng-if="!isLoadingOptimal">Optimal Bids</span>
-                                <span ng-if="isLoadingOptimal"><i class="fa fa-spinner fa-spin"></i> Loading...</span>
-                            </button>
-                            <button class="btn btn-default" 
-                                    ng-click="resetFilters()" 
-                                    ng-disabled="!filters.selectedCar && !sort.sortBy">
-                                <i class="glyphicon glyphicon-refresh"></i> Reset
-                            </button>
-                        </div>
+                <div class="col-sm-4">
+                    <div class="btn-group btn-block">
+                        <button class="btn btn-primary" 
+                                ng-click="showOptimalBids()" 
+                                ng-disabled="isLoadingOptimal">
+                            <i class="glyphicon glyphicon-star"></i> 
+                            <span ng-if="!isLoadingOptimal">Optimal Bids</span>
+                            <span ng-if="isLoadingOptimal"><i class="fa fa-spinner fa-spin"></i> Loading...</span>
+                        </button>
+                        <button class="btn btn-default" 
+                                ng-click="resetFilters()" 
+                                ng-disabled="!filters.selectedCar && !sort.sortBy">
+                            <i class="glyphicon glyphicon-refresh"></i> Reset
+                        </button>
                     </div>
                 </div>
             </div>
             
-            <div class="row" ng-if="optimalBidsActive">
+            <div class="row" ng-if="optimalBidsActive" style="margin-top: 15px;">
                 <div class="col-xs-12">
                     <div class="alert alert-info">
                         <i class="glyphicon glyphicon-info-sign"></i> 
@@ -66,78 +67,120 @@
     </div>
 
     <div class="text-center" ng-show="isLoading">
-        <i class="fa fa-spinner fa-spin fa-3x fa-fw"></i>
-        <span>Loading...</span>
+        <span class="glyphicon glyphicon-refresh spin" style="font-size: 30px; color: #3498db; margin-bottom: 15px; display: block;"></span>
+        <p>Loading biddings...</p>
     </div>
 
-    <div ng-if="bookings.length === 0">
-        <div class="alert alert-info text-center">
-            <i class="fa fa-info-circle"></i> No biddings available
+    <div class="text-center empty-state-container" ng-if="bookings.length === 0 && !isLoading">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <i class="fa fa-handshake-o fa-4x text-muted"></i>
+                <h3 class="text-muted">No Biddings Found</h3>
+                <p class="lead" ng-if="filters.selectedCar">
+                    No biddings found for the selected car
+                </p>
+                <p class="lead" ng-if="!filters.selectedCar">
+                    You don't have any bidding requests yet
+                </p>
+                <button class="btn btn-primary" ng-click="resetFilters()">
+                    <i class="glyphicon glyphicon-refresh"></i> Reset Filters
+                </button>
+            </div>
         </div>
     </div>
 
-
-    <div class="table-responsive hidden-xs" ng-if="bookings.length > 0" style="margin: 10px 0;">
-        <table class="table table-striped table-bordered table-hover">
-            <thead>
-                <tr class="text-center">
-                    <th>Car Name</th>
-                    <th>Car Model</th>
-                    <th>Price per Day</th>
-                    <th>Bid Amount</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Total Payable</th>
-                    <th>User Details</th>
-                    <th>Addons</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr ng-repeat="booking in bookings" ng-class="{'success': isOptimalBid(booking._id)}">
-                    <td>{{booking.vehicle.company}} {{ booking.vehicle.name }}</td>
-                    <td>{{ booking.vehicle.modelYear }}</td>
-                    <td>{{ booking.vehicle.price | currency:"₹" }}</td>
-                    <td>{{ booking.amount | currency:"₹" }}</td>
-                    <td>{{ booking.startDate | date:'yyyy-MM-dd' }}</td>
-                    <td>{{ booking.endDate | date:'yyyy-MM-dd' }}</td>
-                    <td>{{ booking.calculate() | currency:"₹" }}</td>
-                    <td>
-                        <p><strong>First Name:</strong> {{ booking.from.firstName }}</p>
-                        <p><strong>Last Name:</strong> {{ booking.from.lastName }}</p>
-                        <p><strong>Username:</strong> {{ booking.from.username }}</p>
-                    </td>
-                    <td>
-                        <p ng-if="booking.selectedAddons" ng-repeat="addon in booking.selectedAddons">{{ addon.name }}</p>
-                        <p ng-if="booking.selectedAddons.length===0">
-                            N/A
-                        </p>
-                    </td>
-                    <td class="text-center">
-                        <button ng-click="approveBidding(booking._id)" 
-                                ng-if="!checkApproved(booking)" 
-                                class="btn btn-success btn-sm">
-                            Approve
-                        </button>
-                        <button ng-click="rejectBidding(booking._id)" 
-                                ng-if="!checkApproved(booking)" 
-                                class="btn btn-danger btn-sm">
-                            Reject
-                        </button>
-                        <span ng-if="isOptimalBid(booking._id)" class="label label-success">
-                            <i class="glyphicon glyphicon-star"></i> Optimal
-                        </span>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+    <div class="panel panel-primary" ng-if="bookings.length > 0 && !isLoading">
+        <div class="panel-heading">
+            <h3 class="panel-title">Bidding Details</h3>
+        </div>
+        <div class="panel-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered table-condensed">
+                    <thead>
+                        <tr class="text-center">
+                            <th>User</th>
+                            <th>Car Details</th>
+                            <th>Booking Period</th>
+                            <th>Bid Amount</th>
+                            <th>Add-Ons</th>
+                            <th>Total Amount</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="booking in bookings" ng-class="{'success': isOptimalBid(booking._id)}">
+                            <td>
+                                <strong>{{booking.from.username}}</strong>
+                                <div class="small text-muted">
+                                    {{booking.from.firstName}} {{booking.from.lastName}}<br>
+                                    <span ng-if="booking.from.phone"><i class="fa fa-phone"></i> {{booking.from.phone}}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <strong>{{booking.vehicle.company}} {{booking.vehicle.name}}</strong>
+                                <div class="small text-muted">
+                                    <span><i class="fa fa-calendar"></i> {{booking.vehicle.modelYear}}</span><br>
+                                    <span><i class="fa fa-money"></i> {{booking.vehicle.price | currency:"₹"}} /day</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div><i class="fa fa-calendar-check-o"></i> {{ booking.startDate | date: 'MMM dd, yyyy' }}</div>
+                                <div><i class="fa fa-calendar-times-o"></i> {{ booking.endDate | date: 'MMM dd, yyyy' }}</div>
+                                <div class="small text-muted" ng-if="booking.daysCount">
+                                    <i class="fa fa-clock-o"></i> {{booking.daysCount}} days
+                                </div>
+                            </td>
+                            <td>
+                                <strong class="text-success">{{ booking.amount | currency:"₹" }}</strong>
+                                <div class="small text-muted" ng-if="booking.amount != booking.vehicle.price">
+                                </div>
+                            </td>
+                            <td>
+                                <div ng-if="booking.selectedAddons && booking.selectedAddons.length > 0">
+                                    <ul class="list-unstyled small">
+                                        <li ng-repeat="addon in booking.selectedAddons">
+                                            <i class="fa fa-check-circle text-success"></i> {{addon.name}} 
+                                            <span class="text-muted">{{addon.price | currency:"₹"}}</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="text-muted small" ng-if="!booking.selectedAddons || booking.selectedAddons.length === 0">
+                                    <i class="fa fa-info-circle"></i> No add-ons
+                                </div>
+                            </td>
+                            <td>
+                                <strong>{{ booking.calculate() | currency:"₹" }}</strong>
+                                <div class="small text-muted" ng-if="booking.daysCount">
+                                    <i class="fa fa-calculator"></i> Total for {{booking.daysCount}} days
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <button ng-click="approveBidding(booking._id)" 
+                                        ng-if="!checkApproved(booking)" 
+                                        class="btn btn-success btn-xs">
+                                    <i class="fa fa-check"></i> Approve
+                                </button>
+                                <button ng-click="rejectBidding(booking._id)" 
+                                        ng-if="!checkApproved(booking)" 
+                                        class="btn btn-danger btn-xs">
+                                    <i class="fa fa-times"></i> Reject
+                                </button>
+                                <span ng-if="isOptimalBid(booking._id)" class="label label-success">
+                                    <i class="glyphicon glyphicon-star"></i> Optimal
+                                </span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-    
 
-    <div class="visible-xs" ng-if="bookings.length > 0">
+    <!-- Mobile View Cards (shown only on xs screens) -->
+    <div class="visible-xs-block" ng-if="bookings.length > 0 && !isLoading">
         <div class="panel" ng-repeat="booking in bookings" 
              ng-class="{'panel-default': !isOptimalBid(booking._id), 'panel-success': isOptimalBid(booking._id)}" 
-             style="margin: 15px 5px;">
+             style="margin-bottom: 15px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
             <div class="panel-heading">
                 <h4 class="panel-title">
                     {{booking.vehicle.company}} {{ booking.vehicle.name }} ({{ booking.vehicle.modelYear }})
@@ -147,84 +190,113 @@
                 </h4>
             </div>
             <div class="panel-body">
-                <div class="row">
-                    <div class="col-xs-6"><strong>Price per Day:</strong></div>
-                    <div class="col-xs-6">{{ booking.vehicle.price | currency:"₹" }}</div>
-                </div>
-                <div class="row">
-                    <div class="col-xs-6"><strong>Bid Amount:</strong></div>
-                    <div class="col-xs-6">{{ booking.amount | currency:"₹" }}</div>
-                </div>
-                <div class="row">
-                    <div class="col-xs-6"><strong>Start Date:</strong></div>
-                    <div class="col-xs-6">{{ booking.startDate | date:'yyyy-MM-dd' }}</div>
-                </div>
-                <div class="row">
-                    <div class="col-xs-6"><strong>End Date:</strong></div>
-                    <div class="col-xs-6">{{ booking.endDate | date:'yyyy-MM-dd' }}</div>
-                </div>
-                <div class="row">
-                    <div class="col-xs-6"><strong>Total Payable:</strong></div>
-                    <div class="col-xs-6">{{ booking.calculate() | currency:"₹" }}</div>
-                </div>
-                <hr>
-                <div class="row">
-                    <div class="col-xs-12"><strong>User Details:</strong></div>
+                <div class="row" style="margin-bottom: 10px;">
                     <div class="col-xs-12">
-                        {{ booking.from.firstName }} {{ booking.from.lastName }} ({{ booking.from.username }})
+                        <div style="display: flex; align-items: center;">
+                            <div style="width: 40px; height: 40px; background-color: #e9ecef; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+                                <span class="glyphicon glyphicon-user" style="font-size: 20px; color: #6c757d;"></span>
+                            </div>
+                            <div>
+                                <strong>{{booking.from.firstName}} {{booking.from.lastName}}</strong>
+                                <div class="small text-muted">{{booking.from.username}}</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <hr>
-                <div class="row" ng-if="booking.selectedAddons && booking.selectedAddons.length > 0">
-                    <div class="col-xs-12"><strong>Addons:</strong></div>
-                    <div class="col-xs-12">
-                        <span ng-repeat="addon in booking.selectedAddons" class="label label-info" style="margin-right: 5px; display: inline-block; margin-bottom: 5px;">
-                            {{ addon.name }}
+
+                <div class="card bg-light" style="padding: 10px; margin-bottom: 10px; border-radius: 4px; background-color: #f8f9fa;">
+                    <div class="row">
+                        <div class="col-xs-6"><i class="fa fa-calendar-check-o"></i> Start:</div>
+                        <div class="col-xs-6">{{ booking.startDate | date:'MMM dd, yyyy' }}</div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-6"><i class="fa fa-calendar-times-o"></i> End:</div>
+                        <div class="col-xs-6">{{ booking.endDate | date:'MMM dd, yyyy' }}</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <div>
+                        <div class="text-muted">Standard Price</div>
+                        <div>{{ booking.vehicle.price | currency:"₹" }} / day</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="text-muted">Bid Amount</div>
+                        <div class="text-success"><strong>{{ booking.amount | currency:"₹" }} / day</strong></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <div class="text-muted">Add-Ons:</div>
+                    <div ng-if="booking.selectedAddons && booking.selectedAddons.length > 0">
+                        <span ng-repeat="addon in booking.selectedAddons" class="label label-info" style="margin-right: 5px; margin-bottom: 5px; display: inline-block;">
+                            {{ addon.name }} ({{ addon.price | currency:"₹" }})
                         </span>
                     </div>
-                </div>
-                <div class="row" ng-if="!booking.selectedAddons || booking.selectedAddons.length === 0">
-                    <div class="col-xs-12"><strong>Addons:</strong> N/A</div>
-                </div>
-                <hr>
-                <div class="row">
-                    <div class="col-xs-12 text-center">
-                        <button ng-click="approveBidding(booking._id)" 
-                                ng-if="!checkApproved(booking)" 
-                                class="btn btn-success">
-                            <i class="glyphicon glyphicon-ok"></i> Approve
-                        </button>
-                        <button ng-click="rejectBidding(booking._id)" 
-                                ng-if="!checkApproved(booking)" 
-                                class="btn btn-danger">
-                            <i class="glyphicon glyphicon-remove"></i> Reject
-                        </button>
-                        <span ng-if="isOptimalBid(booking._id)" class="label label-success">
-                            <i class="glyphicon glyphicon-star"></i> Optimal
-                        </span>
+                    <div ng-if="!booking.selectedAddons || booking.selectedAddons.length === 0">
+                        <span class="text-muted">No add-ons selected</span>
                     </div>
+                </div>
+
+                <div style="background-color: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
+                    <div class="row">
+                        <div class="col-xs-6">
+                            <div class="text-muted">Total Duration:</div>
+                            <div><strong>{{booking.daysCount}} days</strong></div>
+                        </div>
+                        <div class="col-xs-6 text-right">
+                            <div class="text-muted">Total Amount:</div>
+                            <div><strong class="text-primary">{{ booking.calculate() | currency:"₹" }}</strong></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <button ng-click="approveBidding(booking._id)" 
+                            ng-if="!checkApproved(booking)" 
+                            class="btn btn-success">
+                        <i class="fa fa-check"></i> Approve Bid
+                    </button>
+                    <button ng-click="rejectBidding(booking._id)" 
+                            ng-if="!checkApproved(booking)" 
+                            class="btn btn-danger">
+                        <i class="fa fa-times"></i> Reject Bid
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="text-center" style="margin: 15px 0;">
-        <div class="btn-group">
-            <button class="btn btn-primary" 
-                    ng-disabled="pagination.currentPage === 1" 
-                    ng-click="prevPage()">
-                &laquo; Previous
-            </button>
-
-            <span class="btn btn-default disabled">
-                Page {{ pagination.currentPage }} of {{ pagination.totalPages }}
-            </span>
-
-            <button class="btn btn-primary" 
-                    ng-disabled="pagination.currentPage === pagination.totalPages" 
-                    ng-click="nextPage()">
-                Next &raquo;
-            </button>
-        </div>
+    <div class="text-center" ng-if="bookings.length > 0">
+        <ul class="pagination">
+            <li ng-class="{ 'disabled': pagination.currentPage === 1 }">
+                <a ng-click="prevPage()">&laquo;</a>
+            </li>
+            <li class="disabled"><span>Page {{ pagination.currentPage }} of {{ pagination.totalPages }}</span></li>
+            <li ng-class="{ 'disabled': pagination.currentPage === pagination.totalPages }">
+                <a ng-click="nextPage()">&raquo;</a>
+            </li>
+        </ul>
     </div>
 </div>
+
+<style>
+    .spin {
+        -webkit-animation: spin 1s infinite linear;
+        animation: spin 1s infinite linear;
+    }
+
+    @-webkit-keyframes spin {
+        0% { -webkit-transform: rotate(0deg); }
+        100% { -webkit-transform: rotate(360deg); }
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .pagination > li > a {
+        cursor: pointer;
+    }
+</style>

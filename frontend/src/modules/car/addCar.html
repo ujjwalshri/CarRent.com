@@ -6,9 +6,10 @@
       <h3 class="text-primary">Add Your Vehicle</h3>
     </div>
     <div class="panel-body">
-
+      <div ng-if="isLoading" class="text-center" style="padding: 20px; background-color: rgba(0,0,0,0.05); border-radius: 5px; margin-bottom: 15px;">
+        <loading-component is-loading="isLoading" loading-text="Saving Car Data..."></loading-component>
+      </div>
       <div ng-show="!showCarForm">
-
         <div class="panel panel-info">
           <div class="panel-heading">
             <h3 class="panel-title"><i class="glyphicon glyphicon-info-sign"></i> Become a Seller on Car.com</h3>
@@ -234,15 +235,13 @@
                 </div>
               </div>
 
-              <div class="form-group" ng-if="!isLoading">
+              <div class="form-group">
                 <div class="col-xs-12">
-                  <button type="submit" class="btn btn-success btn-block" ng-disabled="addCarForm.$invalid">Add Car</button>
+                  <button type="submit" class="btn btn-success btn-block" ng-disabled="addCarForm.$invalid || isLoading">
+                    <span ng-if="!isLoading">Add Car</span>
+                    <span ng-if="isLoading"><i class="glyphicon glyphicon-refresh" style="animation: spin 1s infinite linear;"></i> Saving...</span>
+                  </button>
                 </div>
-              </div>
-
-              <div class="text-center" ng-show="isLoading">
-                <i class="fa fa-spinner fa-spin fa-3x fa-fw text-primary"></i>
-                <span class="text-primary">Processing...</span>
               </div>
             </form>
           </div>

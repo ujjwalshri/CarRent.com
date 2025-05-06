@@ -19,6 +19,7 @@ angular
       $scope.currentPage = 1; // setting the current page to 1
       $scope.itemsPerPage = 6; // setting the items per page to 6
       $scope.totalPages = 0; // setting the total pages to 0
+      $scope.optimalBids = []; // array to hold the optimal bids 
 
       // pagination variables
       $scope.pagination = {
@@ -148,7 +149,7 @@ angular
         RecommendationService.optimalBidsRecommendationForSeller()
           .then((response) => {
             // Reset any previous optimal bids
-            $scope.optimalBids = [];
+            
 
             // Process the optimal bid sets from all vehicles
             if (response && response.optimalBidSets && response.optimalBidSets.length > 0) {
@@ -164,11 +165,7 @@ angular
               // Show summary toast with recommendation stats
               const totalVehicles = response.optimalBidSets.length;
               const totalBids = $scope.optimalBids.length;
-              const totalRevenue = response.optimalBidSets.reduce(
-                (sum, v) => sum + v.totalRevenue,
-                0
-              );
-
+            
               ToastService.success(
                 `Found ${totalBids} optimal bids across ${totalVehicles} vehicles that would maximize your revenue}`
               );

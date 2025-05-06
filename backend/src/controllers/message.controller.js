@@ -44,10 +44,19 @@ export const addMessageController = async(req,res)=>{
                 username: req.user.username,
             },
             message: message,
-            image:image? image : null,
+            image:{
+                url: image ? image.url : null,
+                key: image ? image.key : null,
+                filename: image ? image.filename : null,
+                mimeType: image ? image.mimeType : null,
+                size: image ? image.size : null,
+                conversationId: conversationId,
+            }
         });
         emitToRoom(conversationId, "newMessage", newMessage);
         await newMessage.save();
+
+        console.log("Message saved successfully");
         // update the conversation last message
     
         await Conversation.findByIdAndUpdate(conversationId, {lastMessage: message});

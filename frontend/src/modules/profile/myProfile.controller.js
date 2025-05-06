@@ -34,7 +34,6 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
                 $scope.user = result.user;
             } else {
                 $scope.user = result.data;
-                $scope.updateUser = $scope.user;
             }
         }).catch((err) => {
             ToastService.error("Error fetching the profile data" + err);

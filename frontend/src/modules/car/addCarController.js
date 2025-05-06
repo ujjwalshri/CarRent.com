@@ -95,7 +95,7 @@ angular
       CarService.addCar(formData)
           .then((res) => {
               ToastService.success("Car added successfully, please wait for approval");
-              $state.reload();
+              $scope.showCarForm = false; // Hide the form after successful submission
           })
           .catch((err) => {
               ToastService.error(`Error adding car: ${err}`);

@@ -44,7 +44,7 @@ angular.module('myApp').service('SocketService', function($timeout, ApiService) 
             reconnectionDelay: 1000,
             reconnectionDelayMax: 5000,
             query: {
-                username: user.username // Send username with connection
+                username: user.username // Send username with connection in the handshake query 
             }
         });
         

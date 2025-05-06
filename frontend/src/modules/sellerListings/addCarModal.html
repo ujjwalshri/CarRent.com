@@ -153,12 +153,21 @@
     <div class="col-sm-6">
       <button type="button" class="btn btn-default btn-block" ng-click="cancel()">Cancel</button>
     </div>
-    <div class="col-sm-6" ng-if="!isLoading">
+    <div class="col-sm-6" ng-if="!loadingAddCar">
       <button type="button" class="btn btn-success btn-block" ng-click="submitCarForm()" ng-disabled="addCarModalForm.$invalid">Add Car</button>
     </div>
-  </div>
-  <div class="text-center w-100" ng-show="isLoading">
-    <i class="fa fa-spinner fa-spin fa-3x fa-fw text-primary"></i>
-    <span class="text-primary">Processing...</span>
+    <div class="col-sm-6" ng-if="loadingAddCar">
+      <div class="btn btn-block text-center" style="padding: 6px 12px;">
+        <i class="glyphicon glyphicon-refresh" style="animation: spin 1s infinite linear; margin-right: 8px;"></i>
+        <span>{{loadingText}}</span>
+      </div>
+    </div>
   </div>
 </div>
+
+<style>
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+</style>

@@ -7,7 +7,7 @@ angular.module('myApp').service('AdminAnalyticsService', function($http, $q, Api
    */
   this.getGeneralAnalyticsForAdmin = async (params) => {
     let deffered = $q.defer();
-    $http.get(`${ApiService.baseURL}/api/admin/getGeneralAnalytics`, {params:params, withCredentials:true})
+    $http.get(`${ApiService.baseURL}/api/admin/getGeneralStats`, {params:params, withCredentials:true})
     .then((response)=>{
       deffered.resolve(response.data);
     })

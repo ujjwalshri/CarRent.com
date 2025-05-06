@@ -122,8 +122,7 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
             deferred.resolve(res.data);
         })
         .catch(err=>{
-            deferred.reject("Error adding car");
-            console.log(err);
+            deferred.reject("Error adding car" + err.data.message);
         })
         return deferred.promise;
     }
@@ -329,7 +328,6 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
      * @returns {Promise} Promise resolving to the analytics data or error
      */
     this.getNumberOfBidsPerCarLocationForSeller = async (params) => {
-        console.log("params", params);
         let deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/seller/numberOfBidsPerCarLocation`, {params:params, withCredentials:true})
         .then((response)=>{

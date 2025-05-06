@@ -53,7 +53,6 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q, $timeout)
      */
     Car.prototype.validate = function() {
         console.log(this);
-        const registrationNumberRegex = "^[A-Z]{2}\d{2} [A-Z]{2} \d{4}$";
 
         // Validate each property with specific rules
         if (!this.name || typeof this.name !== 'string') {
@@ -71,6 +70,9 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q, $timeout)
         if (isNaN(this.mileage) || this.mileage <= 0) {
             return "Mileage must be a positive number.";
         }
+        if (!Array.isArray(this.images) || this.images.length === 0 || this.images.length>5) {
+            return "Images can be in 1 to 5 range";
+        }
         if (!this.color || typeof this.color !== 'string') {
             return "Color is required and must be a string.";
         }
@@ -83,9 +85,7 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q, $timeout)
         if (!this.city || typeof this.city !== 'string') {
             return "City is required and must be a string.";
         }
-        if (!Array.isArray(this.images) || this.images.length === 0 || this.images.length>5) {
-            return "Images can be in 1 to 5 range";
-        }
+       
         if(this.registrationNumber && typeof this.registrationNumber !== 'string'){
             return "Registration number is required and must be a string.";
         }

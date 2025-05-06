@@ -8,12 +8,11 @@ angular.module('myApp').controller('placeBidModalCtrl', function(
     addOns, 
     blockedDates,
     platformFeePercentage,
-    BiddingFactory,
 ) {
+    // Initial setup
     $scope.car = car;
     $scope.addOns = addOns;
     $scope.platformFeePercentage = platformFeePercentage;
-    $scope.initializeModalFlatpickr = BiddingFactory.initializeFlatpickr;
     $scope.amount = car.price;
     $scope.startDate = "";
     $scope.endDate = "";
@@ -21,8 +20,6 @@ angular.module('myApp').controller('placeBidModalCtrl', function(
     $scope.totalAddonPrice = 0;
     $scope.processingBid = false;
     
-   
-
     // Function to check if an addon is selected
     $scope.isAddonSelected = function(addonId) {
         return $scope.selectedAddons.some(function(addon) {
@@ -48,19 +45,17 @@ angular.module('myApp').controller('placeBidModalCtrl', function(
         }, 0);
     };
 
-    
+    // Calculate booking price function
     $scope.calculateBookingPrice = function(startDate, endDate, amount) {
-            return BiddingFactory.calculate(startDate, endDate, amount);
+        if (!startDate || !endDate || !amount) return 0;
+        return BiddingFactory.calculate(startDate, endDate, amount);
     };
 
-     
+    BiddingFactory.initializeFlatpickr(blockedDates, '#modalDateRangePicker', $scope);
 
-    $scope.initializeModalFlatpickr(blockedDates, '#modalDateRangePicker', $scope);
-   
 
     // Place bid function
     $scope.placeBid = function() {
-       
         $scope.processingBid = true;
 
         const ownerObj = {
@@ -70,7 +65,7 @@ angular.module('myApp').controller('placeBidModalCtrl', function(
             firstName: $scope.car.owner.firstName,
             lastName: $scope.car.owner.lastName,
             city: $scope.car.owner.city
-          }
+        };
 
         // Create bid object
         const bid = BiddingFactory.createBid({
