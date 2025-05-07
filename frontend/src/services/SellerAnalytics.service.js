@@ -371,5 +371,22 @@ angular.module('myApp').service('SellerAnalyticsService', function($http, $q, Ap
     return deferred.promise;
   }
 
-  
+  /**
+   * function to get the price range analytics for seller
+   * @param {*} params 
+   * @returns price range analytics for seller
+   */
+  this.getPriceRangeAnalytics = (params) => {
+      const deferred = $q.defer();
+      $http.get(`${ApiService.baseURL}/api/seller/analytics/price-range-analytics`, { params, withCredentials: true })
+          .then(response => {
+              deferred.resolve(response.data);
+          })
+          .catch(error => {
+              console.error('Error fetching price range analytics data:', error);
+              deferred.reject(error);
+          });
+      return deferred.promise;
+  };
+
 });

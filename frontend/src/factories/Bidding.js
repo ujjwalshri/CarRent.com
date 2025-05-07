@@ -87,17 +87,6 @@ angular.module('myApp').factory('BiddingFactory', function($timeout, CarService,
             return { error: "Vehicle details are missing or incomplete." };
         }
 
-        if (this.startOdometerValue !== null && (isNaN(this.startOdometerValue) )) {
-            return { error: "Invalid start odometer value." };
-        }
-
-        if (
-            this.endOdometerValue !== null &&
-            (isNaN(this.endOdometerValue) || this.endOdometerValue < this.startOdometerValue)
-        ) {
-            return { error: "End odometer value must be greater than or equal to start odometer value." };
-        }
-
         if(this.selectedAddons.length > 10 ){
             return { error: "You can only select up to 10 addons." };
         }
@@ -312,8 +301,8 @@ angular.module('myApp').factory('BiddingFactory', function($timeout, CarService,
                                             { text: 'End Date', style: 'tableHeader' }
                                         ],
                                         [
-                                            { text: new Date(self.startDate).toLocaleString(), style: 'tableContent' },
-                                            { text: new Date(self.endDate).toLocaleString(), style: 'tableContent' }
+                                            { text: new Date(self.startDate).toLocaleDateString(), style: 'tableContent' },
+                                            { text: new Date(self.endDate).toLocaleDateString(), style: 'tableContent' }
                                         ]
                                     ]
                                 }
@@ -508,28 +497,6 @@ angular.module('myApp').factory('BiddingFactory', function($timeout, CarService,
             return bid.calculateBlockedDates(results);
         },
         /**
-         * Converts a response array to an array of Bid objects.
-         * @param {Array} responseArray - The response array to convert.
-         * @returns {Array} - Returns an array of Bid objects.
-         */
-        convertResponceToBidObject: function(responseArray) {
-            var bids = responseArray.map(function(response) {
-                return new Bid(
-                    response._id,
-                    response.amount,
-                    response.startDate,
-                    response.endDate,
-                    response.from,
-                    response.vehicle,
-                    response.owner,
-                    response.startOdometerValue,
-                    response.endOdometerValue,
-                    response.status
-                );
-            });
-            return bids;
-        },
-        /**
          * Calculates the booking price.
          * @param {Date} startDate - The start date of the booking.
          * @param {Date} endDate - The end date of the booking.
@@ -572,17 +539,14 @@ angular.module('myApp').factory('BiddingFactory', function($timeout, CarService,
         },
         validateTax : function(tax){
             if (!tax.name.trim()) {
-                ToastService.error('Tax name is required');
                 return false;
             }
             
             if (tax.type === 'percentage' && (tax.value < 0 || tax.value > 100)) {
-                ToastService.error('Percentage value must be between 0 and 100');
                 return false;
             }
             
             if (tax.type === 'fixed' && tax.value < 0) {
-                ToastService.error('Fixed value cannot be negative');
                 return false;
             }
             

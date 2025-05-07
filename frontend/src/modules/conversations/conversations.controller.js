@@ -23,6 +23,7 @@ angular
       $scope.selectedConversation = null; // Currently selected/active conversation
       $scope.isLoading = false; // Main content loading state
       $scope.messageLoading = false; // Message loading state
+      $scope.isSendingMessage = false; // Message sending state
       
 
       $scope.inputMessage = ""; // Current message being composed
@@ -177,7 +178,6 @@ angular
       // Sends the current message with any attachments
       // Called when user clicks send or presses Enter
       $scope.sendMessage = () => {
-        // Get the ID of the active conversation
         const conversationId = $scope.selectedConversation._id;
         
         // Validate conversation is selected
@@ -190,6 +190,9 @@ angular
         if ($scope.inputMessage.trim() === "" && !$scope.image) {
           return;
         }
+        
+        // Set sending state
+        $scope.isSendingMessage = true;
           
         // Create FormData object for sending mixed content (text + files)
         const formData = new FormData();
@@ -203,6 +206,9 @@ angular
           formData.append("image", $scope.image);
         }
 
+        // Clear input fields before sending
+        const tempMessage = $scope.inputMessage;
+        const tempImage = $scope.image;
         $scope.inputMessage = "";
         $scope.image = undefined;
 
@@ -212,9 +218,13 @@ angular
             $scope.scrollToBottom();
           })
           .catch((error) => {
+            // Restore input fields if sending fails
+            $scope.inputMessage = tempMessage;
+            $scope.image = tempImage;
             ToastService.error(`Error sending message: ${error}`);
           })
           .finally(() => {
+            $scope.isSendingMessage = false;
             $timeout();
           });
       };

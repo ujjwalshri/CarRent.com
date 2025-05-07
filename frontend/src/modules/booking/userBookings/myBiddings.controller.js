@@ -2,6 +2,7 @@ angular.module('myApp').controller('myBiddingsCtrl', function($scope, BiddingFac
 
     $scope.biddingStatus = 'pending'; // setting the bidding status to an empty string
     $scope.isLoading = false; // loading state
+    // scope variable to hold the state for pagination
     $scope.pagination = {
         currentPage: 1,
         itemsPerPage: 6,

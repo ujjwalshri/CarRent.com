@@ -103,21 +103,7 @@ angular
           });
       }
 
-      $scope.toggleAddon = function(addon) {
-        const index = $scope.selectedAddons.findIndex(a => a._id === addon._id);
-        if (index === -1) {
-          $scope.selectedAddons.push(addon);
-          $scope.totalAddonPrice += addon.price;
-        } else {
-          $scope.selectedAddons.splice(index, 1);
-          $scope.totalAddonPrice -= addon.price;
-        }
-        
-      }
-      // Function to check if an addon is selected
-      $scope.isAddonSelected = function(addonId) {
-        return $scope.selectedAddons.some(addon => addon._id === addonId);
-      }
+      
 
       /**
        * Opens the place bid modal

@@ -1,7 +1,6 @@
+<div class="container-fluid bg-gray-lighter" ng-init="init()"></div>
 
-<div class="container-fluid bg-gray-lighter" ng-init="init()">
-
-    <div class="row m-b-15">
+    <div class="row m-b-15 m-t-15"></div>
         <div class="col-md-6">
             <h3 class="m-t-10">
                 <span class="glyphicon glyphicon-list-alt text-primary m-r-5"></span> Vehicle Listings
@@ -152,7 +151,7 @@
                 
                 <div class="panel-footer text-center">
                     <div class="btn-group">
-                        <button class="btn btn-sm btn-warning" ng-click="openPriceModal(car)" title="Edit Price">
+                        <button class="btn btn-sm btn-warning" ng-click="openPriceModal(car)" ng-if="car.status === 'approved'" title="Edit Price">
                             <span class="glyphicon glyphicon-pencil"></span> Price
                         </button>
                         <button class="btn btn-sm btn-info" ng-if="car.status === 'approved'" ng-click="viewCarBookings(car)" title="View Bookings">
@@ -194,7 +193,7 @@
 
     <script type="text/ng-template" id="priceModal.html">
         <div class="modal-header">
-            <button type="button" class="close" ng-click="$dismiss()">&times;</button>
+            <button type="button" class="close" ng-click="cancel()">&times;</button>
             <h4 class="modal-title">Update Car Price</h4>
         </div>
         <div class="modal-body">
@@ -208,7 +207,7 @@
             </form>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-default" ng-click="$dismiss()">Cancel</button>
+            <button class="btn btn-default" ng-click="cancel()">Cancel</button>
             <button class="btn btn-primary" ng-click="updatePrice()">Save Changes</button>
         </div>
     </script>
@@ -221,6 +220,7 @@
 .m-t-5 { margin-top: 5px !important; }
 .m-t-10 { margin-top: 10px !important; }
 .m-t-15 { margin-top: 15px !important; }
+.m-t-20 { margin-top: 20px !important; }
 .m-r-5 { margin-right: 5px !important; }
 .m-b-0 { margin-bottom: 0 !important; }
 .m-b-15 { margin-bottom: 15px !important; }

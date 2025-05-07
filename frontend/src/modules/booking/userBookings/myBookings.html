@@ -33,7 +33,7 @@
                                 <label for="sortBy" class="control-label" style="font-size: 15px;"><i class="glyphicon glyphicon-sort"></i> Sort By:</label>
                                 <select id="sortBy" class="form-control" ng-model="sortBy" ng-change="handleSorting()">
                                     <option value="" disabled selected>Select Sorting Option</option>
-                                    <option value="amount">Price (High to Low)</option>
+                                    <option value="amount">Booking amount (low to high)</option>
                                     <option value="startDate">Start Date (Latest First)</option>
                                 </select>
                             </div>
@@ -62,7 +62,7 @@
         </div>
     </div>
 
-    <!-- No bookings alert - moved here to appear after the filters -->
+
     <div class="row" ng-show="bookings.length === 0 && !isLoading">
         <div class="col-md-12">
             <div class="alert alert-info">
@@ -75,7 +75,7 @@
         </div>
     </div>
 
-    <!-- Bookings Table - Only visible when bookings exist -->
+
     <div class="row" ng-show="bookings.length > 0">
         <div class="col-md-12">
             <div class="panel panel-default">
@@ -159,7 +159,7 @@
         </div>
     </div>
 
-    <!-- Pagination - Only visible when bookings exist -->
+
     <div class="row" ng-show="pagination.totalItems > 0">
         <div class="col-md-12">
             <div class="text-center">

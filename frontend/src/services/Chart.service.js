@@ -79,7 +79,7 @@ angular.module('myApp').service('ChartService', function() {
                            label.toLowerCase().includes('earning') ||
                            label.toLowerCase().includes('revenue');
                            
-    // Check if this is the car-wise negative reviews chart that has overlapping issues
+
     const isNegativeReviewsChart = htmlElementId === 'carWiseNegativeReviews' || 
                                  text.toLowerCase().includes('negative reviews');
 

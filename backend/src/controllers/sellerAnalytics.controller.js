@@ -927,6 +927,59 @@ const pipelines = {
         { $sort: { totalRevenue: -1 } },
         { $limit: 10 }
     ]),
+    priceRangeBookings: (userId, startDate, endDate) => ([
+        {
+          $match: {
+            'owner._id': userId,
+            status: { $in: ["approved", "started", "ended", "reviewed"] },
+            startDate: { $gte: new Date(startDate), $lte: new Date(endDate) },
+            'vehicle.price': { $ne: null }
+          }
+        },
+        {
+          $addFields: {
+            price: "$vehicle.price"
+          }
+        },
+        {
+          $addFields: {
+            priceBucketStart: {
+              $multiply: [{ $floor: { $divide: ["$price", 1000] } }, 1000]
+            }
+          }
+        },
+        {
+          $addFields: {
+            priceBucketEnd: { $add: ["$priceBucketStart", 1000] }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              start: "$priceBucketStart",
+              end: "$priceBucketEnd"
+            },
+            count: { $sum: 1 }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            priceRange: {
+              $concat: [
+                { $toString: "$_id.start" },
+                "-",
+                { $toString: "$_id.end" }
+              ]
+            },
+            count: 1
+          }
+        },
+        {
+          $sort: { priceRange: 1 }
+        }
+      ])
+      
 };
 
 // Individual API Endpoints for Overview Analytics
@@ -1466,3 +1519,35 @@ export const cityWiseEarnings = async (req, res) => {
         return handleResponse(res, 500, { error: 'Failed to fetch city-wise earnings data' });
     }
 }
+
+/**
+ * Get analytics for bookings grouped by price ranges
+ * @param {Object} req - The request object
+ * @param {Object} req.user - The authenticated user
+ * @param {Object} req.query - Query parameters
+ * @param {string} req.query.startDate - Start date for the analysis
+ * @param {string} req.query.endDate - End date for the analysis
+ */
+export const getPriceRangeAnalytics = async (req, res) => {
+    const userId = req.user._id;
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+        return handleResponse(res, 400, { error: "startDate and endDate are required" });
+    }
+
+    const cacheKey = `seller-price-range-analytics-${userId}-${startDate}-${endDate}`;
+    const cachedData = await getCachedData(cacheKey);
+    if (cachedData) {
+        return handleResponse(res, 200, cachedData);
+    }
+
+    try {
+        const priceRangeData = await Bidding.aggregate(pipelines.priceRangeBookings(userId, startDate, endDate));
+        await setCachedData(cacheKey, priceRangeData);
+        return handleResponse(res, 200, priceRangeData);
+    } catch (error) {
+        console.error('Error in getPriceRangeAnalytics:', error);
+        return handleResponse(res, 500, { error: 'Failed to fetch price range analytics data' });
+    }
+};

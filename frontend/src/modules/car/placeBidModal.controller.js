@@ -27,6 +27,10 @@ angular.module('myApp').controller('placeBidModalCtrl', function(
         });
     };
 
+    $scope.init=function(){
+        BiddingFactory.initializeFlatpickr(blockedDates, '#modalDateRangePicker', $scope);
+    }
+
     // Function to toggle addon selection
     $scope.toggleAddon = function(addon) {
         const index = $scope.selectedAddons.findIndex(item => item._id === addon._id);
@@ -51,7 +55,7 @@ angular.module('myApp').controller('placeBidModalCtrl', function(
         return BiddingFactory.calculate(startDate, endDate, amount);
     };
 
-    BiddingFactory.initializeFlatpickr(blockedDates, '#modalDateRangePicker', $scope);
+   
 
 
     // Place bid function

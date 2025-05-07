@@ -19,12 +19,12 @@ export async function generateText(prompt, options = {}) {
     }
 
 
-    const modelName = 'gemini-1.5-pro';
+    const modelName = "gemini-2.0-flash"
     
     // Get the generative model
     const model = genAI.getGenerativeModel({
       model: modelName,
-      // Google's default is 1.0, but we'll make it more deterministic with 0.7
+
       generationConfig: {
         temperature: options.temperature || 0.7,
         topP: options.topP || 0.95,
@@ -40,8 +40,6 @@ export async function generateText(prompt, options = {}) {
     return response.text();
   } catch (error) {
     console.error('Error generating content with Gemini API:', error);
-    
-    // Return a fallback response rather than throwing for better user experience
     if (error.status === 404) {
       return JSON.stringify({
         summary: "Unable to access AI model. Please check your API key configuration.",
@@ -53,7 +51,6 @@ export async function generateText(prompt, options = {}) {
         trends: "Unable to analyze trends due to service unavailability"
       });
     }
-    
     throw error;
   }
 }

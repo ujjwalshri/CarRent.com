@@ -36,7 +36,9 @@ export const addMessageController = async(req,res)=>{
     const conversationId = req.params.conversationId;
     const {message} = req.body;
     let image = req.attachment;
+    
     try{
+
         const newMessage = new Message({
             conversation: conversationId,
             sender: {
@@ -56,9 +58,8 @@ export const addMessageController = async(req,res)=>{
         emitToRoom(conversationId, "newMessage", newMessage);
         await newMessage.save();
 
-        console.log("Message saved successfully");
+
         // update the conversation last message
-    
         await Conversation.findByIdAndUpdate(conversationId, {lastMessage: message});
 
         // emit a socket event to the client which will be the reciever of the message    

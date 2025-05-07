@@ -13,77 +13,37 @@
 
         <div class="navbar-collapse" uib-collapse="isNavCollapsed">
             <ul class="nav navbar-nav navbar-right">
-                <li><a ui-sref="admin.platformManagement"><span class="glyphicon glyphicon-check"></span> Platform Management</a></li>
-                <li><a ui-sref="admin.userManagement"><span class="glyphicon glyphicon-user"></span> User Management</a></li>
-                <li><a ui-sref="admin.analytics"><span class="glyphicon glyphicon-stats"></span> Product Analysis</a></li>
-                <li><a href="#" ng-click="adminLogout()"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
+                <li><a ui-sref="admin.platformManagement" ng-click="isNavCollapsed = true"><span class="glyphicon glyphicon-check"></span> Platform Management</a></li>
+                <li><a ui-sref="admin.userManagement" ng-click="isNavCollapsed = true"><span class="glyphicon glyphicon-user"></span> User Management</a></li>
+                <li><a ui-sref="admin.analytics" ng-click="isNavCollapsed = true"><span class="glyphicon glyphicon-stats"></span> Product Analysis</a></li>
+                <li><a href="#" ng-click="adminLogout(); isNavCollapsed = true"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
             </ul>
         </div>
     </div>
 </nav>
 
 <div ui-view="adminContent" style="padding-top: 50px;">
+    <div class="jumbotron" style="background: linear-gradient(135deg, rgba(0,45,98,0.95), rgba(0,123,255,0.8)), url('https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; height: calc(100vh - 50px); margin-bottom: 0; border-radius: 0; color: white;">
+        <div class="container">
+            <div class="row" style="padding-top: 60px;">
 
-    <div class="hero-section" style="height: 100vh; background: linear-gradient(135deg, rgba(0,45,98,0.95), rgba(0,123,255,0.8)), url('https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; position: relative; margin-top: 0px;">
-        <div class="container" style="height: 100%;">
-            <div class="row" style="height: 100%; display: flex; align-items: center;">
                 <div class="col-md-6">
-                    <div style="padding: 30px; color: #fff;">
-                        <h1 style="font-size: 3.5rem; font-weight: 700; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">
-                            Admin Dashboard
-                        </h1>
-                        <p style="font-size: 1.2rem; line-height: 1.8; margin-bottom: 30px; max-width: 600px; text-shadow: 1px 1px 2px rgba(0,0,0,0.2);">
-                            Welcome to the administrative control center. Manage your car rental platform, users, and analyze business performance all in one place.
-                        </p>
-                        <div class="hero-buttons">
-                            <a ui-sref="admin.platformManagement" class="btn btn-lg" style="background-color: #fff; color: #007bff; font-weight: 600; margin-right: 15px; border-radius: 30px; padding: 12px 30px; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
-                                <span class="glyphicon glyphicon-cog"></span> Platform Management
-                            </a>
-                            <a ui-sref="admin.analytics" class="btn btn-lg" style="background-color: transparent; color: #fff; font-weight: 600; border: 2px solid #fff; border-radius: 30px; padding: 12px 30px; transition: all 0.3s ease;">
-                                <span class="glyphicon glyphicon-stats"></span> View Analytics
-                            </a>
-                        </div>
-                    </div>
+                    <h1 class="text-uppercase"><strong>Admin Dashboard</strong></h1>
+                    <p class="lead">Control everything from one place — users, platform settings, and powerful analytics.</p>
+                    <p>
+                        <a ui-sref="admin.platformManagement" class="btn btn-lg btn-primary">
+                            <span class="glyphicon glyphicon-cog"></span> Platform Management
+                        </a>
+                        <a ui-sref="admin.analytics" class="btn btn-lg btn-default">
+                            <span class="glyphicon glyphicon-stats"></span> View Analytics
+                        </a>
+                    </p>
                 </div>
-                <div class="col-md-6">
-                    <div class="admin-feature-cards" style="display: flex; flex-wrap: wrap; justify-content: center;">
-
-                        <div class="feature-card" style="background-color: rgba(255,255,255,0.9); border-radius: 12px; padding: 25px; margin: 10px; width: calc(50% - 20px); box-shadow: 0 10px 30px rgba(0,0,0,0.15); transition: transform 0.3s ease;">
-                            <div style="text-align: center;">
-                                <div style="background-color: #007bff; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
-                                    <span class="glyphicon glyphicon-user" style="font-size: 24px;"></span>
-                                </div>
-                                <h3 style="color: #333; font-weight: 600; font-size: 1.2rem; margin-bottom: 10px;">User Management</h3>
-                                <p style="color: #666; font-size: 0.9rem;">View, manage, and moderate user accounts across the platform.</p>
-                                <a ui-sref="admin.userManagement" class="btn btn-sm btn-primary" style="margin-top: 10px; border-radius: 20px;">Access</a>
-                            </div>
-                        </div>
-                        
-
-                        <div class="feature-card" style="background-color: rgba(255,255,255,0.9); border-radius: 12px; padding: 25px; margin: 10px; width: calc(50% - 20px); box-shadow: 0 10px 30px rgba(0,0,0,0.15); transition: transform 0.3s ease;">
-                            <div style="text-align: center;">
-                                <div style="background-color: #6f42c1; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px;">
-                                    <span class="glyphicon glyphicon-wrench" style="font-size: 24px;"></span>
-                                </div>
-                                <h3 style="color: #333; font-weight: 600; font-size: 1.2rem; margin-bottom: 10px;">System Settings</h3>
-                                <p style="color: #666; font-size: 0.9rem;">Configure platform settings and system parameters.</p>
-                                <a ui-sref="admin.platformManagement" class="btn btn-sm btn-primary" style="background-color: #6f42c1; border-color: #6f42c1; margin-top: 10px; border-radius: 20px;">Configure</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                
+              
             </div>
         </div>
-        
-
-        <div style="position: absolute; bottom: 0; left: 0; width: 100%; overflow: hidden; line-height: 0; transform: rotate(180deg);">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none" style="position: relative; display: block; width: calc(100% + 1.3px); height: 60px;">
-                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" style="fill: #ffffff;"></path>
-            </svg>
-        </div>
     </div>
-    
-
-    
 </div>
 </body>
+

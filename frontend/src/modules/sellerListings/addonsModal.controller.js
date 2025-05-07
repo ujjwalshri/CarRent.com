@@ -2,6 +2,8 @@
  * Controller for managing car addons modal
  */
 angular.module("myApp").controller('AddonsModalCtrl', function($scope, $uibModalInstance, userCars, AddonService, ToastService) {
+   
+    // Initialize scope variables
     $scope.userCars = userCars;
     $scope.selectedCar = null;
     $scope.newAddon = {
@@ -11,8 +13,14 @@ angular.module("myApp").controller('AddonsModalCtrl', function($scope, $uibModal
     };
     $scope.isLoading = false;
 
+
+    // Initialize by loading addons
+    $scope.init = function(){
+    $scope.loadBookingAddons();
+    }
+
     // Load addons for selected car
-    $scope.loadCarAddons = function() {
+    $scope.loadBookingAddons = function() {
         $scope.isLoading = true;
         AddonService.getOwnAddons()
             .then(function(addons) {
@@ -26,8 +34,7 @@ angular.module("myApp").controller('AddonsModalCtrl', function($scope, $uibModal
             });
     };
     
-    // Initialize by loading addons
-    $scope.loadCarAddons();
+  
 
     // Add new addon
     $scope.addAddon = function() {
@@ -40,7 +47,7 @@ angular.module("myApp").controller('AddonsModalCtrl', function($scope, $uibModal
                     price: 0,
                     description: ''
                 };
-                $scope.loadCarAddons();
+                $scope.loadBookingAddons();
             })
             .catch(function(error) {
                 ToastService.error("Error adding addon: " + error);
@@ -57,7 +64,7 @@ angular.module("myApp").controller('AddonsModalCtrl', function($scope, $uibModal
             AddonService.deleteAddon(addonId)
                 .then(function() {
                     ToastService.success("Addon removed successfully");
-                    $scope.loadCarAddons();
+                    $scope.loadBookingAddons();
                 })
                 .catch(function(error) {
                     ToastService.error("Error removing addon: " + error);

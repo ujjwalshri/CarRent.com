@@ -138,6 +138,8 @@
                         { title: 'Biddings comparison', id: 'myBidsVsOtherSellersAvgBids', chartType: 'line' },
                         { title: 'Earning comparison', id: 'myEarningVsOtherSellersAvgEarnings', chartType: 'line' },
                         { title: 'Addons Distribution (Pie)', id: 'addonsPieChart', chartType: 'pie' },
+                        {title: 'vehicle price ranges and their bookings count', id: 'priceRangeAnalyticsChart', chartType: 'bar' },
+
                     ]">
                         <div class="panel panel-default">
                             <div class="panel-heading">{{chart.title}}</div>
@@ -152,17 +154,17 @@
 
         <uib-tab heading="AI Insights On Your Reviews" select="onTabSelect('aiInsights')">
             <div class="container-fluid">
-                <!-- Loading indicator -->
+
                 <loading-component is-loading="isAiInsightsLoading" loading-text="Loading AI-powered insights..."></loading-component>
                 
-                <!-- No insights message -->
+
                 <div ng-if="!isAiInsightsLoading && aiInsightsLoaded && !reviewInsights" class="alert alert-info">
                     <i class="glyphicon glyphicon-info-sign"></i> Select a date range and click "Apply" to generate AI insights from your customer reviews.
                 </div>
                 
-                <!-- AI Insights Content -->
+
                 <div ng-if="!isAiInsightsLoading && aiInsightsLoaded && reviewInsights">
-                    <!-- Header Panel -->
+
                     <div class="panel panel-primary">
                         <div class="panel-heading">
                             <div class="row">
@@ -176,7 +178,7 @@
                             </div>
                         </div>
                         <div class="panel-body">
-                            <!-- Review Distribution -->
+
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="well well-sm">
@@ -205,9 +207,9 @@
                                 </div>
                             </div>
                             
-                            <!-- Insights Collapsible Panels -->
+
                             <uib-accordion close-others="false">
-                                <!-- Strengths & Areas for Improvement -->
+
                                 <div uib-accordion-group class="panel-success" heading="Strengths & Areas for Improvement">
                                     <div class="row">
                                         <div class="col-md-6">
@@ -237,7 +239,7 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Detailed Insights -->
+
                                 <div uib-accordion-group class="panel-info">
                                     <uib-accordion-heading>
                                         <i class="glyphicon glyphicon-dashboard"></i> Detailed Insights
@@ -255,7 +257,7 @@
                                     </uib-tabset>
                                 </div>
                                 
-                                <!-- Actionable Recommendations -->
+
                                 <div uib-accordion-group class="panel-primary">
                                     <uib-accordion-heading>
                                         <i class="glyphicon glyphicon-list-alt"></i> Actionable Recommendations
@@ -267,7 +269,7 @@
                                     </ol>
                                 </div>
                                 
-                                <!-- Sample Reviews -->
+
                                 <div uib-accordion-group class="panel-default" ng-if="reviewInsights.reviews.length > 0">
                                     <uib-accordion-heading>
                                         <i class="glyphicon glyphicon-comment"></i> Sample Reviews 

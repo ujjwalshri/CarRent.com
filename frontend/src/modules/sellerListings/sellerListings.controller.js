@@ -55,7 +55,7 @@ angular.module('myApp').controller('sellerListingsCtrl', function($scope, $state
     };
     
     /**
-     * Fetches car listings with current filters
+     * 
      */
     function fetchCarListings() {
         $scope.loading = true;
@@ -201,33 +201,51 @@ angular.module('myApp').controller('sellerListingsCtrl', function($scope, $state
         $scope.selectedCarId = car._id;
         $scope.selectedCarPrice.price = car.price;
         
-        $uibModal.open({
+        var modalInstance = $uibModal.open({
             templateUrl: 'priceModal.html',
-            scope: $scope
-        });
-    };
-    
-    /**
-     * Submits updated car price to server
-     */
-    $scope.updatePrice = function() {
-        const carId = $scope.selectedCarId;
-        const carPrice = $scope.selectedCarPrice.price;
+            controller: function($scope, $uibModalInstance, selectedCarPrice, selectedCarId, minPrice, maxPrice, CarService, ToastService) {
+                $scope.selectedCarPrice = selectedCarPrice;
+                
+                $scope.updatePrice = function() {
+                    if ($scope.selectedCarPrice.price < minPrice || $scope.selectedCarPrice.price > maxPrice) {
+                        ToastService.error(`Car price cannot be less than ${minPrice} and greater than ${maxPrice}`);
+                        return;
+                    }
+                    
+                    CarService.updateCarPrice(selectedCarId, $scope.selectedCarPrice.price)
+                        .then(function() {
+                            ToastService.success("Car price updated successfully. It may take some time to reflect.");
+                            $uibModalInstance.close($scope.selectedCarPrice.price);
+                        })
+                        .catch(function(err) {
+                            ToastService.error(`Error updating the car price: ${err.data?.message || err}`);
+                        });
+                };
 
-        if (carPrice < $scope.minPrice || carPrice > $scope.maxPrice) {
-            ToastService.error(`Car price cannot be less than ${$scope.minPrice} and greater than ${$scope.maxPrice}`);
-            return;
-        }
-        
-        CarService.updateCarPrice(carId, $scope.selectedCarPrice.price)
-            .then(function() {
-                ToastService.success("Car price updated successfully. It may take some time to reflect.");
-                $scope.pagination.currentPage = 1;
-                fetchCarListings();
-            })
-            .catch(function(err) {
-                ToastService.error(`Error updating the car price: ${err.data?.message || err}`);
-            });
+                $scope.cancel = function() {
+                    $uibModalInstance.dismiss('cancel');
+                };
+            },
+            resolve: {
+                selectedCarPrice: function() {
+                    return $scope.selectedCarPrice;
+                },
+                selectedCarId: function() {
+                    return $scope.selectedCarId;
+                },
+                minPrice: function() {
+                    return $scope.minPrice;
+                },
+                maxPrice: function() {
+                    return $scope.maxPrice;
+                }
+            }
+        });
+
+        modalInstance.result.then(function() {
+            $scope.pagination.currentPage = 1;
+            fetchCarListings();
+        });
     };
     
     /**

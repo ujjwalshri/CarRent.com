@@ -8,8 +8,11 @@ angular.module("myApp").component("dynamicNavbar", {
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" ui-sref="home">
+                <a class="navbar-brand" ui-sref="home" ng-click="$ctrl.closeNav()" ng-if="!$ctrl.isSeller">
                     <span class="glyphicon glyphicon-car"></span> Car.com
+                </a>
+                <a class="navbar-brand" ui-sref="sellerListings" ng-click="$ctrl.closeNav()" ng-if="$ctrl.isSeller">
+                    <span class="glyphicon glyphicon-dashboard"></span> Seller Dashboard
                 </a>
             </div>
             <div class="collapse navbar-collapse" id="navbarItems" uib-collapse="$ctrl.isNavCollapsed">
@@ -84,6 +87,10 @@ angular.module("myApp").component("dynamicNavbar", {
       });
     };
     
+    // Close the navigation bar
+    ctrl.closeNav = function() {
+      ctrl.isNavCollapsed = true;
+    };
 
     ctrl.loadUserData = function() {
       RouteProtection.getLoggedinUser()
@@ -98,6 +105,7 @@ angular.module("myApp").component("dynamicNavbar", {
             
 
             const userType = user.isSeller ? 'seller' : 'user';
+            ctrl.isSeller = user.isSeller;
             ctrl.renderNavbar(userType);
           }
         })
@@ -126,7 +134,6 @@ angular.module("myApp").component("dynamicNavbar", {
         });
     };
     
-
     function createLinkElement(item) {
       let link;
       
@@ -135,16 +142,16 @@ angular.module("myApp").component("dynamicNavbar", {
         link.on('click', function(e) {
           e.preventDefault();
           ctrl.logout();
+          ctrl.closeNav();
         });
       } else {
-        link = angular.element('<a ui-sref="' + item.href + '"><span class="glyphicon ' + item.icon + '"></span> ' + item.text + '</a>');
+        link = angular.element('<a ui-sref="' + item.href + '" ng-click="$ctrl.closeNav()"><span class="glyphicon ' + item.icon + '"></span> ' + item.text + '</a>');
         $compile(link)($scope);
       }
       
       return link;
     }
     
-
     function createDropdown(item) {
       let dropdown = angular.element(
         '<a href="#" class="dropdown-toggle" uib-dropdown-toggle>' +
@@ -170,18 +177,15 @@ angular.module("myApp").component("dynamicNavbar", {
       return dropdownContainer;
     }
     
-
     ctrl.renderNavbar = function(userType) {
       const config = menuConfigs[userType];
       
-
       const mainLinksContainer = $element.find('#navbarMainLinks');
       const rightLinksContainer = $element.find('#navbarRightLinks');
       
       mainLinksContainer.empty();
       rightLinksContainer.empty();
       
-
       config.mainLinks.forEach(function(item) {
         let element;
         
@@ -196,7 +200,6 @@ angular.module("myApp").component("dynamicNavbar", {
         mainLinksContainer.append(element);
       });
       
-
       config.rightLinks.forEach(function(item) {
         let element = angular.element('<li></li>');
         let link = createLinkElement(item);

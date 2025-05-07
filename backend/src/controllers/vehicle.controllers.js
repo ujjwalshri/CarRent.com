@@ -275,6 +275,7 @@ export const toggleVehicleStatusController = async (req, res) => {
         if(vehicleStatus === 'approved') {
             // Update user to be a seller
             const owner = await User.findById(ownerId);
+
             // Send congratulation email to the seller for becoming a seller if he is adding the vehicle for the first time
             if(owner.isSeller === false){
                 sendCongratulationEmail({ email : vehicle.owner.email, company: vehicle.company, name: vehicle.name, modelYear: vehicle.modelYear})
@@ -597,3 +598,4 @@ export const getCarsWithBids = async(req, res)=>{
     return res.status(500).json({message: `error in the getCarWithBids ${err.message}`});
   }
 }
+

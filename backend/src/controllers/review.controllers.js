@@ -103,7 +103,7 @@ export const addReviewController = async (req, res) => {
     try {
         // Extract reviewer information from authenticated user
         const { _id, username, email, firstName, lastName, city } = req.user; 
-        const reviewer = { _id, username, email }; 
+        const reviewer = { _id, username }; 
         
         // Find the vehicle being reviewed
         const vehicle = await Vehicle.findById(id).session(session);

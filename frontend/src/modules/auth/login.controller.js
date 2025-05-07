@@ -36,8 +36,10 @@ angular.module("myApp").controller("loginCtrl", function($scope, $state, $rootSc
                 
                 // Show success message and redirect
                 ToastService.success("Logged in successfully");
-
-                if(user.isSeller){
+                if(user.isAdmin){
+                    $state.go("admin");
+                }
+                else if(user.isSeller){
                     $state.go("sellerListings");
                 }else{
                     $state.go("home");

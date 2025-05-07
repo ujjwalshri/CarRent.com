@@ -130,6 +130,10 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             resolve : {
                 auth: ['$state', 'RouteProtection', function($state, RouteProtection){
                   RouteProtection.getLoggedinUser().then((user)=>{
+
+                    if(user && user.isSeller){
+                        $state.go('sellerListings');
+                    }
                     if(user && user.isAdmin){
                         $state.go('admin');
                     }}).catch((err)=>{

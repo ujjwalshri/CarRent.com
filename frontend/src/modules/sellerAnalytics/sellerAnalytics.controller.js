@@ -292,7 +292,8 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             SellerAnalyticsService.getSelectedAddonsCount(params),
             SellerAnalyticsService.getBiddingComparison(params),
             SellerAnalyticsService.getEarningComparison(params),
-            SellerAnalyticsService.getAverageBookingPayment(params)
+            SellerAnalyticsService.getAverageBookingPayment(params),
+            SellerAnalyticsService.getPriceRangeAnalytics(params)
         ];
 
         $q.all(bookingPromises)
@@ -306,9 +307,9 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             selectedAddonsCount,
             biddingComparison,
             earningComparison,
-            averageBookingPayment
+            averageBookingPayment,
+            priceRangeAnalytics
         ]) => {
-
             $scope.averageBookingPayment = averageBookingPayment[0]?.averageBookingPayment || 0;
             if (averageRentalDuration && averageRentalDuration.length > 0) {
                 $scope.averageRentalDuration = averageRentalDuration[0]?.averageRentalDuration || 0;
@@ -324,7 +325,8 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                     monthlyBookings: monthlyBookings,
                     topCustomers: topCustomers,
                     cityWiseBookings: cityWiseBookings,
-                    selectedAddonsCount: selectedAddonsCount
+                    selectedAddonsCount: selectedAddonsCount,
+                    priceRangeAnalytics: priceRangeAnalytics
                 },
                 comparisons: {
                     biddingComparison: biddingComparison,
@@ -386,8 +388,7 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
 
         // Overview Charts
         if (overview.carDescription) {
-           
-            
+
             // Add pie chart for car categories
             createChartIfCanvasExists("carCategoriesPieChart", () => 
                 ChartService.createPieChart(
@@ -574,6 +575,19 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                     title: "Earning Comparison",
                     label: "Earnings (₹)"
                 })
+            );
+        }
+
+        if (bookings.priceRangeAnalytics) {
+            createChartIfCanvasExists("priceRangeAnalyticsChart", () =>
+                ChartService.createBarChart(
+                    "bar",
+                    bookings.priceRangeAnalytics.map(range => '₹' + range.priceRange.split('-')[0] + ' - ₹' + range.priceRange.split('-')[1]),
+                    bookings.priceRangeAnalytics.map(range => range.count),
+                    'Number of Bookings',
+                    "Price Range Analytics",
+                    "priceRangeAnalyticsChart"
+                )
             );
         }
     };

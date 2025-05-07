@@ -67,7 +67,6 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
                 CarService.getCurrentPriceRanges()
             ];
         } else {
-            // Create params object with explicit city parameter to fix undefined city issue
             let params = {
                 city: $scope.city || undefined
             };
@@ -87,7 +86,7 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
                         $scope.allCars = responses[0].data;
                         $scope.hasMoreCars = responses[0].data.length > $scope.limit;
                     }
-                    if (responses[1] && responses[1]) {
+                    if (responses[1]) {
                         $scope.carCategories = responses[1];
                     }
                     if (responses[2] && responses[2]) {
@@ -103,27 +102,24 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
                         $scope.hasMoreCars = responses[1].data.length > $scope.limit;
                     }
                     
-                    if (responses[2] && responses[2] && responses[2].recommendations) {
-                        console.log(responses[2].recommendations);
+                    if (responses[2] && responses[2].recommendations) {
                         const recommendations = responses[2].recommendations;
                         $scope.recommendedCarsGroups = [];
                         for (let i = 0; i < recommendations.length; i += 3) {
-                            $scope.recommendedCarsGroups.push(
-                                recommendations.slice(i, i + 3)
-                            );
+                            $scope.recommendedCarsGroups.push(recommendations.slice(i, i + 3));
                         }
                     }
                     
-                    if (responses[3] && responses[3]) {
+                    if (responses[3]) {
                         $scope.carCategories = responses[3];
                     }
-                    if (responses[4] && responses[4]) {
+                    if (responses[4]) {
                         $scope.priceRangeArray = CarFactory.getPriceRangeArray(responses[4][0].min, responses[4][0].max);
                     }
                 }
             })
             .catch(function(errors) {
-              console.log(errors);
+                console.log(errors);
             })
             .finally(function() {
                 $scope.loadingCars = false;
@@ -136,6 +132,7 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
      * @returns {Promise<void>}
      */
     $scope.filterCars = () => {
+
         // Set filtering started flag when any filter is applied
         fetchCarsAndRecommendations();
     };
@@ -183,12 +180,14 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
      * function to reset all the filters and fetch all the cars
      */
     $scope.resetFilters = () => {
+        $scope.isLoading = true;
         $scope.filteringStarted = false;
         $scope.priceFilter = '';
         $scope.search = '';
         $scope.category = '';
         $scope.city = '';
         $scope.skip = 0;
+        $scope.isLoading = false;
         fetchCarsAndRecommendations();
     };
 

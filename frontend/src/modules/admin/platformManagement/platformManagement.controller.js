@@ -8,8 +8,6 @@ angular
     $scope.platformCharge = { percentage: 0, gst: 0 }; // object to store the platform charge percentage
     $scope.activeTab = "generalSettings"; // Add active tab tracking
 
-    // Make Math available to the scope for pagination calculations
-    $scope.Math = window.Math;
 
     // Pagination configuration for car approvals
     $scope.pagination = {

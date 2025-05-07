@@ -15,7 +15,7 @@ app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService
     $scope.resendDisabled = false; // variable to control resend button state
     $scope.cooldownTime = 30; // cooldown time for resend button
     
-    
+    // formdata variable to hold the user input data
     $scope.formData = {
       firstName: '',
       lastName: '',
@@ -27,7 +27,13 @@ app.controller("signupCtrl", function ($scope, $state, AuthService, ToastService
     };
   }
 
-
+  /**
+   * fuction to resend the verification email
+   * It disables the resend button for 30 seconds
+   * and starts a countdown timer
+   * @param {string} email - The email address to which the verification email will be sent
+   * @param {number} cooldownTime - The time in seconds for which the resend button will be disabled
+   */
   $scope.resendVerificationEmail = function() {
     if ($scope.resendDisabled) {
       return;

@@ -9,7 +9,7 @@ import Vehicle from "../models/vehicle.model.js";
  * @returns {Object} JSON response with users and pagination details
  */
 export const getAllUsers = async (req, res) => {
-    const { city, search, skip=0, limit=10, userType='seller' } = req.query;
+    const { search, skip=0, limit=10, userType='seller' } = req.query;
     const adminId = req.user._id;
     
     try {
@@ -18,11 +18,7 @@ export const getAllUsers = async (req, res) => {
         // Build match conditions
         let matchConditions = { _id: { $ne: adminId } };
         
-        // Add city filter if provided
-        if (city) {
-            matchConditions.city = city;
-        }
-        
+     
         // Add user type filter
         if (userType === 'seller') {
             matchConditions.isSeller = true;
@@ -151,83 +147,6 @@ export const makeUserSeller = async(req, res)=>{
 }
 
 /**
- * Updates the user profile
- * @param {Object} req - Express request object
- * @param {Object} req.params - Request parameters
- * @param {string} req.params.userId - User ID to update the profile
- * @param {Object} res - Express response object
- */
-export const updateUserProfileController = async (req, res) => {
-    const userId = req.user._id;
-   
-    const { firstName, lastName, city } = req.body;
-
-    if (!firstName || !lastName || !city) {
-        return res.status(400).json({ message: 'All fields (firstName, lastName, city) are required' });
-    }
-
-    try {
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            {
-                $set: {
-                    firstName,
-                    lastName,
-                    city
-                },
-            },
-            { new: true, runValidators: true }
-        ).select('-password');
-        
-        if (!updatedUser) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        return res.status(200).json({ message: 'User profile updated successfully', user: updatedUser });
-    } catch (err) {
-        console.log(`Error in the updateUserProfileController: ${err.message}`);
-        return res.status(500).json({ message: `Error in the updateUserProfileController: ${err.message}` });
-    }
-};
-
-/**
- * Updates only the user's city
- * @param {Object} req - Express request object
- * @param {Object} req.body - Request body
- * @param {string} req.body.city - New city value
- * @param {Object} res - Express response object
- * @returns {Object} JSON response with updated user data
- */
-export const updateUserCityController = async (req, res) => {
-    const userId = req.user._id;
-    const { city } = req.body;
-
-    if (!city) {
-        return res.status(400).json({ message: 'City is required' });
-    }
-
-    try {
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { city },
-            { new: true, runValidators: true }
-        ).select('-password');
-        
-        if (!updatedUser) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        return res.status(200).json({ 
-            message: 'User city updated successfully', 
-            user: updatedUser 
-        });
-    } catch (err) {
-        console.log(`Error updating user city: ${err.message}`);
-        return res.status(500).json({ message: `Error updating user city: ${err.message}` });
-    }
-};
-
-/**
  * @description: function to get the user at the userId
  * @param {string} userId - the userId of the user to get   
  * @returns {object} - the user object
@@ -235,7 +154,7 @@ export const updateUserCityController = async (req, res) => {
 export const getUserAtUserId = async (req, res) => {
     const {userId} = req.params;
     try {
-        const user = await User.findById(userId).select('-password -adhaar');
+        const user = await User.findById(userId).select('-password');
         if(!user){
             return res.status(404).json({message: 'User not found'});
         }

@@ -6,7 +6,7 @@ angular
     $scope.ownerNameQuery = ''; // added for owner name search
     $scope.isLoading = false;
     
-    // initializing the pagination variables
+    // initializing the pagination object with all the default pag
     $scope.pagination = {
       currentPage: 1,
       itemsPerPage: 6,
@@ -55,7 +55,7 @@ angular
       const params = {
         page: $scope.pagination.currentPage,
         limit: $scope.pagination.itemsPerPage,
-        sort: $scope.sortBy ? { [$scope.sortBy]: -1 } : undefined,
+        sort: $scope.sortBy ? { [$scope.sortBy]: 1 } : undefined,
         ownerName: $scope.ownerNameQuery || undefined // Added owner name parameter
       };
 

@@ -159,7 +159,10 @@ export const getTop3MostReviewedCars = async (req, res) => {
 };
 
 /**
- * Get top 3 owners with most cars
+ * Get top 3 owners with most popular cars 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns map of top 3 owners and the amount of bidding they have on their cars
  */
 export const getTop3OwnersWithMostCars = async (req, res) => {
     const { startDate, endDate } = req.query;
@@ -202,7 +205,10 @@ export const getTop3OwnersWithMostCars = async (req, res) => {
 };
 
 /**
- * Get number of biddings per city
+ * function to get the number of biddings per city for the admin 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns map of city and bids
  */
 export const getBiddingsPerCity = async (req, res) => {
     const { startDate, endDate } = req.query;
@@ -237,7 +243,10 @@ export const getBiddingsPerCity = async (req, res) => {
 };
 
 /**
- * Get user growth statistics
+ * function to get the user growth stats from the database shows how many new users joined the platform on which dates
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns map of data and the number of new users created during that period
  */
 export const getUserGrowthStats = async (req, res) => {
     const { startDate, endDate } = req.query;
@@ -273,7 +282,10 @@ export const getUserGrowthStats = async (req, res) => {
 };
 
 /**
- * Get highest earning cities
+ * function to get the highest earning cities from the database
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns map of city and the total earnings during the time period specified
  */
 export const getHighestEarningCities = async (req, res) => {
     const { startDate, endDate } = req.query;
@@ -570,63 +582,6 @@ export const getOverviewStatsController = async (req, res) => {
 };
 
 
-
-
-
-/*
-@description: function to add a car cateogory by the admin
-takes name as the request body
-return car category
-*/
-export const addCarCategoryController = async(req, res)=>{
-    const {name} = req.body;
-    try{
-        const carCategory = await CarCategory.create({name});
-        return res.status(200).json(carCategory);
-    }catch(err){
-        console.log(`error in the addCarCategoryController ${err}`);
-        return res.status(500).json({message: "Internal server error"});
-    }
-}
-
-/**
- * Retrieves all car categories from the database
- * 
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @returns {Array} - Array of car categories
- */
-export const getAllCarCategoriesController = async(req, res)=>{
-    try{
-        const carCategories = await CarCategory.find();
-        return res.status(200).json(carCategories);
-    }catch(err){
-        console.log(`error in the getAllCarCategoriesController ${err}`);
-        return res.status(500).json({message: "Internal server error"});
-    }   
-}
-
-/**
- * Deletes a car category from the database by its ID
- * 
- * @param {Object} req - Express request object containing categoryID in params
- * @param {Object} res - Express response object
- * @returns {Object} - Returns deleted car category information or error message
- */
-export const deleteCarCategoryController = async(req, res)=>{
-    const {categoryID} = req.params;
-    try{
-        const carCategory = await CarCategory.findByIdAndDelete(categoryID);
-        return res.status(200).json(carCategory);
-    }catch(err){
-        console.log(`error in the deleteCarCategoryController ${err}`);
-        return res.status(500).json({message: "Internal server error"});
-    }
-}
-
-
-
-
 /**
  * Retrieves top 10 sellers with highest earnings
  * Calculates total earnings including base amounts and fines
@@ -786,64 +741,7 @@ export const topPerformersController = async (req, res) => {
     }
 };
 
-/**
- * Sends congratulation emails to top-performing users (sellers and buyers)
- * Handles different email templates based on user type
- * 
- * @param {Object} req - Express request object containing email recipient details
- * @param {Object} res - Express response object
- * @returns {Object} - Success or error message
- */
-export const sendCongratulationMailController = async (req, res) => {
-    const { email, amount, startDate, endDate, totalBookings} = req.body;
-    
-    // Handle buyer congratulation emails (identified by totalBookings field)
-    if(totalBookings){
-        try{
-            // Format dates for email display
-            const formattedStartDate = startDate ? new Date(startDate).toLocaleDateString() : 'start of the platform';
-            const formattedEndDate = endDate ? new Date(endDate).toLocaleDateString() : 'till now';
-            
-            // Send congratulation email to buyer
-            sendTopBuyerEmail(
-               { email: email,
-                totalBookings: totalBookings,
-               startDate: formattedStartDate, 
-               endDate: formattedEndDate}
-            ).catch((err) => {
-                console.error(`Error sending congratulation email to buyer: ${err.message}`);
-            });
-            
-            return res.status(200).json({message: "Congratulation mail sent successfully"});
-        }catch(err){
-            console.log(`error in the sendCongratulationMailController ${err}`);
-            return res.status(500).json({message: "Internal server error"});
-        }
-    }
-    
-    // Handle seller congratulation emails
-    try{
-        // Format amount as currency and dates for email display
-        const formattedAmount = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-        const formattedStartDate = startDate ? new Date(startDate).toLocaleDateString() : 'start of the platform';
-        const formattedEndDate = endDate ? new Date(endDate).toLocaleDateString() : 'till now';
-        
-        // Send congratulation email to seller
-        sendTopSellerEmail(
-           { email: email, 
-            amount:formattedAmount,
-           startDate: formattedStartDate, 
-           endDate: formattedEndDate}
-        ).catch((err) => {
-            console.error(`Error sending congratulation email to seller: ${err.message}`);
-        });
-        
-        return res.status(200).json({message: "Congratulation mail sent successfully"});
-    }catch(err){
-        console.log(`error in the sendCongratulationMailController ${err}`);
-        return res.status(500).json({message: "Internal server error"});
-    }
-}
+
 
 
 
@@ -921,80 +819,6 @@ export const getCustomerSatisfactionScoreController = async (req, res)=>{
     }
 }
 
-/**
- * Adds a new price range to the database
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @returns {Object} - Object containing the price range
- */
-export const updatePriceRangeController = async (req, res)=>{
-    try{
-        const {min, max} = req.body;
-        if(!min || !max){
-            return res.status(400).json({message: "min and max are required"});
-        }
-        if(min >= max){
-            return res.status(400).json({message: "min must be less than max"});
-        }
-        const priceRange = await Price.updateOne({_id: "68063765d698682cae2ad369"}, {min, max});
-        return res.status(200).json(priceRange);
-    }catch(err){
-        console.log(`error in the addPriceRangeController ${err}`);
-        return res.status(500).json({message: "Internal server error"});
-    }
-}
-/**
- * Retrieves current price ranges from the database 
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @returns {Array} - Array of price ranges
- */
-export const getCurrentPriceRangesController = async (req, res)=>{
-    try{
-        const priceRanges = await Price.find();
-        return res.status(200).json(priceRanges);
-    }catch(err){
-        console.log(`error in the getCurrentPriceRangesController ${err}`);
-        return res.status(500).json({message: "Internal server error"});    
-    }
-}
-
-/**
- * Retrieves all charges from the database
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @returns {Array} - Array of charges
- */
-export const getChargesController = async (req, res)=>{
-    try{
-        const charges = await Charges.find();
-        return res.status(200).json(charges);
-    }catch(err){
-        console.log(`error in the getChargesController ${err}`);
-        return res.status(500).json({message: "Internal server error"});
-    }
-}
-
-
-/**
- * Updates the charges in the database
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @returns {Object} - Object containing the updated charges
- */
-export const updateChargesController = async (req, res)=>{
-    try{
-        const {charge, percentage} = req.body;
-        if(charge=== undefined || percentage=== undefined){
-            return res.status(400).json({message: "charge and percentage are required"});
-        }
-         await Charges.updateOne({name: charge}, { $set: {percentage: percentage}});
-        return res.status(200).json({message: "Charges updated successfully"});
-    }catch(err){
-        console.log(`error in the updateChargesController ${err}`);
-        return res.status(500).json({message: "Internal server error"});
-    }
-}
 
 
 /**
@@ -1186,6 +1010,202 @@ export const getCarCateogoryWiseBookings = async(req, res)=>{
         return res.status(200).json(bookings);
     }catch(err){
         console.log(`error in the getCarCateogoryWiseBookingsController ${err}`);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}
+
+
+/*** 
+ * Admin controller for managing car categories,sending congratulatory emails and updating price ranges
+ */
+
+/**
+ * Retrieves all car categories from the database
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Array} - Array of car categories
+ */
+export const getAllCarCategoriesController = async(req, res)=>{
+    try{
+        const carCategories = await CarCategory.find();
+        return res.status(200).json(carCategories);
+    }catch(err){
+        console.log(`error in the getAllCarCategoriesController ${err}`);
+        return res.status(500).json({message: "Internal server error"});
+    }   
+}
+
+/*
+@description: function to add a car cateogory by the admin
+takes name as the request body
+return car category
+*/
+export const addCarCategoryController = async(req, res)=>{
+    const {name} = req.body;
+    try{
+        const carCategory = await CarCategory.create({name});
+        return res.status(200).json(carCategory);
+    }catch(err){
+        console.log(`error in the addCarCategoryController ${err}`);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}
+
+
+/**
+ * Deletes a car category from the database by its ID
+ * 
+ * @param {Object} req - Express request object containing categoryID in params
+ * @param {Object} res - Express response object
+ * @returns {Object} - Returns deleted car category information or error message
+ */
+export const deleteCarCategoryController = async(req, res)=>{
+    const {categoryID} = req.params;
+    try{
+        const carCategory = await CarCategory.findByIdAndDelete(categoryID);
+        return res.status(200).json(carCategory);
+    }catch(err){
+        console.log(`error in the deleteCarCategoryController ${err}`);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}
+
+
+
+
+/**
+ * Sends congratulation emails to top-performing users (sellers and buyers)
+ * Handles different email templates based on user type
+ * 
+ * @param {Object} req - Express request object containing email recipient details
+ * @param {Object} res - Express response object
+ * @returns {Object} - Success or error message
+ */
+export const sendCongratulationMailController = async (req, res) => {
+    const { email, amount, startDate, endDate, totalBookings} = req.body;
+    
+    // Handle buyer congratulation emails (identified by totalBookings field)
+    if(totalBookings){
+        try{
+            // Format dates for email display
+            const formattedStartDate = startDate ? new Date(startDate).toLocaleDateString() : 'start of the platform';
+            const formattedEndDate = endDate ? new Date(endDate).toLocaleDateString() : 'till now';
+            
+            // Send congratulation email to buyer
+            sendTopBuyerEmail(
+               { email: email,
+                totalBookings: totalBookings,
+               startDate: formattedStartDate, 
+               endDate: formattedEndDate}
+            ).catch((err) => {
+                console.error(`Error sending congratulation email to buyer: ${err.message}`);
+            });
+            
+            return res.status(200).json({message: "Congratulation mail sent successfully"});
+        }catch(err){
+            console.log(`error in the sendCongratulationMailController ${err}`);
+            return res.status(500).json({message: "Internal server error"});
+        }
+    }
+    
+    // Handle seller congratulation emails
+    try{
+        // Format amount as currency and dates for email display
+        const formattedAmount = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+        const formattedStartDate = startDate ? new Date(startDate).toLocaleDateString() : 'start of the platform';
+        const formattedEndDate = endDate ? new Date(endDate).toLocaleDateString() : 'till now';
+        
+        // Send congratulation email to seller
+        sendTopSellerEmail(
+           { email: email, 
+            amount:formattedAmount,
+           startDate: formattedStartDate, 
+           endDate: formattedEndDate}
+        ).catch((err) => {
+            console.error(`Error sending congratulation email to seller: ${err.message}`);
+        });
+        
+        return res.status(200).json({message: "Congratulation mail sent successfully"});
+    }catch(err){
+        console.log(`error in the sendCongratulationMailController ${err}`);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}
+
+
+
+/**
+ * Adds a new price range to the database
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} - Object containing the price range
+ */
+export const updatePriceRangeController = async (req, res)=>{
+    try{
+        const {min, max} = req.body;
+        if(!min || !max){
+            return res.status(400).json({message: "min and max are required"});
+        }
+        if(min >= max){
+            return res.status(400).json({message: "min must be less than max"});
+        }
+        const priceRange = await Price.updateOne({_id: "68063765d698682cae2ad369"}, {min, max});
+        return res.status(200).json(priceRange);
+    }catch(err){
+        console.log(`error in the addPriceRangeController ${err}`);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}
+/**
+ * Retrieves current price ranges from the database 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Array} - Array of price ranges
+ */
+export const getCurrentPriceRangesController = async (req, res)=>{
+    try{
+        const priceRanges = await Price.find();
+        return res.status(200).json(priceRanges);
+    }catch(err){
+        console.log(`error in the getCurrentPriceRangesController ${err}`);
+        return res.status(500).json({message: "Internal server error"});    
+    }
+}
+
+/**
+ * Retrieves all charges from the database
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Array} - Array of charges
+ */
+export const getChargesController = async (req, res)=>{
+    try{
+        const charges = await Charges.find();
+        return res.status(200).json(charges);
+    }catch(err){
+        console.log(`error in the getChargesController ${err}`);
+        return res.status(500).json({message: "Internal server error"});
+    }
+}
+
+
+/**
+ * Updates the charges in the database
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} - Object containing the updated charges
+ */
+export const updateChargesController = async (req, res)=>{
+    try{
+        const {charge, percentage} = req.body;
+        if(charge=== undefined || percentage=== undefined){
+            return res.status(400).json({message: "charge and percentage are required"});
+        }
+         await Charges.updateOne({name: charge}, { $set: {percentage: percentage}});
+        return res.status(200).json({message: "Charges updated successfully"});
+    }catch(err){
+        console.log(`error in the updateChargesController ${err}`);
         return res.status(500).json({message: "Internal server error"});
     }
 }

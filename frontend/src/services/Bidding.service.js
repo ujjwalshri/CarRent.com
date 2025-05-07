@@ -232,22 +232,6 @@ angular.module('myApp').service('BiddingService', function($q, ApiService, $http
         })
         return deferred.promise;
     }
-    /**
-     * Recommend a bidding for a particular vehicle
-     * @param {string} vehicleId - The ID of the vehicle
-     * @returns promise
-     */
-    this.recommendBidding = function(vehicleId){
-        let deferred = $q.defer();
-        $http.post(`${ApiService.baseURL}/api/gemini/getOptimalBids/${vehicleId}`, { withCredentials: true })
-        .then((res)=>{
-            deferred.resolve(res.data);
-        })
-        .catch(err=>{
-            deferred.reject(`Error recommending bidding: ${err}`);
-        })
-        return deferred.promise;
-    }
 
     
     /**

@@ -210,6 +210,7 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q, $timeout)
             "Premier", 
             "Hindustan Motors",
             "Opel", 
+            "Tata",
             "Daewoo", 
             "SsangYong",
             "Reva", 

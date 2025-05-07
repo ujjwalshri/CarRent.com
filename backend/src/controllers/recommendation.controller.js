@@ -27,8 +27,6 @@
  */
 import Bidding from "../models/bidding.model.js";
 
-
-
 export const getVehicleRecommendationController = async (req, res) => {
     const selectedCity = req.query.city;
     try {
@@ -119,7 +117,8 @@ export const getVehicleRecommendationController = async (req, res) => {
 
 /**
  * Function to get the optimal bid recommendation for a seller 
- * based on their pending bids
+ * based on their pending bids uses a dynamic programming approach. 
+ * It calculates the maximum revenue possible by selecting non-overlapping bids.
  */
 export const getOptimalBidRecommendationsController = async(req, res) => {
   try {

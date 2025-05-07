@@ -46,6 +46,7 @@ angular.module('myApp').factory('UserFactory', function () {
     User.prototype.validate = function () {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const usernameRegex = /^[a-zA-Z0-9_!@#$%^&*()-+=]{3,20}$/;
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d!@#$%^&*()-+=]{6,}$/;
         const nameRegex = /^[A-Za-z]{2,50}$/;
         const cityRegex = /^[A-Za-z ]{2,100}$/;
 
@@ -70,6 +71,9 @@ angular.module('myApp').factory('UserFactory', function () {
         }
         if(this.password !== this.confirmPassword){
             return "password and confirm password must be same";
+        }
+        if(this.password && !passwordRegex.test(this.password)) {
+            return "password must contain at least one uppercase letter, one lowercase letter, and one number";
         }
         return this;
     };
@@ -103,6 +107,7 @@ angular.module('myApp').factory('UserFactory', function () {
         // function to validate the update user data before sending to the server
         validateUpdateUserData : function (data) {  
             const nameRegex = /^[A-Za-z]{2,50}$/;
+
             if (!data.firstName || !nameRegex.test(data.firstName)) {
                 return "invalid first name";
             }

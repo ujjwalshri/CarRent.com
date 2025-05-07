@@ -12,7 +12,6 @@ angular
       $scope.userGrowthFilter = "city";
       $scope.topSellersWithMostEarnings;
       $scope.top10BuyersWithMostBookings;
-
       $scope.numberOfCustomersWithReviews;
       $scope.numberOfSatisfiedCustomers;
       $scope.isLoading = false;
