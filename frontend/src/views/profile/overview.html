@@ -36,14 +36,6 @@
             <div class="panel-body">
                 <div class="row">
                     <div class="col-sm-4">
-                        <p class="text-muted small">Account Status</p>
-                        <p style="margin-top: 0;">
-                            <span class="label" ng-class="{'label-success': user.isEmailVerified, 'label-warning': !user.isEmailVerified}">
-                                {{user.isEmailVerified ? 'Verified' : 'Unverified'}}
-                            </span>
-                        </p>
-                    </div>
-                    <div class="col-sm-4">
                         <p class="text-muted small">Member Since</p>
                         <p class="lead" style="margin-top: 0;">{{user.createdAt | date:'mediumDate'}}</p>
                     </div>

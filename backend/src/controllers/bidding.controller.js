@@ -212,7 +212,8 @@ export const getBidForOwnerController = async (req, res) => {
     let finalSort = {...sortBy, createdAt: -1};
     const skip = (pageNumber - 1) * limitNumber;
 
-    const matchStage =  { $match: { 
+    const matchStage =  { 
+        $match: { 
         "owner._id": user._id, 
         status,
         startDate:{
@@ -281,7 +282,7 @@ export const getBidForUserController = async (req, res) => {
         // Base match stage
         const matchStage = { 
             "from._id": req.user._id, 
-            status 
+            status ,
         };
         
         const aggregationPipeline = [
@@ -290,7 +291,7 @@ export const getBidForUserController = async (req, res) => {
         
         // Add search functionality if search parameter is provided
         if (search && search.trim() !== '') {
-            aggregationPipeline.push({
+            aggregationPipeline.unshift({
                 $match: {
                     $or: [
                         { "vehicle.name": { $regex: search, $options: "i" } },
@@ -397,12 +398,8 @@ export const getAllBookingsAtOwnerIdController = async (req, res) => {
     };
 
     // Modify matchStage based on bookingsType
-    if (bookingsType === 'started') {
-        matchStage.status = 'started';
-    } else if (bookingsType === 'ended') {
-        matchStage.status = 'ended';
-    } else if(bookingsType === 'reviewed') {
-        matchStage.status = 'reviewed';
+    if(bookingsType){
+        matchStage.status = bookingsType;
     }
 
     // Apply date range filter if both startDate and endDate are provided
@@ -671,7 +668,6 @@ export const reviewBookingController = async(req, res)=>{
         console.log(`error in the reviewBookingController ${err.message}`);
         return res.status(500).json({error: `error in the reviewBookingController ${err.message}`});
     }
-
 }
 
 

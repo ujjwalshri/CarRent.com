@@ -2,7 +2,7 @@
  * Geolocation Service
  * Handles getting user's geolocation and extracting city information
  */
-angular.module('myApp').service('GeolocationService', ['$q', '$http', 'ApiService', function($q, $http, ApiService) {
+angular.module('myApp').service('GeolocationService', ['$q', '$http', 'ApiService', function($q, $http) {
     var service = this;
     
     /**
@@ -73,10 +73,10 @@ angular.module('myApp').service('GeolocationService', ['$q', '$http', 'ApiServic
             }
         }).then(function(response) {
             if (response.data && response.data.address) {
-                console.log(response.data);
+
                 var locationData = {
                     city: response.data.address.city ||
-                    response.data.address.state || // As a final fallback (will give "Delhi")
+                    response.data.address.state || 
                     'Unknown',
                     state: response.data.address.state || 'Unknown',
                     country: response.data.address.country || 'Unknown',
