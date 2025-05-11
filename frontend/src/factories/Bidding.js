@@ -220,7 +220,7 @@ angular.module('myApp').factory('BiddingFactory', function($timeout, CarService,
             // Create PDF definition
             const docDefinition = {
                 pageSize: 'A4',
-                pageMargins: [40, 40, 40, 40],
+                pageMargins: [30, 20, 30, 20], // Reduced margins
                 content: [
                     {
                         columns: [
@@ -231,17 +231,13 @@ angular.module('myApp').factory('BiddingFactory', function($timeout, CarService,
                     {
                         canvas: [{ type: 'line', x1: 0, y1: 5, x2: 515, y2: 5, lineWidth: 1, lineColor: '#aaa' }]
                     },
-                    { text: '\n' },
                     {
                         columns: [
                             {
                                 width: '*',
                                 stack: [
                                     { text: 'CAR RENTAL COMPANY', style: 'companyName' },
-                                    { text: '123 Rental Street', style: 'companyAddress' },
-                                    { text: 'City, State 12345', style: 'companyAddress' },
-                                    { text: 'Phone: (123) 456-7890', style: 'companyAddress' },
-                                    { text: 'Email: info@carrental.com', style: 'companyAddress' }
+                                    { text: ['123 Rental Street • City, State 12345\nPhone: (123) 456-7890 • Email: info@carrental.com'], style: 'companyAddress' }
                                 ]
                             },
                             {
@@ -253,189 +249,117 @@ angular.module('myApp').factory('BiddingFactory', function($timeout, CarService,
                             }
                         ]
                     },
-                    { text: '\n\n' },
                     // Booking Details
                     {
-                        stack: [
-                            { text: 'Booking Details', style: 'sectionHeader' },
-                            {
-                                table: {
-                                    headerRows: 1,
-                                    widths: ['*', '*'],
-                                    body: [
-                                        [
-                                            { text: 'Car Details', style: 'tableHeader' },
-                                            { text: 'Owner Details', style: 'tableHeader' }
-                                        ],
-                                        [
-                                            {
-                                                stack: [
-                                                    { text: `${self.vehicle.company} ${self.vehicle.name} ${self.vehicle.modelYear}`, style: 'tableContent' },
-                                                    { text: 'Model Year: ' + self.vehicle.modelYear, style: 'tableContent' }
-                                                ]
-                                            },
-                                            {
-                                                stack: [
-                                                    { text: self.owner.firstName + ' ' + self.owner.lastName, style: 'tableContent' },
-                                                    { text: self.owner.username, style: 'tableContent' }
-                                                ]
-                                            }
-                                        ]
-                                    ]
-                                }
-                            }
-                        ]
+                        table: {
+                            widths: ['*', '*'],
+                            body: [
+                                [
+                                    { text: `${self.vehicle.company} ${self.vehicle.name}\n${self.vehicle.modelYear}`, style: 'carDetails' },
+                                    { text: `${self.owner.firstName} ${self.owner.lastName}\n${self.owner.username}`, style: 'ownerDetails' }
+                                ]
+                            ]
+                        },
+                        layout: 'lightHorizontalLines'
                     },
-                    { text: '\n' },
-                    // Rental Period
+                    // Rental Period and Odometer in one row
                     {
-                        stack: [
-                            { text: 'Rental Period', style: 'sectionHeader' },
+                        columns: [
                             {
+                                width: '*',
                                 table: {
-                                    headerRows: 1,
-                                    widths: ['*', '*'],
+                                    widths: ['auto', '*'],
                                     body: [
                                         [
-                                            { text: 'Start Date', style: 'tableHeader' },
-                                            { text: 'End Date', style: 'tableHeader' }
+                                            { text: 'Period:', style: 'labelCompact' },
+                                            { text: `${new Date(self.startDate).toLocaleDateString()} - ${new Date(self.endDate).toLocaleDateString()}`, style: 'valueCompact' }
                                         ],
                                         [
-                                            { text: new Date(self.startDate).toLocaleDateString(), style: 'tableContent' },
-                                            { text: new Date(self.endDate).toLocaleDateString(), style: 'tableContent' }
+                                            { text: 'Odometer:', style: 'labelCompact' },
+                                            { text: `${self.startOdometerValue} km - ${self.endOdometerValue} km`, style: 'valueCompact' }
                                         ]
                                     ]
-                                }
+                                },
+                                layout: 'noBorders'
                             }
                         ]
                     },
-                    { text: '\n' },
-                    // Odometer Readings
-                    {
-                        stack: [
-                            { text: 'Odometer Readings', style: 'sectionHeader' },
-                            {
-                                table: {
-                                    headerRows: 1,
-                                    widths: ['*', '*'],
-                                    body: [
-                                        [
-                                            { text: 'Start Reading', style: 'tableHeader' },
-                                            { text: 'End Reading', style: 'tableHeader' }
-                                        ],
-                                        [
-                                            { text: self.startOdometerValue + ' km', style: 'tableContent' },
-                                            { text: self.endOdometerValue + ' km', style: 'tableContent' }
-                                        ]
-                                    ]
-                                }
-                            }
-                        ]
-                    },
-                    { text: '\n' },
-                    // Add addons section if applicable
+                    // Addons in compact table if present
                     ...(self.selectedAddons && self.selectedAddons.length > 0 ? [{
-                        stack: [
-                            { text: 'Selected Addons', style: 'sectionHeader' },
-                            {
-                                table: {
-                                    headerRows: 1,
-                                    widths: ['*', 'auto'],
-                                    body: [
-                                        [
-                                            { text: 'Addon Name', style: 'tableHeader' },
-                                            { text: 'Price', style: 'tableHeader' }
-                                        ],
-                                        ...self.selectedAddons.map(addon => [
-                                            { text: addon.name, style: 'tableContent' },
-                                            { text: formatRupees(addon.price), style: 'tableContent' }
-                                        ])
-                                    ]
-                                }
-                            }
-                        ]
-                    }, { text: '\n' }] : []),
+                        table: {
+                            headerRows: 1,
+                            widths: ['*', 'auto'],
+                            body: [
+                                [{ text: 'Addons', style: 'tableHeaderCompact', colSpan: 2 }, {}],
+                                ...self.selectedAddons.map(addon => [
+                                    { text: addon.name, style: 'tableContentCompact' },
+                                    { text: formatRupees(addon.price), style: 'tableContentCompact' }
+                                ])
+                            ]
+                        },
+                        layout: 'lightHorizontalLines'
+                    }] : []),
                     // Cost breakdown with tax details
                     {
-                        stack: [
-                            { text: 'Cost Breakdown', style: 'sectionHeader' },
-                            {
-                                table: {
-                                    headerRows: 1,
-                                    widths: ['*', 'auto'],
-                                    body: [
-                                        [
-                                            { text: 'Description', style: 'tableHeader' },
-                                            { text: 'Amount', style: 'tableHeader' }
-                                        ],
-                                        [
-                                            { text: 'Daily Rate', style: 'tableContent' },
-                                            { text: formatRupees(dailyRate), style: 'tableContent' }
-                                        ],
-                                        [
-                                            { text: `Rental Cost (${totalNumberOfDays} days)`, style: 'tableContent' },
-                                            { text: formatRupees((rentalCost-addonsTotal)), style: 'tableContent' }
-                                        ],
-                                        ...(addonsTotal > 0 ? [[
-                                            { text: 'Addons Total', style: 'tableContent' },
-                                            { text: formatRupees(addonsTotal), style: 'tableContent' }
-                                        ]] : []),
-                                        // Tax details - only show if there are taxes
-                                        ...taxBreakdown.map(tax => [
-                                            { text: `${tax.name} (${tax.value})`, style: 'tableContent' },
-                                            { text: formatRupees(tax.amount), style: 'tableContent' }
-                                        ]),
-                                        [
-                                            { 
-                                                text: 'Extra Distance Fee' + 
-                                                    (extraDistanceFee > 0 ? ` (${totalDistance - 300} km over limit)` : ''),
-                                                style: 'tableContent'
-                                            },
-                                            { text: formatRupees(extraDistanceFee), style: 'tableContent' }
-                                        ],
-                                        [
-                                            { text: `Platform Fee (${self.platformFeePercentage}%)`, style: 'tableContent' },
-                                            { text: formatRupees(platformFee), style: 'tableContent' }
-                                        ],
-                                        [
-                                            { text: 'Total Amount', style: 'totalLabel' },
-                                            { text: formatRupees(totalAmount - addonsTotal), style: 'totalAmount' }
-                                        ]
-                                    ]
-                                }
-                            }
-                        ]
+                        table: {
+                            headerRows: 1,
+                            widths: ['*', 'auto'],
+                            body: [
+                                [{ text: 'Cost Breakdown', style: 'tableHeaderCompact', colSpan: 2 }, {}],
+                                [
+                                    { text: `Rental Cost (${totalNumberOfDays} days @ ${formatRupees(dailyRate)}/day)`, style: 'tableContentCompact' },
+                                    { text: formatRupees((rentalCost-addonsTotal)), style: 'tableContentCompact' }
+                                ],
+                                ...(addonsTotal > 0 ? [[
+                                    { text: 'Addons Total', style: 'tableContentCompact' },
+                                    { text: formatRupees(addonsTotal), style: 'tableContentCompact' }
+                                ]] : []),
+                                ...taxBreakdown.map(tax => [
+                                    { text: `${tax.name} (${tax.value})`, style: 'tableContentCompact' },
+                                    { text: formatRupees(tax.amount), style: 'tableContentCompact' }
+                                ]),
+                                [
+                                    { text: extraDistanceFee > 0 ? `Extra Distance Fee (${totalDistance - 300} km over limit)` : 'Extra Distance Fee', style: 'tableContentCompact' },
+                                    { text: formatRupees(extraDistanceFee), style: 'tableContentCompact' }
+                                ],
+                                [
+                                    { text: `Platform Fee (${self.platformFeePercentage}%)`, style: 'tableContentCompact' },
+                                    { text: formatRupees(platformFee), style: 'tableContentCompact' }
+                                ],
+                                [
+                                    { text: 'Total Amount', style: 'totalLabel' },
+                                    { text: formatRupees(totalAmount - addonsTotal), style: 'totalAmount' }
+                                ]
+                            ]
+                        },
+                        layout: 'lightHorizontalLines'
                     },
-                    { text: '\n\n' },
                     {
                         stack: [
                             { text: 'Terms & Conditions', style: 'termsHeader' },
-                            { text: '• Platform fee is non-refundable', style: 'termsContent' },
-                            { text: '• Extra distance charges apply beyond 300km', style: 'termsContent' },
-                            { text: '• All prices are in Indian Rupees (₹)', style: 'termsContent' },
-                            { text: '• All applicable taxes are included in the total amount', style: 'termsContent' },
-                            { text: '\n' },
+                            { text: '• Platform fee is non-refundable • Extra distance charges apply beyond 300km • All prices include applicable taxes', style: 'termsContent' },
                             { text: 'Thank you for choosing our service!', style: 'footer' }
                         ]
                     }
                 ],
                 styles: {
-                    header: { fontSize: 24, bold: true, color: '#2c3e50', margin: [0, 0, 0, 10] },
-                    date: { fontSize: 12, color: '#7f8c8d' },
-                    companyName: { fontSize: 18, bold: true, color: '#2c3e50', margin: [0, 0, 0, 5] },
-                    companyAddress: { fontSize: 10, color: '#7f8c8d', margin: [0, 0, 0, 2] },
-                    invoiceNumber: { fontSize: 14, bold: true, color: '#2c3e50' },
-                    invoiceDate: { fontSize: 12, color: '#7f8c8d' },
-                    sectionHeader: { fontSize: 16, bold: true, color: '#2c3e50', margin: [0, 10, 0, 5] },
-                    tableHeader: { fontSize: 12, bold: true, color: '#2c3e50', fillColor: '#f8f9fa' },
-                    tableContent: { fontSize: 11, color: '#34495e' },
-                    totalLabel: { fontSize: 14, bold: true, color: '#2c3e50' },
-                    totalAmount: { fontSize: 14, bold: true, color: '#27ae60' },
-                    footer: { fontSize: 12, color: '#7f8c8d', alignment: 'center', margin: [0, 20, 0, 0] },
-                    subtotalLabel: { fontSize: 12, bold: true, color: '#34495e' },
-                    subtotalAmount: { fontSize: 12, bold: true, color: '#34495e' },
-                    termsHeader: { fontSize: 14, bold: true, color: '#2c3e50', margin: [0, 0, 0, 5] },
-                    termsContent: { fontSize: 10, color: '#7f8c8d', margin: [0, 0, 0, 2] }
+                    header: { fontSize: 20, bold: true, color: '#2c3e50', margin: [0, 0, 0, 5] },
+                    date: { fontSize: 10, color: '#7f8c8d' },
+                    companyName: { fontSize: 16, bold: true, color: '#2c3e50', margin: [0, 0, 0, 2] },
+                    companyAddress: { fontSize: 9, color: '#7f8c8d', margin: [0, 0, 0, 5] },
+                    invoiceNumber: { fontSize: 12, bold: true, color: '#2c3e50' },
+                    invoiceDate: { fontSize: 10, color: '#7f8c8d' },
+                    carDetails: { fontSize: 10, color: '#34495e', margin: [0, 5, 0, 5] },
+                    ownerDetails: { fontSize: 10, color: '#34495e', margin: [0, 5, 0, 5] },
+                    labelCompact: { fontSize: 10, bold: true, color: '#2c3e50', margin: [0, 2, 0, 2] },
+                    valueCompact: { fontSize: 10, color: '#34495e', margin: [0, 2, 0, 2] },
+                    tableHeaderCompact: { fontSize: 11, bold: true, color: '#2c3e50', fillColor: '#f8f9fa', margin: [0, 2, 0, 2] },
+                    tableContentCompact: { fontSize: 9, color: '#34495e', margin: [0, 1, 0, 1] },
+                    totalLabel: { fontSize: 12, bold: true, color: '#2c3e50', margin: [0, 2, 0, 2] },
+                    totalAmount: { fontSize: 12, bold: true, color: '#27ae60', margin: [0, 2, 0, 2] },
+                    termsHeader: { fontSize: 11, bold: true, color: '#2c3e50', margin: [0, 5, 0, 2] },
+                    termsContent: { fontSize: 8, color: '#7f8c8d', margin: [0, 0, 0, 2] },
+                    footer: { fontSize: 10, color: '#7f8c8d', alignment: 'center', margin: [0, 5, 0, 0] }
                 }
             };
             

@@ -8,12 +8,10 @@ angular.module("myApp").component("dynamicNavbar", {
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" ui-sref="home" ng-click="$ctrl.closeNav()" ng-if="!$ctrl.isSeller">
+                <a class="navbar-brand" ui-sref="home" ng-click="$ctrl.closeNav()" >
                     <span class="glyphicon glyphicon-car"></span> Car.com
                 </a>
-                <a class="navbar-brand" ui-sref="sellerListings" ng-click="$ctrl.closeNav()" ng-if="$ctrl.isSeller">
-                    <span class="glyphicon glyphicon-dashboard"></span> Seller Dashboard
-                </a>
+               
             </div>
             <div class="collapse navbar-collapse" id="navbarItems" uib-collapse="$ctrl.isNavCollapsed">
                 <ul class="nav navbar-nav" id="navbarMainLinks">
@@ -26,7 +24,7 @@ angular.module("myApp").component("dynamicNavbar", {
         </div>
     </nav>
   `,
-  controller: function($element, AuthService, ToastService, $compile, $scope, RouteProtection, $rootScope, $state) {
+  controller: function($element, AuthService, ToastService, $compile, $scope, AuthService, $rootScope, $state, $scope) {
     var ctrl = this;
     
     // Menu configurations for different user types
@@ -34,29 +32,29 @@ angular.module("myApp").component("dynamicNavbar", {
       seller: {
         mainLinks: [
           { href: "sellerListings", icon: "glyphicon-list-alt", text: "My Listings" },
-          { href: "conversations({id: undefined})", icon: "glyphicon-comment", text: "Chats" },
-          { dropdown: true, icon: "glyphicon-calendar", text: "Bookings", items: [
-            { href: "ownerBookings", icon: "glyphicon-tag", text: "Biddings" },
+         
+          { dropdown: true, icon: "glyphicon-calendar", text: "Bookings Management", items: [
+            { href: "ownerBookings", icon: "glyphicon-tag", text: "Bidding Requests" },
             { href: "confirmedBookings", icon: "glyphicon-ok", text: "Confirmed Bookings" }
           ]},
           { href: "sellerAnalytics", icon: "glyphicon-stats", text: "Analytics" }
         ],
         rightLinks: [
-          { href: "myProfile({id: undefined})", icon: "glyphicon-user", text: "Profile" },
+          { href: "conversations({id: undefined})", icon: "glyphicon-comment", text: "Chats" },
+          { href: "myProfile.overview", icon: "glyphicon-user", text:"Profile" },
           { action: "logout", icon: "glyphicon-log-out", text: "Logout" }
         ]
       },
       user: {
         mainLinks: [
-          { href: "conversations({id: undefined})", icon: "glyphicon-comment", text: "Chats" },
-          { dropdown: true, icon: "glyphicon-calendar", text: "Bookings", items: [
-            { href: "myBookings", icon: "glyphicon-list", text: "My Bookings" },
-            { href: "bookingHistory", icon: "glyphicon-time", text: "Booking History" },
-            { href: "myBiddings", icon: "glyphicon-bookmark", text: "My Biddings" }
-          ]}
+     
+         
         ],
         rightLinks: [
-          { href: "myProfile({id: undefined})", icon: "glyphicon-user", text: "Profile" },
+          { href: "conversations({id: undefined})", icon: "glyphicon-comment", text: "Chats" },
+          { href: "becomeSeller", icon: "glyphicon-briefcase", text: "Become a host" },
+          { href: "myProfile.overview", icon: "glyphicon-user", text: "Profile" },
+          
           { action: "logout", icon: "glyphicon-log-out", text: "Logout" }
         ]
       },
@@ -93,7 +91,7 @@ angular.module("myApp").component("dynamicNavbar", {
     };
 
     ctrl.loadUserData = function() {
-      RouteProtection.getLoggedinUser()
+      AuthService.getLoggedinUser()
         .then(function(user) {
 
           if (user.isAdmin) {
@@ -106,6 +104,8 @@ angular.module("myApp").component("dynamicNavbar", {
 
             const userType = user.isSeller ? 'seller' : 'user';
             ctrl.isSeller = user.isSeller;
+            $scope.firstName = user.firstName;
+
             ctrl.renderNavbar(userType);
           }
         })

@@ -1,5 +1,5 @@
 const app = angular.module("myApp", ["ui.router", "ui.bootstrap"]);
-app.controller("appCtrl", function($scope, $rootScope, ToastService, AuthService, RouteProtection, SocketService) {
+app.controller("appCtrl", function($scope, $rootScope, ToastService, AuthService, AuthService, SocketService) {
     /**
      * Initializes the application
      * Fetches the logged-in user and updates the root scope
@@ -7,7 +7,7 @@ app.controller("appCtrl", function($scope, $rootScope, ToastService, AuthService
      * @returns {Promise<void>}
      */
     $scope.init = async function() {
-        RouteProtection.getLoggedinUser().then((user)=>{
+        AuthService.getLoggedinUser().then((user)=>{
             $rootScope.isLogged = true;
             if(user.isAdmin){
                 $rootScope.adminLogged = true;

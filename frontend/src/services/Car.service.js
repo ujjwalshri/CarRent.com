@@ -10,23 +10,24 @@
 angular.module('myApp').service('CarService', function($http, ApiService, $q) {
     /*
     function to get all approved cars
-    @params search, price, city, category, skip
+    @params search, sortBy, city, category, fuelType, skip
     @returns promise
     */
     /**
      * Get All Approved Cars
-     * Retrieves approved vehicles with optional filtering and pagination support
+     * Retrieves approved vehicles with optional filtering, sorting, and pagination support
      * 
      * @param {string} search - Optional search term for vehicle name/company
-     * @param {string} price - Optional price range filter
+     * @param {string} sortBy - Optional sorting parameter
      * @param {string} city - Optional city filter
      * @param {string} category - Optional vehicle category filter (SUV, Sedan, etc.)
+     * @param {string} fuelType - Optional fuel type filter (Petrol, Diesel, etc.)
      * @param {number} skip - Number of records to skip for pagination
      * @returns {Promise} Promise resolving to the vehicles data or error
      */
-    this.getAllApprovedCars = (search, price, city,category, skip)=>{
+    this.getAllApprovedCars = (search, sortBy, city, category, fuelType, skip)=>{
         let deferred = $q.defer();
-        $http.get(`${ApiService.baseURL}/api/vehicle/allApprovedVehicles?search=${search===undefined?'':search}&priceRange=${price}&city=${city}&category=${category}&skip=${skip}`, { withCredentials: true })
+        $http.get(`${ApiService.baseURL}/api/vehicle/allApprovedVehicles?search=${search===undefined?'':search}&sortBy=${sortBy}&city=${city}&category=${category}&skip=${skip}&fuelType=${fuelType}`, { withCredentials: true })
         .then((res)=>{
             deferred.resolve(res);
         })
@@ -226,21 +227,24 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
      * Updates a vehicle's status to 'rejected' (admin function)
      * 
      * @param {string} carId - The unique identifier of the vehicle to reject
+     * @param {string} rejectionReason - The reason for rejecting the vehicle
      * @returns {Promise} Promise resolving to confirmation or error
      */
-    this.rejectCar= (carId)=>{
+    this.rejectCar = (carId, rejectionReason) => {
+        console.log(carId, rejectionReason);
         let deferred = $q.defer();
-        $http.patch(`${ApiService.baseURL}/api/vehicle/toggleVehicleStatus/${carId}`,{
-           vehicleStatus: 'rejected'
-        },{ withCredentials: true })
-        .then((res)=>{
-            deferred.resolve(`car rejected successfully`);
+        $http.patch(`${ApiService.baseURL}/api/vehicle/toggleVehicleStatus/${carId}`, {
+            vehicleStatus: 'rejected',
+            rejectionReason: rejectionReason
+        }, { withCredentials: true })
+        .then((res) => {
+            deferred.resolve(res.data);
         })
-        .catch(err=>{
-            deferred.reject(`Error rejecting car ${err}`);
-        })
+        .catch(err => {
+            deferred.reject(err.data ? err.data.message : 'Error rejecting car');
+        });
         return deferred.promise;
-    }
+    };
     /*
     function to delete a car
     @params carId
@@ -365,7 +369,7 @@ angular.module('myApp').service('CarService', function($http, ApiService, $q) {
      * 
      * @returns {Promise} Promise resolving to the car categories or error
      */
-    this.getAllCarCategoriesForAdmin = ()=>{
+    this.getAllCarCategories = ()=>{
         let deferred = $q.defer();
         $http.get(`${ApiService.baseURL}/api/admin/getAllCarCategories`, { withCredentials: true })
         .then((res)=>{

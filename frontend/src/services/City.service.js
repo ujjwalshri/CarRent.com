@@ -6,7 +6,7 @@ angular.module("myApp").service("City", function($http) {
     */
     this.getCities = function() {
         return [
-            "Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", 
+            "Mumbai", "Delhi", "Bengaluru", "Hyderabad", "Chennai", 
             "Kolkata", "Pune", "Ahmedabad", "Jaipur", "Surat", 
             "Lucknow", "Kanpur", "Nagpur", "Indore", "Thane", 
             "Bhopal", "Visakhapatnam", "Patna", "Vadodara", "Ghaziabad", 

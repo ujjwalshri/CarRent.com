@@ -19,10 +19,10 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q, $timeout)
      * @param {Array} images - Array of image URLs for the car
      * @returns {Car} - New Car instance
      */
-    function Car(carName, company, carModel, category, carPrice, mileage, color, fuelType,location, city, images, registrationNumber) {
+    function Car(carName, company, carModel, category, carPrice, mileage, color, fuelType, city, images, registrationNumber) {
         // Ensure the function is called with 'new' operator
         if (!(this instanceof Car)) {
-            return new Car(carName, company, carModel, category, carPrice, mileage, color, fuelType,location, city, images, registrationNumber);
+            return new Car(carName, company, carModel, category, carPrice, mileage, color, fuelType, city, images, registrationNumber);
         }
 
         // Initialize car properties
@@ -34,7 +34,6 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q, $timeout)
         this.mileage = mileage? mileage : null;
         this.color = color ? color.trim() : null;
         this.fuelType = fuelType? fuelType : null;
-        this.location = location ? location.trim() : null;
         this.city = city ? city : null;
         this.images = Array.isArray(images) ? images : [];
         this.registrationNumber = registrationNumber ? registrationNumber : null;
@@ -80,9 +79,7 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q, $timeout)
         if (!this.fuelType || typeof this.fuelType !== 'string') {
             return "Fuel type is required and must be a string.";
         }
-        if(this.location && typeof this.location !== 'string'){
-            return "Location is required and must be a string.";
-        }
+
         if (!this.city || typeof this.city !== 'string') {
             return "City is required and must be a string.";
         }
@@ -155,7 +152,7 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q, $timeout)
             // Create new car instance with provided data
             var car = new Car(
                 data.name, data.company, data.modelYear, data.category,
-                data.price, data.mileage, data.color, data.fuelType, data.location, data.city, data.vehicleImages, data.registrationNumber
+                data.price, data.mileage, data.color, data.fuelType, data.city, data.vehicleImages, data.registrationNumber
             );
             
             console.log("Created car object:", car);
@@ -222,11 +219,7 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q, $timeout)
             'Gasoline',
             'Electric',
         ],
-        locationTypes: [
-            'Local',
-            'Outstation',
-        ],
-
+        
     
 
         /**

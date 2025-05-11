@@ -15,7 +15,7 @@ const conversationSchema = new mongoose.Schema(
            type: String,
            default: "",
         },
-        sender:{
+        creator:{
             _id:{
                 type: mongoose.Schema.Types.ObjectId,
                 required:true
@@ -41,6 +41,22 @@ const conversationSchema = new mongoose.Schema(
             modelYear: {
                 type: Number,
                 required: true,
+            },
+            image: {
+                type: Object,
+                required: true,
+            },
+            fuelType :{
+                type: String,
+                required: true,
+            },
+            category:{
+                type:String,
+                required:true
+            },
+            city:{
+                type:String,
+                required:true
             }
         },  
         },

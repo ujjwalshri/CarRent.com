@@ -8,7 +8,7 @@ import Vehicle from "../models/vehicle.model.js";
 import Bidding from "../models/bidding.model.js";
 import Review from "../models/review.model.js";
 import { getCachedData, setCachedData } from "../services/redis.service.js";
-import { Types } from "mongoose";
+import { pipelines } from "../utils/analyticsPipelines/sellerAnalytics.pipelines.js";
 
 
 /**
@@ -21,968 +21,13 @@ const handleResponse = (res, status, data) => {
         return res.status(status).json(data);
 };
 
-const kilometersLimit = 300;
-const finePerKilometer = 10;
-// Pipeline Definitions
-const pipelines = {
-    carDescription: (userId, startDate, endDate) => ([
-        {
-            $match: {
-                'owner._id': userId,
-                status: "approved",
-                createdAt: {
-                    $gte: new Date(startDate),
-                    $lte: new Date(endDate)
-                }
-            }
-        },
-        {
-           $project : {
-               category : 1
-           }
-        },
-        {
-            $group: {
-                _id: "$category",
-                count: { $sum: 1 }
-            }
-        }
-    ]),
 
-    negativeReviews: (userId, startDate, endDate) => ( // reviews having ratings less than 3
-        [
-            {
-                $match : {
-                    createdAt: {
-                        $gte: new Date(startDate),
-                        $lte: new Date(endDate)
-                    }
-            }
-            },
-            { $match: { "owner._id": userId, rating: { $lt: 3 } } },
-            { $count: "negativeCount" }
-        ]
-    ),
-
-    totalReviews: (userId) => (
-        [
-            {
-                $match: {
-                    createdAt: {
-                        $gte: new Date(startDate),
-                        $lte: new Date(endDate)
-                    }
-                }
-            },
-            
-            { $match: { "owner._id": userId } },
-            { $count: "totalCount" }
-        ]
-    ),
-
-    cityWiseBookings: (userId, startDate, endDate) => (
-        [
-            {
-                $match: {
-                    'owner._id' : userId,
-                    status : { $in: ["approved", "started", "ended", "reviewed"] },
-                    startDate : {
-                        $gte: new Date(startDate),
-                        $lte: new Date(endDate)
-                    }
-                }
-            },
-            {
-              $project : {
-                vehicle : 1
-              }
-            },
-            {
-                $group: {
-                    _id: "$vehicle.city",
-                    count: { $sum: 1 }
-                }
-            }
-        ]
-    ),
-    totalRevenue: (userId, startDate, endDate) => ([
-        {
-            $match: {
-                "owner._id": userId,
-                status: { $in: ["ended", "reviewed"] },
-                    endDate: {
-                        $gte: new Date(startDate),
-                        $lte: new Date(endDate)
-                    }
-            }
-        },
-        {
-            $addFields: {
-                numberOfDays: {
-                    $ceil: {
-                        $divide: [
-                            { $subtract: ["$endDate", "$startDate"] },
-                            1000 * 60 * 60 * 24 
-                        ]
-                    }
-                },
-                kilometersDriven: {
-                    $subtract: ["$endOdometerValue", "$startOdometerValue"]
-                }
-            }
-        },
-        {
-            $addFields: {
-                baseAmount: { $multiply: ["$amount", { $add: ["$numberOfDays", 1] }] },
-                excessKilometers: {
-                    $max: [
-                        { $subtract: ["$kilometersDriven", kilometersLimit] },
-                        0
-                    ]
-                }
-            }
-        },
-        {
-            $addFields: {
-                fine: {
-                    $multiply: ["$excessKilometers", finePerKilometer]
-                },
-                totalBookingRevenue: {
-                    $add: [
-                        "$baseAmount",
-                        { $multiply: [
-                            { $max: [
-                                { $subtract: ["$kilometersDriven", kilometersLimit] },
-                                0
-                            ]},
-                            10
-                        ]}
-                    ]
-                }
-            }
-        },
-        {
-            $group: {
-                _id: null,
-                totalRevenue: { $sum: "$totalBookingRevenue" },
-                totalFineCollected: { $sum: "$fine" },
-                totalBookings: { $sum: 1 },
-                averageRevenue: { $avg: "$totalBookingRevenue" }
-            }
-        }
-    ]),
-
-    popularCars: (userId, startDate, endDate) => ([ // getting cars with most bidings 
-        {
-            $match: {
-                'owner._id': userId,
-                createdAt: {
-                    $gte: new Date(startDate),
-                    $lte: new Date(endDate)
-                }
-            }
-        },
-        {
-        $project: { 
-            vehicle: {
-                company: { $toLower: "$vehicle.company" },
-                name: { $toLower: "$vehicle.name" },
-                modelYear: "$vehicle.modelYear"
-            }
-        }
-    },
-        {
-            $group: {
-                _id: { $concat: ["$vehicle.company", " ", "$vehicle.name", " ", { "$toString": "$vehicle.modelYear" }] },
-                count: { $sum: 1 }
-            }
-        },
-        {
-            $sort: { count: -1 }
-        },
-        {
-            $limit: 3
-        }
-    ]),
-
-    // Performance Analytics Pipelines
-    carWiseBookings: (userId, startDate, endDate) => ([
-        {
-            $match: {
-                'owner._id': userId,
-                status: { $in: ["approved", "started", "ended", "reviewed"] },
-                startDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
-            }
-        },
-        {
-           $project : {
-                vehicle : {
-                     company: { $toLower: "$vehicle.company" },
-                     name: { $toLower: "$vehicle.name" },
-                     modelYear: "$vehicle.modelYear"
-                }
-              }
-        },
-        {
-            $group: {
-                _id: { $concat: ["$vehicle.company", " ", "$vehicle.name", " ", { "$toString": "$vehicle.modelYear" }] },
-                count: { $sum: 1 }
-            }
-        }
-    ]),
-    repeatingCustomersPercentage: (userId, startDate, endDate) => (
-        [
-            {
-              $match: {
-                'owner._id': userId,
-                 status: { $in: ['approved', 'started', 'ended', 'reviewed'] },
-                 startDate: { $gte: new Date(startDate), $lte: new Date(endDate) },
-              },
-            },
-            {
-               $project: {
-                from: {
-                    username: "$from.username",
-                    _id: "$from._id",
-                },
-            }
-        },
-            {
-              $group: {
-                _id: '$from.username',
-                count: { $sum: 1 },
-              },
-            },
-            {
-              $group: {
-                _id: null,
-                totalUniqueCustomers: { $sum: 1 },
-                repeatingCustomers: {
-                  $sum: {
-                    $cond: [{ $gt: ['$count', 1] }, 1, 0],
-                  },
-                },
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                totalUniqueCustomers: 1,
-                repeatingCustomers: 1,
-                repeatingCustomerPercentage: {
-                  $cond: [
-                    { $gt: ['$totalUniqueCustomers', 0] },
-                    {
-                      $multiply: [
-                        { $divide: ['$repeatingCustomers', '$totalUniqueCustomers'] },
-                        100,
-                      ],
-                    },
-                    0,
-                  ],
-                },
-              },
-            },
-          ]
-    ),
- 
-   
-    negativeReviews: (userId, startDate, endDate) => ([ //  aggregation pipeline for getting the negative reviews for a seller grouped by vehicle names
-        {
-            $match: {
-                rating: { $lt: 3 },
-                'owner._id': userId,
-                createdAt: {
-                    $gte: new Date(startDate),
-                    $lte: new Date(endDate)
-                }
-            }
-        },
-        {
-            $group: {
-                _id: {
-                    $concat: [
-                        { "$toLower": "$vehicle.company" },
-                        " ",
-                        { "$toLower": "$vehicle.name" },
-                        " ",
-                        { "$toString": "$vehicle.modelYear" }
-                    ]
-                },
-                count: { $sum: 1 }
-            }
-        }
-    ]),
-
-    sellerBids: (userId, startDate, endDate) => (
-        [
-            {
-                $match: {
-                    createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
-                    'owner._id': userId,
-                },
-            },
-            {
-                $group: {
-                    _id: null,
-                    totalBids: { $sum: 1 },
-                },
-            },
-        ]
-    ),
-    otherSellersAvgBids: (userId, startDate, endDate) => ([
-        {
-            $match: {
-                createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
-                'owner._id': { $ne: userId },
-            },
-        },
-        {
-            $group: {
-                _id: "$owner._id",
-                totalBids: { $sum: 1 },
-            },
-        },
-        {
-            $group: {
-                _id: null,
-                avgBids: { $avg: "$totalBids" },
-            },
-        },
-        {
-            $project: {
-                _id: 0,
-                avgBids: 1,
-            },
-        },
-    ]),
-    
-    myEarningVsOtherSellersAvgEarnings: (userId, startDate, endDate) => ([
-        {
-            $facet: {
-                myEarnings: [
-                    {
-                        $match: {
-                            'owner._id': userId,
-                            status: { $in: ["ended", "reviewed"] },
-                            endDate: {
-                                $gte: new Date(startDate),
-                                $lte: new Date(endDate)
-                            }
-                        }
-                    },
-                    {
-                        $addFields: {
-                            bookingDays: {
-                                $divide: [
-                                    { $subtract: ["$endDate", "$startDate"] },
-                                    1000 * 60 * 60 * 24
-                                ]
-                            },
-                            exceededKmCharge: {
-                                $multiply: [
-                                    {
-                                        $max: [
-                                            0,
-                                            { $subtract: [{ $subtract: ["$endOdometerValue", "$startOdometerValue"] }, kilometersLimit] }
-                                        ]
-                                    },
-                                    finePerKilometer
-                                ]
-                            }
-                        }
-                    },
-                    {
-                        $group: {
-                            _id: null,
-                            totalRevenue: {
-                                $sum: {
-                                    $add: [
-                                        {
-                                            "$multiply": [
-                                                { "$add": ["$bookingDays", 1] },
-                                                "$amount"
-                                            ]
-                                        },
-                                        "$exceededKmCharge"
-                                    ]
-                                }
-                            }
-                        }
-                    }
-                ],
-                otherSellersEarnings: [
-                    {
-                        $match: {
-                            'owner._id': { $ne: userId },
-                            status: { $in: ["ended", "reviewed"] },
-                            endDate: {
-                                $gte: new Date(startDate),
-                                $lte: new Date(endDate)
-                            }
-                        }
-                    },
-                    {
-                        $addFields: {
-                            bookingDays: {
-                                $divide: [
-                                    { $subtract: ["$endDate", "$startDate"] },
-                                    1000 * 60 * 60 * 24
-                                ]
-                            },
-                            exceededKmCharge: {
-                                $multiply: [
-                                    {
-                                        $max: [
-                                            0,
-                                            { $subtract: [{ $subtract: ["$endOdometerValue", "$startOdometerValue"] }, kilometersLimit] }
-                                        ]
-                                    },
-                                    finePerKilometer
-                                ]
-                            }
-                        }
-                    },
-                    {
-                        $group: {
-                            _id: "$owner._id",
-                            sellerRevenue: {
-                                $sum: {
-                                    $add: [
-                                        {
-                                            "$multiply": [
-                                                { "$add": ["$bookingDays", 1] },
-                                                "$amount"
-                                            ]
-                                        },
-                                        "$exceededKmCharge"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    {
-                        $group: {
-                            _id: null,
-                            avgRevenue: { $avg: "$sellerRevenue" }
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            $project: {
-                _id: 0,
-                myEarnings: { $ifNull: [{ $arrayElemAt: ["$myEarnings.totalRevenue", 0] }, 0] },
-                otherSellersAvgEarnings: { $ifNull: [{ $arrayElemAt: ["$otherSellersEarnings.avgRevenue", 0] }, 0] }
-            }
-        }
-    ]),
-    
-    topEarningCars: (userId, startDate, endDate) => ([ // getting top 3 most earning cars
-        {
-            $match: {
-                'owner._id': userId,
-                status: { $in: ["ended", "reviewed"] },
-                endDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
-            }
-        },
-        {
-            $addFields: {
-                bookingDays: {
-                    $divide: [
-                        { $subtract: ["$endDate", "$startDate"] },
-                        1000 * 60 * 60 * 24
-                    ]
-                },
-                exceededKm: {
-                    $max: [
-                        0,
-                        { $subtract: ["$endOdometerValue", "$startOdometerValue"] }
-                    ]
-                },
-                exceededKmCharge: {
-                    $multiply: [
-                        {
-                            $max: [
-                                0,
-                                { $subtract: [{ $subtract: ["$endOdometerValue", "$startOdometerValue"] }, kilometersLimit] }
-                            ]
-                        },
-                        finePerKilometer
-                    ]
-                }
-            }
-        },
-        {
-            $group: {
-                _id: {
-                    $concat: [
-                        "$vehicle.company",
-                        " ",
-                        { $toLower: "$vehicle.name" },
-                        " ",
-                        { "$toString": { "$ifNull": ["$vehicle.modelYear", ""] } }
-                      ]
-                },
-                totalRevenue: {
-                    $sum: {
-                        $add: [
-                            {
-                                "$multiply": [
-                                    { "$add": ["$bookingDays", 1] },
-                                    "$amount"
-                                ]
-                            },
-                            "$exceededKmCharge"
-                        ]
-                    }
-                }
-            }
-        },
-        { $sort: { totalRevenue: -1 } },
-        { $limit: 3 }
-    ]),
-
-    // Booking Analytics Pipelines
-    peakHours: (userId, startDate, endDate) => ([
-        {
-            $match: {
-                'owner._id': userId,
-                status: { $in: ["pending", "approved", "started", "ended", "reviewed"] },
-                createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
-            }
-        },
-        {
-            $group: {
-                _id: {
-                    $hour: {
-                        date: "$createdAt",
-                        timezone: "Asia/Kolkata" // timezone for india
-                    }
-                },
-                count: { $sum: 1 }
-            }
-        },
-        {
-            $sort: { _id: 1 } // sort by hour
-        },
-        {
-            $project: {
-                hour: "$_id",
-                count: 1,
-                _id: 0
-            }
-        }
-    ]),
-
-    monthlyBookings: (userId, startDate, endDate) => ([
-        {
-            $match: {
-                'owner._id': userId,
-                status: { $in: ["approved", "started", "ended", "reviewed"] },
-                startDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
-            }
-        },
-        {
-            $group: {
-                _id: {
-                    $dateToString: { format: "%B", date: "$startDate" }
-                },
-                count: { $sum: 1 }
-            }
-        },
-        {
-            $sort: { _id: 1 }
-        }
-    ]),
-
-    topCustomers: (userId, startDate, endDate) => ([
-        {
-            $match: {
-                'owner._id': userId,
-                status: { $in: ["approved", "started", "ended", "reviewed"] },
-                startDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
-            }
-        },
-        {
-            $group: {
-                _id: "$from.username",
-                count: { $sum: 1 }
-            }
-        },
-        {
-            $sort: { count: -1 }
-        },
-        {
-            $limit: 3
-        }
-    ]),
-    averageRentalDuration: (userId, startDate, endDate) => ([
-        {
-            $match: {
-                'owner._id': userId,
-                status : { $in: ["approved", "started", "ended", "reviewed"] },
-                startDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
-            }
-        },
-        {
-            $project: {
-                startDate: 1,
-                endDate: 1
-            }
-        },
-        {
-            $addFields: {
-                bookingDays: {
-                    $add: [
-                        {
-                            $divide: [
-                                { $subtract: ["$endDate", "$startDate"] },
-                                1000 * 60 * 60 * 24
-                            ]
-                        },
-                        1
-                    ]
-                }
-            }
-        },
-        {
-            $group: {
-                _id: null,
-                averageRentalDuration: { $avg: "$bookingDays" }
-            }
-        }
-    ]),
-    totalRevenueByAddons: (userId, startDate, endDate) => ([
-        {
-            $match: {
-                'owner._id': userId,
-                status: { $in: ["approved", "started", "ended", "reviewed"] },
-                endDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
-            }
-        },
-        {
-            $project: {
-                selectedAddons: 1,
-            }
-        },
-        {
-            $unwind: "$selectedAddons"
-        },
-        {
-            $group: {
-                _id: "$selectedAddons",
-                totalAmount: { $sum: "$selectedAddons.price" }
-            }
-        }
-    ]),
-    averageBidCostPerRental: (userId, startDate, endDate) => ([
-        {
-            $match: {
-                'owner._id': userId,
-                status: { $in: ["approved", "started", "ended", "reviewed"] },
-                createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
-            }
-        },
-        {
-            $project: {
-                amount: 1
-            }
-        },
-        {
-            $group: {
-                _id: null,
-                averageCostPerRental: { $avg: "$amount" }
-            }
-        }
-    ]),
-    averageBookingPayment: (userId, startDate, endDate) => ([
-        {
-            $match: {
-                'owner._id': userId,
-                status: { $in: ["ended", "reviewed"] },
-                endDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
-            }
-        },
-        {
-            $addFields: {
-                // Calculate number of days (endDate - startDate + 1)
-                numberOfDays: {
-                    $add: [
-                        {
-                            $dateDiff: {
-                                startDate: "$startDate",
-                                endDate: "$endDate",
-                                unit: "day"
-                            }
-                        },
-                        1
-                    ]
-                },
-                // Calculate extra kilometers charge if applicable
-                extraKmCharge: {
-                    $cond: {
-                        if: {
-                            $gt: [
-                                { $subtract: ["$endOdometerValue", "$startOdometerValue"] },
-                                300
-                            ]
-                        },
-                        then: {
-                            $multiply: [
-                                { 
-                                    $subtract: [
-                                        { $subtract: ["$endOdometerValue", "$startOdometerValue"] },
-                                        300
-                                    ]
-                                },
-                                10 // $10 per extra km
-                            ]
-                        },
-                        else: 0
-                    }
-                },
-                // Calculate total addons amount
-                addonsTotal: {
-                    $reduce: {
-                        input: "$selectedAddons",
-                        initialValue: 0,
-                        in: { $add: ["$$value", "$$this.price"] }
-                    }
-                }
-            }
-        },
-        {
-            $addFields: {
-                // Calculate total payment for each booking
-                totalPayment: {
-                    $add: [
-                        { $multiply: ["$amount", "$numberOfDays"] }, // Base amount * days
-                        "$extraKmCharge", // Extra km charges
-                        "$addonsTotal" // Addons total
-                    ]
-                }
-            }
-        },
-        {
-            $group: {
-                _id: null,
-                averageBookingPayment: { $avg: "$totalPayment" },
-                totalBookings: { $sum: 1 },
-                totalRevenue: { $sum: "$totalPayment" }
-            }
-        },
-        {
-            $project: {
-                _id: 0,
-                averageBookingPayment: { $round: ["$averageBookingPayment", 2] },
-                totalBookings: 1,
-                totalRevenue: { $round: ["$totalRevenue", 2] }
-            }
-        }
-    ]),
-    selectedAddonsCount : (userId, startDate, endDate)=> ([
-        {
-            $match: {
-                'owner._id': userId,
-                status: { $in: ["approved", "started", "ended", "reviewed"] },
-                startDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
-            }
-        },
-        {
-            $project: {
-                selectedAddons: 1
-            }
-        },
-        {
-            $unwind: "$selectedAddons"
-        },
-        {
-            $group: {
-                _id: "$selectedAddons.name", 
-                count: { $sum: 1 }
-            }
-        },
-        {
-            $sort: { count: -1 }
-        },
-        {
-            $limit: 5
-        }
-    ]),
-    sellerRating: (sellerId) => ([
-        {
-          $match: {
-            'owner._id': { $exists: true, $eq: new Types.ObjectId(String(sellerId)) }
-          }
-        },
-        {
-          $group: {
-            _id: null,
-            averageRating: { $avg: "$rating" }
-          }
-        }
-      ])
-      ,
-      topCitiesWithMostNegativeReviews: (sellerId, startDate, endDate) => ([
-        {
-          $match: {
-            'owner._id': { $exists: true, $eq: new Types.ObjectId(String(sellerId)) },
-            createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
-            rating: { $lt: 3 } 
-          }
-        },
-        {
-          $project: {
-            city: "$vehicle.city",
-            createdAt: 1
-          }
-        },
-        {
-          $project: {
-            city: 1,
-            createdAt: {
-              $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } 
-            }
-          }
-        },
-        {
-          $group: {
-            _id: { city: "$city", date: "$createdAt" }, 
-            count: { $sum: 1 }  
-          }
-        },
-        {
-          $group: {
-            _id: "$_id.city",  
-            reviewCounts: {
-              $push: { 
-                date: "$_id.date", 
-                count: "$count" 
-              }
-            }
-          }
-        },
-        {
-          $sort: { count: -1 }
-        },
-        {
-          $limit: 5 
-        }
-      ]),
-      cityWiseEarnings: (userId, startDate, endDate) => ([
-        {
-            $match: {
-                'owner._id': userId,
-                status: { $in: ["ended", "reviewed"] },
-                endDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
-            }
-        },
-        {
-            $addFields: {
-                bookingDays: {
-                    $divide: [
-                        { $subtract: ["$endDate", "$startDate"] },
-                        1000 * 60 * 60 * 24
-                    ]
-                },
-                exceededKm: {
-                    $max: [
-                        0,
-                        { $subtract: ["$endOdometerValue", "$startOdometerValue"] }
-                    ]
-                },
-                exceededKmCharge: {
-                    $multiply: [
-                        {
-                            $max: [
-                                0,
-                                { $subtract: [{ $subtract: ["$endOdometerValue", "$startOdometerValue"] }, kilometersLimit] }
-                            ]
-                        },
-                        finePerKilometer
-                    ]
-                }
-            }
-        },
-        {
-            $group: {
-                _id: "$vehicle.city",
-                totalRevenue: {
-                    $sum: {
-                        $add: [
-                            {
-                                "$multiply": [
-                                    { "$add": ["$bookingDays", 1] },
-                                    "$amount"
-                                ]
-                            },
-                            "$exceededKmCharge"
-                        ]
-                    }
-                }
-            }
-        },
-        { $sort: { totalRevenue: -1 } },
-        { $limit: 10 }
-    ]),
-    priceRangeBookings: (userId, startDate, endDate) => ([
-        {
-          $match: {
-            'owner._id': userId,
-            status: { $in: ["approved", "started", "ended", "reviewed"] },
-            startDate: { $gte: new Date(startDate), $lte: new Date(endDate) },
-            'vehicle.price': { $ne: null }
-          }
-        },
-        {
-          $addFields: {
-            price: "$vehicle.price"
-          }
-        },
-        {
-          $addFields: {
-            priceBucketStart: {
-              $multiply: [{ $floor: { $divide: ["$price", 1000] } }, 1000]
-            }
-          }
-        },
-        {
-          $addFields: {
-            priceBucketEnd: { $add: ["$priceBucketStart", 1000] }
-          }
-        },
-        {
-          $group: {
-            _id: {
-              start: "$priceBucketStart",
-              end: "$priceBucketEnd"
-            },
-            count: { $sum: 1 }
-          }
-        },
-        {
-          $project: {
-            _id: 0,
-            priceRange: {
-              $concat: [
-                { $toString: "$_id.start" },
-                "-",
-                { $toString: "$_id.end" }
-              ]
-            },
-            count: 1
-          }
-        },
-        {
-          $sort: { priceRange: 1 }
-        }
-      ])
-      
-};
-
-// Individual API Endpoints for Overview Analytics
+/**
+ * @description Get the total revenue for a seller within a date range
+ * @param {*} req - The request object
+ * @param {*} res - The response object
+ * @returns {Object} The total revenue data
+ */
 export const getTotalRevenue = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
@@ -992,12 +37,13 @@ export const getTotalRevenue = async (req, res) => {
     }
 
     const cacheKey = `seller-revenue-${userId}-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
-    if (cachedData) {
-        return handleResponse(res, 200, cachedData);
-    }
+   
 
     try {
+        const cachedData = await getCachedData(cacheKey);
+        if (cachedData) {
+            return handleResponse(res, 200, cachedData);
+        }
         const revenueData = await Bidding.aggregate(pipelines.totalRevenue(userId, startDate, endDate));
         const result = revenueData[0] || { 
             totalRevenue: 0, 
@@ -1013,6 +59,18 @@ export const getTotalRevenue = async (req, res) => {
     }
 };
 
+
+/**
+ * @description Get the car description for a seller within a date range
+ * @param {Object} req - The request object
+ * @param {Object} req.user - The authenticated user
+ * @param {string} req.user._id - The user id
+ * @param {Object} req.query - The query parameters
+ * @param {string} req.query.startDate - The start date
+ * @param {string} req.query.endDate - The end date
+ * @param {Object} res - The response object
+ * @returns {Object} The car description data
+ */
 export const getCarDescription = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
@@ -1022,12 +80,13 @@ export const getCarDescription = async (req, res) => {
     }
 
     const cacheKey = `seller-car-description-${userId}-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
+    
+
+    try {
+        const cachedData = await getCachedData(cacheKey);
     if (cachedData) {
         return handleResponse(res, 200, cachedData);
     }
-
-    try {
         const carDescriptionData = await Vehicle.aggregate(pipelines.carDescription(userId, startDate, endDate));
         await setCachedData(cacheKey, carDescriptionData);
         return handleResponse(res, 200, carDescriptionData);
@@ -1037,6 +96,13 @@ export const getCarDescription = async (req, res) => {
     }
 };
 
+
+/**
+ * @description Get the popular cars for a seller within a date range
+ * @param {*} req returns the request object
+ * @param {*} res returns the response object
+ * @returns {Object} The popular cars data
+ */
 export const getPopularCars = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
@@ -1046,12 +112,13 @@ export const getPopularCars = async (req, res) => {
     }
 
     const cacheKey = `seller-popular-cars-${userId}-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
-    if (cachedData) {
-        return handleResponse(res, 200, cachedData);
-    }
+   
 
     try {
+        const cachedData = await getCachedData(cacheKey);
+        if (cachedData) {
+            return handleResponse(res, 200, cachedData);
+        }
         const popularCarsData = await Bidding.aggregate(pipelines.popularCars(userId, startDate, endDate));
         await setCachedData(cacheKey, popularCarsData);
         return handleResponse(res, 200, popularCarsData);
@@ -1061,7 +128,12 @@ export const getPopularCars = async (req, res) => {
     }
 };
 
-// Individual API Endpoints for Performance Analytics
+/**
+ * function to get the car wise bookings for a seller
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the car wise bookings for a seller
+ */
 export const getCarWiseBookings = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
@@ -1071,12 +143,13 @@ export const getCarWiseBookings = async (req, res) => {
     }
 
     const cacheKey = `seller-car-wise-bookings-${userId}-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
+    
+
+    try {
+        const cachedData = await getCachedData(cacheKey);
     if (cachedData) {
         return handleResponse(res, 200, cachedData);
     }
-
-    try {
         const carWiseBookingsData = await Bidding.aggregate(pipelines.carWiseBookings(userId, startDate, endDate));
         await setCachedData(cacheKey, carWiseBookingsData);
         return handleResponse(res, 200, carWiseBookingsData);
@@ -1086,6 +159,13 @@ export const getCarWiseBookings = async (req, res) => {
     }
 };
 
+
+/**
+ * function to get the negative reviews for a seller
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the negative reviews for a seller
+ */
 export const getNegativeReviews = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
@@ -1110,6 +190,13 @@ export const getNegativeReviews = async (req, res) => {
     }
 };
 
+
+/**
+ * function to get the top earning cars for a seller
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the top earning cars for a seller
+ */
 export const getTopEarningCars = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
@@ -1119,12 +206,13 @@ export const getTopEarningCars = async (req, res) => {
     }
 
     const cacheKey = `seller-top-earning-cars-${userId}-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
-    if (cachedData) {
-        return handleResponse(res, 200, cachedData);
-    }
+   
 
     try {
+        const cachedData = await getCachedData(cacheKey);
+        if (cachedData) {
+            return handleResponse(res, 200, cachedData);
+        }
         const topEarningCarsData = await Bidding.aggregate(pipelines.topEarningCars(userId, startDate, endDate));
         await setCachedData(cacheKey, topEarningCarsData);
         return handleResponse(res, 200, topEarningCarsData);
@@ -1134,7 +222,12 @@ export const getTopEarningCars = async (req, res) => {
     }
 };
 
-// Individual API Endpoints for Booking Analytics
+/**
+ * function to get the peak bidding hours for a seller
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the peak bidding hours for a seller
+ */
 export const getPeakHours = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
@@ -1144,12 +237,13 @@ export const getPeakHours = async (req, res) => {
     }
 
     const cacheKey = `seller-peak-hours-${userId}-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
+    
+
+    try {
+        const cachedData = await getCachedData(cacheKey);
     if (cachedData) {
         return handleResponse(res, 200, cachedData);
     }
-
-    try {
         const peakHoursData = await Bidding.aggregate(pipelines.peakHours(userId, startDate, endDate));
         const result = {
             data: Array.from({ length: 24 }, (_, i) => {
@@ -1166,6 +260,13 @@ export const getPeakHours = async (req, res) => {
     }
 };
 
+
+/**
+ * function to get the monthly bookings for a seller
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the monthly bookings for a seller
+ */
 export const getMonthlyBookings = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
@@ -1175,12 +276,13 @@ export const getMonthlyBookings = async (req, res) => {
     }
 
     const cacheKey = `seller-monthly-bookings-${userId}-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
+    
+
+    try {
+        const cachedData = await getCachedData(cacheKey);
     if (cachedData) {
         return handleResponse(res, 200, cachedData);
     }
-
-    try {
         const monthlyBookingsData = await Bidding.aggregate(pipelines.monthlyBookings(userId, startDate, endDate));
         await setCachedData(cacheKey, monthlyBookingsData);
         return handleResponse(res, 200, monthlyBookingsData);
@@ -1190,6 +292,13 @@ export const getMonthlyBookings = async (req, res) => {
     }
 };
 
+
+/**
+ * function to get the top customers for a seller
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the top customers for a seller
+ */
 export const getTopCustomers = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
@@ -1199,12 +308,13 @@ export const getTopCustomers = async (req, res) => {
     }
 
     const cacheKey = `seller-top-customers-${userId}-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
-    if (cachedData) {
-        return handleResponse(res, 200, cachedData);
-    }
+   
 
     try {
+        const cachedData = await getCachedData(cacheKey);
+        if (cachedData) {
+            return handleResponse(res, 200, cachedData);
+        }
         const topCustomersData = await Bidding.aggregate(pipelines.topCustomers(userId, startDate, endDate));
         await setCachedData(cacheKey, topCustomersData);
         return handleResponse(res, 200, topCustomersData);
@@ -1214,6 +324,12 @@ export const getTopCustomers = async (req, res) => {
     }
 };
 
+/**
+ * function to get the average rental duration for a seller
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the average rental duration for a seller
+ */
 export const getAverageRentalDuration = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
@@ -1223,12 +339,13 @@ export const getAverageRentalDuration = async (req, res) => {
     }
 
     const cacheKey = `seller-avg-rental-duration-${userId}-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
+    
+    try {
+        const cachedData = await getCachedData(cacheKey);
     if (cachedData) {
         return handleResponse(res, 200, cachedData);
     }
 
-    try {
         const avgRentalDurationData = await Bidding.aggregate(pipelines.averageRentalDuration(userId, startDate, endDate));
         await setCachedData(cacheKey, avgRentalDurationData);
         return handleResponse(res, 200, avgRentalDurationData);
@@ -1238,6 +355,13 @@ export const getAverageRentalDuration = async (req, res) => {
     }
 };
 
+
+/**
+ * function to get the repeating customers percentage for a seller
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the repeating customers percentage for a seller
+ */
 export const getRepeatingCustomersPercentage = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
@@ -1247,12 +371,13 @@ export const getRepeatingCustomersPercentage = async (req, res) => {
     }
 
     const cacheKey = `seller-repeating-customers-${userId}-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
-    if (cachedData) {
-        return handleResponse(res, 200, cachedData);
-    }
+  
 
     try {
+        const cachedData = await getCachedData(cacheKey);
+        if (cachedData) {
+            return handleResponse(res, 200, cachedData);
+        }
         const repeatingCustomersData = await Bidding.aggregate(pipelines.repeatingCustomersPercentage(userId, startDate, endDate));
         await setCachedData(cacheKey, repeatingCustomersData);
         return handleResponse(res, 200, repeatingCustomersData);
@@ -1262,6 +387,13 @@ export const getRepeatingCustomersPercentage = async (req, res) => {
     }
 };
 
+
+/**
+ * function to get the city wise bookings for a seller
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the city wise bookings for a seller
+ */
 export const getCityWiseBookings = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
@@ -1271,12 +403,13 @@ export const getCityWiseBookings = async (req, res) => {
     }
 
     const cacheKey = `seller-city-wise-bookings-${userId}-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
-    if (cachedData) {
-        return handleResponse(res, 200, cachedData);
-    }
+  
 
     try {
+        const cachedData = await getCachedData(cacheKey);
+        if (cachedData) {
+            return handleResponse(res, 200, cachedData);
+        }
         const cityWiseBookingsData = await Bidding.aggregate(pipelines.cityWiseBookings(userId, startDate, endDate));
         await setCachedData(cacheKey, cityWiseBookingsData);
         return handleResponse(res, 200, cityWiseBookingsData);
@@ -1286,7 +419,12 @@ export const getCityWiseBookings = async (req, res) => {
     }
 };
 
-// Individual API Endpoints for Comparison Analytics
+/**
+ * function to get the bidding comparison for a seller
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the bidding comparison for a seller
+ */
 export const getBiddingComparison = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
@@ -1296,12 +434,13 @@ export const getBiddingComparison = async (req, res) => {
     }
 
     const cacheKey = `seller-bidding-comparison-${userId}-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
-    if (cachedData) {
-        return handleResponse(res, 200, cachedData);
-    }
+   
 
     try {
+        const cachedData = await getCachedData(cacheKey);
+        if (cachedData) {
+            return handleResponse(res, 200, cachedData);
+        }
         const [myBidsData] = await Bidding.aggregate(pipelines.sellerBids(userId, startDate, endDate));
         const [otherSellersData] = await Bidding.aggregate(pipelines.otherSellersAvgBids(userId, startDate, endDate));
 
@@ -1318,6 +457,13 @@ export const getBiddingComparison = async (req, res) => {
     }
 };
 
+
+/**
+ * function to get the earning comparison for a seller
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the earning comparison for a seller
+ */
 export const getEarningComparison = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
@@ -1327,12 +473,13 @@ export const getEarningComparison = async (req, res) => {
     }
 
     const cacheKey = `seller-earning-comparison-${userId}-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
-    if (cachedData) {
-        return handleResponse(res, 200, cachedData);
-    }
+   
 
     try {
+        const cachedData = await getCachedData(cacheKey);
+        if (cachedData) {
+            return handleResponse(res, 200, cachedData);
+        }
         const [comparisonData] = await Bidding.aggregate(pipelines.myEarningVsOtherSellersAvgEarnings(userId, startDate, endDate));
         
         const result = {
@@ -1348,7 +495,12 @@ export const getEarningComparison = async (req, res) => {
     }
 };
 
-
+/**
+ * function to get the total revenue by addons for a seller
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the total revenue by addons for a seller
+ */
 export const getTotalRevenueByAddons = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
@@ -1358,12 +510,13 @@ export const getTotalRevenueByAddons = async (req, res) => {
     }
 
     const cacheKey = `seller-total-revenue-by-addons-${userId}-${startDate}-${endDate}`; 
-    const cachedData = await getCachedData(cacheKey); 
-    if (cachedData) {
-        return handleResponse(res, 200, cachedData); 
-    }
+  
 
     try {
+        const cachedData = await getCachedData(cacheKey); 
+        if (cachedData) {
+            return handleResponse(res, 200, cachedData); 
+        }
         const totalRevenueByAddonsData = await Bidding.aggregate(pipelines.totalRevenueByAddons(userId, startDate, endDate));
         await setCachedData(cacheKey, totalRevenueByAddonsData);
         return handleResponse(res, 200, totalRevenueByAddonsData);
@@ -1392,12 +545,13 @@ export const getAverageBidCostPerRental = async (req, res) => {
     }
 
     const cacheKey = `seller-average-cost-per-rental-${userId}-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
+    
+
+    try {
+        const cachedData = await getCachedData(cacheKey);
     if (cachedData) {
         return handleResponse(res, 200, cachedData);
     }
-
-    try {
         const averageCostPerRentalData = await Bidding.aggregate(pipelines.averageBidCostPerRental(userId, startDate, endDate));
         await setCachedData(cacheKey,    averageCostPerRentalData );
         return handleResponse(res, 200,   averageCostPerRentalData  );
@@ -1407,6 +561,12 @@ export const getAverageBidCostPerRental = async (req, res) => {
     }
 };
 
+/**
+ * function to get the average booking payment for a seller
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the average booking payment for a seller
+ */
 export const getAverageBookingPayment = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
@@ -1416,12 +576,13 @@ export const getAverageBookingPayment = async (req, res) => {
     }
 
     const cacheKey = `seller-average-booking-payment-${userId}-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
-    if (cachedData) {
-        return handleResponse(res, 200, cachedData);
-    }
+   
 
     try {
+        const cachedData = await getCachedData(cacheKey);
+        if (cachedData) {
+            return handleResponse(res, 200, cachedData);
+        }
         const averageBookingPaymentData = await Bidding.aggregate(pipelines.averageBookingPayment(userId, startDate, endDate));
         await setCachedData(cacheKey, averageBookingPaymentData);
         return handleResponse(res, 200, averageBookingPaymentData);
@@ -1431,6 +592,12 @@ export const getAverageBookingPayment = async (req, res) => {
     }
 };
 
+/**
+ * function to get the selected addons count for a seller
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the selected addons count for a seller
+ */
 export const getSelectedAddonsCount = async (req, res) => {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
@@ -1438,8 +605,13 @@ export const getSelectedAddonsCount = async (req, res) => {
     if (!startDate || !endDate) {
         return handleResponse(res, 400, { error: "startDate and endDate are required" });
     }
+    const cacheKey = `seller-selected-addons-count-${userId}-${startDate}-${endDate}`;
 
     try {
+        const cachedData = await getCachedData(cacheKey);
+        if (cachedData) {
+            return handleResponse(res, 200, cachedData);
+        }
         const selectedAddonsCountData = await Bidding.aggregate(pipelines.selectedAddonsCount(userId, startDate, endDate));
         return handleResponse(res, 200, selectedAddonsCountData);
     } catch (error) {
@@ -1483,7 +655,13 @@ export const topCitiesWithMostNegativeReviews = async (req, res)=>{
     if(!sellerId){
         return handleResponse(res, 400, {error: "sellerId is required"});
     }
+    const cacheKey = `top-cities-with-most-negative-reviews-${sellerId}-${startDate}-${endDate}`;
+  
     try {
+        const cachedData = await getCachedData(cacheKey);
+        if (cachedData) {
+            return handleResponse(res, 200, cachedData);
+        }
         const topCitiesWithMostNegativeReviewsData = await Review.aggregate(pipelines.topCitiesWithMostNegativeReviews(sellerId, startDate, endDate));
         return handleResponse(res, 200, topCitiesWithMostNegativeReviewsData );
     } catch (error) {
@@ -1506,11 +684,12 @@ export const cityWiseEarnings = async (req, res) => {
         return handleResponse(res, 400, { error: "startDate and endDate are required" });
     }
     const cacheKey = `seller-city-wise-earnings-${userId}-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
-    if (cachedData) {
-        return handleResponse(res, 200, cachedData);
-    }
+   
     try {
+        const cachedData = await getCachedData(cacheKey);
+        if (cachedData) {
+            return handleResponse(res, 200, cachedData);
+        }
         const cityWiseEarningsData = await Bidding.aggregate(pipelines.cityWiseEarnings(userId, startDate, endDate));
         await setCachedData(cacheKey, cityWiseEarningsData);
         return handleResponse(res, 200, cityWiseEarningsData);
@@ -1537,12 +716,13 @@ export const getPriceRangeAnalytics = async (req, res) => {
     }
 
     const cacheKey = `seller-price-range-analytics-${userId}-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
-    if (cachedData) {
-        return handleResponse(res, 200, cachedData);
-    }
+   
 
     try {
+        const cachedData = await getCachedData(cacheKey);
+        if (cachedData) {
+            return handleResponse(res, 200, cachedData);
+        }
         const priceRangeData = await Bidding.aggregate(pipelines.priceRangeBookings(userId, startDate, endDate));
         await setCachedData(cacheKey, priceRangeData);
         return handleResponse(res, 200, priceRangeData);

@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema(  
     {
-        conversation: {
+        conversationId: {
             type: Object,
             required: true,
         },

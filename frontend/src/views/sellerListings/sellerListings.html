@@ -1,0 +1,409 @@
+<div class="container-fluid" ng-init="init()">
+
+    <div class="row page-header" style=" color: rgb(9, 9, 9); border-radius: 0 0 4px 4px; margin-top: 0; padding: 14px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <div class="col-md-6">
+            <h2 style="margin: 0;">
+                <i class="glyphicon glyphicon-list-alt m-r-5"></i> Vehicle Listings
+                <small style="color: #060606; display: block; margin-top: 5px; font-size: 14px;">Manage your rental vehicles</small>
+            </h2>
+        </div>
+        <div class="col-md-6 text-right m-t-10">
+            <div class="btn-group m-b-10">
+                <button class="btn btn-primary btn-md" ng-click="openAddCarModal()">
+                    <i class="glyphicon glyphicon-plus"></i> Add Vehicle
+                </button>
+                <button class="btn btn-success btn-md" ng-click="openAddonsModal()">
+                    <i class="glyphicon glyphicon-cog"></i> Manage Add-ons
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 visible-xs visible-sm" style="margin-bottom: 15px;">
+            <button class="btn btn-default btn-block" data-toggle="collapse" data-target="#filterPanel" aria-expanded="false">
+                <i class="glyphicon glyphicon-filter"></i> Filters
+                <span class="caret"></span>
+            </button>
+        </div>
+
+        <div class="col-md-3">
+            <div id="filterPanel" class="panel panel-default collapse navbar-collapse" style="border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div class="panel-heading" style="background: linear-gradient(to right, #f5f5f5, #e8e8e8); border-bottom: 1px solid #ddd;">
+                    <h4 class="panel-title">
+                        <i class="glyphicon glyphicon-filter text-primary"></i> 
+                        Filter Options
+                    </h4>
+                </div>
+                <div class="panel-body">
+                    <h5><strong>Status Filter</strong></h5>
+                    <div class="btn-group btn-group-sm m-b-15 btn-group-justified" role="group" aria-label="Status Filter" uib-tooltip="Filter by approval status">
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-default" ng-click="showAll()" ng-class="{'active btn-info': activeButton === 'all'}">
+                                <i class="glyphicon glyphicon-th-list"></i> All
+                            </button>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-default" ng-click="showApproved()" ng-class="{'active btn-success': activeButton === 'approved'}">
+                                <i class="glyphicon glyphicon-ok"></i> Approved
+                            </button>
+                        </div>
+                    </div>
+                    
+                    
+                    <div class="btn-group btn-group-sm m-b-15 btn-group-justified">
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-default" ng-click="showPending()" ng-class="{'active btn-warning': activeButton === 'pending'}">
+                                <i class="glyphicon glyphicon-time"></i> Pending
+                            </button>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-default" ng-click="showRejected()" ng-class="{'active btn-danger': activeButton === 'rejected'}">
+                                <i class="glyphicon glyphicon-remove"></i> Rejected
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <div class="row m-b-15">
+                        <div class="col-md-12">
+                            <div class="input-group">
+                                <input type="text" class="form-control" 
+                                    placeholder="Search listings..." 
+                                    ng-model="search.searchQuery"
+                                    ng-change="searchCars()"
+                                    uib-tooltip="Search by car name, company or model">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-primary" type="button">
+                                        <i class="glyphicon glyphicon-search"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    
+                    <div class="form-group">
+                        <label><i class="glyphicon glyphicon-tag text-primary"></i> Category</label>
+                        <select class="form-control" ng-model="filters.category" ng-change="filterCars()" uib-tooltip="Filter by vehicle category">
+                            <option value="">All Categories</option>
+                            <option ng-repeat="cat in categories" value="{{cat.name}}">{{cat.name}}</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="glyphicon glyphicon-map-marker text-primary"></i> City</label>
+                        <select class="form-control" ng-model="filters.city" ng-change="filterCars()" uib-tooltip="Filter by city location">
+                            <option value="">All Cities</option>
+                            <option ng-repeat="cityOption in cities" value="{{cityOption}}">{{cityOption}}</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label><i class="glyphicon glyphicon-usd text-primary"></i> Price Range</label>
+                        <select class="form-control" ng-model="filters.priceRange" ng-change="filterCars()" uib-tooltip="Filter by price range">
+                            <option value="">All Prices</option>
+                            <option ng-repeat="priceRange in priceRanges" value="{{priceRange}}">{{priceRange}}</option>
+                        </select>
+                    </div>
+                    
+                    <button class="btn btn-default btn-block" ng-click="reset()" uib-tooltip="Clear all filters">
+                        <i class="glyphicon glyphicon-refresh"></i> Reset Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+
+            <!-- Replace the simple loading indicator with our skeleton loader -->
+            <div class="row" ng-show="loading && !userCars.length">
+                <div class="col-md-12">
+                    <loading-car-component count="6" columns="col-lg-4 col-md-6 col-sm-6"></loading-car-component>
+                </div>
+            </div>
+
+            <div class="row" ng-show="!loading && noListings">
+                <div class="col-md-8 col-md-offset-2">
+                    <div class="jumbotron text-center" style="background-color: #f9f9f9; border: 1px dashed #ddd;">
+                        <i class="glyphicon glyphicon-info-sign" style="font-size: 48px; color: #4a90e2;"></i>
+                        <h3>No Vehicle Listings Found</h3>
+                        <p class="lead">No vehicles match your current filter criteria.</p>
+                        <button class="btn btn-primary" ng-click="reset()">
+                            <i class="glyphicon glyphicon-refresh"></i> Clear Filters
+                        </button>
+                        <button class="btn btn-success" ng-click="openAddCarModal()">
+                            <i class="glyphicon glyphicon-plus"></i> Add Your First Vehicle
+                        </button>
+                    </div>
+                </div>
+            </div>
+    
+
+            <div class="row" ng-show="!loading">
+                <div ng-class="{'col-lg-4 col-md-6': true}" class="col-sm-6 m-b-20" ng-repeat="car in userCars">
+                    <div class="panel" ng-class="{
+                        'panel-success': car.status === 'approved',
+                        'panel-warning': car.status === 'pending',
+                        'panel-danger': car.status === 'rejected'
+                    }" style="border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.3s ease;">
+
+                        <div class="panel-heading clearfix" style="border-radius: 4px 4px 0 0; border-bottom: none;">
+                            <h4 class="panel-title pull-left">
+                                <strong>{{ car.company }}</strong> {{ car.name }}
+                                <small class="text-muted" style="display: block; font-size: 12px;">{{ car.modelYear }}</small>
+                            </h4>
+                            <span class="label pull-right" ng-class="{
+                                'label-success': car.status === 'approved',
+                                'label-warning': car.status === 'pending',
+                                'label-danger': car.status === 'rejected'
+                            }" style="margin-top: 5px;">{{ car.status | uppercase }}</span>
+                        </div>
+                        
+                        <div class="panel-body p-0">
+
+                            <div class="text-right" style="background-color: #f8f8f8; padding: 5px 10px; border-bottom: 1px solid #eee;">
+                                <h4 class="m-0 text-primary">
+                                    {{ car.price | currency:"₹" }} 
+                                    <small style="color: #777;">/day</small>
+                                </h4>
+                            </div>
+                            
+
+                            <div class="thumbnail m-b-0 b-0" style="cursor: pointer; margin: 0; padding: 0; border: none;">
+                                <div uib-carousel active="car.activeSlide" interval="5000" no-wrap="false" style="border-radius: 0;">
+                                    <div uib-slide ng-repeat="slide in car.vehicleImages track by $index" index="$index">
+                                        <img ng-src="{{slide.url}}" class="img-responsive center-block" 
+                                             style="height: 200px; width: 100%; object-fit: cover;" 
+                                             alt="{{car.company}} {{car.name}} Image">
+                                        <div class="carousel-caption" style="padding: 5px; background-color: rgba(0,0,0,0.5); bottom: 0; left: 0; right: 0;">
+                                            <p class="m-0">Photo {{$index+1}} of {{car.vehicleImages.length}}</p>
+                                        </div>
+                                    </div>
+
+                                    <div uib-slide ng-if="!car.vehicleImages || car.vehicleImages.length === 0">
+                                        <div style="height: 200px; background-color: #eee; display: flex; align-items: center; justify-content: center;">
+                                            <span class="glyphicon glyphicon-picture" style="font-size: 48px; color: #aaa;"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+
+                            <table class="table table-striped table-condensed m-b-0">
+                                <tbody>
+                                    <tr>
+                                        <td><i class="glyphicon glyphicon-tag text-muted"></i> Category</td>
+                                        <td class="text-right"><strong>{{ car.category }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="glyphicon glyphicon-map-marker text-muted"></i> City</td>
+                                        <td class="text-right"><strong>{{ car.city }}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="glyphicon glyphicon-dashboard text-muted"></i> Mileage</td>
+                                        <td class="text-right"><strong>{{ car.mileage }} km/l</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td><i class="glyphicon glyphicon-tint text-muted"></i> Fuel</td>
+                                        <td class="text-right"><strong>{{ car.fuelType }}</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+
+                        <div class="panel-footer text-center" style="background-color: #f9f9f9; border-radius: 0 0 4px 4px;">
+                            <div class="btn-group btn-group-justified">
+                                <div class="btn-group" ng-if="car.status === 'approved'">
+                                    <button class="btn btn-warning" ng-click="openPriceModal(car)" uib-tooltip="Update rental price">
+                                        <i class="glyphicon glyphicon-pencil"></i> Edit Price
+                                    </button>
+                                </div>
+                                <div class="btn-group" ng-if="car.status === 'approved'">
+                                    <button class="btn btn-info" ng-click="viewCarBookings(car)" uib-tooltip="View booking details">
+                                        <i class="glyphicon glyphicon-list"></i> Bookings
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    
+
+           
+    
+
+            <div class="row" ng-show="pagination.totalItems > 0">
+                <div class="col-md-12">
+                    <div class="panel panel-default" style="border-radius: 4px; margin-top: -15px;">
+                        <div class="panel-body text-center" style="padding-top: 10px; ">
+                            <ul uib-pagination
+                                total-items="pagination.totalItems"
+                                ng-model="pagination.currentPage"
+                                max-size="pagination.maxSize"
+                                class="pagination pagination-sm m-0"
+                                boundary-links="true"
+                                force-ellipses="true"
+                                items-per-page="pagination.itemsPerPage"
+                                ng-change="pageChanged()"
+                                first-text="&laquo;"
+                                last-text="&raquo;"
+                                previous-text="&lsaquo;"
+                                next-text="&rsaquo;"
+                                direction-links="true">
+                            </ul>
+                            <p class="text-muted small m-t-5">Page {{pagination.currentPage}} of {{pagination.totalPages}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="text/ng-template" id="priceModal.html">
+        <div class="modal-header bg-primary" style="border-radius: 4px 4px 0 0;">
+            <button type="button" class="close" ng-click="cancel()" style="color: white;">&times;</button>
+            <h4 class="modal-title text-white">
+                <i class="glyphicon glyphicon-tag"></i> Update Vehicle Price
+            </h4>
+        </div>
+        <div class="modal-body">
+            <div class="row">
+                <div class="col-sm-4 text-center">
+                    <img ng-src="{{selectedCar.vehicleImages[0].url}}" 
+                         class="img-thumbnail" 
+                         style="max-height: 100px; margin-bottom: 10px;" 
+                         alt="{{selectedCar.company}} {{selectedCar.name}}">
+                    <h5 class="text-primary"><strong>{{selectedCar.company}} {{selectedCar.name}}</strong></h5>
+                </div>
+                <div class="col-sm-8">
+                    <form class="form-horizontal" name="priceForm">
+                        <div class="form-group" ng-class="{'has-error': priceForm.newPrice.$invalid && priceForm.newPrice.$dirty}">
+                            <label for="newPrice" class="col-sm-6 control-label">New Daily Rate (₹)</label>
+                            <div class="col-sm-6">
+                                <div class="input-group">
+                                    <span class="input-group-addon">₹</span>
+                                    <input type="number" 
+                                           id="newPrice" 
+                                           name="newPrice"
+                                           class="form-control" 
+                                           placeholder="Enter new price" 
+                                           ng-model="selectedCarPrice.price"
+                                           min="1" 
+                                           required>
+                                </div>
+                                <p class="help-block text-danger" ng-show="priceForm.newPrice.$error.min">
+                                    Price cannot be negative or zero
+                                </p>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-default" ng-click="cancel()">
+                <i class="glyphicon glyphicon-remove"></i> Cancel
+            </button>
+            <button class="btn btn-primary" ng-click="updatePrice()" ng-disabled="priceForm.$invalid">
+                <i class="glyphicon glyphicon-ok"></i> Save Changes
+            </button>
+        </div>
+    </script>
+</div>
+
+<style>
+
+.bg-primary { background-color: #337ab7; color: white; }
+.bg-gray-lighter { background-color: #f9f9f9; }
+.text-white { color: white !important; }
+
+
+.m-0 { margin: 0 !important; }
+.m-t-5 { margin-top: 5px !important; }
+.m-t-10 { margin-top: 10px !important; }
+.m-t-15 { margin-top: 15px !important; }
+.m-t-20 { margin-top: 20px !important; }
+.m-r-5 { margin-right: 5px !important; }
+.m-b-0 { margin-bottom: 0 !important; }
+.m-b-10 { margin-bottom: 10px !important; }
+.m-b-15 { margin-bottom: 15px !important; }
+.m-b-20 { margin-bottom: 20px !important; }
+.p-0 { padding: 0 !important; }
+.b-0 { border: 0 !important; }
+
+
+.panel:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+
+.btn-group-justified .btn {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.btn-group .btn.active {
+    font-weight: bold;
+    box-shadow: inset 0 3px 5px rgba(0,0,0,0.125);
+}
+
+
+.carousel-control {
+    background-image: none !important;
+    opacity: 0.5;
+    filter: alpha(opacity=50);
+}
+.carousel-control:hover {
+    opacity: 0.9;
+    filter: alpha(opacity=90);
+}
+
+
+.panel-heading .label {
+    font-size: 85%;
+    padding: 0.2em 0.6em;
+}
+
+
+.pagination {
+    margin: 0;
+}
+
+
+.col-md-3, .col-md-9, .col-md-12 {
+    transition: all 0.3s ease;
+}
+
+/* Mobile view styles for filter panel */
+@media (max-width: 991px) {
+    #filterPanel {
+        margin-bottom: 15px;
+    }
+    
+    #filterPanel.collapse {
+        display: none;
+    }
+    
+    #filterPanel.collapse.in {
+        display: block;
+    }
+    
+    .collapse-animate {
+        transition: height 0.3s ease;
+    }
+}
+
+/* Hide collapse button on desktop */
+@media (min-width: 992px) {
+    #filterPanel.collapse {
+        display: block !important;
+        height: auto !important;
+    }
+}
+</style>
+

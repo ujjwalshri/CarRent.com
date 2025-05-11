@@ -37,7 +37,7 @@ import crypto from 'crypto';
  * @returns {Object} JSON response with user details or error message
  */
 export const signupController = async (req, res) => {
-    const { username, password, firstName, lastName, email, city } = req.body;
+    const { username, password, firstName, lastName, email } = req.body;
     
     try {
         const salt = await bcrypt.genSalt(10);

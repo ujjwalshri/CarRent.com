@@ -29,7 +29,7 @@ import Vehicle from "../models/vehicle.model.js";
  * a new one. Emits a socket event to notify participants of the new conversation.
  */
 export const addConversationController = async(req,res)=>{
-    const sender = {
+    const creator = {
         _id : req.user._id,
         username: req.user.username,
     };
@@ -42,7 +42,7 @@ export const addConversationController = async(req,res)=>{
         // check for existing conversation if there is an existing conversation on that vehicle ID between the sender and the owner then return the conversation
         const existingConversation = await Conversation.findOne({
             $and: [
-                { 'sender._id': sender._id },
+                { 'creator._id': creator._id },
                 { 'reciever._id': owner._id },
                 { 'vehicle._id': vehicleId }
             ]
@@ -51,12 +51,21 @@ export const addConversationController = async(req,res)=>{
             return res.status(200).json({existingConversation});
         }
 
-        const vehicle = await Vehicle.findById(vehicleId).select('_id name company modelYear location');
+        const vehicle = await Vehicle.findById(vehicleId).select('_id name company modelYear vehicleImages fuelType category city');
 
         
         const conversation = new Conversation({
-            sender,
-            vehicle: vehicle,
+            creator,
+            vehicle: {
+                _id: vehicle._id,
+                name: vehicle.name,
+                company: vehicle.company,
+                modelYear: vehicle.modelYear,
+                image: vehicle.vehicleImages[0],
+                fuelType: vehicle.fuelType,
+                category: vehicle.category,
+                city: vehicle.city
+            },
             reciever: {
                 _id: owner._id,
                 username: owner.username,
@@ -92,7 +101,7 @@ export const addConversationController = async(req,res)=>{
 export const getAllConversationsController = async(req, res)=>{
     const userId = req.user._id;
     try{
-        const conversations = await Conversation.find({$or: [{ 'sender._id': userId }, { 'reciever._id': userId }]});
+        const conversations = await Conversation.find({$or: [{ 'creator._id': userId }, { 'reciever._id': userId }]});
         return res.status(200).json({conversations});
     }catch(err){
         return res.status(500).json({message: "Internal server error"});
@@ -122,7 +131,7 @@ export const getAllConversationsAtCarIdController = async(req, res)=>{
         const conversations = await Conversation.find({
             $and: [
                 { $or: [
-                    { 'sender._id': req.user._id },
+                    { 'creator._id': req.user._id },
                     { 'reciever._id': req.user._id }
                 ] },
                 { 'vehicle._id': vehicleId }

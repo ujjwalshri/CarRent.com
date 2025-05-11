@@ -4,7 +4,6 @@ import joi from 'joi';
 export const createCarValidation = joi.object({
     name: joi.string().min(2).max(50).required(),
     company: joi.string().min(2).max(50).required(),
-    location: joi.string().min(2).max(50).required(),
     modelYear: joi.number().min(1886).max(new Date().getFullYear()+1).required(),
     price: joi.number().min(0).required(),
     color: joi.string().min(3).max(20).required(),

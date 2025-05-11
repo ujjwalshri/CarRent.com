@@ -87,6 +87,29 @@ this.registerUser = function(user) {
     return deffered.promise;
 };
 
+     /*
+   function to get all the loggedInUser details
+      @params none
+      @returns none
+   */
+      this.getLoggedinUser = ()=>{
+        let deferred = $q.defer();
+        $http.get(`${ApiService.baseURL}/api/auth/me`, { withCredentials: true })
+        .then((res)=>{
+           deferred.resolve(res.data);
+        })
+        .catch(err=>{
+           deferred.reject("Error fetching user");
+        })
+        return deferred.promise;
+  }
+
+    /**
+     * Resend verification email
+     * @param {string} email - The email address to resend the verification email to
+     * @returns promise
+     */
+
    this.resendVerificationEmail = function(email) {
         let deffered = $q.defer();
         $http.post(`${ApiService.baseURL}/api/auth/resendVerificationEmail`, { email: email }, { withCredentials: true })

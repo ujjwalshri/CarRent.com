@@ -5,19 +5,11 @@ import Tax from '../models/taxes.model.js';
 import {sendInvoiceEmail, sendGenericEmail} from '../services/email.service.js';
 import validateBiddingData from '../validation/bid.validation.js';
 import dotenv from 'dotenv';
-import AWS from 'aws-sdk';
 import mongoose from 'mongoose';
 const { ObjectId } = mongoose.Types;
 import sqsProducerService from '../services/SQS.producer.service.js';
-
 dotenv.config();
-AWS.config.update({
-    accessKeyId: process.env.S3_ACCESS_KEY,
-    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
-    region: process.env.S3_BUCKET_REGION
-});
 
-const sqs = new AWS.SQS();
 
 /**
  * Add a Bid Controller
@@ -60,6 +52,10 @@ export const addBidController = async (req, res) => {
 
     if(startDate > endDate){
         return res.status(400).json({error: 'startDate cannot be greater than endDate'});
+    }
+
+    if(owner._id.toString() === req.user._id.toString()){
+        return res.status(400).json({error: 'You cannot bid on your own vehicle'});
     }
 
     try {
@@ -266,28 +262,72 @@ export const getBidForOwnerController = async (req, res) => {
  */
 export const getBidForUserController = async (req, res) => {
 
-    let { page = 1, limit = 10, sort = {}, status="pending" } = req.query;
+    let { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc', status="pending", search = "" } = req.query;
     const pageNumber = parseInt(page);
     const limitNumber = parseInt(limit);
-    let finalSort = { ...sort, createdAt: -1 };
+    
+    // Create the sort object based on sortBy and sortOrder
+    const finalSort = {};
+    finalSort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+    
+    // Add createdAt as a secondary sort if not already the primary sort
+    if (sortBy !== 'createdAt') {
+        finalSort.createdAt = -1;
+    }
+    
     const skip = (pageNumber - 1) * limitNumber;
     
     try{
+        // Base match stage
+        const matchStage = { 
+            "from._id": req.user._id, 
+            status 
+        };
+        
         const aggregationPipeline = [
-            { $match: { "from._id": req.user._id, status } },
-            {
-                $facet: {
-                    metadata: [
-                        { $count: "totalDocs" }
-                    ],
-                    data: [
-                        { $sort: finalSort },
-                        { $skip: skip },
-                        { $limit: limitNumber }
+            { $match: matchStage }
+        ];
+        
+        // Add search functionality if search parameter is provided
+        if (search && search.trim() !== '') {
+            aggregationPipeline.push({
+                $match: {
+                    $or: [
+                        { "vehicle.name": { $regex: search, $options: "i" } },
+                        { "vehicle.company": { $regex: search, $options: "i" } },
+                        { 
+                            $expr: { 
+                                $regexMatch: { 
+                                    input: { 
+                                        $concat: [
+                                            { $ifNull: ["$vehicle.company", ""] },
+                                            " ",
+                                            { $ifNull: ["$vehicle.name", ""] }
+                                        ]
+                                    },
+                                    regex: search,
+                                    options: "i" 
+                                }
+                            } 
+                        }
                     ]
                 }
+            });
+        }
+        
+        // Add facet stage for pagination and metadata
+        aggregationPipeline.push({
+            $facet: {
+                metadata: [
+                    { $count: "totalDocs" }
+                ],
+                data: [
+                    { $sort: finalSort },
+                    { $skip: skip },
+                    { $limit: limitNumber }
+                ]
             }
-        ];
+        });
 
         const [result] = await Bidding.aggregate(aggregationPipeline);
         return res.status(200).json({
@@ -378,19 +418,8 @@ export const getAllBookingsAtOwnerIdController = async (req, res) => {
 
         // Add car search query processing
         if (carSearchQuery && carSearchQuery.trim() !== '') {
-            aggregationPipeline.push({
-                $addFields: {
-                    combinedVehicle: {
-                        $concat: [
-                            { $ifNull: ["$vehicle.name", ""] },
-                            " ",
-                            { $ifNull: ["$vehicle.company", ""] }
-                        ]
-                    }
-                }
-            });
-            
-            aggregationPipeline.push({
+             // Add search functionality if search parameter is provided
+            aggregationPipeline.unshift({
                 $match: {
                     $or: [
                         { "vehicle.name": { $regex: carSearchQuery, $options: "i" } },
@@ -398,7 +427,13 @@ export const getAllBookingsAtOwnerIdController = async (req, res) => {
                         { 
                             $expr: { 
                                 $regexMatch: { 
-                                    input: "$combinedVehicle",
+                                    input: { 
+                                        $concat: [
+                                            { $ifNull: ["$vehicle.company", ""] },
+                                            " ",
+                                            { $ifNull: ["$vehicle.name", ""] }
+                                        ]
+                                    },
                                     regex: carSearchQuery,
                                     options: "i" 
                                 }
@@ -407,20 +442,7 @@ export const getAllBookingsAtOwnerIdController = async (req, res) => {
                     ]
                 }
             });
-        }
 
-        // Add username search query processing
-        if (usernameSearchQuery && usernameSearchQuery.trim() !== '') {
-            aggregationPipeline.push({
-                $match: {
-                    $or: [
-                        { "from.username": { $regex: usernameSearchQuery, $options: "i" } },
-                        { "from.firstName": { $regex: usernameSearchQuery, $options: "i" } },
-                        { "from.lastName": { $regex: usernameSearchQuery, $options: "i" } },
-                        { "from.email": { $regex: usernameSearchQuery, $options: "i" } }
-                    ]
-                }
-            });
         }
 
         // Add pagination and sorting
@@ -449,86 +471,7 @@ export const getAllBookingsAtOwnerIdController = async (req, res) => {
     }
 };
 
-/*
-    @description function to get the bookings by the user id
-    uses req.query for the query parameters and applies pagination and sorting to the results
-    return all the booking with status approved, started, ended at a particular user id
-*/  
-export const getAllBookingsAtUserIdController = async (req, res)=>{
-    let { page = 1, limit = 10, sort = {}, ownerName = '' } = req.query;
-     if(req.query.sort !== undefined){
-        let parsedSort;
-        try {
-            parsedSort = JSON.parse(sort);
-        } catch (err) {
-            console.log(`Error parsing sort parameter: ${err.message}`);
-            return res.status(400).json({ error: 'Invalid sort parameter' });
-        }
-        sort = parsedSort;
-     }
-    
-    const userId = req.user._id;
-    const pageNumber = parseInt(page);
-    const limitNumber = parseInt(limit);
-    let finalSort = { ...sort, createdAt: -1 };
-    const skip = (pageNumber - 1) * limitNumber;
-    try{
-        const aggregationPipeline = [
-            {
-                $match: {
-                    "from._id": userId,
-                    status: { $in: ['approved', 'started'] }
-                }
-            }
-        ];
 
-        // Add owner name search if provided
-        if (ownerName && ownerName.trim() !== '') {
-            aggregationPipeline.push({
-                $match: {
-                    $or: [
-                        { "owner.firstName": { $regex: ownerName, $options: "i" } },
-                        { "owner.lastName": { $regex: ownerName, $options: "i" } },
-                        { "owner.username": { $regex: ownerName, $options: "i" } },
-                        { "owner.email": { $regex: ownerName, $options: "i" } },
-                        { 
-                            $expr: { 
-                                $regexMatch: { 
-                                    input: { $concat: ["$owner.firstName", " ", "$owner.lastName"] },
-                                    regex: ownerName,
-                                    options: "i" 
-                                }
-                            } 
-                        }
-                    ]
-                }
-            });
-        }
-
-        // Add pagination and sorting
-        aggregationPipeline.push({
-            $facet: {
-                bookings: [
-                    { $sort: finalSort },
-                    { $skip: skip },
-                    { $limit: limitNumber }
-                ],
-                totalCount: [
-                    { $count: "count" }
-                ]
-            }
-        });
-
-        const result = await Bidding.aggregate(aggregationPipeline);
-        const bookings = result[0].bookings;
-        const totalDocs = result[0].totalCount[0]?.count || 0;
-
-        return res.status(200).json({ bookings, totalDocs });
-    }catch(err){
-        console.log(`error in the getAllBookingsAtUserIdController ${err.message}`);
-        return res.status(500).json({error: `error in the getAllBookingsAtUserIdController ${err.message}`});
-    }
-}
 /*
     @description function to get the bookings history for the logged in user
     uses req.query for the query parameters and applies pagination and sorting to the results
@@ -554,6 +497,9 @@ export const getUserBookingHistory = async (req, res) => {
     }
 
     try {
+          
+
+
         const aggregationPipeline = [
             {
                 $match: {
@@ -574,16 +520,9 @@ export const getUserBookingHistory = async (req, res) => {
                 }
             }
         ];
-       
-        if (search?.trim()) {
-            const combinedField = { 
-                $concat: [ 
-                    { $ifNull: ["$vehicle.name", ""] }, 
-                    " ", 
-                    { $ifNull: ["$vehicle.company", ""] } 
-                ] 
-            };
-        
+
+        // Add search functionality if search parameter is provided
+        if (search && search.trim() !== '') {
             aggregationPipeline.unshift({
                 $match: {
                     $or: [
@@ -592,7 +531,13 @@ export const getUserBookingHistory = async (req, res) => {
                         { 
                             $expr: { 
                                 $regexMatch: { 
-                                    input: combinedField,
+                                    input: { 
+                                        $concat: [
+                                            { $ifNull: ["$vehicle.company", ""] },
+                                            " ",
+                                            { $ifNull: ["$vehicle.name", ""] }
+                                        ]
+                                    },
                                     regex: search,
                                     options: "i" 
                                 }
@@ -603,9 +548,11 @@ export const getUserBookingHistory = async (req, res) => {
             });
         }
 
+       
+        
         const result = await Bidding.aggregate(aggregationPipeline);
-        const bookings = result[0].bookings || [];
-        const totalDocs = result[0].totalCount[0]?.count || 0;
+        const bookings = result[0]?.bookings || [];
+        const totalDocs = result[0]?.totalCount[0]?.count || 0;
 
         
         return res.status(200).json({ 

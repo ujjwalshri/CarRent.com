@@ -1,0 +1,604 @@
+<div class="filter-section" style="background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1494976388531-d1058494cdd8?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80'); background-size: cover; background-position: center; padding: 30px 0; margin-bottom: 40px;" ng-init="init()">
+    <div class="container-fluid" style="max-width: 1400px; margin: 0 auto;">
+
+
+        <div class="visible-xs visible-sm" style="margin-bottom: 15px;">
+            <button class="btn btn-default btn-block" data-toggle="collapse" data-target="#filterContent" aria-expanded="false">
+                <i class="glyphicon glyphicon-filter"></i> Filters
+                <span class="caret"></span>
+            </button>
+        </div>
+
+        <div id="filterContent" class="filter-container collapse navbar-collapse" style="background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 15px; padding: 25px;">
+            <div class="row" style="margin: 0 -10px;">
+
+                <div class="col-md-2 col-sm-6 col-xs-12 filter-col">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <span class="input-group-addon">
+                                <i class="glyphicon glyphicon-map-marker" style="color: white;"></i>
+                            </span>
+                            <select class="form-control custom-select filter-input" ng-model="city" ng-change="filterCars()">
+                                <option value="" disabled>Select City</option>
+                                <option ng-repeat="cityOption in cities" value="{{cityOption}}">{{cityOption}}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-sm-6 col-xs-12 filter-col">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <span class="input-group-addon">
+                                <i class="glyphicon glyphicon-tag" style="color: white;"></i>
+                            </span>
+                            <select class="form-control filter-input" ng-model="category" ng-change="filterCars()">
+                                <option value="">All Categories</option>
+                                <option ng-repeat="category in carCategories" value="{{category.name}}">{{category.name}}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-sm-6 col-xs-12 filter-col">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <span class="input-group-addon">
+                                <i class="glyphicon glyphicon-tint" style="color: white;"></i>
+                            </span>
+                            <select class="form-control filter-input" ng-model="fuelType" ng-change="filterCars()">
+                                <option value="">All Fuel Types</option>
+                                <option ng-repeat="type in fuelTypes" value="{{type}}">{{type}}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-sm-6 col-xs-12 filter-col">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <span class="input-group-addon">
+                                <i class="glyphicon glyphicon-sort" style="color: white;"></i>
+                            </span>
+                            <select class="form-control filter-input" ng-model="sortBy" ng-change="filterCars()">
+                                <option ng-repeat="option in sortOptions" value="{{option.value}}">{{option.label}}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-sm-6 col-xs-12 filter-col">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <span class="input-group-addon">
+                                <i class="glyphicon glyphicon-search" style="color: white;"></i>
+                            </span>
+                            <input type="text" ng-model="search" placeholder="Search for cars" ng-change="filterCarsWithDelay()"
+                                   class="form-control filter-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-sm-6 col-xs-12 filter-col">
+                    <button class="btn btn-default btn-block filter-btn" ng-click="resetFilters()" 
+                            ng-disabled="!city && !sortBy && !search && !category && !fuelType">
+                        <i class="glyphicon glyphicon-refresh"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container" style="margin-top: 40px; margin-bottom: 20px;">
+
+  <div ng-if="user && !user.isSeller && recommendedCarsGroups.length > 0 " style="margin-bottom: 40px;">
+    <h2 class="text-center" style="font-size: 28px; font-weight: 600; margin-bottom: 30px;">
+      <span style="color: #27ae60;">Top</span> Cars in {{ city || 'Delhi' }}
+      <div style="width: 50px; height: 3px; background: #27ae60; margin: 15px auto 0;"></div>
+    </h2>
+    
+    <div class="carousel-container" style="padding: 20px;">
+      <div uib-carousel active="active" interval="5000" no-wrap="false" style="margin-bottom: 10px;">
+        <div uib-slide ng-repeat="slideGroup in recommendedCarsGroups" index="$index">
+          <div class="row">
+            <div class="col-xs-12 col-sm-4" ng-repeat="car in slideGroup">
+              <div class="recommended-car-card" style="cursor: pointer; border-radius: 12px; overflow: hidden; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2); background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85)); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); height: 280px; margin-bottom: 15px; position: relative;" ng-click="redirectCarPage(car._id)">
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.05; background-image: radial-gradient(#000 1px, transparent 1px); background-size: 20px 20px;"></div>
+                <div style="height: 140px; position: relative; overflow: hidden;">
+                  <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(45deg, rgba(39,174,96,0.8), rgba(41,128,185,0.8));"></div>
+                  <img ng-src="{{car.vehicle.vehicleImages && car.vehicle.vehicleImages.length > 0 ? car.vehicle.vehicleImages[0].url : 'https://via.placeholder.com/300x200?text=No+Image'}}"
+                       style="width: 100%; height: 100%; object-fit: cover; opacity: 0.8;"
+                       alt="{{car.vehicle.company}} {{car.vehicle.name}}">
+                </div>
+                <div style="padding: 15px; position: relative;">
+                  <div ng-if="car.isPopular" style="position: absolute; top: -25px; right: 15px; background: #e74c3c; color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                    <i class="glyphicon glyphicon-fire"></i> Popular
+                  </div>
+                  <h4 style="color: #2c3e50; margin: 0 0 10px 0; font-weight: 700; font-size: 18px; line-height: 1.2;">
+                    {{car.vehicle.company}} {{car.vehicle.name}}
+                  </h4>
+                  <div style="color: #27ae60; font-size: 20px; font-weight: 700; margin-bottom: 15px;">
+                    {{car.vehicle.price | currency:"₹"}}
+                    <small style="color: #7f8c8d; font-size: 12px; font-weight: normal;">/day</small>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <div style="text-align: center; flex: 1; padding: 0 5px;">
+                      <i class="glyphicon glyphicon-map-marker" style="color: #3498db;"></i>
+                      <div style="font-size: 12px; color: #34495e; margin-top: 2px;">{{car.vehicle.city}}</div>
+                    </div>
+                    <div style="text-align: center; flex: 1; padding: 0 5px; border-left: 1px solid #eee; border-right: 1px solid #eee;">
+                      <i class="glyphicon glyphicon-dashboard" style="color: #3498db;"></i>
+                      <div style="font-size: 12px; color: #34495e; margin-top: 2px;">{{car.vehicle.mileage}} kmpl</div>
+                    </div>
+                    <div style="text-align: center; flex: 1; padding: 0 5px;">
+                      <i class="glyphicon glyphicon-tint" style="color: #3498db;"></i>
+                      <div style="font-size: 12px; color: #34495e; margin-top: 2px;">{{car.vehicle.fuelType}}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-xs-12" ng-if="loadingCars === false">
+      <h2 class="text-center" style="font-size: 28px; font-weight: 600; margin-bottom: 30px;" ng-if="allCars.length !== 0">Available Cars in {{ city ? city : "in all cities"}}</h2>
+    </div>
+  </div>
+
+  <!-- Replace the simple loading indicator with our new skeleton loader -->
+  <loading-car-component ng-if="loadingCars" count="6"></loading-car-component>
+
+  <!-- No cars found message -->
+  <div class="row" ng-if="!loadingCars && allCars.length === 0">
+    <div class="col-xs-12 text-center" style="padding: 40px 20px;">
+      <div style="max-width: 400px; margin: 0 auto;">
+        <span class="glyphicon glyphicon-search" style="font-size: 48px; color: #bdc3c7; margin-bottom: 20px; display: block;"></span>
+        <h3 style="color: #2c3e50; margin-bottom: 15px;">No Cars Found</h3>
+        <p style="color: #7f8c8d; margin-bottom: 20px;">We couldn't find any cars matching your current filters. Try adjusting your search criteria or removing some filters.</p>
+        <button class="btn btn-primary" ng-click="resetFilters()">
+          <span class="glyphicon glyphicon-refresh"></span> Reset Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" ng-if="!loadingCars">
+    <div class="col-md-4 col-sm-6" ng-repeat="car in allCars">
+      <div class="panel panel-default car-panel" ng-click="redirectCarPage(car._id)" style="margin-bottom: 20px; cursor: pointer; height: 600px; border-radius: 8px; overflow: hidden;">
+        <div class="panel-body" style="padding: 0; height: 100%;">
+          <div class="car-image-container" style="height: 220px; overflow: hidden; position: relative; background-color: #f5f5f5;">
+            <img ng-src="{{ car.vehicleImages[0].url }}" 
+                 alt="{{ car.carName }}"
+                 style="width: 100%; height: 100%; object-fit: cover; object-position: center;">
+            <span class="label label-danger" style="position: absolute; top: 10px; right: 10px;" ng-if="car.isPopular">
+                <span class="glyphicon glyphicon-fire"></span> Popular
+            </span>
+          </div>
+
+          <div class="car-details" style="padding: 15px; display: flex; flex-direction: column; height: calc(100% - 220px);">
+            <div class="car-header" style="border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px;">
+              <h4 class="text-primary" style="margin-top: 0; margin-bottom: 10px; font-size: 20px;">
+                  {{car.company}} {{ car.name }}
+                  <small class="text-muted">{{ car.modelYear }}</small>
+              </h4>
+              <div class="row">
+                  <div class="col-xs-7">
+                      <h3 class="price-tag" style="margin: 0; color: #2ecc71;">
+                          <strong>{{ car.price | currency:"₹" }}</strong>
+                          <small class="text-muted" style="font-size: 14px;">per day</small>
+                      </h3>
+                  </div>
+                  <div class="col-xs-5 text-right">
+                      <span class="label label-primary" style="font-size: 12px; padding: 5px 10px;">
+                          <span class="glyphicon glyphicon-tag"></span> {{car.category}}
+                      </span>
+                  </div>
+              </div>
+            </div>
+            
+            <div class="car-specs-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+              <div class="spec-item" style="background: #f8f9fa; padding: 8px; border-radius: 4px;">
+                  <span class="glyphicon glyphicon-map-marker text-primary"></span>
+                  <div style="display: inline-block; vertical-align: middle;">
+                      <small class="text-muted">Location</small>
+                      <div><strong>{{car.city}}</strong></div>
+                      <small ng-if="car.location!=='undefined'">{{car.location}}</small>
+                  </div>
+              </div>
+              <div class="spec-item" style="background: #f8f9fa; padding: 8px; border-radius: 4px;">
+                  <span class="glyphicon glyphicon-dashboard text-primary"></span>
+                  <div style="display: inline-block; vertical-align: middle;">
+                      <small class="text-muted">Mileage</small>
+                      <div><strong>{{car.mileage}} kmpl</strong></div>
+                  </div>
+              </div>
+              <div class="spec-item" style="background: #f8f9fa; padding: 8px; border-radius: 4px;">
+                  <span class="glyphicon glyphicon-tint text-primary"></span>
+                  <div style="display: inline-block; vertical-align: middle;">
+                      <small class="text-muted">Fuel Type</small>
+                      <div><strong>{{car.fuelType}}</strong></div>
+                  </div>
+              </div>
+              <div class="spec-item" style="background: #f8f9fa; padding: 8px; border-radius: 4px;">
+                  <span class="glyphicon glyphicon-record text-primary"></span>
+                  <div style="display: inline-block; vertical-align: middle;">
+                      <small class="text-muted">Color</small>
+                      <div>
+                          <strong style="vertical-align: middle;">{{car.color}}</strong>
+                          <span ng-attr-style="display: inline-block; width: 15px; height: 15px; border-radius: 50%; border: 1px solid #ccc; vertical-align: middle; margin-left: 5px; background-color: {{car.color}}"></span>
+                      </div>
+                  </div>
+              </div>
+            </div>
+
+            <div class="owner-info" style="background-color: #f8f9fa; padding: 10px; border-radius: 4px; border: 1px solid #eee; margin-top: auto;">
+              <div style="display: flex; align-items: center;">
+                  <div style="width: 40px; height: 40px; background-color: #e9ecef; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px;">
+                      <span class="glyphicon glyphicon-user" style="font-size: 20px; color: #6c757d;"></span>
+                  </div>
+                  <div>
+                      <small class="text-muted">{{car.owner.username}}</small>
+                  </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center" style="margin: 30px 0;" ng-if="hasMoreCars && !isLoading">
+    <button id="load-more-btn" class="btn btn-primary btn-lg" ng-click="loadMoreCars()" style="padding: 12px 30px; border-radius: 30px;">
+      Show More <span class="glyphicon glyphicon-chevron-down"></span>
+    </button>
+  </div>
+
+
+  <div class="text-center" ng-show="isLoading" style="margin: 10px 0;">
+    <span class="glyphicon glyphicon-refresh spin" style="font-size: 30px; color: #3498db; margin-bottom: 15px; display: block;"></span>
+    <p>Loading more cars...</p>
+  </div>
+</div>
+
+<div class="container-fluid" style="background: #2c3e50; padding: 40px 0; margin-top: 40px; color: white;">
+  <div class="container">
+    <div class="row">
+      <div class="col-xs-12 text-center" style="margin-bottom: 15px;">
+        <h3 style="font-size: 24px; font-weight: 600; margin-top: 0; margin-bottom: 5px;">Why Choose Us</h3>
+        <p class="text-muted" style="color: #bdc3c7; font-size: 14px;">The perfect car rental experience awaits you</p>
+      </div>
+    </div>
+    
+    <div class="row text-center">
+      <div class="col-md-4 col-sm-4 col-xs-12" style="margin-bottom: 15px;">
+        <div style="padding: 10px;">
+          <span class="glyphicon glyphicon-thumbs-up" style="font-size: 22px; color: #3498db; margin-bottom: 8px; display: block;"></span>
+          <h4 style="margin: 0 0 5px 0; font-size: 16px; font-weight: 600;">Quality Vehicles</h4>
+          <p style="color: #bdc3c7; font-size: 12px; margin: 0;">Well-maintained and regularly serviced</p>
+        </div>
+      </div>
+      <div class="col-md-4 col-sm-4 col-xs-12" style="margin-bottom: 15px;">
+        <div style="padding: 10px;">
+          <span class="glyphicon glyphicon-usd" style="font-size: 22px; color: #2ecc71; margin-bottom: 8px; display: block;"></span>
+          <h4 style="margin: 0 0 5px 0; font-size: 16px; font-weight: 600;">Best Prices</h4>
+          <p style="color: #bdc3c7; font-size: 12px; margin: 0;">No hidden charges, great value</p>
+        </div>
+      </div>
+      <div class="col-md-4 col-sm-4 col-xs-12" style="margin-bottom: 15px;">
+        <div style="padding: 10px;">
+          <span class="glyphicon glyphicon-time" style="font-size: 22px; color: #e74c3c; margin-bottom: 8px; display: block;"></span>
+          <h4 style="margin: 0 0 5px 0; font-size: 16px; font-weight: 600;">24/7 Support</h4>
+          <p style="color: #bdc3c7; font-size: 12px; margin: 0;">Always available to help you</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.car-panel {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid #ddd;
+    margin-bottom: 20px;
+    background: white;
+}
+
+.car-panel:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.car-details h4 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.spin {
+    -webkit-animation: spin 1s infinite linear;
+    animation: spin 1s infinite linear;
+}
+
+@-webkit-keyframes spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Enhanced responsive styles */
+@media (max-width: 767px) {
+    .hero-section {
+        min-height: 400px !important;
+        padding: 30px 0 50px 0 !important;
+    }
+    
+    .hero-section h1 {
+        font-size: 32px !important;
+    }
+    
+    .hero-section p {
+        font-size: 16px !important;
+        padding: 0 15px;
+    }
+    
+    .carousel-container {
+        padding: 10px !important;
+    }
+    
+    .recommended-car-panel {
+        height: auto !important;
+        margin-bottom: 15px !important;
+    }
+    
+    .car-panel {
+        height: auto !important;
+        min-height: 450px;
+    }
+    
+    .car-image-container {
+        height: 180px !important;
+    }
+    
+    .car-details {
+        height: auto !important;
+    }
+    
+    .car-specs-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .filter-container .panel-body {
+        padding: 15px !important;
+    }
+    
+    .panel-heading {
+        padding: 10px !important;
+    }
+    
+    .btn {
+        white-space: normal;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .hero-section {
+        min-height: 450px !important;
+    }
+    
+    .car-panel {
+        height: 550px !important;
+    }
+    
+    .car-image-container {
+        height: 200px !important;
+    }
+}
+
+/* Additional responsive utilities */
+.img-responsive {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+.text-ellipsis {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Fix for panels on small screens */
+.panel-body {
+    word-wrap: break-word;
+}
+
+/* Custom select styling for filters */
+.filter-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    position: relative;
+    padding-right: 30px !important;
+}
+
+.input-group {
+    position: relative;
+}
+
+.input-group::after {
+    content: "\e114"; /* Bootstrap glyphicon-chevron-down Unicode */
+    font-family: 'Glyphicons Halflings';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: white;
+    z-index: 1;
+    pointer-events: none;
+    font-size: 12px;
+}
+
+/* Remove default arrow in IE */
+.filter-input::-ms-expand {
+    display: none;
+}
+
+.filter-input:focus {
+    outline: none;
+    border-color: rgba(255,255,255,0.5);
+}
+
+/* Remove default arrow in IE */
+.filter-input::-ms-expand {
+    display: none;
+}
+
+/* Fix for buttons on small screens */
+@media (max-width: 767px) {
+    .btn {
+        margin-bottom: 5px;
+    }
+    
+    .btn-lg {
+        font-size: 16px;
+        padding: 8px 16px !important;
+    }
+    
+    .form-group {
+        margin-bottom: 10px;
+    }
+    
+    .col-xs-12, .col-sm-6, .col-md-4 {
+        padding-bottom: 10px;
+    }
+}
+
+.filter-section {
+    position: relative;
+    z-index: 1;
+}
+
+.filter-container {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.filter-col {
+    padding: 0 10px;
+}
+
+.filter-input {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    height: 42px;
+}
+
+.filter-input::placeholder {
+    color: rgba(255,255,255,0.7);
+}
+
+.filter-input:focus {
+    background: rgba(255,255,255,0.3);
+    color: white;
+    border-color: rgba(255,255,255,0.5);
+}
+
+.filter-btn {
+    height: 42px;
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.filter-btn:hover:not(:disabled) {
+    background: rgba(255,255,255,0.3);
+    color: white;
+}
+
+.filter-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.input-group-addon {
+    background: transparent !important;
+    border: none !important;
+    color: white;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+/* Responsive styles */
+@media (max-width: 767px) {
+    .filter-section {
+        padding: 15px 0;
+    }
+
+    .filter-container {
+        padding: 15px;
+    }
+
+    .filter-col {
+        margin-bottom: 10px;
+    }
+
+    .form-group {
+        margin-bottom: 10px;
+    }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+    .filter-col {
+        margin-bottom: 15px;
+    }
+}
+
+/* Mobile styles for filter section */
+@media (max-width: 991px) {
+    .filter-section {
+        padding: 15px 0;
+    }
+
+    #filterContent.collapse {
+        display: none;
+    }
+
+    #filterContent.collapse.in {
+        display: block;
+    }
+
+    .collapse-animate {
+        transition: height 0.3s ease;
+    }
+
+    .filter-container {
+        margin-top: 10px;
+    }
+}
+
+/* Desktop styles - always show filters */
+@media (min-width: 992px) {
+    #filterContent.collapse {
+        display: block !important;
+        height: auto !important;
+    }
+
+    /* Hide toggle button on desktop */
+    .filter-toggle {
+        display: none;
+    }
+}
+</style>

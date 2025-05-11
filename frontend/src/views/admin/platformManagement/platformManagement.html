@@ -1,0 +1,633 @@
+<div class="admin-page-container" style="padding-top: 20px;">
+    <div class="container-fluid" ng-init="init()">
+        <loading-component is-loading="isLoading" loading-text="Loading Platform Management..."></loading-component>
+        
+
+        <div class="row text-center">
+            <div class="col-md-12">
+                <div class="page-header">
+                    <h2><i class="glyphicon glyphicon-dashboard "></i> Platform Management Dashboard</h2>
+                </div>
+            </div>
+        </div>
+        
+        <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" ng-class="{'active': activeTab === 'generalSettings'}">
+                <a href="javascript:void(0);" ng-click="setActiveTab('generalSettings')">
+                    <i class="glyphicon glyphicon-cog"></i> General Settings
+                </a>
+            </li>
+            <li role="presentation" ng-class="{'active': activeTab === 'taxesManagement'}">
+                <a href="javascript:void(0);" ng-click="setActiveTab('taxesManagement')">
+                    <i class="glyphicon glyphicon-usd"></i> Taxes Management
+                </a>
+            </li>
+            <li role="presentation" ng-class="{'active': activeTab === 'carApproval'}">
+                <a href="javascript:void(0);" ng-click="setActiveTab('carApproval')">
+                    <i class="glyphicon glyphicon-check"></i> Car Approvals 
+                    <span class="badge" ng-if="cars.length > 0">{{pagination.totalItems}}</span>
+                </a>
+            </li>
+        </ul>
+
+
+        <div class="tab-content" style="padding-top: 20px;">
+
+            <div ng-show="activeTab === 'generalSettings'" class="tab-pane-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="panel panel-primary">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">
+                                    <i class="glyphicon glyphicon-tag"></i> Car Categories
+                                </h3>
+                            </div>
+                            <div class="panel-body">
+                                <form ng-submit="addCarCategory()" class="form-horizontal">
+                                    <div class="form-group">
+                                        <label for="categoryInput" class="control-label col-sm-3">Category:</label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <input type="text" 
+                                                    class="form-control" 
+                                                    id="categoryInput"
+                                                    ng-model="carCategory" 
+                                                    placeholder="Enter category (e.g., SUV, Sedan)"
+                                                    ng-maxlength="50"
+                                                    ng-minlength="3"
+                                                    autocomplete="off">
+                                                <span class="input-group-btn">
+                                                    <button type="submit" 
+                                                            class="btn btn-success" 
+                                                            ng-disabled="categoryError || !carCategory">
+                                                        <i class="glyphicon glyphicon-plus"></i> Add
+                                                    </button>
+                                                </span>
+                                            </div>
+                                            <span class="help-block small" ng-if="categoryError">
+                                                <span class="text-danger">
+                                                    <i class="glyphicon glyphicon-warning-sign"></i> {{categoryError}}
+                                                </span>
+                                            </span>
+                                            <span class="help-block small" ng-if="!categoryError && carCategory">
+                                                <span class="text-success">
+                                                    <i class="glyphicon glyphicon-ok"></i> Valid category name
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </form>
+
+                                <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                                    <table class="table table-striped table-hover table-condensed">
+                                        <thead>
+                                            <tr>
+                                                <th>Category Name</th>
+
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr ng-repeat="category in carCategories">
+                                                <td><span class="label label-info">{{category.name}}</span></td>
+                                            
+                                            </tr>
+                                            <tr ng-if="!carCategories || carCategories.length === 0">
+                                                <td colspan="2" class="text-center">
+                                                    <em>No categories available.</em>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+
+                        <div class="panel panel-primary">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">
+                                    <i class="glyphicon glyphicon-usd"></i> Price Range
+                                </h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <form ng-submit="addPriceRange()" class="form-horizontal">
+                                            <div class="form-group">
+                                                <label class="control-label col-sm-4">Min Price :</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon">₹</span>
+                                                        <input type="number" 
+                                                            class="form-control input-sm" 
+                                                            ng-model="priceRange.min" 
+                                                            placeholder="Min price"
+                                                            min="0"
+                                                            required>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="control-label col-sm-4">Max Price :</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon">₹</span>
+                                                        <input type="number" 
+                                                            class="form-control input-sm" 
+                                                            ng-model="priceRange.max" 
+                                                            placeholder="Max price"
+                                                            min="{{priceRange.min}}"
+                                                            required>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <div class="col-sm-offset-4 col-sm-8">
+                                                    <button type="submit" 
+                                                            class="btn btn-sm btn-primary"
+                                                            ng-disabled="!priceRange.min || !priceRange.max || priceRange.min >= priceRange.max">
+                                                        <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                                    </button>
+                                                    <div class="help-block small" ng-if="priceRange.min >= priceRange.max">
+                                                        <span class="text-danger">
+                                                            <i class="glyphicon glyphicon-warning-sign"></i> Max must be greater than min
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="well well-sm text-center">
+                                            <span class="text-muted small">Current Range</span>
+                                            <h4 ng-if="priceRange.min !== undefined && priceRange.max !== undefined">
+                                                ₹{{priceRange.min | number:0}} - ₹{{priceRange.max | number:0}}
+                                            </h4>
+                                            <p ng-if="priceRange.min === undefined || priceRange.max === undefined" class="text-muted small">
+                                                Not set
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+
+                        <div class="panel panel-primary">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">
+                                    <i class="glyphicon glyphicon-percent"></i> Platform Charges
+                                </h3>
+                            </div>
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <form class="form-horizontal">
+                                            <div class="form-group">
+                                                <label class="control-label col-sm-4">Platform Fee:</label>
+                                                <div class="col-sm-8">
+                                                    <div class="input-group">
+                                                        <input type="number" 
+                                                            class="form-control input-sm" 
+                                                            ng-model="platformCharge.percentage" 
+                                                            placeholder="Fee percentage"
+                                                            min="0"
+                                                            max="100"
+                                                            step="0.01"
+                                                            required>
+                                                        <span class="input-group-addon">%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <div class="col-sm-offset-4 col-sm-8">
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button type="button" 
+                                                                class="btn btn-primary"
+                                                                ng-click="savePlatformCharge('Platform Fee')"
+                                                                ng-disabled="platformCharge.percentage === undefined || platformCharge.percentage < 0 || platformCharge.percentage > 100">
+                                                            <i class="glyphicon glyphicon-floppy-disk"></i> Save Fee
+                                                        </button>
+                                                    
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="well well-sm text-center">
+                                            <span class="text-muted small">Current Charges</span>
+                                            <div ng-if="platformCharge.percentage !== undefined && platformCharge.gst !== undefined">
+                                                <h5>Platform: <span class="badge">{{platformCharge.percentage}}%</span></h5>
+                                            </div>
+                                            <p ng-if="platformCharge.percentage === undefined || platformCharge.gst === undefined" class="text-muted small">
+                                                Not set
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+
+            <div ng-show="activeTab === 'taxesManagement'" class="tab-pane-content">
+                <div ng-include="'views/admin/platformManagement/taxesManagement.html'"></div>
+            </div>
+            
+
+            <div ng-show="activeTab === 'carApproval'" class="tab-pane-content">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-primary">
+                            <div class="panel-heading clearfix">
+                                <h3 class="panel-title pull-left">
+                                    <i class="glyphicon glyphicon-check"></i> Car Approval Requests
+                                </h3>
+                                <div class="pull-right">
+                                    <span class="badge" ng-if="cars.length > 0">{{pagination.totalItems}} pending</span>
+                                </div>
+                            </div>
+                            <div class="panel-body">
+                                <div ng-if="cars.length === 0" class="alert alert-info">
+                                    <i class="glyphicon glyphicon-info-sign"></i> No pending car approval requests.
+                                </div>
+                                
+                                <div ng-if="cars.length > 0" class="car-approval-list">
+                                    <div class="input-group" style="margin-bottom: 15px;">
+                                        <span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>
+                                        <input type="text" class="form-control" placeholder="Search cars by company, model, owner..." ng-model="carSearchQuery">
+                                    </div>
+                                    
+                                    <div uib-accordion close-others="false">
+                                        <div uib-accordion-group ng-repeat="car in cars | orderBy:'-createdAt' | filter:carSearchQuery" is-open="car.isOpen" class="car-approval-item">
+                                            <uib-accordion-heading>
+                                                <div class="row">
+                                                    <div class="col-xs-8">
+                                                        <strong class="car-title">{{car.company}} {{car.name}} ({{car.modelYear}})</strong>
+                                                        <span class="label label-default">{{car.category}}</span>
+                                                    </div>
+                                                    <div class="col-xs-4 text-right">
+                                                        <span class="label label-primary">₹{{car.price | number:0}} per day</span>
+                                                        <i class="glyphicon" ng-class="{'glyphicon-chevron-down': car.isOpen, 'glyphicon-chevron-right': !car.isOpen}"></i>
+                                                    </div>
+                                                </div>
+                                            </uib-accordion-heading>
+                                            
+                                            <div class="row">
+
+                                                <div class="col-md-6">
+                                                    <div class="panel panel-default">
+                                                        <div class="panel-heading">
+                                                            <h4 class="panel-title">
+                                                                <i class="glyphicon glyphicon-camera"></i> Vehicle Images
+                                                                <span class="badge pull-right">{{car.vehicleImages.length}}</span>
+                                                            </h4>
+                                                        </div>
+                                                        <div class="panel-body" style="padding: 10px;">
+                                                            <div uib-carousel active="car.activeSlide" interval="false" no-wrap="false" style="background-color: #f5f5f5; border-radius: 4px;">
+                                                                <div uib-slide ng-repeat="slide in car.vehicleImages track by $index" index="$index">
+                                                                    <img ng-src="{{slide.url}}" class="img-responsive center-block" 
+                                                                        style="height: 200px; object-fit: contain; border-radius: 4px;" alt="Car Image">
+                                                                    <div class="carousel-caption">
+                                                                        <span class="badge">Image {{$index + 1}} of {{car.vehicleImages.length}}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="text-center" style="margin-top: 5px;" ng-if="car.vehicleImages.length > 1">
+                                                                <div class="btn-group btn-group-xs">
+                                                                    <button type="button" class="btn btn-default" ng-click="car.activeSlide = car.activeSlide - 1" 
+                                                                            ng-disabled="car.activeSlide === 0">
+                                                                        <i class="glyphicon glyphicon-chevron-left"></i> Prev
+                                                                    </button>
+                                                                    <button type="button" class="btn btn-default" ng-click="car.activeSlide = car.activeSlide + 1" 
+                                                                            ng-disabled="car.activeSlide === car.vehicleImages.length - 1">
+                                                                        Next <i class="glyphicon glyphicon-chevron-right"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+
+                                                <div class="col-md-6">
+                                                    <div class="row">
+
+                                                        <div class="col-md-12">
+                                                            <div class="panel panel-default">
+                                                                <div class="panel-heading">
+                                                                    <h4 class="panel-title">
+                                                                        <i class="glyphicon glyphicon-info-sign"></i> Vehicle Details
+                                                                    </h4>
+                                                                </div>
+                                                                <div class="panel-body">
+                                                                    <div class="row">
+                                                                        <div class="col-sm-6">
+                                                                            <table class="table table-condensed table-details">
+                                                                                <tbody>
+                                                                                    <tr>
+                                                                                        <th><i class="glyphicon glyphicon-tag"></i> Make:</th>
+                                                                                        <td>{{car.company}}</td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th><i class="glyphicon glyphicon-wrench"></i> Model:</th>
+                                                                                        <td>{{car.name}}</td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th><i class="glyphicon glyphicon-calendar"></i> Year:</th>
+                                                                                        <td>{{car.modelYear}}</td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th><i class="glyphicon glyphicon-usd"></i> Price/day:</th>
+                                                                                        <td>{{car.price |currency: '₹'}}</td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th> registration no.</th>
+                                                                                        <td>{{car.registrationNumber  || N/A}}</td>
+                                                                                    </tr>
+                                                                                
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                        <div class="col-sm-6">
+                                                                            <table class="table table-condensed table-details">
+                                                                                <tbody>
+                                                                                    <tr>
+                                                                                        <th><i class="glyphicon glyphicon-tint"></i> Fuel:</th>
+                                                                                        <td>{{car.fuelType}}</td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th><i class="glyphicon glyphicon-tags"></i> Category:</th>
+                                                                                        <td>{{car.category}}</td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th><i class="glyphicon glyphicon-dashboard"></i> Mileage:</th>
+                                                                                        <td>{{car.mileage}} kmpl</td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th><i class="glyphicon glyphicon-time"></i> Listed:</th>
+                                                                                        <td>{{car.createdAt | date:'dd MMM yyyy'}}</td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th><i class="glyphicon glyphicon-map-marker"></i> City :</th>
+                                                                                        <td>{{car.city }}</td>
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+
+                                                        <div class="col-md-12">
+                                                            <div class="panel panel-default">
+                                                                <div class="panel-heading">
+                                                                    <h4 class="panel-title">
+                                                                        <i class="glyphicon glyphicon-user"></i> Owner Information
+                                                                    </h4>
+                                                                </div>
+                                                                <div class="panel-body">
+                                                                    <div class="row">
+                                                                        <div class="col-sm-6">
+                                                                            <table class="table table-condensed table-details">
+                                                                                <tbody>
+                                                                                    <tr>
+                                                                                        <th><i class="glyphicon glyphicon-user"></i> Name:</th>
+                                                                                        <td>{{car.owner.firstName}} {{car.owner.lastName}}</td>
+                                                                                    </tr>
+                                                                                    <tr>
+                                                                                        <th><i class="glyphicon glyphicon-tag"></i> Username:</th>
+                                                                                        <td>{{car.owner.username}}</td>
+                                                                                    </tr>
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                        <div class="col-sm-6">
+                                                                            <table class="table table-condensed table-details">
+                                                                                <tbody>
+                                                                                    <tr>
+                                                                                        <th><i class="glyphicon glyphicon-envelope"></i> Email:</th>
+                                                                                        <td>
+                                                                                            <a href="mailto:{{car.owner.email}}" ng-if="car.owner.email">
+                                                                                                {{car.owner.email}}
+                                                                                            </a>
+                                                                                            <span ng-if="!car.owner.email">Not provided</span>
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+
+                                            <div class="row" ng-if="car.features && car.features.length > 0">
+                                                <div class="col-md-12">
+                                                    <div class="panel panel-default">
+                                                        <div class="panel-heading">
+                                                            <h4 class="panel-title">
+                                                                <i class="glyphicon glyphicon-check"></i> Vehicle Features
+                                                            </h4>
+                                                        </div>
+                                                        <div class="panel-body">
+                                                            <span class="label label-info feature-tag" ng-repeat="feature in car.features track by $index">
+                                                                {{feature}}
+                                                            </span>
+                                                            <span ng-if="!car.features || car.features.length === 0" class="text-muted">
+                                                                No features specified
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+
+                                            <div class="row" ng-if="car.description">
+                                                <div class="col-md-12">
+                                                    <div class="panel panel-default">
+                                                        <div class="panel-heading">
+                                                            <h4 class="panel-title">
+                                                                <i class="glyphicon glyphicon-file"></i> Vehicle Description
+                                                            </h4>
+                                                        </div>
+                                                        <div class="panel-body">
+                                                            <p>{{car.description}}</p>
+                                                            <p ng-if="!car.description" class="text-muted">No description provided</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <div class="panel panel-default">
+                                                        <div class="panel-heading">
+                                                            <h4 class="panel-title">
+                                                                <i class="glyphicon glyphicon-check"></i> Approval Actions
+                                                            </h4>
+                                                        </div>
+                                                        <div class="panel-body text-center">
+                                                            <div class="form-group" ng-if="showFeedbackInput === car._id">
+                                                                <label for="rejectionReason">Rejection Reason (optional):</label>
+                                                                <textarea id="rejectionReason" class="form-control" ng-model="car.rejectionReason" 
+                                                                        rows="2" placeholder="Enter reason for rejection (will be sent to owner)"></textarea>
+                                                            </div>
+                                                            
+                                                            <div class="btn-group">
+                                                                <button class="btn btn-success" ng-click="approveCar(car._id)">
+                                                                    <i class="glyphicon glyphicon-ok"></i> Approve Vehicle
+                                                                </button>
+                                                                <button class="btn btn-danger"  ng-click="rejectCar(car)" ng-if="showFeedbackInput !== car._id">
+                                                                    <i class="glyphicon glyphicon-remove"></i> Reject Vehicle
+                                                                </button>
+                                                                <button class="btn btn-danger" ng-click="rejectCar(car._id)" ng-if="showFeedbackInput === car._id">
+                                                                    <i class="glyphicon glyphicon-send"></i> Submit Rejection
+                                                                </button>
+                                                            </div>
+                                                            <button class="btn btn-default" ng-click="showFeedbackInput = null" ng-if="showFeedbackInput === car._id">
+                                                                <i class="glyphicon glyphicon-remove"></i> Cancel
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+
+                                    <div class="text-center pagination-container">
+                                        <ul uib-pagination
+                                            total-items="pagination.totalItems"
+                                            ng-model="pagination.currentPage"
+                                            items-per-page="pagination.itemsPerPage"
+                                            max-size="pagination.maxSize"
+                                            class="pagination-sm"
+                                            boundary-link-numbers="true"
+                                            rotate="false"
+                                            previous-text="&lsaquo;"
+                                            next-text="&rsaquo;"
+                                            first-text="&laquo;"
+                                            last-text="&raquo;"
+                                            ng-change="pageChanged()">
+                                        </ul>
+                                        <div class="text-muted small" ng-if="pagination.totalItems > 0">
+                                            <span>Page {{pagination.currentPage}} of {{Math.ceil(pagination.totalItems / pagination.itemsPerPage) || 1}}</span>
+                                            <span class="ml-2">|</span>
+                                            <span class="ml-2">Showing 
+                                                {{pagination.totalItems === 0 ? 0 : (pagination.currentPage - 1) * pagination.itemsPerPage + 1}} - 
+                                                {{(pagination.currentPage * pagination.itemsPerPage > pagination.totalItems) ? 
+                                                pagination.totalItems : pagination.currentPage * pagination.itemsPerPage}} 
+                                                of {{pagination.totalItems}} total</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="well well-sm text-center text-muted">
+                    <small>
+                        <i class="glyphicon glyphicon-info-sign"></i> 
+                        Platform Management Dashboard - Car rental platform configuration and management
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <style>
+            .panel {
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                margin-bottom: 15px;
+            }
+            .panel-heading {
+                background-image: linear-gradient(to bottom, #337ab7 0%, #2e6da4 100%);
+            }
+            .car-details {
+                font-size: 12px;
+                line-height: 1.8;
+            }
+            .car-approval-list {
+                max-height: 600px;
+                overflow-y: auto;
+            }
+            .accordion-toggle {
+                cursor: pointer;
+            }
+            .badge {
+                background-color: #5cb85c;
+            }
+            .panel-title {
+                font-weight: 600;
+            }
+            .table-condensed {
+                font-size: 12px;
+            }
+            .nav-tabs > li.active > a, 
+            .nav-tabs > li.active > a:hover, 
+            .nav-tabs > li.active > a:focus {
+                background-color: #f8f8f8;
+                border-bottom-color: transparent;
+                font-weight: bold;
+            }
+            .tab-content {
+                border: 1px solid #ddd;
+                border-top: none;
+                border-radius: 0 0 4px 4px;
+                padding: 15px;
+                background-color: #f8f8f8;
+            }
+            .tab-pane-content {
+                animation: fadeIn 0.3s ease-in;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            .car-approval-item {
+                margin-bottom: 10px;
+                border-radius: 4px;
+            }
+            .car-approval-item .panel {
+                margin-bottom: 10px;
+            }
+            .car-title {
+                margin-right: 8px;
+            }
+            .table-details {
+                margin-bottom: 0;
+            }
+            .table-details th {
+                width: 40%;
+                vertical-align: middle !important;
+            }
+            .table-details td {
+                vertical-align: middle !important;
+            }
+            .feature-tag {
+                display: inline-block;
+                margin: 0 5px 5px 0;
+                padding: 5px 8px;
+            }
+        </style>
+    </div>
+</div>

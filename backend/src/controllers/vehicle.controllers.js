@@ -7,8 +7,8 @@ import User from "../models/user.model.js";
 import Vehicle from "../models/vehicle.model.js"; 
 import Bidding from "../models/bidding.model.js";
 import { createCarValidation } from "../validation/car.validation.js";
-import { sendCongratulationEmail, sendCarRejectionEmail } from "../services/email.service.js";
-import { getCachedData, setCachedData, deleteCachedData} from "../services/redis.service.js";
+import { sendCongratulationEmail, sendCarRejectionEmail, sendVehicleApprovalEmail } from "../services/email.service.js";
+import { getCachedData, setCachedData} from "../services/redis.service.js";
 import {Types} from 'mongoose';
 
 /**
@@ -37,7 +37,7 @@ import {Types} from 'mongoose';
  */
 export const addCarController = async (req, res) => {
     const {
-        name, company, modelYear, price, color, mileage, fuelType, category, city, location, registrationNumber
+        name, company, modelYear, price, color, mileage, fuelType, category, city, registrationNumber
     } = req.body;
     try {
         const user = req.user;
@@ -49,7 +49,7 @@ export const addCarController = async (req, res) => {
         }));
 
         const carData = {
-            name, company, modelYear, price, color, mileage,vehicleImages:images, registrationNumber, fuelType,location, category, city, owner:{
+            name, company, modelYear, price, color, mileage,vehicleImages:images, registrationNumber, fuelType, category, city, owner:{
                 username: user.username,
                 email: user.email,
                 firstName: user.firstName,
@@ -57,7 +57,7 @@ export const addCarController = async (req, res) => {
             }
         }
 
-        const vehicle = await Vehicle.findOne({ registrationNumber });
+        const vehicle = await Vehicle.findOne({ registrationNumber, status: {$in: ['approved', 'pending']}});
         if(vehicle){
             return res.status(400).json({message: 'Car with this registration number already exists'});
         }
@@ -75,7 +75,6 @@ export const addCarController = async (req, res) => {
             color,
             mileage,
             fuelType,
-            location, 
             category,
             city,
             vehicleImages: images,
@@ -131,59 +130,43 @@ export const addCarController = async (req, res) => {
  * @param {Object} req - Express request object
  * @param {Object} req.query - Query parameters for filtering
  * @param {string} [req.query.search] - Search term for vehicle name, company, or model year
- * @param {string} [req.query.priceRange] - Price range in format 'min-max'
  * @param {string} [req.query.city] - City filter
  * @param {string} [req.query.category] - Vehicle category filter
  * @param {number} [req.query.limit=6] - Number of results to return
  * @param {number} [req.query.skip=0] - Number of results to skip (pagination)
+ * @param {string} [req.query.sortBy] - Sorting parameter ('price-low', 'price-high', 'fuel-type')
+ * @param {string} [req.query.sortOrder='asc'] - Sorting order ('asc' or 'desc')
+ * @param {string} [req.query.fuelType] - Fuel type filter
  * @param {Object} res - Express response object
  * @returns {Object} JSON response with filtered vehicles or error
  * @description
  * Retrieves approved vehicles using aggregation pipeline with text search,
- * filtering by price range, city, category, and pagination support.
+ * filtering by city, category, fuel type, sorting, and pagination support.
  */
 export const getAllCarController = async (req, res) => {
-    let { search = '', priceRange, city, category, limit = 6, skip = 0 } = req.query;
+    let { search = '', city, category, limit = 6, skip = 0, sortBy = '', sortOrder = 'asc', fuelType = '' } = req.query;
     skip = parseInt(skip);
     limit = parseInt(limit);
 
-    if (priceRange === 'undefined') priceRange = false;
     if (city === 'undefined') city = false;
     if (category === 'undefined') category = false;
+    if (fuelType === 'undefined') fuelType = false;
 
-    //  Create a unique cache key based on the query params
-    const cacheKey = `cars:${search}:${priceRange}:${city}:${category}:${limit}:${skip}`;
-    const cachedData = await getCachedData(cacheKey);
-    if(cachedData){
-        return res.status(200).json(cachedData);
-    }
+    const cacheKey = `cars:${search}:${city}:${category}:${limit}:${skip}:${sortBy}:${sortOrder}:${fuelType}`;
+   
 
     try {
-        const aggregationPipeline = [];
+        const cachedData = await getCachedData(cacheKey);
+        if(cachedData){
+            return res.status(200).json(cachedData);
+        }
 
-        
+        const aggregationPipeline = [];
         let matchConditions = {
             status: 'approved',
-            deleted: false
+            deleted: false,
         };
 
-        
-        if (priceRange) {
-            const [minPrice, maxPrice] = priceRange.split('-').map(Number);
-            matchConditions.price = { $gte: minPrice, $lte: maxPrice };
-        }
-
-        
-        if (city) {
-            matchConditions.city = city;
-        }
-
-        
-        if (category) {
-            matchConditions.category = category;
-        }
-
-        
         if (search?.trim()) {
             aggregationPipeline.push({
                 $search: {
@@ -196,13 +179,36 @@ export const getAllCarController = async (req, res) => {
                 },
             });
         }
-
         
+        if (city) {
+            matchConditions.city = city;
+        }
+
+        if (category) {
+            matchConditions.category = category;
+        }
+
+        if (fuelType) {
+            matchConditions.fuelType = fuelType;
+        }
+
         aggregationPipeline.push({ $match: matchConditions });
 
+        // Add sorting based on sortBy parameter
+        const sortStage = {};
+        switch(sortBy) {
+            case 'price-low':
+                sortStage.price = 1;
+                break;
+            case 'price-high':
+                sortStage.price = -1;
+                break;
+            default:
+                sortStage.createdAt = -1;
+        }
         
         aggregationPipeline.push(
-            { $sort: { createdAt: -1 } },
+            { $sort: sortStage },
             { $skip: skip },
             { $limit: limit }
         );
@@ -261,6 +267,8 @@ export const getVehicleByStatus = async(req, res)=>{
  */
 export const toggleVehicleStatusController = async (req, res) => {
     const { vehicleStatus } = req.body;
+    const {rejectionReason} = req.body;
+    
     try {
         const vehicle = await Vehicle.findById(req.params.id);
         if (!vehicle) {
@@ -275,7 +283,7 @@ export const toggleVehicleStatusController = async (req, res) => {
         if(vehicleStatus === 'approved') {
             // Update user to be a seller
             const owner = await User.findById(ownerId);
-
+            
             // Send congratulation email to the seller for becoming a seller if he is adding the vehicle for the first time
             if(owner.isSeller === false){
                 sendCongratulationEmail({ email : vehicle.owner.email, company: vehicle.company, name: vehicle.name, modelYear: vehicle.modelYear})
@@ -284,13 +292,20 @@ export const toggleVehicleStatusController = async (req, res) => {
                 });
                 await User.updateOne({ _id: ownerId }, { isSeller: true });
             }
+
+            // Send vehicle approval email
+            sendVehicleApprovalEmail(vehicle)
+            .catch((err) => {
+                console.error(`Error sending vehicle approval email: ${err.message}`);
+            });
             
         } else if(vehicleStatus === 'rejected') {
             // Send rejection email to the seller for not becoming a seller
             sendCarRejectionEmail({
                 email: vehicle.owner.email,
                 seller: vehicle.owner,
-                vehicle: vehicle
+                vehicle: vehicle,
+                rejectionReason: rejectionReason
             }).catch((err) => {
                 console.error(`Error sending rejection email: ${err.message}`);
             });

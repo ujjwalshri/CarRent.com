@@ -27,7 +27,11 @@ const attachmentSchema = new mongoose.Schema({
         required: true
     },
     message: {
-        type: {
+            _id: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Message",
+                required: true
+            },
             sender: {
                 _id: {
                     type: mongoose.Schema.Types.ObjectId,
@@ -44,7 +48,6 @@ const attachmentSchema = new mongoose.Schema({
                 required: true
             }
         }
-    }
 }, { timestamps: true });
 
 const Attachment = mongoose.model("Attachment", attachmentSchema);

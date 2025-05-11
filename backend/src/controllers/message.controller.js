@@ -1,5 +1,3 @@
-
-
 /**
  * Message Controllers
  * Handles all operations related to chat messages
@@ -9,7 +7,7 @@
 import Message from "../models/messages.model.js";
 import Conversation from "../models/conversation.model.js";
 import {emitToRoom} from "../services/socket.service.js";
-import Attachment from "../models/chat.Attachments.model.js";
+import Attachment from "../models/chat.attachments.model.js";
 /**
  * Adds a new message to a conversation
  * 
@@ -35,30 +33,55 @@ import Attachment from "../models/chat.Attachments.model.js";
 export const addMessageController = async(req,res)=>{
     const conversationId = req.params.conversationId;
     const {message} = req.body;
-    let image = req.attachment;
-    
     try{
 
         const newMessage = new Message({
-            conversation: conversationId,
+            conversationId: conversationId,
             sender: {
                 _id: req.user._id,
                 username: req.user.username,
             },
             message: message,
-            image:{
-                url: image ? image.url : null,
-                key: image ? image.key : null,
-                filename: image ? image.filename : null,
-                mimeType: image ? image.mimeType : null,
-                size: image ? image.size : null,
-                conversationId: conversationId,
+            image: {
+                url: req.file?.location,
+                key: req.file?.key,
+                filename: req.file?.originalname,
+                mimeType: req.file?.mimetype,
+                size: req.file?.size,
             }
+
         });
+
         emitToRoom(conversationId, "newMessage", newMessage);
         await newMessage.save();
 
+        if (req.file) {
+            console.log("inside file" , newMessage);
+            // Create an image object with file details and conversation ID
+            const image = {
+                url: req.file.location,
+                key: req.file.key,
+                filename: req.file.originalname,
+                mimeType: req.file.mimetype,
+                size: req.file.size,
+                conversationId: conversationId,
+                message : {
+                    _id: newMessage._id,
+                    sender: {
+                        _id : req.user._id,
+                        username: req.user.username,
+                    },
+                    messageContent: req.body.message || "Shared an attachment", // Provide default message if none is provided
+                },
+            };
 
+
+            
+
+            // Create a new attachment document and save it to the database
+            const attachment = new Attachment(image);
+            await attachment.save();
+        }
         // update the conversation last message
         await Conversation.findByIdAndUpdate(conversationId, {lastMessage: message});
 
@@ -106,7 +129,7 @@ export const addMessageController = async(req,res)=>{
 export const getMessagesController = async(req,res)=>{
     const conversationId = req.params.conversationId;
     try{
-        const messages = await Message.find({ conversation: conversationId }).sort({ createdAt: -1 });
+        const messages = await Message.find({ conversationId: conversationId }).sort({ createdAt: -1 });
         return res.status(200).json({messages});
     }catch(err){
         return res.status(500).json({message: "Internal server error"});

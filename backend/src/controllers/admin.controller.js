@@ -7,13 +7,12 @@ import CarCategory from "../models/car.category.model.js";
 import { sendTopSellerEmail, sendTopBuyerEmail } from "../services/email.service.js";
 import { getCachedData, setCachedData } from "../services/redis.service.js";
 import Charges from "../models/charges.model.js";
+import { pipelines } from "../utils/analyticsPipelines/adminAnalytics.pipelines.js";
 
-const kilometersLimit = 300; // Constant for kilometers limit
-const finePerKilometer = 10; // Constant for fine per kilometer
+
 
 const getValue = (result, fallback = 0) =>
     result.status === "fulfilled" ? result.value : fallback;
-
 
 /**
  * Get car description statistics grouped by car category
@@ -25,31 +24,13 @@ export const getCarDescriptionStats = async (req, res) => {
     const { startDate, endDate } = req.query;
     // redis cache
     const cacheKey = `car-description-stats-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
-    if(cachedData){
-        return res.status(200).json(cachedData);
-    }
+   
     try {
-        const carDescriptionPipeline = [
-            {
-                $match: {
-                    status: 'approved',
-                    deleted: false,
-                    createdAt: {
-                        $gte: new Date(startDate),
-                        $lte: new Date(endDate)
-                    }
-                }
-            },
-            {
-                $group: {
-                    _id: "$category", 
-                    count: { $sum: 1 }
-                }
-            }
-        ];
-
-        const stats = await Vehicle.aggregate(carDescriptionPipeline);
+        const cachedData = await getCachedData(cacheKey);
+        if(cachedData){
+            return res.status(200).json(cachedData);
+        }
+        const stats = await Vehicle.aggregate(pipelines.carDescription(startDate, endDate));
         await setCachedData(cacheKey, stats);
         res.status(200).json(stats);
     } catch (error) {
@@ -66,34 +47,13 @@ export const getCarDescriptionStats = async (req, res) => {
 export const getTop10PopularCarModels = async (req, res) => {
     const { startDate, endDate } = req.query;
     const cacheKey = `top-10-popular-car-models-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
-    if(cachedData){
-        return res.status(200).json(cachedData);
-    }
+   
     try {
-        const top10PopularCarModelsPipeline = [
-            {
-                $match: {
-                    startDate: {
-                        $gte: new Date(startDate),
-                        $lte: new Date(endDate)
-                    }
-                }
-            },
-            {
-                $group: {
-                    _id: { $concat: ["$vehicle.company", " ", "$vehicle.name", " ", { "$toString": "$vehicle.modelYear" }] },
-                    count: { $sum: 1 }
-                }
-            },
-            {
-                $sort: {count: -1}
-            },
-            {
-                $limit: 10
-            }
-        ];
-        const stats = await Bidding.aggregate(top10PopularCarModelsPipeline);
+        const cachedData = await getCachedData(cacheKey);
+        if(cachedData){
+            return res.status(200).json(cachedData);
+        }
+        const stats = await Bidding.aggregate(pipelines.top10PopularCarModels(startDate, endDate));
         await setCachedData(cacheKey, stats);
         res.status(200).json(stats);
     } catch (error) {
@@ -110,47 +70,13 @@ export const getTop10PopularCarModels = async (req, res) => {
 export const getTop3MostReviewedCars = async (req, res) => {
     const { startDate, endDate } = req.query;
     const cacheKey = `top-3-most-reviewed-cars-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
+    
+    try {
+        const cachedData = await getCachedData(cacheKey);
     if(cachedData){
         return res.status(200).json(cachedData);
     }
-    try {
-
-        const top3MostReviewedCarsPipeline = [
-            {
-                $match: {
-                    createdAt: {
-                        $gte: new Date(startDate),
-                        $lte: new Date(endDate)
-                    },
-                    rating: { $gte: 3 } // Only include reviews with rating >= 3 (positive ratings)
-                }
-            },
-            {
-               $project : {
-                vehicle : {
-                    company : 1,
-                    name : { $toLower: "$vehicle.name" },
-                    modelYear : 1
-                },
-                rating: 1 
-               }
-            },
-            {
-                $group: {
-                    _id: { $concat: ["$vehicle.company", " ", "$vehicle.name", " ", { "$toString": "$vehicle.modelYear" }] },
-                    count: { $sum: 1 },
-                    averageRating: { $avg: "$rating" } // Calculate average positive rating as well
-                }
-            },
-            {
-                $sort: { count: -1 } // Sort by number of positive reviews
-            },
-            {
-                $limit: 3
-            },
-        ];
-        const stats = await Review.aggregate(top3MostReviewedCarsPipeline);
+        const stats = await Review.aggregate(pipelines.top3MostReviewedCars(startDate, endDate));
         await setCachedData(cacheKey, stats);
         res.status(200).json(stats);
     } catch (error) {
@@ -167,36 +93,13 @@ export const getTop3MostReviewedCars = async (req, res) => {
 export const getTop3OwnersWithMostCars = async (req, res) => {
     const { startDate, endDate } = req.query;
     const cacheKey = `top-3-owners-with-most-cars-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
-    if(cachedData){
-        return res.status(200).json(cachedData);
-    }
+   
     try {
-        const top3OwnersWithMostCarsAddedPipeline = [
-            {
-                $match: {
-                    status: 'approved',
-                    deleted: false,
-                    createdAt: {
-                        $gte: new Date(startDate),
-                        $lte: new Date(endDate)
-                    }
-                }
-            },
-            {
-                $group: {
-                    _id: "$owner.username",
-                    count: { $sum: 1 }
-                }
-            },
-            {
-                $sort: {count: -1}
-            },
-            {
-                $limit: 3
-            }
-        ]
-        const stats = await Vehicle.aggregate(top3OwnersWithMostCarsAddedPipeline);
+        const cachedData = await getCachedData(cacheKey);
+        if(cachedData){
+            return res.status(200).json(cachedData);
+        }
+        const stats = await Vehicle.aggregate(pipelines.top3OwnersWithMostCars(startDate, endDate));
         await setCachedData(cacheKey, stats);
         res.status(200).json(stats);
     } catch (error) {
@@ -213,28 +116,13 @@ export const getTop3OwnersWithMostCars = async (req, res) => {
 export const getBiddingsPerCity = async (req, res) => {
     const { startDate, endDate } = req.query;
     const cacheKey = `biddings-per-city-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
-    if(cachedData){
-        return res.status(200).json(cachedData);
-    }
+
     try {
-        const numberOfBiddingPerCityPipeline = [
-            {
-                $match: {
-                    createdAt: {
-                        $gte: new Date(startDate), 
-                        $lte: new Date(endDate)
-                    }
-                }
-            },
-            {
-                $group: {
-                    _id: "$vehicle.city",
-                    count: { $sum: 1 }
-                }
-            }
-        ];
-        const stats = await Bidding.aggregate(numberOfBiddingPerCityPipeline);
+        const cachedData = await getCachedData(cacheKey);
+        if(cachedData){
+            return res.status(200).json(cachedData);
+        }
+        const stats = await Bidding.aggregate(pipelines.biddingsPerCity(startDate, endDate));
         await setCachedData(cacheKey, stats);
         res.status(200).json(stats);
     } catch (error) {
@@ -251,29 +139,13 @@ export const getBiddingsPerCity = async (req, res) => {
 export const getUserGrowthStats = async (req, res) => {
     const { startDate, endDate } = req.query;
     const cacheKey = `user-growth-stats-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
+    
+    try {
+        const cachedData = await getCachedData(cacheKey);
     if(cachedData){
         return res.status(200).json(cachedData);
     }
-    try {
-
-        const userGrowthPipeline = [
-            { $match: {
-                createdAt: {
-                    $gte: new Date(startDate),
-                    $lte: new Date(endDate)
-                }
-            }},
-            {
-             $group : {
-                _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-                count: { $sum: 1 }
-             }
-            }, 
-            { $sort: { _id: 1 } } 
-        ]
-        
-        const stats = await User.aggregate(userGrowthPipeline);
+        const stats = await User.aggregate(pipelines.userGrowth(startDate, endDate));
         await setCachedData(cacheKey, stats);
         res.status(200).json(stats);
     } catch (error) {
@@ -290,57 +162,13 @@ export const getUserGrowthStats = async (req, res) => {
 export const getHighestEarningCities = async (req, res) => {
     const { startDate, endDate } = req.query;
     const cacheKey = `highest-earning-cities-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
-    if(cachedData){
-        return res.status(200).json(cachedData);
-    }
+   
     try {
-        const highestEarningCitiesPipeline =  [
-            { $match:  {
-                status: { $in: ["ended", "reviewed"] },
-                endDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
-            } },
-            {
-                $addFields: {
-                    numberOfDays: {
-                        $ceil: {
-                            $divide: [
-                                { $subtract: ["$endDate", "$startDate"] },
-                                1000 * 60 * 60 * 24
-                            ]
-                        }
-                    },
-                    kilometersDriven: {
-                        $subtract: ["$endOdometerValue", "$startOdometerValue"]
-                    }
-                }
-            },
-            {
-                $addFields: {
-                    baseAmount: { $multiply: ["$amount", { $add: ["$numberOfDays", 1] }] },
-                    excessKilometers: {
-                        $max: [{ $subtract: ["$kilometersDriven", kilometersLimit] }, 0]
-                    }
-                }
-            },
-            {
-                $addFields: {
-                    fine: { $multiply: ["$excessKilometers", finePerKilometer] },
-                    totalBookingRevenue: {
-                        $add: ["$baseAmount", { $multiply: ["$excessKilometers", finePerKilometer] }]
-                    }
-                }
-            },
-            {
-                $group: {
-                    _id: "$vehicle.city",
-                    totalEarnings: { $sum: "$totalBookingRevenue" }
-                }
-            },
-            { $sort: { totalEarnings: -1 } },
-            { $limit: 5 }
-        ];
-        const stats = await Bidding.aggregate(highestEarningCitiesPipeline);
+        const cachedData = await getCachedData(cacheKey);
+        if(cachedData){
+            return res.status(200).json(cachedData);
+        }
+        const stats = await Bidding.aggregate(pipelines.highestEarningCities(startDate, endDate));
         await setCachedData(cacheKey, stats);
         res.status(200).json(stats);
     } catch (error) {
@@ -370,55 +198,13 @@ export const getGeneralAnalyticsController = async (req, res) => {
   
       const totalNumberOfBlockedUsersPromise = User.countDocuments({ isBlocked: true });
   
-      const ongoingBookingsPromise = Bidding.aggregate([
-        { $match: { status: "started" } },
-        { $group: { _id: null, count: { $sum: 1 } } },
-      ]);
+      const ongoingBookingsPromise = Bidding.aggregate(pipelines.generalAnalytics(startDate, endDate).ongoingBookings);
   
-      const averageBookingDurationPromise = Bidding.aggregate([
-        {
-          $match: {
-            status: { $in: ["approved", "started", "ended", "reviewed"] },
-            startDate: {
-              $gte: new Date(startDate),
-              $lte: new Date(endDate),
-            },
-          },
-        },
-        {
-          $project: {
-            durationInDays: {
-              $max: [
-                1,
-                {
-                  $dateDiff: {
-                    startDate: "$startDate",
-                    endDate: "$endDate",
-                    unit: "day",
-                  },
-                },
-              ],
-            },
-          },
-        },
-        {
-          $group: {
-            _id: null,
-            avgDuration: { $avg: "$durationInDays" },
-          },
-        },
-      ]);
+      const averageBookingDurationPromise = Bidding.aggregate(pipelines.generalAnalytics(startDate, endDate).averageBookingDuration);
   
       const totalNumberOfUsersPromise = User.countDocuments();
   
-      const userEngagementPromise = User.aggregate([ 
-        {
-          $group: {
-            _id: "$from.username",
-            count: { $sum: 1 },
-          },
-        },
-      ]);
+      const userEngagementPromise = Bidding.aggregate(pipelines.generalAnalytics(startDate, endDate).userEngagement);
   
       const [
         blockedUsersResult,
@@ -486,80 +272,18 @@ export const getOverviewStatsController = async (req, res) => {
     }
     // check if the data is already in the cache
     const cacheKey = `admin-overview-stats-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
+   
+    try {
+        const cachedData = await getCachedData(cacheKey);
     if(cachedData){
         console.log("serving data from cache");
         return res.status(200).json(cachedData);
     }
-    try {
-        let matchStage =   {
-            $match: {
-                startDate: {
-                    $gte: new Date(startDate),
-                    $lte: new Date(endDate)
-                }
-            }
-        };
-        const biddingConversionRatePipeline = [
-          matchStage,
-            {
-                $group: {
-                    _id: null,
-                    totalBids: { $sum: 1 },
-                    totalAccepted: {
-                        $sum: {
-                            $cond: [
-                                { 
-                                    $in: ["$status", ["approved", "started", "ended", "reviewed"]] 
-                                }, 
-                                1, 
-                                0
-                            ]
-                        }
-                    }
-                }
-            },
-            {
-                $project: {
-                    _id: 0,
-                    totalBids: 1,
-                    totalAccepted: 1,
-                    conversionRate: {
-                        $cond: [
-                            { $eq: ["$totalBids", 0] }, 
-                            0, 
-                            { $multiply: [{ $divide: ["$totalAccepted", "$totalBids"] }, 100] }
-                        ]
-                    }
-                }
-            }
-        ];
+        const biddingConversionRatePipeline = pipelines.overviewStats(startDate, endDate).biddingConversionRate; // getting the pipelines from the analytics pipelines folder
 
-        const newUsersPipeline = [
-           {
-            $match: {
-                createdAt: {
-                    $gte: new Date(startDate),
-                    $lte: new Date(endDate)
-                }
-            }
-           },
-           {
-            $project: {
-                _id: 0,
-                sum: 1
-            }
-           },
-           {
-            $group: {
-                _id: null,
-                count: { $sum: 1 }
-            }
-           }
-        ]
+        const newUsersPipeline = pipelines.overviewStats(startDate, endDate).newUsers; // getting the pipelines from the analytics pipelines folder
 
        
-
         const [biddingConversionRateResult, newUsersResult] = await Promise.allSettled([
             Bidding.aggregate(biddingConversionRatePipeline),
             User.aggregate(newUsersPipeline),
@@ -598,129 +322,20 @@ export const topPerformersController = async (req, res) => {
     }
 
     const cacheKey = `admin-top-performers-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
+    
+
+    try {
+        const cachedData = await getCachedData(cacheKey);
     if(cachedData){
         console.log("serving data from cache");
         return res.status(200).json(cachedData);
     }
-
-    try {
-        // Initialize match stage with completed booking statuses
-        let sellersMatchStage = {
-            status: { $in: ["ended", "reviewed"] }
-        };
-
-        // Apply date filter if startDate and endDate are provided
-        sellersMatchStage.endDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
-        
-        // Complex aggregation pipeline to calculate earnings
-        const topSellersPipeline = [
-            {
-                $match: sellersMatchStage // Filter bookings by status and date range
-            },
-            {
-                $addFields: {
-                    // Calculate number of days for each booking
-                    numberOfDays: {
-                        $ceil: {
-                            $divide: [
-                                { $subtract: ["$endDate", "$startDate"] },
-                                1000 * 60 * 60 * 24
-                            ]
-                        }
-                    },
-                    // Calculate kilometers driven
-                    kilometersDriven: {
-                        $subtract: ["$endOdometerValue", "$startOdometerValue"]
-                    }
-                }
-            },
-            {
-                $addFields: {
-                    // Calculate base amount (price per day * number of days)
-                    baseAmount: { $multiply: ["$amount", { $add: ["$numberOfDays", 1] }] },
-                    // Calculate excess kilometers (above 300km limit)
-                    excessKilometers: {
-                        $max: [
-                            { $subtract: ["$kilometersDriven", kilometersLimit] },
-                            0
-                        ]
-                    }
-                }
-            },
-            {
-                $addFields: {
-                    // Calculate fine for excess kilometers ($10 per km)
-                    fine: { $multiply: ["$excessKilometers", finePerKilometer] },
-                    // Calculate total revenue (base amount + fines)
-                    totalBookingRevenue: {
-                        $add: [
-                            "$baseAmount",
-                            { $multiply: [
-                                { $max: [
-                                    { $subtract: ["$kilometersDriven", kilometersLimit] },
-                                    0
-                                ]},
-                                finePerKilometer
-                            ]}
-                        ]
-                    }
-                }
-            },
-            {
-                // Group by owner to calculate total earnings per seller
-                $group: {
-                    _id: "$owner._id",
-                    ownerUsername: { $first: "$owner.username" },
-                    ownerEmail: { $first: "$owner.email" },
-                    ownerFirstName: { $first: "$owner.firstName" },
-                    ownerLastName: { $first: "$owner.lastName" },
-                    totalEarnings: { $sum: "$totalBookingRevenue" },
-                    totalFine: { $sum: "$fine" }
-                }
-            },
-            {
-                $sort: { totalEarnings: -1 } // Sort by earnings in descending order
-            },
-            {
-                $limit: 10 // Limit to top 10 sellers
-            }
-        ];
-
-        let buyersMatchStage = {
-            status: { $in: ["approved", "started", "ended", "reviewed"] }
-        };
-
-        // Apply date filter if startDate and endDate are provided
-            buyersMatchStage.startDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
-
-        
-        // Aggregation pipeline to find and rank top buyers
-        const topBuyersPipeline = [
-            { $match: buyersMatchStage }, // Filter bookings by status and date range
-            {
-                // Group by buyer to count bookings per person
-                $group: {
-                    _id: "$from._id",
-                    buyerUsername: { $first: "$from.username" },
-                    buyerEmail: { $first: "$from.email" },
-                    buyerFirstName: { $first: "$from.firstName" },
-                    buyerLastName: { $first: "$from.lastName" },
-                    buyerCity: { $first: "$from.city" },
-                    count: { $sum: 1 } // Count bookings per buyer
-                }
-            },
-            {
-                $sort: { count: -1 } // Sort by booking count in descending order
-            },
-            {
-                $limit: 10 // Limit to top 10 buyers
-            }
-        ];
+       
+        const topPerformersPipelines =  pipelines.topPerformers(startDate, endDate);
 
         const [topSellersResult, topBuyersResult] = await Promise.allSettled([
-            Bidding.aggregate(topSellersPipeline),
-            Bidding.aggregate(topBuyersPipeline)
+            Bidding.aggregate(topPerformersPipelines.topSellers),
+            Bidding.aggregate(topPerformersPipelines.topBuyers)
         ]);
 
         const topSellers = getValue(topSellersResult, []);
@@ -765,51 +380,11 @@ export const getCustomerSatisfactionScoreController = async (req, res)=>{
             console.log("serving data from cache");
             return res.status(200).json(cachedData);
         }
-      // pipeline for calculating the customer satisfaction score which is calculated numberOfSatisfiedCustomers/numberOfCustomersWithReviews * 100
-      const customerSatisfactionPipeline = [
-        {
-          $match: {
-            createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
-          }
-        },
-        {
-          $group: {
-            _id: null,
-            numberOfCustomersWithReviews: { $sum: 1 },
-            numberOfSatisfiedCustomers: {
-              $sum: {
-                $cond: [
-                  { $gte: ["$rating", 3] }, // Consider rating >= 3 as "satisfied"
-                  1,
-                  0
-                ]
-              }
-            }
-          }
-        },
-        {
-          $project: {
-            _id: 0,
-            numberOfCustomersWithReviews: 1,
-            numberOfSatisfiedCustomers: 1,
-            customerSatisfactionScore: {
-              $cond: [
-                { $eq: ["$numberOfCustomersWithReviews", 0] },
-                0,
-                {
-                  $multiply: [
-                    { $divide: ["$numberOfSatisfiedCustomers", "$numberOfCustomersWithReviews"] },
-                    100
-                  ]
-                }
-              ]
-            }
-          }
-        }
-      ];
+
+   
       
 
-      const customerSatisfactionScore = await Review.aggregate(customerSatisfactionPipeline);
+      const customerSatisfactionScore = await Review.aggregate(pipelines.customerSatisfaction(startDate, endDate));
       await setCachedData(cacheKey, {customerSatisfactionScore});
       return res.status(200).json(customerSatisfactionScore);
       
@@ -840,19 +415,7 @@ export const getNewUsers = async(req, res)=>{
             return res.status(200).json(cachedData);
         }
 
-        const newUsers = await User.aggregate([
-            {
-                $match: {
-                    createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
-                }
-            },
-            {
-                $group: {
-                    _id: null,
-                    totalNewUsers: { $sum: 1 }
-                }
-            }
-        ]);
+        const newUsers = await User.aggregate(pipelines.newUsers(startDate, endDate));
         await setCachedData(cacheKey, newUsers);
         return res.status(200).json(newUsers);
     }catch(err){
@@ -877,34 +440,7 @@ export const getTop3CompaniesWithMostNegativeReviews = async(req, res)=>{
         if(cachedData){
             return res.status(200).json(cachedData);
         }
-        const companies = await Review.aggregate([
-            {
-                $match: {
-                    createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
-                }
-            },
-            {
-                $project: {
-                    company: "$vehicle.company",
-                    rating: 1,
-                    createdAt: 1
-                }
-            },
-            {
-                $group: {
-                    _id: "$company",
-                    totalNegativeReviews: { $sum: { $cond: [{ $lt: ["$rating", 3] }, 1, 0] } }
-                }
-            },
-            {
-                $sort: {
-                    totalNegativeReviews: -1
-                }
-            },
-            {
-                $limit: 3
-            }
-        ]);
+        const companies = await Review.aggregate(pipelines.top3CompaniesWithMostNegativeReviews(startDate, endDate));
         await setCachedData(cacheKey, companies);
         return res.status(200).json(companies);
     }catch(err){
@@ -932,34 +468,7 @@ export const topSellersWithMostNegativeReviews = async(req, res)=>{
         if(cachedData){
             return res.status(200).json(cachedData);
         }
-        const sellers = await Review.aggregate([
-            {
-                $match: {
-                    createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
-                }
-            },
-            {
-                $project: {
-                    seller: "$owner.username",
-                    rating: 1,
-                    createdAt: 1
-                }
-            },
-            {
-                $group: {
-                    _id: "$seller",
-                    totalNegativeReviews: { $sum: { $cond: [{ $lt: ["$rating", 3] }, 1, 0] } }
-                }
-            },
-            {
-                $sort: {
-                    totalNegativeReviews: -1
-                }
-            },
-            {
-                $limit: 5
-            }
-        ]);
+        const sellers = await Review.aggregate(pipelines.topSellersWithMostNegativeReviews(startDate, endDate));
         await setCachedData(cacheKey, sellers);
         return res.status(200).json(sellers);
     }catch(err){
@@ -982,30 +491,13 @@ export const getCarCateogoryWiseBookings = async(req, res)=>{
         return res.status(400).json({message: "startDate and endDate are required"});
     }
     const cacheKey = `car-category-wise-bookings-${startDate}-${endDate}`;
-    const cachedData = await getCachedData(cacheKey);
-    if(cachedData){
-        return res.status(200).json(cachedData);
-    }
+   
     try{
-        const bookings = await Bidding.aggregate([
-            {
-                $match: {
-                    status : { $in: ["approved", "started", "ended", "reviewed"] },
-                    startDate: { $gte: new Date(startDate), $lte: new Date(endDate) }
-                }
-            },
-            {
-                $group: {
-                    _id: "$vehicle.category",
-                    totalBookings: { $sum: 1 }
-                }
-            },
-            {
-                $sort: {
-                    totalBookings: -1
-                }
-            }
-        ]);
+        const cachedData = await getCachedData(cacheKey);
+        if(cachedData){
+            return res.status(200).json(cachedData);
+        }
+        const bookings = await Bidding.aggregate(pipelines.carCategoryWiseBookings(startDate, endDate));
         await setCachedData(cacheKey, bookings);
         return res.status(200).json(bookings);
     }catch(err){

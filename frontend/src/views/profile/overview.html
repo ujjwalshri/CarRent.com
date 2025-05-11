@@ -1,0 +1,54 @@
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Profile Overview</h3>
+    </div>
+    <div class="panel-body">
+
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h4 class="panel-title"><span class="glyphicon glyphicon-user"></span> Basic Information</h4>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <p class="text-muted small">Full Name</p>
+                        <p class="lead" style="margin-top: 0;">{{user.firstName}} {{user.lastName}}</p>
+                    </div>
+                    <div class="col-sm-4">
+                        <p class="text-muted small">Username</p>
+                        <p class="lead" style="margin-top: 0;">{{user.username}}</p>
+                    </div>
+                    <div class="col-sm-4">
+                        <p class="text-muted small">Email</p>
+                        <p class="lead" style="margin-top: 0;">{{user.email}} <span class="label" ng-class="{'label-success': user.isEmailVerified, 'label-warning': !user.isEmailVerified}">
+                            {{user.isEmailVerified ? 'Verified' : 'Unverified'}}
+                        </span></p> 
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="panel panel-info">
+            <div class="panel-heading">
+                <h4 class="panel-title"><span class="glyphicon glyphicon-info-sign"></span> Account Information</h4>
+            </div>
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-sm-4">
+                        <p class="text-muted small">Account Status</p>
+                        <p style="margin-top: 0;">
+                            <span class="label" ng-class="{'label-success': user.isEmailVerified, 'label-warning': !user.isEmailVerified}">
+                                {{user.isEmailVerified ? 'Verified' : 'Unverified'}}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-sm-4">
+                        <p class="text-muted small">Member Since</p>
+                        <p class="lead" style="margin-top: 0;">{{user.createdAt | date:'mediumDate'}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

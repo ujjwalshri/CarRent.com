@@ -8,30 +8,27 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
     $stateProvider
         .state("home", {
             url: "/home",
-            templateUrl: "modules/home/home.html",
+            templateUrl: "views/home/home.html",
             controller: "homeCtrl",
             resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    RouteProtection.getLoggedinUser().then((user)=>{
+                auth: ['$state', 'AuthService', function($state, AuthService){
+                    AuthService.getLoggedinUser().then((user)=>{
                         if(user && user.isAdmin){
                             $state.go('admin');
                         }
-                        if(user && user.isSeller){
-                            $state.go('sellerListings');
-                        }
                     }).catch((err)=>{
-                     
+                       console.log(err);   
                     })
                 }]
             }
         })
         .state("login",{
             url: "/login",
-            templateUrl: "modules/auth/login.html",
+            templateUrl: "views/auth/login.html",
             controller: "loginCtrl",
             resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    RouteProtection.getLoggedinUser().then((user)=>{
+                auth: ['$state', 'AuthService', function($state, AuthService){
+                    AuthService.getLoggedinUser().then((user)=>{
                         if(user && user.isAdmin){
                             $state.go('admin');
                         }
@@ -40,18 +37,17 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
                         }
                         
                     }).catch((err)=>{
-                        
                     })
                 }]
             }
         })
         .state("signup",{
            url: "/signup",
-           templateUrl: "modules/auth/signup.html",
+           templateUrl: "views/auth/signup.html",
            controller: "signupCtrl",
               resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    RouteProtection.getLoggedinUser().then((user)=>{
+                auth: ['$state', 'AuthService', function($state, AuthService){
+                    AuthService.getLoggedinUser().then((user)=>{
                         if(user && user.isAdmin){
                             $state.go('admin');
                         }
@@ -65,13 +61,16 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('becomeSeller', {
             url: '/becomeSeller',
-            templateUrl: 'modules/car/addCar.html',
-            controller: 'addCarCtrl',
+            templateUrl: 'views/becomeSeller/becomeSeller.html',
+            controller: 'becomeSellerCtrl',
             resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                   RouteProtection.getLoggedinUser().then((user)=>{
+                auth: ['$state', 'AuthService', function($state, AuthService){
+                    AuthService.getLoggedinUser().then((user)=>{
                     if(user.isAdmin){
                         $state.go('admin');
+                    }
+                    if(user && user.isSeller){
+                        $state.go('home');
                     }
                 }).catch((err)=>{
                     console.log(err);
@@ -82,11 +81,11 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('admin', {
             url: '/admin',
-            templateUrl: 'modules/admin/admin.html',
+            templateUrl: 'views/admin/admin.html',
             controller: 'adminCtrl',
             resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                  RouteProtection.getLoggedinUser().then((user)=>{
+                auth: ['$state', 'AuthService', function($state, AuthService){
+                    AuthService.getLoggedinUser().then((user)=>{
                     if(!user.isAdmin){
                         $state.go('home');
                     }
@@ -100,7 +99,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             url: '/platformManagement',
             views: {
                 'adminContent@admin': { 
-                    templateUrl: 'modules/admin/platformManagement/platformManagement.html',
+                    templateUrl: 'views/admin/platformManagement/platformManagement.html',
                     controller: 'carCtrl'
                 }
             }
@@ -109,7 +108,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             url: '/userManagement',
             views: {
                 'adminContent@admin': {
-                    templateUrl: 'modules/admin/userManagement/userManagement.html',
+                    templateUrl: 'views/admin/userManagement/userManagement.html',
                     controller: 'userManagementCtrl',
                 }
             }
@@ -118,22 +117,20 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             url: '/analytics',
             views: {
                 'adminContent@admin': {
-                    templateUrl: 'modules/admin/Analytics/analytics.html',
+                    templateUrl: 'views/admin/Analytics/analytics.html',
                     controller: 'analyticsCtrl'
                 }
             }
         })
         .state('singleCar',{
             url: '/singleCar/:id',
-            templateUrl: 'modules/car/singleCar.html',
+            templateUrl: 'views/car/singleCar.html',
             controller: 'singleCarCtrl',
             resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                  RouteProtection.getLoggedinUser().then((user)=>{
+                auth: ['$state', 'AuthService', function($state, AuthService){
+                    AuthService.getLoggedinUser().then((user)=>{
 
-                    if(user && user.isSeller){
-                        $state.go('sellerListings');
-                    }
+                   
                     if(user && user.isAdmin){
                         $state.go('admin');
                     }}).catch((err)=>{
@@ -144,11 +141,11 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('conversations', {
             url: '/conversations?/:id',
-            templateUrl: 'modules/conversations/conversations.html',
+            templateUrl: 'views/conversations/conversations.html',
             controller: 'conversationsCtrl',
             resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                   RouteProtection.getLoggedinUser().then((user)=>{
+                auth: ['$state', 'AuthService', function($state, AuthService){
+                    AuthService.getLoggedinUser().then((user)=>{
                     if(user && user.isAdmin){
                         $state.go('admin');
                     }
@@ -160,11 +157,11 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         }) 
         .state('myProfile', {
             url: '/myProfile?/:id',
-            templateUrl: 'modules/profile/myProfile.html',
+            templateUrl: 'views/profile/myProfile.html',
             controller: 'myProfileCtrl',
             resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    RouteProtection.getLoggedinUser().then(user=>{
+                auth: ['$state', 'AuthService', function($state, AuthService){
+                    AuthService.getLoggedinUser().then(user=>{
                         if(user && user.isAdmin){
                             $state.go('admin');
                         }
@@ -174,33 +171,28 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
                 }]
             }
         })
-        .state('myBookings', {
-            url: '/myBookings',
-            templateUrl: 'modules/booking/userBookings/myBookings.html',
-            controller: 'userBookingsCtrl',
-            resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                   RouteProtection.getLoggedinUser().then((user)=>{
-                    if(user && user.isAdmin){
-                        $state.go('admin');
-                    }
-                    if(user.isSeller){
-                        $state.go('ownerBookings');
-                    }
-                   }).catch((err)=>{
-                    $state.go('login');
-                })
-                }]
-            }
-            
+        .state('myProfile.overview', {
+            url: '/overview',
+            templateUrl: 'views/profile/overview.html',
+            controller: 'myProfileCtrl'
+        })
+        .state('myProfile.biddings', {
+            url: '/biddings',
+            templateUrl: 'views/profile/userBookings/myBiddings.html',
+            controller: 'myBiddingsCtrl'
+        })
+        .state('myProfile.bookingsHistory', {
+            url: '/bookingsHistory',
+            templateUrl: 'views/profile/userBookings/bookingsHistory.html',
+            controller: 'bookingsHistoryCtrl'
         })
         .state('ownerBookings', {
             url: '/ownerBiddings',
-            templateUrl: 'modules/booking/ownerBookings/ownerBiddings.html',
+            templateUrl: 'views/ownerBookings/ownerBiddings.html',
             controller: 'ownerBiddingsCtrl',
             resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    RouteProtection.getLoggedinUser().then((user)=>{
+                auth: ['$state', 'AuthService', function($state, AuthService){
+                    AuthService.getLoggedinUser().then((user)=>{
                         if(user && user.isAdmin){
                             $state.go('admin');
                         }
@@ -215,11 +207,11 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('bookingHistory', {
             url: '/bookingHistory',
-            templateUrl: 'modules/booking/userBookings/bookingsHistory.html',
+            templateUrl: 'views/booking/userBookings/bookingsHistory.html',
             controller: 'bookingsHistoryCtrl',
             resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                   RouteProtection.getLoggedinUser().then((user)=>{
+                auth: ['$state', 'AuthService', function($state, AuthService){
+                    AuthService.getLoggedinUser().then((user)=>{
                     if(user && user.isAdmin){
                         $state.go('admin');
                     }
@@ -232,11 +224,11 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('confirmedBookings', {
             url: '/confirmedBookings',
-            templateUrl: 'modules/booking/ownerBookings/confirmedBookings.html',
+            templateUrl: 'views/ownerBookings/confirmedBookings.html',
             controller: 'confirmedBookingsCtrl',
             resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                  RouteProtection.getLoggedinUser().then((user)=>{
+                auth: ['$state', 'AuthService', function($state, AuthService){
+                    AuthService.getLoggedinUser().then((user)=>{
                     if(user && user.isAdmin){
                         $state.go('admin');
                     }
@@ -251,11 +243,11 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('manageBookings', {
             url: '/manageBookings:id',
-            templateUrl: 'modules/booking/ownerBookings/manageBookings.html',
+            templateUrl: 'views/booking/ownerBookings/manageBookings.html',
             controller: 'manageBookingsCtrl',
             resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    RouteProtection.getLoggedinUser().then((user)=>{
+                auth: ['$state', 'AuthService', function($state, AuthService){
+                    AuthService.getLoggedinUser().then((user)=>{
                         if(user && user.isAdmin){
                             $state.go('admin');
                         }
@@ -268,11 +260,11 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('myBiddings', {
             url: '/myBiddings',
-            templateUrl: 'modules/booking/userBookings/myBiddings.html',
+            templateUrl: 'views/booking/userBookings/myBiddings.html',
             controller: 'myBiddingsCtrl',
             resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    RouteProtection.getLoggedinUser().then((user)=>{
+                auth: ['$state', 'AuthService', function($state, AuthService){
+                    AuthService.getLoggedinUser().then((user)=>{
                         if(user && user.isAdmin){
                             $state.go('admin');
                         }
@@ -284,11 +276,11 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('sellerAnalytics', {
             url: '/sellerAnalytics',
-            templateUrl: 'modules/sellerAnalytics/sellerAnalytics.html',
+            templateUrl: 'views/sellerAnalytics/sellerAnalytics.html',
             controller: 'sellerAnalyticsCtrl',
             resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    RouteProtection.getLoggedinUser().then((user)=>{
+                auth: ['$state', 'AuthService', function($state, AuthService){
+                    AuthService.getLoggedinUser().then((user)=>{
                         if(user && user.isAdmin){
                             $state.go('admin');
                         }
@@ -303,20 +295,20 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('verified', {
             url: '/verified',
-            templateUrl: 'modules/auth/verifiedEmail.html',
+            templateUrl: 'views/auth/verifiedEmail.html',
             resolve : {
-                auth : ['$state', 'RouteProtection', function($state, RouteProtection){
+                auth : ['$state', 'AuthService', function($state, AuthService){
                     
                 }]
             }
         })
         .state('sellerListings', {
             url: '/sellerListings',
-            templateUrl: 'modules/sellerListings/sellerListings.html',
+            templateUrl: 'views/sellerListings/sellerListings.html',
             controller: 'sellerListingsCtrl',
             resolve : {
-                auth: ['$state', 'RouteProtection', function($state, RouteProtection){
-                    RouteProtection.getLoggedinUser().then((user)=>{
+                auth: ['$state', 'AuthService', function($state, AuthService){
+                    AuthService.getLoggedinUser().then((user)=>{
                         
                         if(user && user.isAdmin){
                             $state.go('admin');

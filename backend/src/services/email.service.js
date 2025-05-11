@@ -8,7 +8,8 @@ import {
     congratulateBecomingSeller, 
     invoiceTemplate,
     carRejectionMailTemplate,
-    verificationTemplate
+    verificationTemplate,
+    vehicleApprovalTemplate
 } from '../utils/email.templates.js';
 
 dotenv.config();
@@ -30,7 +31,8 @@ const sendEmail = async (options) => {
         congratulateBecomingSeller: congratulateBecomingSeller,
         invoice: invoiceTemplate,
         carRejection: carRejectionMailTemplate,
-        verification: verificationTemplate
+        verification: verificationTemplate,
+        vehicleApproval: vehicleApprovalTemplate
     };
 
     const template = templates[options.template];
@@ -140,6 +142,23 @@ export const sendVerificationEmail = async (data) => {
         data: {
             firstName: data.firstName,
             verificationToken: data.verificationToken
+        }
+    });
+};
+
+export const sendVehicleApprovalEmail = async (data) => {
+    return sendEmail({
+        to: data.owner.email,
+        subject: 'Vehicle Approved - Car Rental',
+        template: 'vehicleApproval',
+        data: {
+            ownerName: `${data.owner.firstName} ${data.owner.lastName}`,
+            company: data.company,
+            name: data.name,
+            modelYear: data.modelYear,
+            registrationNumber: data.registrationNumber,
+            city: data.city,
+            price: data.price
         }
     });
 };

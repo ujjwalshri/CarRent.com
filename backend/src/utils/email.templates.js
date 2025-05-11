@@ -1,4 +1,3 @@
-
 /**
  * Email Templates
  * @module utils/email.templates
@@ -320,25 +319,60 @@ export const carRejectionMailTemplate = (data) => {
     const vehicleCompany = data.vehicle?.company || '';
     const vehicleName = data.vehicle?.name || '';
     const vehicleModelYear = data.vehicle?.modelYear || '';
+    const rejectionReason = data.rejectionReason || 'No specific reason provided';
     
     return `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
         <h2 style="color: #4CAF50;">Car Rejection Notification</h2>
         <p>Dear ${sellerFirstName} ${sellerLastName},</p>
         <p>We regret to inform you that your car ${vehicleCompany} ${vehicleName} ${vehicleModelYear} has been rejected for one of the following reasons:</p>
-        <ul>
-            <li>The car images are not real</li>
-            <li>The car registration number is not valid</li>
-            <li>The car details are not correct</li>
-            <li>We dont allow cars from your country</li>
-            <li>The owner details are not correct</li>
-            
-        </ul>
+        <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="font-size: 16px; margin: 10px 0;">${rejectionReason}</p>
+
+        </div>
         <p>Please review the feedback and make the necessary changes to your car listing.</p>
         <p>Thank you for your understanding.</p>
     </div>
     `
-}
+};
+
+export const vehicleApprovalTemplate = (data) => `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #4CAF50, #2E8B57); padding: 30px; text-align: center; color: white; border-radius: 8px;">
+            <h1 style="margin: 0;">Vehicle Approved! 🎉</h1>
+        </div>
+
+        <div style="background-color: #ffffff; padding: 30px; border-radius: 8px; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+            <p style="font-size: 16px;">Dear ${data.ownerName},</p>
+            
+            <p style="font-size: 16px;">Great news! Your vehicle has been approved and is now listed on our platform:</p>
+            
+            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="color: #4CAF50; margin-top: 0;">${data.company} ${data.name} ${data.modelYear}</h3>
+                <p><strong>Registration Number:</strong> ${data.registrationNumber}</p>
+                <p><strong>Location:</strong> ${data.city}</p>
+                <p><strong>Daily Rate:</strong> ₹${data.price}</p>
+            </div>
+
+            <p>Your vehicle is now visible to potential renters and can start receiving booking requests. Here's what you can expect:</p>
+            
+            <ul style="padding-left: 20px; margin: 15px 0;">
+                <li>Your vehicle will appear in search results</li>
+                <li>You'll receive emails for new booking requests</li>
+                <li>You can track your earnings through the dashboard</li>
+            </ul>
+
+            <p style="background-color: #e8f5e9; padding: 15px; border-radius: 5px; border-left: 4px solid #4CAF50;">
+                Remember to keep your calendar updated and respond to booking requests promptly to maintain a good host rating!
+            </p>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; color: #666;">
+            <p>Thank you for choosing to list with us!</p>
+            <p style="font-size: 12px;">© ${new Date().getFullYear()} Car Rental.com. All rights reserved.</p>
+        </div>
+    </div>
+`;
 
 export const verificationTemplate = (data) => {
     return `

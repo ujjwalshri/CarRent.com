@@ -1,0 +1,233 @@
+<div class="admin-page-container" style="padding-top: 20px;">
+    <div class="container-fluid" ng-init="init()">
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="page-header text-center">
+                    <h2><i class="glyphicon glyphicon-user"></i> User Management Dashboard</h2>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row">
+            <div class="col-md-10 col-md-offset-1">
+                <div class="panel panel-default" style="border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px;">
+                    <div class="panel-heading" style="background: linear-gradient(to right, hsl(0, 0%, 42%), #5f5e5e); border-bottom: 1px solid #ddd;">
+                        <h4 class="panel-title">
+                            <i class="glyphicon glyphicon-filter text-primary"></i> 
+                            Filter Users
+                        </h4>
+                    </div>
+                    <div class="panel-body" style="padding: 15px;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <label><i class="glyphicon glyphicon-search text-muted"></i> Search Users:</label>
+                                    <div class="input-group">
+                                        <input type="text" 
+                                            ng-model="search" 
+                                            placeholder="Search by name, username or email..." 
+                                            class="form-control" 
+                                            ng-change="filterUsersWithDelay()" 
+                                            style="border-radius: 3px 0 0 3px;">
+                                        <span class="input-group-btn">
+                                            <button class="btn btn-primary" type="button">
+                                                <i class="glyphicon glyphicon-search"></i>
+                                            </button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label><i class="glyphicon glyphicon-filter text-muted"></i> User Type:</label>
+                                <div class="btn-group btn-group-justified" role="group">
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn" 
+                                            ng-class="{'btn-primary': userType === 'seller', 'btn-default': userType !== 'seller'}" 
+                                            ng-click="setUserType('seller')">
+                                            <i class="glyphicon glyphicon-tag"></i> Sellers
+                                        </button>
+                                    </div>
+                                    <div class="btn-group" role="group">
+                                        <button type="button" class="btn" 
+                                            ng-class="{'btn-primary': userType === 'buyer', 'btn-default': userType !== 'buyer'}" 
+                                            ng-click="setUserType('buyer')">
+                                            <i class="glyphicon glyphicon-shopping-cart"></i> Buyers
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="visible-md-block visible-lg-block">&nbsp;</label>
+                                <button class="btn btn-default btn-block" ng-click="resetFilter()">
+                                    <i class="glyphicon glyphicon-refresh"></i> Reset
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row">
+            <div class="col-md-10 col-md-offset-1">
+                <div class="panel panel-default" style="box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            <i class="glyphicon glyphicon-list-alt"></i> 
+                            Users List
+                        </h3>
+                    </div>
+                    <div class="panel-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-striped">
+                                <thead>
+                                    <tr style="background: #f5f5f5;">
+                                        <th class="text-center" style="width: 60px;">#</th>
+                                        <th>Name</th>
+                                        <th>Username</th>
+                                        <th>Email</th>
+                                        <th class="text-center">Role</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr ng-repeat="user in allUsers">
+                                        <td class="text-center">{{(pagination.currentPage - 1) * pagination.itemsPerPage + $index + 1}}</td>
+                                        <td>
+                                            <div style="font-weight: bold;">{{user.firstName}} {{user.lastName}}</div>
+                                        </td>
+                                        <td>
+                                            <span class="text-muted">@</span>{{user.username}}
+                                        </td>
+                                        <td>
+                                            <a href="mailto:{{user.email}}" class="text-primary">{{user.email}}</a>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="label" ng-class="{'label-success': user.isSeller, 'label-info': !user.isSeller}">
+                                                <i class="glyphicon" ng-class="{'glyphicon-tag': user.isSeller, 'glyphicon-shopping-cart': !user.isSeller}"></i>
+                                                {{user.isSeller ? 'Seller' : 'Buyer'}}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="label" ng-class="{'label-danger': user.isBlocked, 'label-success': !user.isBlocked}">
+                                                {{user.isBlocked ? 'Blocked' : 'Active'}}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-danger" ng-hide="user.isBlocked" ng-click="block(user._id)" 
+                                                        uib-tooltip="Block User">
+                                                    <i class="glyphicon glyphicon-ban-circle"></i> Block
+                                                </button>
+                                                <button class="btn btn-success" ng-show="user.isBlocked" ng-click="unblock(user._id)"
+                                                        uib-tooltip="Unblock User">
+                                                    <i class="glyphicon glyphicon-ok-circle"></i> Unblock
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr ng-if="allUsers.length === 0 && !isLoading">
+                                        <td colspan="7" class="text-center">
+                                            <div style="padding: 20px;">
+                                                <i class="glyphicon glyphicon-info-sign" style="font-size: 24px; color: #ccc;"></i>
+                                                <p style="margin-top: 10px;">No users found matching your criteria</p>
+                                                <button class="btn btn-sm btn-default" ng-click="resetFilter()">
+                                                    <i class="glyphicon glyphicon-refresh"></i> Reset Filters
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+
+                    <div class="text-center" ng-show="isLoading" style="padding: 30px;">
+                        <i class="fa fa-spinner fa-spin fa-2x fa-fw text-primary"></i>
+                        <span class="sr-only">Loading...</span>
+                        <p class="text-muted">Loading users...</p>
+                    </div>
+
+
+                    <div class="panel-footer" ng-show="pagination.totalItems > 0">
+                        <div class="text-center">
+                            <ul uib-pagination
+                                total-items="pagination.totalItems"
+                                ng-model="pagination.currentPage"
+                                ng-change="pageChanged()"
+                                max-size="pagination.maxSize"
+                                items-per-page="pagination.itemsPerPage"
+                                class="pagination pagination-sm m-0"
+                                boundary-links="true"
+                                force-ellipses="true"
+                                first-text="&laquo;"
+                                last-text="&raquo;"
+                                previous-text="&lsaquo;"
+                                next-text="&rsaquo;"
+                                rotate="true">
+                            </ul>
+                            <div class="text-muted" style="margin-top: 5px;">
+                                <small>
+                                    Showing {{((pagination.currentPage - 1) * pagination.itemsPerPage) + 1}} 
+                                    to {{Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)}} 
+                                    of {{pagination.totalItems}} users
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="well well-sm text-center text-muted">
+                <small>
+                    <i class="glyphicon glyphicon-info-sign"></i> 
+                    User Management Dashboard - Manage system users and their permissions
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+
+.panel {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 15px;
+}
+.panel-heading {
+    background-image: linear-gradient(to bottom, #337ab7 0%, #2e6da4 100%);
+}
+.panel-title {
+    font-weight: 600;
+    color: white;
+}
+.table-condensed {
+    font-size: 12px;
+}
+/* Fix pagination alignment */
+.pagination {
+    margin: 10px 0;
+}
+.m-r-5 { margin-right: 5px; }
+.p-0 { padding: 0; }
+.table-hover tbody tr:hover {
+    background-color: #f0f7fd;
+}
+.btn-group-sm > .btn {
+    padding: 5px 10px;
+}
+.label {
+    display: inline-block;
+    padding: 0.3em 0.6em;
+}
+</style>

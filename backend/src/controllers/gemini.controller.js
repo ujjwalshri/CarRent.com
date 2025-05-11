@@ -1,7 +1,12 @@
 import Review from "../models/review.model.js";
 import { generateText } from "../services/gemini.service.js";
 
-
+/**
+ * function to get the review summary for a seller within a specified date range 
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the review summary for the seller using the gemini service, generating insights based on the reviews
+ */
 export const getReviewSummaryController = async (req, res) => {
   try {
     const sellerId = req.user._id;
