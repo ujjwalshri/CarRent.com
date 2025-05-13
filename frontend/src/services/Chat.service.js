@@ -22,9 +22,11 @@ angular.module('myApp').service('ChatService', function($q, ApiService, $http) {
      * Gets all conversations
      * @returns all the conversations
      */
-    this.getAllConversations = function(){
+    this.getAllConversations = function(searchQuery){
         const deferred = $q.defer();
-        $http.get(`${ApiService.baseURL}/api/conversation/getAllConversations`, { withCredentials: true })
+        $http.get(`${ApiService.baseURL}/api/conversation/getAllConversations`, { params: {
+                searchQuery: searchQuery
+        }, withCredentials: true })
             .then((res) => {
                 deferred.resolve(res.data);
             })

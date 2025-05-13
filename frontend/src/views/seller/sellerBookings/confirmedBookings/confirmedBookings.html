@@ -10,24 +10,19 @@
                         <i class="fa fa-filter"></i> Filter Bookings
                     </h3>
                 </div>
-                <div class="col-xs-12 col-sm-6 visible-xs visible-sm">
-                    <button class="btn btn-default btn-sm pull-right" data-toggle="collapse" data-target="#filterPanelBookings" aria-expanded="false">
-                        <i class="glyphicon glyphicon-filter"></i> Toggle Filters
-                        <span class="caret"></span>
-                    </button>
-                </div>
+               
             </div>
         </div>
         
 
-        <div id="filterPanelBookings" class="panel-body collapse navbar-collapse">
+        <div id="filterPanelBookings" class="panel-body navbar-collapse">
             <div class="row">
                 <div class="col-sm-4">
                     <select class="form-control" ng-model="bookingsType.type" ng-change="applyFilter()">
                         <option value="" disabled selected>Select Booking Type</option>
                         <option value="started">Started</option>
                         <option value="ended">Ended</option>
-                        <option value="reviewed">Reviewed</option>
+                        <option value="approved">Approved</option>
                     </select>
                 </div>
                 <div class="col-sm-3">
@@ -155,7 +150,7 @@
                                 <div><i class="fa fa-calendar-times-o"></i> {{ booking.endDate | date: 'MMM dd, yyyy' }}</div>
                                 <div class="small text-muted" ng-if="booking.status === 'started' || booking.status === 'ended' || booking.status === 'reviewed'">
                                     <span ng-if="booking.startOdometerValue">Start: {{booking.startOdometerValue}} km</span>
-                                    <span ng-if="booking.endOdometerValue"><br>End: {{booking.endOdometerValue}} km</span>
+                                    <span ng-if="booking.endOdometerValue && booking.startOdometerValue !== -1"><br>End: {{booking.endOdometerValue}} km</span>
                                 </div>
                             </td>
                             <td>
@@ -177,7 +172,7 @@
                                     'label-info': booking.status === 'started',
                                     'label-success': booking.status === 'ended' || booking.status === 'reviewed'
                                 }">
-                                    {{booking.status | uppercase}}
+                                    {{booking.status==='reviewed' ? 'ended' : booking.status | uppercase}}
                                 </span>
                                 <div class="small text-muted" ng-if="booking.todayBookingCalculator() && booking.status === 'approved'">
                                     <i class="fa fa-clock-o"></i> Starting Today
@@ -200,7 +195,7 @@
                                         ng-if="booking.status === 'started'">
                                     <i class="fa fa-stop"></i> End
                                 </button>
-                                <button ng-click="downloadInvoice(booking)" 
+                                <button ng-click="booking.generatePDF()" 
                                         class="btn btn-success btn-xs" 
                                         ng-if="booking.status === 'ended' || booking.status === 'reviewed'">
                                     <i class="fa fa-download"></i> Invoice
@@ -352,13 +347,5 @@
     
     .pagination > li > a {
         cursor: pointer;
-    }
-
-    /* Desktop styles - always show filters */
-    @media (min-width: 992px) {
-        #filterPanelBookings.collapse {
-            display: block !important;
-            height: auto !important;
-        }
     }
 </style>

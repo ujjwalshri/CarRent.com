@@ -29,6 +29,7 @@ angular
         startDate: null,
         endDate: null
       };
+      // variable to hold the error message for date filter
       $scope.dateFilterError = null;
 
       
@@ -140,18 +141,7 @@ angular
         });
       };
 
-      /**
-       * Downloads the invoice for a completed booking
-       * @param {Object} booking - The booking to generate invoice for
-       */
-      $scope.downloadInvoice = function(booking) {
-        if (booking && booking.generatePDF) {
-          booking.generatePDF();
-        } else {
-          ToastService.error("Unable to generate invoice");
-        }
-      };
-      
+    
       /**
        * Fetches confirmed bookings for the currently logged-in car owner
        * Applies current pagination, sorting, and filtering settings

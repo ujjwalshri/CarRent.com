@@ -1,0 +1,272 @@
+<div ng-init="init()" class="container-fluid">
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="page-header">
+          <h2 class="text-center">My Bookings History</h2>
+      </div>
+        <div class="row">
+          <div class="col-xs-12">
+            <div class="panel panel-primary">
+              <div class="panel-heading">
+                <h3 class="panel-title">  <i class="glyphicon glyphicon-filter"></i>  Filter and Search</h3>
+              </div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="col-xs-12 col-sm-4">
+                    <div class="form-group">
+                      <div class="dropdown" uib-dropdown dropdown-append-to-body>
+                        <button type="button" class="btn btn-default  btn-block" uib-dropdown-toggle>
+                          <span class="glyphicon glyphicon-sort"></span>
+                          Sort By: {{selectedSort.label}} <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" uib-dropdown-menu>
+                          <li><a href ng-click="applySorting('createdAt', -1, 'Latest First')">Latest First</a></li>
+                          <li><a href ng-click="applySorting('createdAt', 1, 'Oldest First')">Oldest First</a></li>
+                          <li class="divider"></li>
+                          <li><a href ng-click="applySorting('amount', -1, 'Amount High to Low')">Amount High to Low</a></li>
+                          <li><a href ng-click="applySorting('amount', 1, 'Amount Low to High')">Amount Low to High</a></li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+    
+                  <div class="col-xs-12 col-sm-4">
+                    <div class="form-group">
+                      <div class="input-group">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>
+                        <input type="text" class="form-control" ng-model="search.searchQuery" ng-change="handleSearch()" ng-model-options="{ debounce: 500 }" placeholder="Search by Car Name or Company">
+                      </div>
+                    </div>
+                  </div>
+    
+                  <div class="col-xs-12 col-sm-4">
+                    <div class="form-group">
+                      <button type="button" class="btn btn-default btn-block" ng-click="resetFilters()">
+                        <span class="glyphicon glyphicon-refresh"></span> Reset Filters
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <div ng-show="bookings.length > 0 && !isLoading">
+      <div class="row">
+        <div class="col-xs-12" ng-repeat="booking in bookings">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <div class="row">
+                <div class="col-xs-12 col-sm-3 col-md-2">
+                  <img ng-src="{{booking.vehicle.vehicleImage.url}}" 
+                       ng-if="booking.vehicle.vehicleImage"
+                       alt="Vehicle Image" 
+                       class="img-responsive img-thumbnail center-block">
+                  <img src="data:image/jpeg;base64,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" 
+                       ng-if="!booking.vehicle.vehicleImage"
+                       alt="No Image Available" 
+                       class="img-responsive img-thumbnail center-block">
+                </div>
+
+                <div class="col-xs-12 col-sm-6 col-md-8" style="margin-top: 15px;">
+                  <h4 class="panel-title">
+                    <strong>{{ booking.vehicle.company }} {{ booking.vehicle.name }}</strong>
+
+                  </h4>
+                  <p class="text-muted">
+                    <span class="hidden-xs">{{ booking.vehicle.modelYear }} • {{ booking.vehicle.fuelType }}</span>
+                    <span class="visible-xs-inline">{{ booking.vehicle.modelYear }} • {{ booking.vehicle.fuelType }}</span>
+                  </p>
+                </div>
+
+                <div class="col-xs-12 col-sm-3 col-md-2">
+                  <div class="text-right hidden-xs">
+                    <h4 class="no-margin">{{ booking.amount | currency:"₹" }}<small>/day</small></h4>
+                    <small class="text-muted">Total: {{ booking.calculate() | currency:"₹" }}</small>
+                  </div>
+                  <div class="visible-xs">
+                    <h4>{{ booking.amount | currency:"₹" }}<small>/day</small></h4>
+                    <small class="text-muted">Total: {{ booking.calculate() | currency:"₹" }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-xs-12 col-sm-6 col-md-3">
+                  <div class="well well-sm">
+                    <strong><i class="glyphicon glyphicon-calendar"></i> Rental Period</strong>
+                    <div class="text-muted">
+                      <small>From:</small> {{booking.startDate | date: 'MMM dd, yyyy'}}<br>
+                      <small>To:</small> {{booking.endDate | date: 'MMM dd, yyyy'}}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-xs-12 col-sm-6 col-md-3">
+                  <div class="well well-sm">
+                    <strong><i class="glyphicon glyphicon-user"></i> Car Owner</strong>
+                    <div>
+                      {{booking.owner.firstName}} {{booking.owner.lastName}}
+                      <div class="text-muted"><small>@{{booking.owner.username}}</small></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-xs-12 col-sm-6 col-md-3">
+                  <div class="well well-sm">
+                    <strong><i class="glyphicon glyphicon-info-sign"></i> Vehicle Details</strong>
+                    <div class="text-muted">
+                      Category: {{booking.vehicle.category}}<br>
+                      Fuel Type: {{booking.vehicle.fuelType}}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-xs-12 col-sm-6 col-md-3">
+                  <div class="btn-group-vertical btn-block">
+                    <button class="btn btn-primary" ng-click="booking.generatePDF()">
+                      <i class="glyphicon glyphicon-download-alt"></i> Download Invoice
+                    </button>
+                    <button class="btn btn-info" ng-click="navigateToSingleCarPage(booking.vehicle._id)">
+                      <i class="glyphicon glyphicon-repeat"></i> Book Again
+                    </button>
+                  </div>
+                </div>
+                
+              </div>
+              
+
+              <div class="row" ng-if="booking.status === 'ended' && booking.status !== 'reviewed'">
+                <div class="col-xs-12">
+                  <div class="well">
+                    <h4>Share Your Experience</h4>
+                    <form name="reviewForm_{{booking._id}}" ng-submit="addReview(booking)" class="form" novalidate>
+                      <div class="form-group">
+                        <label>Rating:</label>
+                        <div class="star-rating">
+                          <span ng-repeat="star in [1, 2, 3, 4, 5]" 
+                                ng-click="setRating(star, booking)" 
+                                class="star" 
+                                ng-class="{'active': star <= booking.review.rating}">
+                              ★
+                          </span>
+                        </div>
+                        <input type="hidden" name="rating" ng-model="booking.review.rating" required>
+                        <p class="text-muted" ng-show="booking.review.rating">
+                          You selected: {{booking.review.rating}} star<span ng-if="booking.review.rating > 1">s</span>
+                        </p>
+                        <p class="text-danger" ng-show="reviewForm_{{booking._id}}.$submitted && !booking.review.rating">
+                          Please select a rating.
+                        </p>
+                      </div>
+
+                      <div class="form-group">
+                        <label>Review:</label>
+                        <textarea name="newReview" 
+                                class="form-control" 
+                                ng-model="booking.review.reviewContent" 
+                                rows="3" 
+                                ng-maxlength="150" 
+                                placeholder="Share your experience with this car...">
+                        </textarea>
+                        <p class="text-danger" ng-show="reviewForm_{{booking._id}}.reviewContent.$error.maxlength">
+                          Review cannot be more than 150 characters.
+                        </p>
+                      </div>
+
+                      <button type="submit" 
+                              class="btn btn-success btn-block" 
+                              ng-disabled="reviewForm_{{booking._id}}.$invalid || isLoading">
+                        <i class="glyphicon glyphicon-ok"></i> Submit Review
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="text-center" ng-if="pagination.totalItems > 0">
+          <ul uib-pagination
+              total-items="pagination.totalItems"
+              ng-model="pagination.currentPage"
+              max-size="pagination.maxSize"
+              class="pagination-sm"
+              boundary-links="true"
+              force-ellipses="true"
+              items-per-page="pagination.itemsPerPage"
+              ng-change="pageChanged()"
+              first-text="&laquo;"
+              last-text="&raquo;"
+              previous-text="&lsaquo;"
+              next-text="&rsaquo;"
+              direction-links="true"
+              rotate="true">
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" ng-show="!bookings.length && !isLoading">
+      <div class="col-md-6 col-md-offset-3">
+          <div class="alert alert-info text-center">
+              <h4><i class="glyphicon glyphicon-info-sign"></i> No Booking History</h4>
+              <p class="text-muted">  
+                  Unable to find any booking history.
+            </p>
+          </div>
+      </div>
+  </div>
+</div>
+
+<style>
+
+    .star-rating {
+        font-size: 24px;
+        display: inline-block;
+        cursor: pointer;
+        margin-bottom: 10px;
+    }
+    
+    .star-rating .star {
+        color: #ccc;
+        display: inline-block;
+        padding: 0 2px;
+        transition: color 0.2s ease;
+    }
+    
+    .star-rating .star:hover,
+    .star-rating .star.active {
+        color: #FFD700;
+    }
+    
+
+    .star-rating .star:hover ~ .star {
+        color: #ccc;
+    }
+    
+    .star-rating .star:hover ~ .star.active {
+        color: #FFD700;
+    }
+
+    .mb-1 { margin-bottom: 8px; }
+    .mb-2 { margin-bottom: 16px; }
+    .mb-3 { margin-bottom: 24px; }
+    @media (max-width: 767px) {
+      .panel-heading .text-right {
+        text-align: left;
+        margin-top: 10px;
+      }
+      .btn-group-vertical {
+        margin-top: 15px;
+      }
+      .panel-body {
+        padding: 10px;
+      }
+    }
+</style>

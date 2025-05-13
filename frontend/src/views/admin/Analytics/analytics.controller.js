@@ -283,26 +283,26 @@ angular
                   (company) => company.totalNegativeReviews
                 ),
                 "Top 3 Companies with Most Negative Reviews",
-                "Top 3 Companies with Most Negative Reviews",
+                "Top 3 Companies with Most Negative Reviews(rating less than 3)",
                 "top3CompaniesWithMostNegativeReviews"
               );
 
-              // Create charts
-              ChartService.createBarChart(
-                "line",
-                userGrowth.map((user) => user._id),
-                userGrowth.map((user) => user.count),
-                "User Growth",
-                "User Growth",
-                "userGrowth"
+              ChartService.createLineChart( "userGrowth",
+               
+                {
+                 labels: userGrowth.map((user) => user._id),
+                data: userGrowth.map((user) => user.count),
+               title: "User Growth",
+                label: "User Growth"
+                }
               );
-
+              
               
 
               ChartService.createPieChart(
                 categoryWiseBookings.map((category) => category._id),
                 categoryWiseBookings.map((category) => category.totalBookings),
-                "Number of Biddings",
+                "Category Wise Number of Biddings ",
                 "categoryWiseBookings"
               )
 
@@ -336,7 +336,7 @@ angular
                 carDescription.map((car) => car._id),
                 carDescription.map((car) => car.count),
                 "Number of cars",
-                "car category and their type on the platform",
+                "Category Wise Number of Cars",
                 "carDescription"
               );
 
@@ -358,7 +358,7 @@ angular
                 "top3Sellers"
               );
               ChartService.createBarChart(
-                "line",
+                "bar",
                 topSellersWithMostNegativeReviews.map((seller) => seller._id),
                 topSellersWithMostNegativeReviews.map(
                   (seller) => seller.totalNegativeReviews

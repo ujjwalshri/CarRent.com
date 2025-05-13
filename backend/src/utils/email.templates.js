@@ -179,7 +179,6 @@ export const invoiceTemplate = (data) => {
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; background-color: #f8f9fa; padding: 20px;">
         <div style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 30px; text-align: center; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
             <h1 style="margin: 0; font-size: 28px; text-transform: uppercase;">Rental Invoice</h1>
-            <p style="margin: 10px 0 0; font-size: 16px; opacity: 0.9;">Booking Reference: ${data.booking._id}</p>
             <p style="margin: 5px 0 0; font-size: 14px;">Date: ${new Date().toLocaleDateString()}</p>
         </div>
 

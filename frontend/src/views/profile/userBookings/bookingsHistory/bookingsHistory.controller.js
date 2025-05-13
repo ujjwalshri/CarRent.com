@@ -73,15 +73,7 @@ angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, Biddi
         
     };
 
-    // Initialize bookings with review property
-    function initializeBookingWithReview(booking) {
-        booking.review = {
-            rating: "",
-            newReview: ""
-        };
-        return booking;
-    }
-
+   
    /**
     * @description: this function will be called when the controller is loaded, fetches the bookings initially
     * @returns {Promise} - A promise that resolves when the bookings are fetched
@@ -121,6 +113,16 @@ angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, Biddi
                 $scope.isLoading = false;
             });
     }
+
+     // Initialize bookings with review property
+     function initializeBookingWithReview(booking) {
+        booking.review = {
+            rating: "",
+            reviewContent: ""
+        };
+        return booking;
+    }
+
     
     /**
      * Fetch booking history with current pagination
@@ -144,17 +146,14 @@ angular.module('myApp').controller('bookingsHistoryCtrl', function($scope, Biddi
 
     // Handle review submission for a specific booking
     $scope.addReview = function(booking) {
-        if (!booking) {
-            ToastService.error("No booking selected for review");
-            return;
-        }
-
+    
         const carId = booking.vehicle._id;
         const bookingId = booking._id;
         const review = {
             rating: parseInt(booking.review.rating),
-            review: booking.review.newReview.trim()
+            review: booking.review.reviewContent.trim()
         };
+        
 
         $scope.isLoading = true;
         const reviewData = Review.createValidatedReview(review);

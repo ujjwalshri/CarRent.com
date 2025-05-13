@@ -36,7 +36,6 @@ export const addConversationController = async(req,res)=>{
 
     const vehicleId = req.params.vehicleId;
     const owner = req.body;
-    console.log(owner);
 
     try{
         // check for existing conversation if there is an existing conversation on that vehicle ID between the sender and the owner then return the conversation
@@ -72,8 +71,9 @@ export const addConversationController = async(req,res)=>{
             }
         });
 
-        
+     
         await conversation.save();
+
         // throw an event that a new conversation has been created if the user is online and connected i want to send the newConversation event to the client
         const io = req.app.get('io');
         io.emit('newConversation', conversation);
@@ -96,14 +96,46 @@ export const addConversationController = async(req,res)=>{
  * @returns {Object} JSON response with conversations array or error
  * @description
  * Fetches all conversations where the logged-in user is either
- * the sender or receiver of the conversation.
+ * the sender or receiver of the conversation. Includes search functionality for car name and company.
  */
 export const getAllConversationsController = async(req, res)=>{
     const userId = req.user._id;
+    const { searchQuery } = req.query;
+    
     try{
-        const conversations = await Conversation.find({$or: [{ 'creator._id': userId }, { 'reciever._id': userId }]});
+        let query = {
+            $or: [{ 'creator._id': userId }, { 'reciever._id': userId }]
+        };
+
+        // Add search conditions if searchQuery is present
+        if (searchQuery) {
+            const searchRegex = new RegExp(searchQuery, 'i'); // case-insensitive search
+            query = {
+                $and: [
+                    query,
+                    {
+                        $or: [
+                            { 'vehicle.name': searchRegex },
+                            { 'vehicle.company': searchRegex },
+                            // Combined search for company + name
+                            {
+                                $expr: {
+                                    $regexMatch: {
+                                        input: { $concat: ['$vehicle.company', ' ', '$vehicle.name'] },
+                                        regex: searchRegex
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                ]
+            };
+        }
+
+        const conversations = await Conversation.find(query).sort({ updatedAt: -1 });
         return res.status(200).json({conversations});
     }catch(err){
+        console.log(`Error in getAllConversationsController: ${err}`);
         return res.status(500).json({message: "Internal server error"});
     }
 }

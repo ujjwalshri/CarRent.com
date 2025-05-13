@@ -75,6 +75,10 @@ const biddingSchema = new mongoose.Schema({
             type:String,
             required:true
         },
+        vehicleImage:{
+            type: Object,
+            required: true,
+        },
     },
     owner: {
         _id: {
@@ -118,6 +122,7 @@ const biddingSchema = new mongoose.Schema({
         type:Array,
         default:[]
     },
+   
     status:{
         type:String,
         enum:["pending", "approved", "rejected", "reviewed", "ended"],

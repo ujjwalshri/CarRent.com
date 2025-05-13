@@ -178,17 +178,17 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('myProfile.biddings', {
             url: '/biddings',
-            templateUrl: 'views/profile/userBookings/myBiddings.html',
+            templateUrl: 'views/profile/userBookings/myBiddings/myBiddings.html',
             controller: 'myBiddingsCtrl'
         })
         .state('myProfile.bookingsHistory', {
             url: '/bookingsHistory',
-            templateUrl: 'views/profile/userBookings/bookingsHistory.html',
+            templateUrl: 'views/profile/userBookings/bookingsHistory/bookingsHistory.html',
             controller: 'bookingsHistoryCtrl'
         })
         .state('ownerBookings', {
             url: '/ownerBiddings',
-            templateUrl: 'views/ownerBookings/ownerBiddings.html',
+            templateUrl: 'views/seller/sellerBookings/biddingRequests/ownerBiddings.html',
             controller: 'ownerBiddingsCtrl',
             resolve : {
                 auth: ['$state', 'AuthService', function($state, AuthService){
@@ -207,7 +207,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('bookingHistory', {
             url: '/bookingHistory',
-            templateUrl: 'views/booking/userBookings/bookingsHistory.html',
+            templateUrl: 'views/profile/userBookings/bookingsHistory/bookingsHistory.html',
             controller: 'bookingsHistoryCtrl',
             resolve : {
                 auth: ['$state', 'AuthService', function($state, AuthService){
@@ -224,7 +224,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('confirmedBookings', {
             url: '/confirmedBookings',
-            templateUrl: 'views/ownerBookings/confirmedBookings.html',
+            templateUrl: 'views/seller/sellerBookings/confirmedBookings/confirmedBookings.html',
             controller: 'confirmedBookingsCtrl',
             resolve : {
                 auth: ['$state', 'AuthService', function($state, AuthService){
@@ -232,8 +232,8 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
                     if(user && user.isAdmin){
                         $state.go('admin');
                     }
-                    if(user.isSeller){
-                        $state.go('manageBookings');
+                    if(user.isSeller === false){
+                        $state.go('home');
                     }
                    }).catch((err)=>{
                     $state.go('login'); 
@@ -241,26 +241,9 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
                 }]
             }
         })
-        .state('manageBookings', {
-            url: '/manageBookings:id',
-            templateUrl: 'views/booking/ownerBookings/manageBookings.html',
-            controller: 'manageBookingsCtrl',
-            resolve : {
-                auth: ['$state', 'AuthService', function($state, AuthService){
-                    AuthService.getLoggedinUser().then((user)=>{
-                        if(user && user.isAdmin){
-                            $state.go('admin');
-                        }
-                       
-                    }).catch((err)=>{
-                        $state.go('login');
-                    })
-                }]
-            }
-        })
         .state('myBiddings', {
             url: '/myBiddings',
-            templateUrl: 'views/booking/userBookings/myBiddings.html',
+            templateUrl: 'views/profile/userBookings/myBiddings/myBiddings.html',
             controller: 'myBiddingsCtrl',
             resolve : {
                 auth: ['$state', 'AuthService', function($state, AuthService){
@@ -276,7 +259,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('sellerAnalytics', {
             url: '/sellerAnalytics',
-            templateUrl: 'views/sellerAnalytics/sellerAnalytics.html',
+            templateUrl: 'views/seller/sellerAnalytics/sellerAnalytics.html',
             controller: 'sellerAnalyticsCtrl',
             resolve : {
                 auth: ['$state', 'AuthService', function($state, AuthService){
@@ -304,7 +287,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
         })
         .state('sellerListings', {
             url: '/sellerListings',
-            templateUrl: 'views/sellerListings/sellerListings.html',
+            templateUrl: 'views/seller/sellerListings/sellerListings.html',
             controller: 'sellerListingsCtrl',
             resolve : {
                 auth: ['$state', 'AuthService', function($state, AuthService){

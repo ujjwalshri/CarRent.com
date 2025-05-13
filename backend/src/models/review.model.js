@@ -34,7 +34,11 @@ const reviewSchema = new mongoose.Schema(
             city: {
                 type: String,
                 required: true,
-            }
+            },
+            fuelType: {
+                type: String,
+                required: true,
+            },
         },
         reviewer: {
             _id: {

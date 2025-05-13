@@ -89,8 +89,10 @@ export const getOptimalBidRecommendationsController = async(req, res) => {
           
           // Calculate total days and total revenue for this booking
           const days = calculateDays(startDate, endDate);
-          const totalRevenue = days * bid.amount;
-          
+          const totalRevenue = (days * bid.amount ) + bid.selectedAddons.reduce((acc, addon) => {
+              return acc + addon.price;
+          }, 0);
+
           bidsByVehicle[vehicleId].rentals.push({
               id: bid._id.toString(),
               startDate: startDate,

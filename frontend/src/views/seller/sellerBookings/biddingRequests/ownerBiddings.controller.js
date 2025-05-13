@@ -148,9 +148,6 @@ angular
 
         RecommendationService.optimalBidsRecommendationForSeller()
           .then((response) => {
-            // Reset any previous optimal bids
-            
-
             // Process the optimal bid sets from all vehicles
             if (response && response.optimalBidSets && response.optimalBidSets.length > 0) {
               // Extract all optimal bid IDs from all vehicle recommendations
@@ -225,7 +222,7 @@ angular
               // Show modal with overlapping bids
               const modalInstance = $uibModal.open({
                 templateUrl:
-                  "views/ownerBookings/overlappingBidsModal.html",
+                  "views/seller/sellerBookings/biddingRequests/overlappingBidsModal.html",
                 controller: "OverlappingBidsModalCtrl",
                 resolve: {
                   overlappingBids: function () {

@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const messageSchema = new mongoose.Schema(  
     {
         conversationId: {
-            type: Object,
+            type: mongoose.Schema.Types.ObjectId,
             required: true,
         },
         image: {

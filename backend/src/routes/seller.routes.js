@@ -23,7 +23,8 @@ import {
     getSellerRating,
     topCitiesWithMostNegativeReviews,
     cityWiseEarnings,
-    getPriceRangeAnalytics
+    getPriceRangeAnalytics,
+    priceRangeWiseAverageRating
 } from '../controllers/sellerAnalytics.controller.js';
 
 const router = express.Router(); 
@@ -53,11 +54,14 @@ router.get('/analytics/repeating-customers', protectRoute, allowSeller, getRepea
 router.get('/analytics/city-wise-bookings', protectRoute, allowSeller, getCityWiseBookings);
 router.get('/analytics/selected-addons-count', protectRoute, allowSeller, getSelectedAddonsCount)
 router.get('/analytics/seller-rating/:id', protectRoute, getSellerRating);
+router.get('/analytics/price-range-analytics-bookings', protectRoute, allowSeller, getPriceRangeAnalytics);
+router.get('/analytics/price-range-analytics-averageRating', protectRoute, allowSeller,priceRangeWiseAverageRating );
 
 
 // Comparison Analytics Routes
 router.get('/analytics/bidding-comparison', protectRoute, allowSeller, getBiddingComparison);
 router.get('/analytics/earning-comparison', protectRoute, allowSeller, getEarningComparison);
-router.get('/analytics/price-range-analytics', protectRoute, allowSeller, getPriceRangeAnalytics);
+
+    
 
 export default router;

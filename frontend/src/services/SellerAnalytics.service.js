@@ -378,12 +378,25 @@ angular.module('myApp').service('SellerAnalyticsService', function($http, $q, Ap
    */
   this.getPriceRangeAnalytics = (params) => {
       const deferred = $q.defer();
-      $http.get(`${ApiService.baseURL}/api/seller/analytics/price-range-analytics`, { params, withCredentials: true })
+      $http.get(`${ApiService.baseURL}/api/seller/analytics/price-range-analytics-bookings`, { params, withCredentials: true })
           .then(response => {
               deferred.resolve(response.data);
           })
           .catch(error => {
               console.error('Error fetching price range analytics data:', error);
+              deferred.reject(error);
+          });
+      return deferred.promise;
+  };
+
+  this.getPriceRangeWiseAverageRating = (params) => {
+      const deferred = $q.defer();
+      $http.get(`${ApiService.baseURL}/api/seller/analytics/price-range-analytics-averageRating`, { params, withCredentials: true })
+          .then(response => {
+              deferred.resolve(response.data);
+          })
+          .catch(error => {
+              console.error('Error fetching price range wise average rating data:', error);
               deferred.reject(error);
           });
       return deferred.promise;

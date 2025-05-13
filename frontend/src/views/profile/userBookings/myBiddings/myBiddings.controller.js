@@ -1,4 +1,4 @@
-angular.module('myApp').controller('myBiddingsCtrl', function($scope, BiddingFactory, BiddingService, ToastService, $timeout) {
+angular.module('myApp').controller('myBiddingsCtrl', function($scope, BiddingFactory, BiddingService, ToastService) {
 
     $scope.biddingStatus = 'pending'; // setting the bidding status to an empty string
     $scope.isLoading = false; // loading state
@@ -50,7 +50,7 @@ angular.module('myApp').controller('myBiddingsCtrl', function($scope, BiddingFac
 
         BiddingService.getBiddingsForUser(params) // fetching the biddings for the user
             .then((biddings) => {
-
+                 console.log(biddings.bids)
                 $scope.bookings = biddings.bids.map((bid) => {
                    return BiddingFactory.createBid(bid, false);
                 });
@@ -115,8 +115,8 @@ angular.module('myApp').controller('myBiddingsCtrl', function($scope, BiddingFac
                 'desc': 'Price: High-Low'
             },
             'startDate': {
-                'asc': 'Earliest Starting',
-                'desc': 'Latest Starting'
+                'asc': 'Latest Starting',
+                'desc': 'Earliest Starting'
             },
             'createdAt': {
                 'asc': 'Oldest First',

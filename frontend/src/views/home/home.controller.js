@@ -34,32 +34,20 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
     $scope.recommendedCars = []; // Array to store recommended cars
     $scope.recommendedCarsGroups = []; // Array to store recommended cars in groups of 3
     $scope.active = 0; // Active index for carousel
+
+    // Add filter toggle state
+    $scope.isFilterCollapsed = true;
+    
+    // Function to toggle filter visibility
+    $scope.toggleFilter = function() {
+        $scope.isFilterCollapsed = !$scope.isFilterCollapsed;
+    };
+
+  
    
    /**
-    * Initializes the home page by loading cars, categories, price ranges and user data
-    * 
-    * @function init
-    * @description
-    * - For logged out users:
-    *   1. Loads approved cars with current filters
-    *   2. Gets all car categories
-    *   3. Gets price range configuration
-    * 
-    * - For logged in users:
-    *   1. Gets user profile data
-    *   2. Loads approved cars with current filters  
-    *   3. Gets personalized car recommendations based on user's city or on the basis of the user's selected city
-    *   4. Gets all car categories
-    *   5. Gets price range configuration
-    * 
-    * All requests are made in parallel using $q.all() for better performance
-    * Updates scope variables with the fetched data:
-    * - allCars: List of filtered cars
-    * - hasMoreCars: Flag for pagination
-    * - carCategories: Available car categories
-    * - priceRangeArray: Array of price range options
-    * - user: Logged in user profile (if authenticated)
-    * - recommendedCarsGroups: Personalized recommendations (if authenticated)
+    * function to initialize the controller
+    * @description: this function will be called when the controller is loaded, fetches the geolocation and cars initially
     */
     $scope.init = function() {
         fetchGeolocation();
@@ -67,11 +55,14 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
 
     function fetchGeolocation(){
         $scope.loadingCars = true;
-        GeolocationService.getUserLocationWithCity().then((response) => {
+        GeolocationService.getUserLocationWithCity()
+        .then((response) => {
             $scope.city = response.city;
-            fetchCars();
-        }
-        ).catch((error) => {
+            return fetchCars();
+        })
+        .then(()=>{
+            console.log("Cars fetched successfully");
+        }).catch((error) => {
             console.error("Error fetching geolocation data:", error);
         })
     }
@@ -105,6 +96,8 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
      * Filters cars based on the current filters
      */
     $scope.filterCars = () => {
+        $scope.skip = 0; // Reset skip when filters change
+        $scope.allCars = []; // Clear existing cars
         fetchCars();
     };
 
@@ -117,6 +110,8 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
             $timeout.cancel(searchTimeout);
         }
         searchTimeout = $timeout(() => {
+            $scope.skip = 0; // Reset skip when search changes
+            $scope.allCars = []; // Clear existing cars
             fetchCars();
         }, 300);
     };
@@ -133,11 +128,10 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
     
         CarService.getAllApprovedCars($scope.search, $scope.sortBy, $scope.city, $scope.category, $scope.fuelType, $scope.skip)
             .then((res) => {
-                if (res.data.length <= $scope.limit) {
+                if (res.data.length < $scope.limit) { // Changed <= to < to fix edge case
                     $scope.hasMoreCars = false;
                 }
                 $scope.allCars = $scope.allCars.concat(res.data);
-                $scope.skip += $scope.limit;
             })
             .catch((err) => {
                 ToastService.error(err);

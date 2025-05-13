@@ -360,4 +360,108 @@ angular.module('myApp').service('ChartService', function() {
       
       return this.chartInstances[canvasId];
   };
+
+  this.createComboChart = function(canvasId, data) {
+    // Destroy existing chart if it exists
+    if (this.chartInstances[canvasId]) {
+      this.chartInstances[canvasId].destroy();
+    }
+
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    
+    // Extract labels and values
+    const labels = data.map(item => `₹${item.priceRange}`);
+    const counts = data.map(item => item.count);
+    const ratings = data.map(item => parseFloat(item.averageRating).toFixed(1));
+    console.log("Counts: ", counts);
+    console.log("Ratings: ", ratings);
+    console.log("Labels: ", labels);
+
+    // Create new chart
+    this.chartInstances[canvasId] = new Chart(ctx, {
+        type: 'bar', // overall base type
+        data: {
+          labels: labels, // ['2000-3000', '3000-4000', ...]
+          datasets: [
+            {
+              label: 'Number of Reviews',
+              data: counts,
+              backgroundColor: 'rgba(75, 192, 192, 0.5)',
+              borderColor: 'rgba(75, 192, 192, 1)',
+              borderWidth: 1,
+              yAxisID: 'y-axis-count',
+              type: 'bar'
+            },
+            {
+              label: 'Average Rating',
+              data: ratings,
+              type: 'line',
+              borderColor: 'rgba(255, 99, 132, 1)',
+              backgroundColor: 'rgba(255, 99, 132, 0.2)',
+              borderWidth: 2,
+              yAxisID: 'y-axis-rating',
+              fill: false,
+              lineTension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          title: {
+            display: true,
+            text: 'Price Range Vs Average Rating and Number of Reviews',
+            fontSize: 16
+          },
+          legend: {
+            position: 'top'
+          },
+          tooltips: {
+            mode: 'index',
+            intersect: false
+          },
+          scales: {
+            xAxes: [{
+              display: true,
+              scaleLabel: {
+                display: true,
+                labelString: 'Price Range'
+              }
+            }],
+            yAxes: [
+              {
+                id: 'y-axis-count',
+                type: 'linear',
+                position: 'left',
+                scaleLabel: {
+                  display: true,
+                  labelString: 'Number of Reviews'
+                },
+                ticks: {
+                  beginAtZero: true
+                }
+              },
+              {
+                id: 'y-axis-rating',
+                type: 'linear',
+                position: 'right',
+                scaleLabel: {
+                  display: true,
+                  labelString: 'Average Rating'
+                },
+                ticks: {
+                  beginAtZero: true,
+                  max: 5
+                },
+                gridLines: {
+                  drawOnChartArea: false
+                }
+              }
+            ]
+          }
+        }
+      });
+      
+
+    return this.chartInstances[canvasId];
+  };
 });

@@ -16,6 +16,24 @@ angular.module('myApp').controller('AddCarModalCtrl', function($scope, $uibModal
     $scope.maxPrice = 0;
     $scope.currentYear = new Date().getFullYear();
     const rgbToHex = CarFactory.rgbToHex;
+
+     // car model variable to bind the form fields
+     $scope.car = {
+        name: "",
+        company: "",
+        modelYear: "",
+        category: "",
+        price: "",
+        mileage: "",
+        color: "",
+        fuelType: "",
+        city: "",
+        registrationNumber: ""
+      }
+
+    
+
+
     
    /**
     * @description: this function will be called when the controller is loaded, fetches the car categories and price ranges
@@ -60,16 +78,16 @@ angular.module('myApp').controller('AddCarModalCtrl', function($scope, $uibModal
         
         // Create a car object using the factory with form field values
         const car = CarFactory.createCar({
-            name: $scope.carName,
-            company: $scope.company,
-            modelYear: $scope.carModel,
-            category: $scope.category,
-            price: $scope.carPrice,
-            mileage: $scope.mileage,
+            name: $scope.car.name,
+            company: $scope.car.company,
+            modelYear: $scope.car.modelYear,
+            category: $scope.car.category,
+            price: $scope.car.price,
+            mileage: $scope.car.mileage,
             color: $scope.color,
-            fuelType: $scope.fuelType,
-            city: $scope.city,
-            registrationNumber: $scope.registrationNumber,
+            fuelType: $scope.car.fuelType,
+            city: $scope.car.city,
+            registrationNumber: $scope.car.registrationNumber,
             vehicleImages: $scope.images
         });
         

@@ -24,6 +24,14 @@ angular
       $scope.isLoading = false; // Main content loading state
       $scope.messageLoading = false; // Message loading state
       $scope.isSendingMessage = false; // Message sending state
+
+
+      $scope.search = {
+        searchQuery: "", // Search query for filtering conversations
+        searchTime: 300, // Debounce time for search input
+      }
+
+      $scope.carId = $stateParams.id; // Car ID for filtering conversations
       
 
       $scope.inputMessage = ""; // Current message being composed
@@ -32,25 +40,24 @@ angular
       
 
       $scope.init = () => {
-        // Begin loading sequence
+
         $scope.isLoading = true;
         
-        // Execute parallel API requests first
         $q.all([
           AuthService.getLoggedinUser(),
           $stateParams.id
             ? ChatService.getConversationsAtCarId($stateParams.id)
-            :  ChatService.getAllConversations(),
+            :  ChatService.getAllConversations($scope.searchQuery),
         ])
           .then(([user, conversationsData]) => {
-            // Store user data and conversation list
+
             $scope.loggedInUser = user;
             $scope.myConversations = conversationsData.conversations;
             
-            // Initialize socket service with current user
+
             SocketService.initialize(user);
             
-            // Setup socket event listeners
+
             SocketService.on("newMessage", (message) => {
               console.log('New message received:', message);
                 $scope.messages.push(message);
@@ -73,9 +80,9 @@ angular
               }
             });
 
-            // Join user's personal room for notifications
+
             SocketService.joinUserRoom($scope.loggedInUser.username);
-            // Request current online users
+
             SocketService.getOnlineUsers();
           })
           .catch((err) => {
@@ -86,9 +93,9 @@ angular
           });
       };
 
-      // Handle controller destruction (navigation away)
+
       $scope.$on("$destroy", function () {
-        // Clean up socket event listeners
+
         SocketService.off("newMessage");
         SocketService.off("onlineUsers");
         SocketService.off("newConversation");
@@ -106,16 +113,11 @@ angular
       };
       
       // Retrieves and displays messages for a selected conversation
-      // Called when user clicks on a conversation in the list
       $scope.fetchMessages = (conversationId) => {
-
-        // Set loading state for message area
         $scope.messageLoading = true;
         
-        // Clear existing messages
         $scope.messages = [];
-        
-        // Find the full conversation object by ID
+      
         $scope.selectedConversation = $scope.myConversations.find(
             (conversation) => conversation._id === conversationId
         );
@@ -126,24 +128,18 @@ angular
           return;
         }
          
-        // Join the conversation's socket room for real-time updates
         SocketService.joinConversation($scope.selectedConversation._id);
-        
-        // Fetch all messages for this conversation
+      
         ChatService.getAllMessages(conversationId)
           .then((messages) => {
-            // Update message list with fetched data
             $scope.messages = messages.messages;
             console.log('Fetched messages:', $scope.messages[0]);
-            // Scroll to latest messages
             $scope.scrollToBottom();
           })
           .catch((err) => {
-            // Display error notification if message fetch fails
             ToastService.error(`Error fetching messages ${err}`);
           })
           .finally(() => {
-            // Reset message loading state
             $scope.messageLoading = false;
             $timeout();
           });
@@ -154,12 +150,7 @@ angular
       // Called when user selects an image file to attach
       $scope.previewImages = function (input) {
         if (input.files) {
-
-          
-          // Store selected image file for upload
           $scope.image = input.files[0];
-          
-          // Trigger digest cycle to update the $scope.image state
           $timeout();
         }
         input.value = null;
@@ -168,11 +159,9 @@ angular
       // Monitors keyboard input for Enter key press
       // Allows sending messages with Enter key
       $scope.checkEnter = function (event) {
-        if (event.keyCode === 13) { // Enter key code
-          // Prevent default form submission behavior
+        if (event.keyCode === 13) { 
+
           event.preventDefault();
-          
-          // Send the current message
           $scope.sendMessage();
         }
       };
@@ -182,7 +171,7 @@ angular
       $scope.sendMessage = () => {
         const conversationId = $scope.selectedConversation._id;
         
-        // Validate conversation is selected
+
         if (!$scope.selectedConversation) {
           ToastService.error("Please select a conversation first");
           return;
@@ -193,34 +182,28 @@ angular
           return;
         }
         
-
-
-          
-        // Create FormData object for sending mixed content (text + files)
         const formData = new FormData();
         
-        // Add text message to form data if present
         if ($scope.inputMessage.trim()) {
           formData.append("message", $scope.inputMessage.trim());
         }
-        // Add image attachment if present
+
         if ($scope.image) {
           formData.append("image", $scope.image);
         }
 
-        // Clear input fields before sending
+
         const tempMessage = $scope.inputMessage;
         const tempImage = $scope.image;
         $scope.inputMessage = "";
         $scope.image = undefined;
 
-        // Send message to server
+
         ChatService.addMessage(formData, conversationId)
           .then((res) => {
             $scope.scrollToBottom();
           })
           .catch((error) => {
-            // Restore input fields if sending fails
             $scope.inputMessage = tempMessage;
             $scope.image = tempImage;
             ToastService.error(`Error sending message: ${error}`);
@@ -229,20 +212,37 @@ angular
             $timeout();
           });
       };
+
+
+      $scope.searchConversations = function() {
+        $timeout.cancel($scope.searchTimeout);
+        // Create a new timeout to execute the search after 300ms
+        $scope.searchTimeout = $timeout(() => {
+          ChatService.getAllConversations($scope.search.searchQuery)
+            .then((response) => {
+              // Update conversation list with search results
+              $scope.myConversations = response.conversations;
+            })
+            .catch((err) => {
+              ToastService.error(`Error fetching conversations: ${err}`);
+            });
+        }, 300);
+      }
+
       
       // Determines if the other user in a conversation is currently online
       // Used to display online status indicators in conversation list
       $scope.isUserOnline = function(conversation) {
-        // Guard against missing data
+
         if (!conversation || !$scope.onlineUsers || !$scope.loggedInUser) {
           return false;
         }
         
-        // Determine which user in the conversation isn't the current user
+
         const otherUserName = conversation.reciever.username === $scope.loggedInUser.username ? 
           conversation.creator.username : conversation.reciever.username;
           
-        // Check if other user is in the online users list
+
         return $scope.onlineUsers.includes(otherUserName);
       };
 

@@ -1,4 +1,3 @@
-
 import { Types } from "mongoose";
 
 const kilometersLimit = 300;
@@ -109,6 +108,13 @@ export const pipelines = {
                 },
                 kilometersDriven: {
                     $subtract: ["$endOdometerValue", "$startOdometerValue"]
+                },
+                addonsTotal: {
+                    $reduce: {
+                        input: { $ifNull: ["$selectedAddons", []] },
+                        initialValue: 0,
+                        in: { $add: ["$$value", "$$this.price"] }
+                    }
                 }
             }
         },
@@ -137,7 +143,8 @@ export const pipelines = {
                                 0
                             ]},
                             10
-                        ]}
+                        ]},
+                        "$addonsTotal"
                     ]
                 }
             }
@@ -147,6 +154,7 @@ export const pipelines = {
                 _id: null,
                 totalRevenue: { $sum: "$totalBookingRevenue" },
                 totalFineCollected: { $sum: "$fine" },
+                totalAddonsRevenue: { $sum: "$addonsTotal" },
                 totalBookings: { $sum: 1 },
                 averageRevenue: { $avg: "$totalBookingRevenue" }
             }
@@ -958,6 +966,80 @@ export const pipelines = {
         },
         {
           $sort: { priceRange: 1 }
+        }
+      ]),
+      priceRangeWiseAverageRating: (userId, startDate, endDate) => ([
+        {
+          $match: {
+            'owner._id': userId,
+            createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
+            'vehicle.price': { $ne: null }
+          }
+        },
+        {
+          $addFields: {
+            price: "$vehicle.price"
+          }
+        },
+        {
+          $addFields: {
+            priceBucketStart: {
+              $multiply: [{ $floor: { $divide: ["$price", 1000] } }, 1000]
+            }
+          }
+        },
+        {
+          $addFields: {
+            priceBucketEnd: { $add: ["$priceBucketStart", 1000] }
+          }
+        },
+        {
+          $group: {
+            _id: {
+              start: "$priceBucketStart",
+              end: "$priceBucketEnd"
+            },
+            averageRating: { $avg: "$rating" },
+            count : { $sum: 1 }
+          }
+        },
+        {
+          $project: {
+            _id: 0,
+            priceRange: {
+              $concat: [
+                { $toString: "$_id.start" },
+                "-",
+                { $toString: "$_id.end" }
+              ]
+            },
+            averageRating: 1,
+            count : 1
+          }
+        },
+        {
+          $sort: { priceRange: 1 }
+        }
+      ]),
+      averageRatingByFuelType: (userId, startDate, endDate) => ([
+        {
+            $match: {
+                'owner._id': userId,
+                createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
+            }
+        },
+        {
+            $group: {
+                _id: "$vehicle.fuelType",
+                averageRating: { $avg: "$rating" }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                fuelType: "$_id",
+                averageRating: { $round: ["$averageRating", 2] }
+            }
         }
       ])
       

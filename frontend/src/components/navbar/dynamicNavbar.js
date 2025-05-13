@@ -3,17 +3,17 @@ angular.module("myApp").component("dynamicNavbar", {
     <nav class="navbar navbar-inverse" id="dynamicNavbar">
         <div class="container-fluid">
             <div class="navbar-header">
-                <button type="button" class="navbar-toggle collapsed" ng-click="$ctrl.toggleNav()">
+                <button type="button" class="navbar-toggle" ng-click="$ctrl.toggleNav()">
+                    <span class="sr-only">Toggle navigation</span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" ui-sref="home" ng-click="$ctrl.closeNav()" >
+                <a class="navbar-brand" ui-sref="home" ng-click="$ctrl.closeNav()">
                     <span class="glyphicon glyphicon-car"></span> Car.com
                 </a>
-               
             </div>
-            <div class="collapse navbar-collapse" id="navbarItems" uib-collapse="$ctrl.isNavCollapsed">
+            <div class="navbar-collapse" uib-collapse="$ctrl.isNavCollapsed">
                 <ul class="nav navbar-nav" id="navbarMainLinks">
                     <!-- Dynamically populated menu items will go here -->
                 </ul>
@@ -24,7 +24,7 @@ angular.module("myApp").component("dynamicNavbar", {
         </div>
     </nav>
   `,
-  controller: function($element, AuthService, ToastService, $compile, $scope, AuthService, $rootScope, $state, $scope) {
+  controller: function($element, AuthService, ToastService, $compile, $scope, $rootScope, $state) {
     var ctrl = this;
     
     // Menu configurations for different user types
@@ -32,30 +32,23 @@ angular.module("myApp").component("dynamicNavbar", {
       seller: {
         mainLinks: [
           { href: "sellerListings", icon: "glyphicon-list-alt", text: "My Listings" },
-         
           { dropdown: true, icon: "glyphicon-calendar", text: "Bookings Management", items: [
             { href: "ownerBookings", icon: "glyphicon-tag", text: "Bidding Requests" },
-            { href: "confirmedBookings", icon: "glyphicon-ok", text: "Confirmed Bookings" }
+            { href: "confirmedBookings", icon: "glyphicon-ok", text: "Confirmed Requests" }
           ]},
-          { href: "sellerAnalytics", icon: "glyphicon-stats", text: "Analytics" }
+          { href: "sellerAnalytics", icon: "glyphicon-stats", text: "Seller Analytics" }
         ],
         rightLinks: [
           { href: "conversations({id: undefined})", icon: "glyphicon-comment", text: "Chats" },
-          { href: "myProfile.overview", icon: "glyphicon-user", text:"Profile" },
-          { action: "logout", icon: "glyphicon-log-out", text: "Logout" }
+          { href: "myProfile.overview", icon: "glyphicon-user", text: "Profile" },
         ]
       },
       user: {
-        mainLinks: [
-     
-         
-        ],
+        mainLinks: [],
         rightLinks: [
           { href: "conversations({id: undefined})", icon: "glyphicon-comment", text: "Chats" },
           { href: "becomeSeller", icon: "glyphicon-briefcase", text: "Become a host" },
           { href: "myProfile.overview", icon: "glyphicon-user", text: "Profile" },
-          
-          { action: "logout", icon: "glyphicon-log-out", text: "Logout" }
         ]
       },
       public: {
@@ -68,7 +61,6 @@ angular.module("myApp").component("dynamicNavbar", {
     
     ctrl.$onInit = function() {
       ctrl.isNavCollapsed = true;
-      
       ctrl.loadUserData();
 
       $rootScope.$on('admin:loggedOut', function() {
@@ -85,7 +77,6 @@ angular.module("myApp").component("dynamicNavbar", {
       });
     };
     
-    // Close the navigation bar
     ctrl.closeNav = function() {
       ctrl.isNavCollapsed = true;
     };
@@ -93,24 +84,17 @@ angular.module("myApp").component("dynamicNavbar", {
     ctrl.loadUserData = function() {
       AuthService.getLoggedinUser()
         .then(function(user) {
-
           if (user.isAdmin) {
-
             $element.find('#dynamicNavbar').css('display', 'none');
           } else {
-
             $element.find('#dynamicNavbar').css('display', 'block');
-            
-
             const userType = user.isSeller ? 'seller' : 'user';
             ctrl.isSeller = user.isSeller;
             $scope.firstName = user.firstName;
-
             ctrl.renderNavbar(userType);
           }
         })
         .catch(function() {
-
           $element.find('#dynamicNavbar').css('display', 'block');
           ctrl.renderNavbar('public');
         });
@@ -138,42 +122,37 @@ angular.module("myApp").component("dynamicNavbar", {
       let link;
       
       if (item.action === 'logout') {
-        link = angular.element('<a href="#"><span class="glyphicon ' + item.icon + '"></span> ' + item.text + '</a>');
-        link.on('click', function(e) {
-          e.preventDefault();
-          ctrl.logout();
-          ctrl.closeNav();
-        });
+        link = angular.element('<a href="#" ng-click="$ctrl.logout(); $ctrl.closeNav()"><span class="glyphicon ' + item.icon + '"></span> ' + item.text + '</a>');
       } else {
         link = angular.element('<a ui-sref="' + item.href + '" ng-click="$ctrl.closeNav()"><span class="glyphicon ' + item.icon + '"></span> ' + item.text + '</a>');
-        $compile(link)($scope);
       }
       
+      $compile(link)($scope);
       return link;
     }
     
     function createDropdown(item) {
-      let dropdown = angular.element(
-        '<a href="#" class="dropdown-toggle" uib-dropdown-toggle>' +
+      let dropdownContainer = angular.element('<li uib-dropdown class="dropdown"></li>');
+      
+      let toggle = angular.element(
+        '<a href uib-dropdown-toggle class="dropdown-toggle" ng-click="$event.preventDefault()">' +
         '<span class="glyphicon ' + item.icon + '"></span> ' + item.text +
         ' <span class="caret"></span></a>'
       );
       
-      let dropdownMenu = angular.element('<ul class="dropdown-menu"></ul>');
+      let menu = angular.element('<ul uib-dropdown-menu class="dropdown-menu" role="menu"></ul>');
       
       item.items.forEach(function(subItem) {
-        let li = angular.element('<li></li>');
+        let li = angular.element('<li role="menuitem"></li>');
         let link = createLinkElement(subItem);
         li.append(link);
-        dropdownMenu.append(li);
+        menu.append(li);
       });
       
-      let dropdownContainer = angular.element('<li class="dropdown" uib-dropdown></li>');
-      dropdownContainer.append(dropdown);
-      dropdownContainer.append(dropdownMenu);
+      dropdownContainer.append(toggle);
+      dropdownContainer.append(menu);
       
       $compile(dropdownContainer)($scope);
-      
       return dropdownContainer;
     }
     

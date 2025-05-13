@@ -46,21 +46,5 @@ app.controller("appCtrl", function($scope, $rootScope, ToastService, AuthService
        
     };
 
-    /**
-     * Logs out the current user
-     * removes the user cookie and sets isLogged to false
-     * @returns {Promise<void>}
-     */
-    $scope.logout = () => {  
-        AuthService.logout().then((res) => {
-            // Disconnect socket before logout
-            SocketService.disconnect();
-            
-            ToastService.success("Logged out successfully");
-            $rootScope.isLogged = false;
-
-        }).catch((err)=>{
-            ToastService.error("Error logging out");
-        })
-    };
+  
 });

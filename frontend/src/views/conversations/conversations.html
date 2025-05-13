@@ -53,6 +53,41 @@
     .chat-list-col.hide-on-mobile {
       display: none !important;
     }
+
+    .list-group-item {
+        padding: 10px !important;
+    }
+    
+    .list-group-item-text {
+        max-width: 100%;
+    }
+    
+    .list-group-item-text > div {
+        width: 100%;
+    }
+    
+    .list-group-item-text span {
+        display: inline-block;
+        max-width: calc(100% - 85px); /* Adjust based on "Last message:" width */
+    }
+    
+    .car-thumb {
+        width: 50px !important;
+        height: 50px !important;
+    }
+  }
+
+  /* Fix for medium screens (tablets) */
+  @media (min-width: 768px) and (max-width: 991px) {
+    .chat-msg-col {
+        display: flex !important;
+    }
+    .chat-msg-col:not(.active) {
+        display: none !important;
+    }
+    .chat-list-col.hide-on-mobile {
+        display: none !important;
+    }
   }
 </style>
 <div ng-init="init()" class="container-fluid chat-container">
@@ -63,7 +98,35 @@
       style="height: 100%; overflow-y: auto; background-color: #ffffff; border-right: 1px solid #e2e2e2; border-radius: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin: 0;"
     >
       <div class="panel-heading text-white" style="background-color: #075E54; padding: 15px; border-radius: 0;">
-        <h3 class="panel-title" style="color: white;">Chats</h3>
+        <h3 class="panel-title" style="color: white; margin-bottom: 5px;">Conversations</h3>
+        <div class="search-container" style="position: relative;" ng-if="!carId " >
+          <input 
+            type="text" 
+            class="form-control" 
+            placeholder="Search conversations by car name..." 
+            ng-model="search.searchQuery"
+            ng-change="searchConversations()"
+            style="
+              border-radius: 20px;
+              height: 36px;
+              background-color: #f2f6f5;
+              border: none;
+              padding: 0 35px 0 15px;
+              color: rgb(5, 5, 5);
+              width: 100%;
+            "
+          >
+          <i class="glyphicon glyphicon-search" 
+             style="
+               position: absolute;
+               right: 12px;
+               top: 50%;
+               transform: translateY(-50%);
+               color: rgba(8, 8, 8, 0.8);
+               pointer-events: none;
+             "
+          ></i>
+        </div>
       </div>
 
       <div class="list-group">
@@ -89,26 +152,33 @@
           style="border: none; margin: 5px 10px; border-radius: 10px; background-color: #ffffff; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.04); display: flex; align-items: center; gap: 10px;"
           ng-mouseover="hover=true"
           ng-mouseleave="hover=false"
-          ng-style="{'background-color': hover ? '#f5f5f5' : '#ffffff'}"
+          ng-class="{'selected-conversation': selectedConversation._id === conversation._id}"
+          ng-style="{
+            'background-color': selectedConversation._id === conversation._id ? '#B8B8B8' : (hover ? '#f5f5f5' : '#ffffff')
+          }"
         >
-
           <div class="car-thumb" style="width: 60px; height: 60px; flex-shrink: 0; border-radius: 8px; overflow: hidden; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center;">
             <img ng-src="{{conversation.vehicle.image.url}}" 
                  style="width: 100%; height: 100%; object-fit: contain; background-color: #f8f9fa;"
                  onerror="this.src='assets/carRentlogo.jpeg'"
                  alt="Car Image">
           </div>
-          <div style="flex: 1; min-width: 0;">
+          <div style="flex: 1; min-width: 0; width: calc(100% - 70px);">
             <h4 class="list-group-item-heading" style="color: #075E54; font-weight: 600; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
               {{conversation.vehicle.company}} {{conversation.vehicle.name}} ({{conversation.vehicle.modelYear}})
             </h4>
-            <p class="list-group-item-text" style="color: #4a4a4a; font-size: 13px; margin: 0 0 5px;">
-              <span style="color: #128C7E; font-weight: 500;" ng-if="conversation.lastMessage">Last message: </span>
-              <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 200px;">{{conversation.lastMessage || 'No messages yet'}}</span>
-            </p>
-            <small class="text-secondary">
+            <div class="list-group-item-text" style="color: #4a4a4a; font-size: 13px; margin: 0 0 5px; width: 100%;">
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <span style="color: #128C7E; font-weight: 500; flex-shrink: 0;" ng-if="conversation.lastMessage">Last message:</span>
+                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{conversation.lastMessage || 'No messages yet'}}</span>
+              </div>
+            </div>
+            
+            <small class="text-secondary" style="display: block; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
               {{conversation.reciever.username === loggedInUser.username ? conversation.creator.username : conversation.reciever.username}}
-              <span style="margin-left: 5px; display: inline-block; width: 8px; height: 8px; border-radius: 50%;" ng-style="{'background-color': isUserOnline(conversation) ? '#25D366' : '#dc3545'}"></span>
+              <span style="margin-left: 5px; display: inline-block; width: 8px; height: 8px; border-radius: 50%; vertical-align: middle;" 
+                    ng-style="{'background-color': isUserOnline(conversation) ? '#25D366' : '#dc3545'}">
+              </span>
             </small>
           </div>
         </a>
@@ -122,7 +192,11 @@
       style="height: 100%; display: flex; flex-direction: column; padding: 0; background-color: #e5ddd5; background-image: url('https://web.whatsapp.com/img/bg-chat-tile-dark_a4be512e7195b6b733d9110b408f075d.png'); border-radius: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin: 0;"
     >
       <div class="panel-heading text-white" style="background-color: #075E54; padding: 15px; border-radius: 0;">
-        <button class="btn btn-xs btn-light visible-xs-inline" ng-click="selectedConversation = null" style="margin-right: 10px; background-color: #128C7E; border: none;">← Back</button>
+        <button class="btn btn-xs btn-light visible-xs-inline visible-sm-inline" 
+                ng-click="selectedConversation = null" 
+                style="margin-right: 10px; background-color: #128C7E; border: none; color: white;">
+          <i class="glyphicon glyphicon-arrow-left"></i> Back
+        </button>
         <h3 class="panel-title" style="color: white; display: inline" ng-show="selectedConversation">
           {{selectedConversation.reciever.username === loggedInUser.username ? selectedConversation.creator.username : selectedConversation.reciever.username}}
           <span style="margin-left: 5px;">
@@ -138,16 +212,20 @@
       <loading-component is-loading="messageLoading" loading-text="Loading messages..."></loading-component>
 
       <div class="panel-body" id="chatBox" style="flex-grow: 1; overflow-y: auto; padding: 10px; margin: 0;">
+        <div ng-if="selectedConversation && (!messages || messages.length === 0)" class="text-center" style="padding: 30px 20px;">
+          <div style="background-color: rgba(255, 255, 255, 0.9); border-radius: 10px; padding: 20px; margin: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1);">
+            <i class="glyphicon glyphicon-comment" style="font-size: 48px; color: #075E54; margin-bottom: 15px;"></i>
+            <h4 style="color: #075E54; margin-bottom: 10px;">No Messages Yet</h4>
+            <p style="color: #666;">Start the conversation by sending a message below!</p>
+          </div>
+        </div>
+
         <div
           class="media"
           ng-repeat="message in messages | orderBy: 'createdAt'"
-          ng-class="{'text-right': message.sender.username === loggedInUser.username, 'text-left': message.sender.username !== loggedInUser.username}"
-          style="margin-bottom: 15px"
+          style="margin-bottom: 15px; display: flex;"
+          ng-class="{'justify-content-end': message.sender.username === loggedInUser.username}"
         >
-         
-          
-          <div style="clear: both;"></div>
-          
           <div
             class="media-body message-bubble"
             style="
@@ -158,22 +236,30 @@
               max-width: 70%;
               word-wrap: break-word;
               width: auto;
+              margin: 0 8px;
+              position: relative;
             "
-            ng-style="{'background-color': message.sender.username === loggedInUser.username ? '#DCF8C6' : '#ffffff', 'color': '#000000'}"
+            ng-style="{
+              'background-color': message.sender.username === loggedInUser.username ? '#DCF8C6' : '#ffffff',
+              'color': '#000000',
+              'margin-left': message.sender.username === loggedInUser.username ? 'auto' : '8px',
+              'margin-right': message.sender.username === loggedInUser.username ? '8px' : 'auto'
+            }"
           >
-          <h5 class="media-heading"><strong style="color: #075E54;">{{ message.sender.username }}</strong></h5>
-          <p >{{message.message}}</p>
-           
+            <h5 class="media-heading" style="font-size: 13px; margin-bottom: 4px;">
+              <strong style="color: #075E54;">{{ message.sender.username }}</strong>
+            </h5>
+            <p style="margin: 0;">{{message.message}}</p>
             
-            <div  ng-if="message.image">
+            <div ng-if="message.image" style="margin-top: 8px;">
               <img
                 ng-src="{{message.image.url}}"
-               
                 class="img-responsive"
-                style="max-width: 250px; width:100%; height: auto; max-height: 200px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.08); margin-top: 5px;"
+                style="max-width: 250px; width: 100%; height: auto; max-height: 200px; object-fit: cover; border-radius: 5px; box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.08);"
               />
             </div>
-            <span class="text-muted message-time" style="font-size: 11px; display: block; text-align: right; margin-top: 5px">
+            <span class="text-muted message-time" 
+                  style="font-size: 11px; display: block; margin-top: 4px; text-align: right;">
               {{message.createdAt | date:'shortTime'}}
             </span>
           </div>

@@ -38,7 +38,13 @@ export const pipelines = {
         },
         {
             $group: {
-                _id: { $concat: ["$vehicle.company", " ", "$vehicle.name", " ", { "$toString": "$vehicle.modelYear" }] },
+                _id: {$concat: [
+                    { "$toLower": "$vehicle.company" },
+                    " ",
+                    { "$toLower": "$vehicle.name" },
+                    " ",
+                    { "$toString": "$vehicle.modelYear" }
+                ]},
                 count: { $sum: 1 }
             }
         },
@@ -73,7 +79,13 @@ export const pipelines = {
         },
         {
             $group: {
-                _id: { $concat: ["$vehicle.company", " ", "$vehicle.name", " ", { "$toString": "$vehicle.modelYear" }] },
+                _id: {$concat: [
+                    { "$toLower": "$vehicle.company" },
+                    " ",
+                    { "$toLower": "$vehicle.name" },
+                    " ",
+                    { "$toString": "$vehicle.modelYear" }
+                ] },
                 count: { $sum: 1 },
                 averageRating: { $avg: "$rating" } // Calculate average positive rating as well
             }

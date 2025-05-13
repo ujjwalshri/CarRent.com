@@ -1,0 +1,201 @@
+<div class="container-fluid" ng-init="init()">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="page-header">
+                <h2 class="text-center">My Biddings</h2>
+            </div>
+
+
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <i class="glyphicon glyphicon-filter"></i> Filter and Search
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+
+                        <div class="col-sm-6 col-md-3">
+                            <div class="form-group">
+                                <div uib-dropdown class="btn-block">
+                                    <button type="button" class="btn btn-default btn-block" uib-dropdown-toggle>
+                                        <i class="glyphicon glyphicon-tag"></i>
+                                        Status: {{biddingStatus ? (biddingStatus | uppercase) : 'All'}} 
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu" uib-dropdown-menu>
+                                        <li><a href ng-click="biddingStatus = 'pending'; applyFilter()">
+                                            <i class="glyphicon glyphicon-time text-warning"></i> Pending</a>
+                                        </li>
+                                        <li><a href ng-click="biddingStatus = 'rejected'; applyFilter()">
+                                            <i class="glyphicon glyphicon-remove text-danger"></i> Rejected</a>
+                                        </li>
+                                        <li><a href ng-click="biddingStatus = 'approved'; applyFilter()">
+                                            <i class="glyphicon glyphicon-ok text-success"></i> Approved</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="col-sm-6 col-md-4">
+                            <div class="form-group">
+                                <div class="input-group">
+                                    <div class="input-group-addon">
+                                        <i class="glyphicon glyphicon-search"></i>
+                                    </div>
+                                    <input type="text"
+                                           class="form-control"
+                                           ng-model="search.carQuery"
+                                           ng-change="applyFilter()"
+                                           ng-model-options="{ debounce: 500 }"
+                                           placeholder="Search by Car Name or Company">
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="col-sm-6 col-md-3">
+                            <div class="form-group">
+                                <div uib-dropdown class="btn-block">
+                                    <button class="btn btn-default btn-block" uib-dropdown-toggle>
+                                        <i class="glyphicon glyphicon-sort"></i>
+                                        Sort: {{getSortLabel()}}
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-right" uib-dropdown-menu>
+                                        <li><a href ng-click="setSort('amount', 'asc')">
+                                            <i class="glyphicon glyphicon-arrow-up"></i> Price: Low-High
+                                        </a></li>
+                                        <li><a href ng-click="setSort('amount', 'desc')">
+                                            <i class="glyphicon glyphicon-arrow-down"></i> Price: High-Low
+                                        </a></li>
+                                        <li class="divider"></li>
+                                        <li><a href ng-click="setSort('startDate', 'asc')">
+                                            <i class="glyphicon glyphicon-calendar"></i> Earliest Starting
+                                        </a></li>
+                                        <li><a href ng-click="setSort('startDate', 'desc')">
+                                            <i class="glyphicon glyphicon-calendar"></i> Latest Starting
+                                        </a></li>
+                                        <li class="divider"></li>
+                                        <li><a href ng-click="setSort('createdAt', 'desc')">
+                                            <i class="glyphicon glyphicon-time"></i> Newest First
+                                        </a></li>
+                                        <li><a href ng-click="setSort('createdAt', 'asc')">
+                                            <i class="glyphicon glyphicon-time"></i> Oldest First
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="col-sm-6 col-md-2">
+                            <button type="button" class="btn btn-default btn-block" ng-click="resetFilter()">
+                                <i class="glyphicon glyphicon-refresh"></i> Reset
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row" ng-show="bookings.length > 0">
+        <div class="col-md-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Bidding Details</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Car Details</th>
+                                    <th>Dates</th>
+                                    <th>Price Details</th>
+                                    <th>Owner Info</th>
+                                    <th>Status</th>
+                                    <th>Add-ons</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr ng-repeat="booking in bookings">
+                                    <td>
+                                        <strong>{{booking.vehicle.company}} {{booking.vehicle.name}}</strong>
+                                        <div class="text-muted">
+                                            <small>{{booking.vehicle.modelYear}} • {{booking.vehicle.fuelType}}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div><small>Start:</small> {{booking.startDate | date: 'MMM dd, yyyy'}}</div>
+                                        <div><small>End:</small> {{booking.endDate | date: 'MMM dd, yyyy'}}</div>
+                                    </td>
+                                    <td>
+                                        <div><strong>{{ booking.amount | currency:"₹" }}</strong>/day</div>
+                                        <div class="text-muted"><small>Total:</small> {{ booking.calculate() | currency:"₹" }}</div>
+                                    </td>
+                                    <td>
+                                        <div>{{booking.owner.firstName}} {{booking.owner.lastName}}</div>
+                                        <div class="text-muted"><small>@{{booking.owner.username}}</small></div>
+                                    </td>
+                                    <td>
+                                        <span class="label" ng-class="{
+                                            'label-warning': booking.status === 'pending',
+                                            'label-danger': booking.status === 'rejected',
+                                            'label-success': booking.status === 'approved'
+                                        }">{{ booking.status | uppercase }}</span>
+                                    </td>
+                                    <td>
+                                        <div ng-if="booking.selectedAddons && booking.selectedAddons.length > 0">
+                                            <ul class="list-unstyled">
+                                                <li ng-repeat="addon in booking.selectedAddons">
+                                                    <i class="glyphicon glyphicon-ok text-success"></i> {{addon.name}}
+                                                    <span class="text-muted">{{addon.price | currency:"₹"}}</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <div class="text-muted" ng-if="!booking.selectedAddons || booking.selectedAddons.length === 0">
+                                            <i class="glyphicon glyphicon-info-sign"></i> No add-ons
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" ng-show="!bookings.length && !isLoading">
+        <div class="col-md-6 col-md-offset-3">
+            <div class="alert alert-info text-center">
+                <h4><i class="glyphicon glyphicon-info-sign"></i> No Biddings Found</h4>
+                <p class="text-muted" ng-if="biddingStatus">
+                    No {{biddingStatus}} biddings available.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center" ng-if="pagination.totalItems > 0">
+        <ul uib-pagination
+            total-items="pagination.totalItems"
+            ng-model="pagination.currentPage"
+            max-size="pagination.maxSize"
+            class="pagination-sm"
+            boundary-links="true"
+            force-ellipses="true"
+            items-per-page="pagination.itemsPerPage"
+            ng-change="pageChanged()"
+            first-text="&laquo;"
+            last-text="&raquo;"
+            previous-text="&lsaquo;"
+            next-text="&rsaquo;"
+            direction-links="true"
+            rotate="true">
+        </ul>
+    </div>
+</div>

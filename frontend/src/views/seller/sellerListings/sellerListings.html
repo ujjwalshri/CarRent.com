@@ -20,9 +20,9 @@
     </div>
 
     <div class="row">
-        <div class="col-md-12 visible-xs visible-sm" style="margin-bottom: 15px;">
-            <button class="btn btn-default btn-block" data-toggle="collapse" data-target="#filterPanel" aria-expanded="false">
-                <i class="glyphicon glyphicon-filter"></i> Filters
+        <div class="visible-xs" style="margin-bottom: 15px;">
+            <button class="btn btn-default btn-block filter-toggle" data-toggle="collapse" data-target="#filterPanel">
+                <i class="glyphicon glyphicon-filter"></i> Filter Vehicles
                 <span class="caret"></span>
             </button>
         </div>
@@ -115,8 +115,6 @@
         </div>
 
         <div class="col-md-9">
-
-            <!-- Replace the simple loading indicator with our skeleton loader -->
             <div class="row" ng-show="loading && !userCars.length">
                 <div class="col-md-12">
                     <loading-car-component count="6" columns="col-lg-4 col-md-6 col-sm-6"></loading-car-component>
@@ -133,7 +131,7 @@
                             <i class="glyphicon glyphicon-refresh"></i> Clear Filters
                         </button>
                         <button class="btn btn-success" ng-click="openAddCarModal()">
-                            <i class="glyphicon glyphicon-plus"></i> Add Your First Vehicle
+                            <i class="glyphicon glyphicon-plus"></i> Add Vehicle
                         </button>
                     </div>
                 </div>
@@ -208,6 +206,10 @@
                                         <td><i class="glyphicon glyphicon-tint text-muted"></i> Fuel</td>
                                         <td class="text-right"><strong>{{ car.fuelType }}</strong></td>
                                     </tr>
+                                    <tr>
+                                        <td><i class="glyphicon glyphicon-tint text-muted"></i> Registration number</td>
+                                        <td class="text-right"><strong>{{ car.registrationNumber }}</strong></td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -232,31 +234,30 @@
             </div>
     
 
-           
-    
-
             <div class="row" ng-show="pagination.totalItems > 0">
-                <div class="col-md-12">
-                    <div class="panel panel-default" style="border-radius: 4px; margin-top: -15px;">
-                        <div class="panel-body text-center" style="padding-top: 10px; ">
-                            <ul uib-pagination
-                                total-items="pagination.totalItems"
-                                ng-model="pagination.currentPage"
-                                max-size="pagination.maxSize"
-                                class="pagination pagination-sm m-0"
-                                boundary-links="true"
-                                force-ellipses="true"
-                                items-per-page="pagination.itemsPerPage"
-                                ng-change="pageChanged()"
-                                first-text="&laquo;"
-                                last-text="&raquo;"
-                                previous-text="&lsaquo;"
-                                next-text="&rsaquo;"
-                                direction-links="true">
-                            </ul>
-                            <p class="text-muted small m-t-5">Page {{pagination.currentPage}} of {{pagination.totalPages}}</p>
+                <div class="col-xs-12">
+                    <nav class="text-center">
+                        <div class="panel panel-default" style="display: inline-block; min-width: 300px; margin: 0 auto;">
+                            <div class="panel-body">
+                                <ul uib-pagination
+                                    total-items="pagination.totalItems"
+                                    ng-model="pagination.currentPage"
+                                    max-size="pagination.maxSize"
+                                    class="pagination pagination-sm no-margin"
+                                    boundary-links="true"
+                                    force-ellipses="true"
+                                    items-per-page="pagination.itemsPerPage"
+                                    ng-change="pageChanged()"
+                                    first-text="&laquo;"
+                                    last-text="&raquo;"
+                                    previous-text="&lsaquo;"
+                                    next-text="&rsaquo;"
+                                    rotate="true">
+                                </ul>
+                                <p class="text-muted small" style="margin: 5px 0 0;">Page {{pagination.currentPage}} of {{pagination.totalPages}}</p>
+                            </div>
                         </div>
-                    </div>
+                    </nav>
                 </div>
             </div>
         </div>
@@ -315,8 +316,9 @@
     </script>
 </div>
 
-<style>
 
+
+<style>
 .bg-primary { background-color: #337ab7; color: white; }
 .bg-gray-lighter { background-color: #f9f9f9; }
 .text-white { color: white !important; }
@@ -379,10 +381,18 @@
     transition: all 0.3s ease;
 }
 
-/* Mobile view styles for filter panel */
-@media (max-width: 991px) {
-    #filterPanel {
+/* Mobile styles for filter panel */
+@media (max-width: 767px) {
+    .filter-toggle {
+        display: block;
         margin-bottom: 15px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #ddd;
+        background: linear-gradient(to bottom, #ffffff 0%, #f5f5f5 100%);
+    }
+
+    .filter-toggle:hover {
+        background: linear-gradient(to bottom, #f5f5f5 0%, #e8e8e8 100%);
     }
     
     #filterPanel.collapse {
@@ -392,17 +402,18 @@
     #filterPanel.collapse.in {
         display: block;
     }
-    
-    .collapse-animate {
-        transition: height 0.3s ease;
-    }
 }
 
-/* Hide collapse button on desktop */
-@media (min-width: 992px) {
+
+@media (min-width: 768px) {
+    .filter-toggle {
+        display: none !important;
+    }
+
     #filterPanel.collapse {
         display: block !important;
         height: auto !important;
+        visibility: visible !important;
     }
 }
 </style>

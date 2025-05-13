@@ -229,7 +229,7 @@ angular.module('myApp').factory('CarFactory', function(CarService, $q, $timeout)
         getPriceRangeArray: function(min , max) {
 
             const priceRangeArray = [];
-            const step = 500;
+            const step = 1000;
             for(let i = min; i <= max; i += step) {
                 priceRangeArray.push(`${i}-${Math.min(i + step, max)}`);
             }

@@ -6,7 +6,7 @@
         <div class="row text-center">
             <div class="col-md-12">
                 <div class="page-header">
-                    <h2><i class="glyphicon glyphicon-dashboard "></i> Platform Management Dashboard</h2>
+                    <h2><i class="glyphicon glyphicon-dashboard "></i> Platform Management</h2>
                 </div>
             </div>
         </div>
@@ -243,6 +243,7 @@
             </div>
             
 
+
             <div ng-show="activeTab === 'carApproval'" class="tab-pane-content">
                 <div class="row">
                     <div class="col-md-12">
@@ -252,7 +253,7 @@
                                     <i class="glyphicon glyphicon-check"></i> Car Approval Requests
                                 </h3>
                                 <div class="pull-right">
-                                    <span class="badge" ng-if="cars.length > 0">{{pagination.totalItems}} pending</span>
+                                    <span class="label label-info" ng-if="cars.length > 0">{{pagination.totalItems}} pending</span>
                                 </div>
                             </div>
                             <div class="panel-body">
@@ -262,21 +263,25 @@
                                 
                                 <div ng-if="cars.length > 0" class="car-approval-list">
                                     <div class="input-group" style="margin-bottom: 15px;">
-                                        <span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>
+                                        <span class="input-group-addon bg-primary"><i class="glyphicon glyphicon-search text-white"></i></span>
                                         <input type="text" class="form-control" placeholder="Search cars by company, model, owner..." ng-model="carSearchQuery">
                                     </div>
                                     
                                     <div uib-accordion close-others="false">
-                                        <div uib-accordion-group ng-repeat="car in cars | orderBy:'-createdAt' | filter:carSearchQuery" is-open="car.isOpen" class="car-approval-item">
-                                            <uib-accordion-heading>
+                                        <div uib-accordion-group ng-repeat="car in cars | orderBy:'-createdAt' | filter:carSearchQuery" is-open="car.isOpen" class="car-approval-item panel-info">
+                                            <uib-accordion-heading class="custom-accordion-heading">
                                                 <div class="row">
-                                                    <div class="col-xs-8">
-                                                        <strong class="car-title">{{car.company}} {{car.name}} ({{car.modelYear}})</strong>
-                                                        <span class="label label-default">{{car.category}}</span>
+                                                    <div class="col-xs-12 col-sm-8 col-md-9">
+                                                        <div class="car-header-info">
+                                                            <strong class="car-title text-primary">{{car.company}} {{car.name}} ({{car.modelYear}})</strong>
+                                                            <span class="label label-info category-label">{{car.category}}</span>
+                                                        </div>
                                                     </div>
-                                                    <div class="col-xs-4 text-right">
-                                                        <span class="label label-primary">₹{{car.price | number:0}} per day</span>
-                                                        <i class="glyphicon" ng-class="{'glyphicon-chevron-down': car.isOpen, 'glyphicon-chevron-right': !car.isOpen}"></i>
+                                                    <div class="col-xs-12 col-sm-4 col-md-3">
+                                                        <div class="car-header-price">
+                                                            <span class="label label-success">₹{{car.price | number:0}} per day</span>
+                                                            <i class="glyphicon" ng-class="{'glyphicon-chevron-down text-primary': car.isOpen, 'glyphicon-chevron-right text-muted': !car.isOpen}"></i>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </uib-accordion-heading>
@@ -301,18 +306,7 @@
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <div class="text-center" style="margin-top: 5px;" ng-if="car.vehicleImages.length > 1">
-                                                                <div class="btn-group btn-group-xs">
-                                                                    <button type="button" class="btn btn-default" ng-click="car.activeSlide = car.activeSlide - 1" 
-                                                                            ng-disabled="car.activeSlide === 0">
-                                                                        <i class="glyphicon glyphicon-chevron-left"></i> Prev
-                                                                    </button>
-                                                                    <button type="button" class="btn btn-default" ng-click="car.activeSlide = car.activeSlide + 1" 
-                                                                            ng-disabled="car.activeSlide === car.vehicleImages.length - 1">
-                                                                        Next <i class="glyphicon glyphicon-chevron-right"></i>
-                                                                    </button>
-                                                                </div>
-                                                            </div>
+                                                            
                                                         </div>
                                                     </div>
                                                 </div>
@@ -604,29 +598,122 @@
                 to { opacity: 1; }
             }
             .car-approval-item {
-                margin-bottom: 10px;
+                margin-bottom: 15px;
                 border-radius: 4px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             }
-            .car-approval-item .panel {
-                margin-bottom: 10px;
+
+            .car-approval-item .panel-heading {
+                padding: 12px 15px;
+                background: #f8f9fa;
             }
-            .car-title {
-                margin-right: 8px;
-            }
-            .table-details {
+
+            .car-header-info {
                 margin-bottom: 0;
             }
-            .table-details th {
-                width: 40%;
-                vertical-align: middle !important;
-            }
-            .table-details td {
-                vertical-align: middle !important;
-            }
-            .feature-tag {
+
+            .car-title {
                 display: inline-block;
-                margin: 0 5px 5px 0;
-                padding: 5px 8px;
+                margin-right: 8px;
+                font-size: 16px;
+                color: #333;
+            }
+
+            .category-label {
+                vertical-align: middle;
+            }
+
+            .car-header-price {
+                text-align: right;
+                margin-top: 0;
+            }
+
+            .car-header-price .label {
+                margin-right: 10px;
+                font-size: 14px;
+            }
+
+            /* Mobile Specific Styles */
+            @media (max-width: 767px) {
+                .car-approval-item .panel-heading {
+                    padding: 10px;
+                }
+                
+                .car-header-info, .car-header-price {
+                    text-align: left;
+                    margin: 5px 0;
+                }
+                
+                .car-title {
+                    display: block;
+                    margin-bottom: 5px;
+                }
+
+                .car-header-price {
+                    border-top: 1px solid #eee;
+                    padding-top: 8px;
+                    margin-top: 8px;
+                }
+
+                .category-label {
+                    font-size: 12px;
+                }
+
+                /* Improve table responsiveness on mobile */
+                .table-details {
+                    font-size: 13px;
+                }
+
+                .table-details th {
+                    width: 40%;
+                }
+
+                /* Make buttons more mobile-friendly */
+                .btn-group {
+                    display: flex;
+                    flex-direction: column;
+                    width: 100%;
+                    gap: 8px;
+                }
+                
+                .btn-group .btn {
+                    width: 100%;
+                    margin: 0;
+                    border-radius: 4px !important;
+                }
+
+                /* Improve image carousel on mobile */
+                .carousel {
+                    margin-bottom: 15px;
+                }
+
+                .carousel img {
+                    max-height: 200px;
+                    width: auto;
+                    margin: 0 auto;
+                }
+
+                /* Better spacing for panels on mobile */
+                .panel {
+                    margin-bottom: 15px;
+                }
+
+                .panel-body {
+                    padding: 12px;
+                }
+            }
+
+            /* Tablet and up */
+            @media (min-width: 768px) {
+                .car-header-info, .car-header-price {
+                    display: flex;
+                    align-items: center;
+                    height: 100%;
+                }
+                
+                .car-header-price {
+                    justify-content: flex-end;
+                }
             }
         </style>
     </div>

@@ -27,12 +27,13 @@ angular.module('myApp').factory('BiddingFactory', function($timeout, CarService,
         status = "pending",
         selectedAddons = [],
         platformFeePercentage = null,
-        taxes = []
+        taxes = [], 
+        vehicleImage = null
     ) {
         if (!(this instanceof Bid)) {
             return new Bid(
                 _id, amount, startDate, endDate, from, vehicle, owner,
-                startOdometerValue, endOdometerValue, status, selectedAddons,platformFeePercentage, taxes
+                startOdometerValue, endOdometerValue, status, selectedAddons,platformFeePercentage, taxes, vehicleImage
             );
         }
 
@@ -50,6 +51,7 @@ angular.module('myApp').factory('BiddingFactory', function($timeout, CarService,
         this.selectedAddons = selectedAddons;
         this.platformFeePercentage = platformFeePercentage || 0;
         this.taxes = taxes || [];
+        this.vehicleImage = vehicleImage || null;
     }
 
     /**
@@ -156,7 +158,7 @@ angular.module('myApp').factory('BiddingFactory', function($timeout, CarService,
         const dailyRate = self.amount;
         const totalNumberOfDays = Math.ceil((new Date(self.endDate) - new Date(self.startDate)) / (1000 * 60 * 60 * 24)) + 1;
         
-        // Calculate rental cost (daily rate * number of days)
+
         
         
         // Addons total calculation
@@ -220,7 +222,7 @@ angular.module('myApp').factory('BiddingFactory', function($timeout, CarService,
             // Create PDF definition
             const docDefinition = {
                 pageSize: 'A4',
-                pageMargins: [30, 20, 30, 20], // Reduced margins
+                pageMargins: [30, 20, 30, 20],
                 content: [
                     {
                         columns: [
@@ -243,46 +245,121 @@ angular.module('myApp').factory('BiddingFactory', function($timeout, CarService,
                             {
                                 width: 'auto',
                                 stack: [
-                                    { text: 'Invoice #: ' + self._id, style: 'invoiceNumber' },
-                                    { text: 'Date: ' + new Date().toLocaleDateString(), style: 'invoiceDate' }
                                 ]
                             }
                         ]
                     },
-                    // Booking Details
+                    // Vehicle Details Section
                     {
+                        margin: [0, 15, 0, 0],
                         table: {
-                            widths: ['*', '*'],
+                            widths: ['*'],
                             body: [
-                                [
-                                    { text: `${self.vehicle.company} ${self.vehicle.name}\n${self.vehicle.modelYear}`, style: 'carDetails' },
-                                    { text: `${self.owner.firstName} ${self.owner.lastName}\n${self.owner.username}`, style: 'ownerDetails' }
-                                ]
+                                [{ text: 'VEHICLE DETAILS', style: 'sectionHeader' }],
+                                [{
+                                    stack: [
+                                        {
+                                            columns: [
+                                                {
+                                                    width: 'auto',
+                                                    stack: [
+                                                        { text: 'Make/Model:', style: 'labelBold' },
+                                                        { text: 'Year:', style: 'labelBold' },
+                                                        { text: 'Category:', style: 'labelBold' },
+                                                        { text: 'Fuel Type:', style: 'labelBold' }
+                                                    ]
+                                                },
+                                                {
+                                                    width: '*',
+                                                    margin: [10, 0, 0, 0],
+                                                    stack: [
+                                                        { text: `${self.vehicle.company} ${self.vehicle.name}`, style: 'value' },
+                                                        { text: self.vehicle.modelYear, style: 'value' },
+                                                        { text: self.vehicle.category, style: 'value' },
+                                                        { text: self.vehicle.fuelType, style: 'value' }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }]
                             ]
                         },
                         layout: 'lightHorizontalLines'
                     },
-                    // Rental Period and Odometer in one row
+                    // Owner Details Section
                     {
-                        columns: [
-                            {
-                                width: '*',
-                                table: {
-                                    widths: ['auto', '*'],
-                                    body: [
-                                        [
-                                            { text: 'Period:', style: 'labelCompact' },
-                                            { text: `${new Date(self.startDate).toLocaleDateString()} - ${new Date(self.endDate).toLocaleDateString()}`, style: 'valueCompact' }
-                                        ],
-                                        [
-                                            { text: 'Odometer:', style: 'labelCompact' },
-                                            { text: `${self.startOdometerValue} km - ${self.endOdometerValue} km`, style: 'valueCompact' }
-                                        ]
+                        margin: [0, 15, 0, 0],
+                        table: {
+                            widths: ['*'],
+                            body: [
+                                [{ text: 'OWNER DETAILS', style: 'sectionHeader' }],
+                                [{
+                                    stack: [
+                                        {
+                                            columns: [
+                                                {
+                                                    width: 'auto',
+                                                    stack: [
+                                                        { text: 'Name:', style: 'labelBold' },
+                                                        { text: 'Username:', style: 'labelBold' },
+                                                        { text: 'Contact:', style: 'labelBold' }
+                                                    ]
+                                                },
+                                                {
+                                                    width: '*',
+                                                    margin: [10, 0, 0, 0],
+                                                    stack: [
+                                                        { text: `${self.owner.firstName} ${self.owner.lastName}`, style: 'value' },
+                                                        { text: self.owner.username, style: 'value' },
+                                                        { text: self.owner.phone || 'N/A', style: 'value' }
+                                                    ]
+                                                }
+                                            ]
+                                        }
                                     ]
-                                },
-                                layout: 'noBorders'
-                            }
-                        ]
+                                }]
+                            ]
+                        },
+                        layout: 'lightHorizontalLines'
+                    },
+                    // Rental Details Section
+                    {
+                        margin: [0, 15, 0, 0],
+                        table: {
+                            widths: ['*'],
+                            body: [
+                                [{ text: 'RENTAL DETAILS', style: 'sectionHeader' }],
+                                [{
+                                    stack: [
+                                        {
+                                            columns: [
+                                                {
+                                                    width: 'auto',
+                                                    stack: [
+                                                        { text: 'Period:', style: 'labelBold' },
+                                                        { text: 'Duration:', style: 'labelBold' },
+                                                        { text: 'Odometer:', style: 'labelBold' },
+                                                        { text: 'Total Distance:', style: 'labelBold' }
+                                                    ]
+                                                },
+                                                {
+                                                    width: '*',
+                                                    margin: [10, 0, 0, 0],
+                                                    stack: [
+                                                        { text: `${new Date(self.startDate).toLocaleDateString()} - ${new Date(self.endDate).toLocaleDateString()}`, style: 'value' },
+                                                        { text: `${totalNumberOfDays} days`, style: 'value' },
+                                                        { text: `${self.startOdometerValue} km - ${self.endOdometerValue} km`, style: 'value' },
+                                                        { text: `${totalDistance} km`, style: 'value' }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }]
+                            ]
+                        },
+                        layout: 'lightHorizontalLines'
                     },
                     // Addons in compact table if present
                     ...(self.selectedAddons && self.selectedAddons.length > 0 ? [{
@@ -349,6 +426,25 @@ angular.module('myApp').factory('BiddingFactory', function($timeout, CarService,
                     companyAddress: { fontSize: 9, color: '#7f8c8d', margin: [0, 0, 0, 5] },
                     invoiceNumber: { fontSize: 12, bold: true, color: '#2c3e50' },
                     invoiceDate: { fontSize: 10, color: '#7f8c8d' },
+                    sectionHeader: {
+                        fontSize: 12,
+                        bold: true,
+                        color: '#2c3e50',
+                        fillColor: '#ecf0f1',
+                        margin: [0, 5, 0, 5],
+                        padding: [5, 5, 5, 5]
+                    },
+                    labelBold: {
+                        fontSize: 10,
+                        bold: true,
+                        color: '#34495e',
+                        margin: [0, 2, 0, 2]
+                    },
+                    value: {
+                        fontSize: 10,
+                        color: '#2c3e50',
+                        margin: [0, 2, 0, 2]
+                    },
                     carDetails: { fontSize: 10, color: '#34495e', margin: [0, 5, 0, 5] },
                     ownerDetails: { fontSize: 10, color: '#34495e', margin: [0, 5, 0, 5] },
                     labelCompact: { fontSize: 10, bold: true, color: '#2c3e50', margin: [0, 2, 0, 2] },
@@ -403,7 +499,8 @@ angular.module('myApp').factory('BiddingFactory', function($timeout, CarService,
                 data.status,
                 data.selectedAddons,
                 data.platformFeePercentage,
-                data.taxes
+                data.taxes,
+                data.vehicleImage
             );
             if(toValidate) {
                 return bid.validate();

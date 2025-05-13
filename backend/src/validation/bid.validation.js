@@ -30,6 +30,7 @@ const validateBiddingData = (data) => {
             category: Joi.string().required(),
             status: Joi.string().valid('pending', 'approved').required(),
             city: Joi.string().required(),
+            vehicleImage: Joi.object().required(),
         }).required(),
         status: Joi.string().valid('pending', 'approved', 'rejected', 'ended', 'reviewed'),
         selectedAddons: Joi.array().max(10).required(),

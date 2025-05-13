@@ -297,7 +297,8 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             SellerAnalyticsService.getBiddingComparison(params),
             SellerAnalyticsService.getEarningComparison(params),
             SellerAnalyticsService.getAverageBookingPayment(params),
-            SellerAnalyticsService.getPriceRangeAnalytics(params)
+            SellerAnalyticsService.getPriceRangeAnalytics(params),
+            SellerAnalyticsService.getPriceRangeWiseAverageRating(params)
         ];
 
         $q.all(bookingPromises)
@@ -312,8 +313,11 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             biddingComparison,
             earningComparison,
             averageBookingPayment,
-            priceRangeAnalytics
+            priceRangeAnalytics,
+            priceRangeWiseAverageRating
         ]) => {
+
+            console.log(priceRangeWiseAverageRating);
             $scope.averageBookingPayment = averageBookingPayment[0]?.averageBookingPayment || 0;
             if (averageRentalDuration && averageRentalDuration.length > 0) {
                 $scope.averageRentalDuration = averageRentalDuration[0]?.averageRentalDuration || 0;
@@ -330,7 +334,8 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                     topCustomers: topCustomers,
                     cityWiseBookings: cityWiseBookings,
                     selectedAddonsCount: selectedAddonsCount,
-                    priceRangeAnalytics: priceRangeAnalytics
+                    priceRangeAnalytics: priceRangeAnalytics,
+                    priceRangeWiseAverageRating: priceRangeWiseAverageRating
                 },
                 comparisons: {
                     biddingComparison: biddingComparison,
@@ -422,7 +427,7 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                     overview.popularCars.map(car => car._id),
                     overview.popularCars.map(car => car.count),
                     'Number of Biddings',
-                    "Most Popular Cars",
+                    "Most Popular Car Models",
                     "myMostPopularCar"
                 )
             );
@@ -453,7 +458,7 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                     performance.topEarningCars.map(car => car._id),
                     performance.topEarningCars.map(car => car.totalRevenue),
                     'Total Revenue (₹)',
-                    "Top 3 Earning Cars",
+                    "Top 3 Earning Car Models",
                     "top3CarsWithMostEarning"
                 )
             );
@@ -497,6 +502,14 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
                     'Number of Bookings',
                     "Monthly Booking Trends",
                     "numberOfBookingsPerMonth"
+                )
+            );
+        }
+        if(bookings.priceRangeWiseAverageRating) {
+            createChartIfCanvasExists("priceRangeWiseAverageRating", () =>
+                ChartService.createComboChart(
+                    "priceRangeWiseAverageRating",
+                    bookings.priceRangeWiseAverageRating
                 )
             );
         }

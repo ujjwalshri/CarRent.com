@@ -102,7 +102,7 @@ export const addReviewController = async (req, res) => {
 
     try {
         // Extract reviewer information from authenticated user
-        const { _id, username, email, firstName, lastName, city } = req.user; 
+        const { _id, username } = req.user; 
         const reviewer = { _id, username }; 
         
         // Find the vehicle being reviewed
@@ -122,6 +122,7 @@ export const addReviewController = async (req, res) => {
                 color : vehicle.color,
                 mileage : vehicle.mileage,
                 price : vehicle.price,
+                fuelType : vehicle.fuelType,
             },
             reviewer,
             owner : {

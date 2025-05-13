@@ -15,6 +15,21 @@ angular
     $scope.maxPrice = 0;
     
     const rgbToHex = CarFactory.rgbToHex;
+    
+    // car model variable to bind the form fields
+    $scope.car = {
+      name: "",
+      company: "",
+      modelYear: "",
+      category: "",
+      price: "",
+      mileage: "",
+      color: "",
+      fuelType: "",
+      city: "",
+      registrationNumber: ""
+    }
+
 
     // Get current year for model year validation
     $scope.currentYear = new Date().getFullYear();
@@ -66,16 +81,16 @@ angular
       $scope.isLoading = true;
       // Create a car object using the factory with form field values also validates the car object fields
       const car = CarFactory.createCar({
-        name: $scope.carName, 
-        company: $scope.company, 
-        modelYear: $scope.carModel, 
-        category: $scope.category, 
-        price: $scope.carPrice, 
-        mileage: $scope.mileage, 
+        name: $scope.car.name, 
+        company: $scope.car.company, 
+        modelYear: $scope.car.modelYear, 
+        category: $scope.car.category, 
+        price: $scope.car.price, 
+        mileage: $scope.car.mileage, 
         color: $scope.color,
-        fuelType: $scope.fuelType,
-        city: $scope.city,
-        registrationNumber: $scope.registrationNumber,
+        fuelType: $scope.car.fuelType,
+        city: $scope.car.city,
+        registrationNumber: $scope.car.registrationNumber,
         vehicleImages: $scope.images
       });
       
@@ -98,20 +113,28 @@ angular
           .catch((err) => {
               ToastService.error(`Error adding car: ${err}`);
           }).finally(() => {  
-            // Reset form fields after submission (success or failure)
-            $scope.carName = "";
-            $scope.company = "";
-            $scope.carModel = "";
-            $scope.category = "";
-            $scope.carPrice = "";
-            $scope.mileage = "";
+            // Reset form fields and state
+            $scope.car = {
+              name: "",
+              company: "",
+              modelYear: "",
+              category: "",
+              price: "",
+              mileage: "",
+              color: "",
+              fuelType: "",
+              city: "",
+              registrationNumber: ""
+            };
             $scope.color = "";
-            $scope.fuelType = "";
-            $scope.city = "";
-            $scope.registrationNumber = "";
-            $scope.images = []; 
+            $scope.images = [];
             $scope.isLoading = false;
             
+            // Reset form state to pristine and untouched
+            if ($scope.addCarForm) {
+              $scope.addCarForm.$setPristine();
+              $scope.addCarForm.$setUntouched();
+            }
           });
-  }
+    };
 });

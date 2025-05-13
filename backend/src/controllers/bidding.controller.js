@@ -87,6 +87,7 @@ export const addBidController = async (req, res) => {
                 category: vehicle.category,
                 status: vehicle.status,
                 city: vehicle.city,
+                vehicleImage: vehicle.vehicleImages[0],
             },
             status,
             selectedAddons,
@@ -103,6 +104,7 @@ export const addBidController = async (req, res) => {
         if(validateBiddingData(biddingData).error){
             return res.status(400).json({error: validateBiddingData(biddingData).error.details[0].message});
         }
+        console.log("biddingData", biddingData);
 
         // Send the bidding data to SQS queue using the producer service
         await sqsProducerService.sendBidMessage(biddingData);
@@ -171,7 +173,7 @@ export const updateBidStatusController = async (req, res) => {
             sendGenericEmail({
                 to: bidding.from.email,
                 subject: "Bidding Approved",
-                text: `Congrats Your bid on vehicle ${bidding.vehicle.name} has been approved by the owner ${bidding.owner.username}, the bid amount is  ₹${bidding.amount}, startDate is ${new Date(bidding.startDate).toLocaleDateString()}, endDate is ${new Date(bidding.endDate).toLocaleDateString()}`
+                text: `Congrats Your bid on vehicle ${bidding.vehicle.company} ${bidding.vehicle.name} ${bidding.vehicle.modelYear}  has been approved by the owner ${bidding.owner.username}, the bid amount is  ₹${bidding.amount}, startDate is ${new Date(bidding.startDate).toLocaleDateString()}, endDate is ${new Date(bidding.endDate).toLocaleDateString()}`
             })
             .catch((err) => {
                 console.error(`Error sending bidding email: ${err.message}`);
@@ -279,19 +281,22 @@ export const getBidForUserController = async (req, res) => {
     const skip = (pageNumber - 1) * limitNumber;
     
     try{
-        // Base match stage
-        const matchStage = { 
+
+        let matchStage = { 
             "from._id": req.user._id, 
             status ,
+            startDate:{
+                $gte: new Date(new Date().setHours(0, 0, 0, 0)), // making sure user dont see the past bids that cant be accepted
+            }
         };
-        
-        const aggregationPipeline = [
+        // Build base match stage
+        let aggregationPipeline = [
             { $match: matchStage }
         ];
         
         // Add search functionality if search parameter is provided
         if (search && search.trim() !== '') {
-            aggregationPipeline.unshift({
+            aggregationPipeline = [{
                 $match: {
                     $or: [
                         { "vehicle.name": { $regex: search, $options: "i" } },
@@ -311,9 +316,10 @@ export const getBidForUserController = async (req, res) => {
                                 }
                             } 
                         }
-                    ]
+                    ],
+                    ...matchStage
                 }
-            });
+            }];
         }
         
         // Add facet stage for pagination and metadata
@@ -398,7 +404,11 @@ export const getAllBookingsAtOwnerIdController = async (req, res) => {
     };
 
     // Modify matchStage based on bookingsType
-    if(bookingsType){
+    if(bookingsType === 'ended'){
+        matchStage.status = { $in: ['ended', 'reviewed'] };
+    }else if(bookingsType === 'started'){
+        matchStage.status = { $in: ['started'] };
+    }else if(bookingsType === 'approved'){
         matchStage.status = bookingsType;
     }
 
@@ -409,37 +419,65 @@ export const getAllBookingsAtOwnerIdController = async (req, res) => {
     }
 
     try {
-        const aggregationPipeline = [
+        let aggregationPipeline = [
             { $match: matchStage }
         ];
 
-        // Add car search query processing
-        if (carSearchQuery && carSearchQuery.trim() !== '') {
-             // Add search functionality if search parameter is provided
-            aggregationPipeline.unshift({
-                $match: {
-                    $or: [
-                        { "vehicle.name": { $regex: carSearchQuery, $options: "i" } },
-                        { "vehicle.company": { $regex: carSearchQuery, $options: "i" } },
-                        { 
-                            $expr: { 
-                                $regexMatch: { 
-                                    input: { 
-                                        $concat: [
-                                            { $ifNull: ["$vehicle.company", ""] },
-                                            " ",
-                                            { $ifNull: ["$vehicle.name", ""] }
-                                        ]
-                                    },
-                                    regex: carSearchQuery,
-                                    options: "i" 
-                                }
-                            } 
+        // Apply car search query first
+        if (carSearchQuery?.trim()) {
+            const carSearchConditions = [
+                { "vehicle.name": { $regex: carSearchQuery, $options: "i" } },
+                { "vehicle.company": { $regex: carSearchQuery, $options: "i" } },
+                { 
+                    $expr: { 
+                        $regexMatch: { 
+                            input: { 
+                                $concat: [
+                                    { $ifNull: ["$vehicle.company", ""] },
+                                    " ",
+                                    { $ifNull: ["$vehicle.name", ""] }
+                                ]
+                            },
+                            regex: carSearchQuery,
+                            options: "i" 
                         }
-                    ]
+                    } 
+                }
+            ];
+
+            aggregationPipeline.push({
+                $match: {
+                    $or: carSearchConditions
                 }
             });
+        }
 
+        // Apply username search query on the filtered results
+        if (usernameSearchQuery?.trim()) {
+            const usernameSearchConditions = [
+                { "from.username": { $regex: usernameSearchQuery, $options: "i" } },
+                { 
+                    $expr: { 
+                        $regexMatch: { 
+                            input: { 
+                                $concat: [
+                                    { $ifNull: ["$from.firstName", ""] },
+                                    " ",
+                                    { $ifNull: ["$from.lastName", ""] }
+                                ]
+                            },
+                            regex: usernameSearchQuery,
+                            options: "i" 
+                        }
+                    } 
+                }
+            ];
+
+            aggregationPipeline.push({
+                $match: {
+                    $or: usernameSearchConditions
+                }
+            });
         }
 
         // Add pagination and sorting
@@ -469,98 +507,7 @@ export const getAllBookingsAtOwnerIdController = async (req, res) => {
 };
 
 
-/*
-    @description function to get the bookings history for the logged in user
-    uses req.query for the query parameters and applies pagination and sorting to the results
-    return all the booking history for the particular user
-*/  
-export const getUserBookingHistory = async (req, res) => {
-    const { page = 1, limit = 10, sort = {}, search = undefined } = req.query;
-    
-    const userId = req.user._id;
-    const pageNumber = parseInt(page, 10);
-    const limitNumber = parseInt(limit, 10);
-    const skip = (pageNumber - 1) * limitNumber;
 
-    
-    // Parse sort if it's a string
-    let sortObj = sort;
-    if (typeof sort === 'string') {
-        try {
-            sortObj = JSON.parse(sort);
-        } catch (err) {
-            sortObj = { createdAt: -1 }; // default sort
-        }
-    }
-
-    try {
-          
-
-
-        const aggregationPipeline = [
-            {
-                $match: {
-                    "from._id": userId,
-                    status: { $in: ["reviewed", "ended"] },
-                }
-            },
-            {
-                $facet: {
-                    bookings: [
-                        { $sort: sortObj },
-                        { $skip: skip },
-                        { $limit: limitNumber }
-                    ],
-                    totalCount: [
-                        { $count: "count" }
-                    ]
-                }
-            }
-        ];
-
-        // Add search functionality if search parameter is provided
-        if (search && search.trim() !== '') {
-            aggregationPipeline.unshift({
-                $match: {
-                    $or: [
-                        { "vehicle.name": { $regex: search, $options: "i" } },
-                        { "vehicle.company": { $regex: search, $options: "i" } },
-                        { 
-                            $expr: { 
-                                $regexMatch: { 
-                                    input: { 
-                                        $concat: [
-                                            { $ifNull: ["$vehicle.company", ""] },
-                                            " ",
-                                            { $ifNull: ["$vehicle.name", ""] }
-                                        ]
-                                    },
-                                    regex: search,
-                                    options: "i" 
-                                }
-                            } 
-                        }
-                    ]
-                }
-            });
-        }
-
-       
-        
-        const result = await Bidding.aggregate(aggregationPipeline);
-        const bookings = result[0]?.bookings || [];
-        const totalDocs = result[0]?.totalCount[0]?.count || 0;
-
-        
-        return res.status(200).json({ 
-            bookings, 
-            totalDocs
-        });
-    } catch (err) {
-        console.error(`Error in getUserBookingHistory: ${err.message}`);
-        return res.status(500).json({ error: `Error in getUserBookingHistory: ${err.message}` });
-    }
-};
 
 /*
     @description function to get a booking by the booking id
@@ -706,3 +653,97 @@ export const getOverlappingBidsController = async (req, res) => {
     }
 };
 
+
+
+
+/*
+    @description function to get the bookings history for the logged in user
+    uses req.query for the query parameters and applies pagination and sorting to the results
+    return all the booking history for the particular user
+*/  
+export const getUserBookingHistory = async (req, res) => {
+    const { page = 1, limit = 10, sort = {}, search = undefined } = req.query;
+    
+    const userId = req.user._id;
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    
+    // Parse sort if it's a string
+    let sortObj = sort;
+    if (typeof sort === 'string') {
+        try {
+            sortObj = JSON.parse(sort);
+        } catch (err) {
+            sortObj = { createdAt: -1 }; // default sort
+        }
+    }
+
+    try {
+
+        let matchStage = {
+            "from._id": userId,
+            status: { $in: ["reviewed", "ended"] },
+        }
+        const aggregationPipeline = [];
+
+        // Add search functionality if search parameter is provided
+        if (search && search.trim() !== '') {
+            aggregationPipeline.push({
+                $match: {
+                    $or: [
+                        { "vehicle.name": { $regex: search, $options: "i" } },
+                        { "vehicle.company": { $regex: search, $options: "i" } },
+                        { 
+                            $expr: { 
+                                $regexMatch: { 
+                                    input: { 
+                                        $concat: [
+                                            { $ifNull: ["$vehicle.company", ""] },
+                                            " ",
+                                            { $ifNull: ["$vehicle.name", ""] }
+                                        ]
+                                    },
+                                    regex: search,
+                                    options: "i" 
+                                }
+                            } 
+                        }
+                    ],
+                    ...matchStage
+                }
+            });
+        }else{
+            aggregationPipeline.push({ $match: matchStage });
+        }
+
+         aggregationPipeline.push(
+            {
+                $facet: {
+                    bookings: [
+                        { $sort: sortObj },
+                        { $skip: skip },
+                        { $limit: limitNumber }
+                    ],
+                    totalCount: [
+                        { $count: "count" }
+                    ]
+                }
+            }
+         )
+           
+        const result = await Bidding.aggregate(aggregationPipeline);
+        const bookings = result[0]?.bookings || [];
+        const totalDocs = result[0]?.totalCount[0]?.count || 0;
+
+        
+        return res.status(200).json({ 
+            bookings, 
+            totalDocs
+        });
+    } catch (err) {
+        console.error(`Error in getUserBookingHistory: ${err.message}`);
+        return res.status(500).json({ error: `Error in getUserBookingHistory: ${err.message}` });
+    }
+};

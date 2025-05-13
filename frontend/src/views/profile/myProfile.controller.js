@@ -3,9 +3,8 @@
  * Handles user profile data display, editing, and car management for sellers
  * @module myProfileCtrl
  */
-angular.module("myApp").controller("myProfileCtrl", function($scope, $state, ToastService, UserService, City, $stateParams) {
+angular.module("myApp").controller("myProfileCtrl", function($scope, $state, ToastService, UserService, AuthService, $rootScope, SocketService) {
 
-    $scope.isSeller = true;  // Flag to indicate if the user is a seller
     $scope.loadingProfileData = false;
     
     /**
@@ -21,29 +20,47 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
      */
     function fetchProfileData() {
         $scope.loadingProfileData = true;
-
-        let promise;
-        promise = UserService.getUserProfile();
-        
-        promise.then((result) => {
-            if($stateParams.id) {
-                $scope.user = result.user;
-            } else {
+        UserService.getUserProfile().then((result) => {
                 $scope.user = result.data;
+                console.log($scope.user);
+                if($scope.user.isSeller){
+                    return UserService.getSellerRating($scope.user._id);
+                }else{
+                    return null;
+                }
+        })
+        .then((res)=>{
+            if(res){
+                $scope.user.rating = res.sellerRating[0].averageRating.toFixed(1);
             }
-        }).catch((err) => {
+        })
+        .catch((err) => {
             ToastService.error("Error fetching the profile data" + err);
         }).finally(() => {
             $scope.loadingProfileData = false;
         });
     }
   
-    /**
-     * goes to the become seller page
+
+      /**
+     * Logs out the current user
+     * removes the user cookie and sets isLogged to false
+     * @returns {Promise<void>}
      */
-    $scope.navigate = () => {
-        $state.go('becomeSeller');
-    }
+      $scope.logout = () => {  
+        AuthService.logout().then((res) => {
+            // Disconnect socket before logout
+            SocketService.disconnect();
+            
+            ToastService.success("Logged out successfully");
+            $rootScope.$emit('user:loggedOut');
+            $rootScope.isLogged = false;
+            $state.go('login');
+
+        }).catch((err)=>{
+            ToastService.error("Error logging out");
+        })
+    };
     
 
 });

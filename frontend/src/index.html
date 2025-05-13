@@ -23,7 +23,7 @@
       }
     </script>
     <script async
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB438DF3pwmDK9oh_5ULpO504fYhfOKQ0o&libraries=visualization&callback=initMap">
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB438DF3pwmDK9oh_5ULpO504fYhfOKQ0o&loading=async&libraries=visualization&callback=initMap">
     </script>
    
     <!-- ui Router -->
@@ -49,6 +49,8 @@
     
     <!--importing the chart js library-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+
+
     
     <!--importing the heatmap.js library-->
     <script src="https://cdn.jsdelivr.net/npm/heatmap.js@2.0.5/build/heatmap.min.js"></script>
@@ -67,10 +69,10 @@
 
 
     <script src="components/backButton.js"></script>
-    <script src="components/loadingComponent.js"></script>
-    <script src="components/loadingCarComponent.js"></script>
+    <script src="components/loading/loadingComponent.js"></script>
+    <script src="components/loading/loadingCarComponent.js"></script>
     <script src="components/navbar/dynamicNavbar.js"></script>
-    <script src="components/loadingSingleCarComponent.js"></script>
+    <script src="components/loading/loadingSingleCarComponent.js"></script>
 
     <script src="views/admin/admin.controller.js"></script>
     <script src="views/admin/Analytics/analytics.controller.js"></script>
@@ -80,22 +82,23 @@
     <script src="views/car/singleCar.controller.js"></script>
     <script src="views/auth/signup.controller.js"></script>
     <script src="views/auth/login.controller.js"></script>
-    <script src="views/ownerBookings/ownerBiddings.controller.js"></script>
+    <script src="views/seller/sellerBookings/biddingRequests/ownerBiddings.controller.js"></script>
+    <script src="views/seller/sellerBookings/confirmedBookings/confirmedBookings.controller.js"></script>
     <script src="views/profile/myProfile.controller.js"></script>
     <script src="views/admin/userManagement/userManagement.controller.js"></script>
     <script src="views/conversations/conversations.controller.js"></script>
-    <script src="views/ownerBookings/confirmedBookings.controller.js"></script>
-    <script src="views/profile/userBookings/myBiddings.controller.js"></script>
-    <script src="views/ownerBookings/overlappingBidsModal.controller.js"></script>
-    <script src="views/sellerAnalytics/sellerAnalytics.controller.js"></script>
-    <script src="views/profile/userBookings/bookingsHistory.controller.js"></script>
-    <script src="views/sellerListings/bookingModal.controller.js"></script>
-    <script src="views/sellerListings/sellerListings.controller.js"></script>
-    <script src="views/sellerListings/addCarModalController.js"></script>
+    <script src="views/seller/sellerBookings/confirmedBookings/confirmedBookings.controller.js"></script>
+    <script src="views/profile/userBookings/myBiddings/myBiddings.controller.js"></script>
+    <script src="views/profile/userBookings/bookingsHistory/bookingsHistory.controller.js"></script>
+    <script src="views/seller/sellerBookings/biddingRequests/overlappingBidsModal.controller.js"></script>
+    <script src="views/seller/sellerAnalytics/sellerAnalytics.controller.js"></script>
+    <script src="views/seller/sellerListings/sellerListings.controller.js"></script>
+    <script src="views/seller/sellerListings/addCarModal/addCarModalController.js"></script>
     <script src="views/car/placeBidModal.controller.js"></script>
-    <script src="views/sellerListings/addonsModal.controller.js"></script>
+    <script src="views/seller/sellerListings/addonsModal/addonsModal.controller.js"></script>
     <script src="views/becomeSeller/becomeSeller.controller.js"></script>
     <script src="views/admin/platformManagement/rejectCarModal.controller.js"></script>
+    <script src="views/seller/sellerListings/bookingsModal/bookingModal.controller.js"></script>
 
 
 

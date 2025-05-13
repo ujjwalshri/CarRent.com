@@ -7,19 +7,18 @@
     <table class="table table-striped">
       <thead>
         <tr>
-          <th>Booking ID</th>
           <th>User</th>
           <th>Start Date</th>
           <th>End Date</th>
           <th>Status</th>
           <th>Total Payable Price</th>
           <th>Amount per day</th>
-          <th>Actions</th>
+
         </tr>
       </thead>
       <tbody>
         <tr ng-repeat="booking in carBookings">
-          <td>{{ booking._id }}</td>
+
           <td>{{ booking.from.firstName }} {{ booking.from.lastName }}</td>
           <td>{{ booking.startDate | date:'MMM d, yyyy' }}</td>
           <td>{{ booking.endDate | date:'MMM d, yyyy' }}</td>

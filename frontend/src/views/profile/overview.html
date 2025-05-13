@@ -6,38 +6,75 @@
 
         <div class="panel panel-info">
             <div class="panel-heading">
-                <h4 class="panel-title"><span class="glyphicon glyphicon-user"></span> Basic Information</h4>
+                <h4 class="panel-title"><i class="glyphicon glyphicon-user m-r-5"></i> Basic Information</h4>
             </div>
             <div class="panel-body">
                 <div class="row">
                     <div class="col-sm-4">
-                        <p class="text-muted small">Full Name</p>
-                        <p class="lead" style="margin-top: 0;">{{user.firstName}} {{user.lastName}}</p>
+                        <p class="text-muted"><small>Full Name</small></p>
+                        <p class="lead m-t-0">{{user.firstName}} {{user.lastName}}</p>
                     </div>
                     <div class="col-sm-4">
-                        <p class="text-muted small">Username</p>
-                        <p class="lead" style="margin-top: 0;">{{user.username}}</p>
+                        <p class="text-muted"><small>Username</small></p>
+                        <p class="lead m-t-0">{{user.username}}</p>
                     </div>
                     <div class="col-sm-4">
-                        <p class="text-muted small">Email</p>
-                        <p class="lead" style="margin-top: 0;">{{user.email}} <span class="label" ng-class="{'label-success': user.isEmailVerified, 'label-warning': !user.isEmailVerified}">
-                            {{user.isEmailVerified ? 'Verified' : 'Unverified'}}
-                        </span></p> 
+                        <p class="text-muted"><small>Email</small></p>
+                        <p class="lead m-t-0">
+                            {{user.email}} 
+                            <span class="label" ng-class="{'label-success': user.isEmailVerified, 'label-warning': !user.isEmailVerified}">
+                                {{user.isEmailVerified ? 'Verified' : 'Unverified'}}
+                            </span>
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
 
 
-        <div class="panel panel-info">
-            <div class="panel-heading">
-                <h4 class="panel-title"><span class="glyphicon glyphicon-info-sign"></span> Account Information</h4>
-            </div>
-            <div class="panel-body">
+        <div uib-accordion>
+            <div uib-accordion-group class="panel-info">
+                <div uib-accordion-heading>
+                    <i class="glyphicon glyphicon-info-sign"></i> Account Information
+                    <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': $ctrl.isOpen, 'glyphicon-chevron-right': !$ctrl.isOpen}"></i>
+                </div>
+                
                 <div class="row">
+
                     <div class="col-sm-4">
-                        <p class="text-muted small">Member Since</p>
-                        <p class="lead" style="margin-top: 0;">{{user.createdAt | date:'mediumDate'}}</p>
+                        <div class="panel panel-default">
+                            <div class="panel-body text-center">
+                                <h5 class="text-muted">Member Since</h5>
+                                <p class="lead">{{user.createdAt | date:'mediumDate'}}</p>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="col-sm-4" ng-if="user.isSeller">
+                        <div class="panel panel-default">
+                            <div class="panel-body text-center">
+                                <h5 class="text-muted">Seller Since</h5>
+                                <p class="lead">{{user.updatedAt | date:'mediumDate'}}</p>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="col-sm-4" ng-if="user.isSeller">
+                        <div class="panel panel-default">
+                            <div class="panel-body text-center">
+                                <h5 class="text-muted">Seller Rating</h5>
+                                <uib-rating ng-model="user.rating" 
+                                          max="5" 
+                                          readonly="true"
+                                          state-on="'glyphicon glyphicon-star text-warning'"
+                                          state-off="'glyphicon glyphicon-star-empty'"
+                                          aria-label="Seller Rating"></uib-rating>
+                                <h4>{{user.rating || 'N/A'}} <i class="fa fa-star rating-star"></i></h4>
+                                <small class="text-muted">Based on customer reviews</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

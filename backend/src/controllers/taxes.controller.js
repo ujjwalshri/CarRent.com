@@ -164,10 +164,7 @@ export const deleteTaxController = async (req, res) => {
         if (!deletedTax) {
             return res.status(404).json({ message: "Tax not found" });
         }
-        
-
-
-        
+    
         return res.status(200).json({ message: "Tax deleted successfully", deletedTax });
     } catch (err) {
         console.error(`Error in deleteTaxController: ${err.message}`);

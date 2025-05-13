@@ -273,7 +273,7 @@ angular.module('myApp').controller('sellerListingsCtrl', function($scope, $state
     */
     $scope.viewCarBookings = function(car) {
         $uibModal.open({
-            templateUrl: 'views/sellerListings/bookingsModal.html',
+            templateUrl: 'views/seller/sellerListings/bookingsModal/bookingsModal.html',
             controller: 'BookingsModalCtrl',
             resolve: {
                 selectedCar: function() {
@@ -290,7 +290,7 @@ angular.module('myApp').controller('sellerListingsCtrl', function($scope, $state
     */
     $scope.openAddonsModal = function() {
         var modalInstance = $uibModal.open({
-            templateUrl: 'views/sellerListings/addonsModal.html',
+            templateUrl: 'views/seller/sellerListings/addonsModal/addonsModal.html',
             controller: 'AddonsModalCtrl',
             size: 'md',
             backdrop: 'static',
@@ -319,7 +319,7 @@ angular.module('myApp').controller('sellerListingsCtrl', function($scope, $state
     $scope.openAddCarModal = function() {
         $scope.addCarLoading = true;
         var modalInstance = $uibModal.open({
-            templateUrl: 'views/sellerListings/addCarModal.html',
+            templateUrl: 'views/seller/sellerListings/addCarModal/addCarModal.html',
             controller: 'AddCarModalCtrl',
             size: 'md',
             backdrop: 'static'

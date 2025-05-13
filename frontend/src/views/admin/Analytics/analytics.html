@@ -55,7 +55,13 @@
                         <input type="date" 
                                class="form-control" 
                                ng-model="startDate"
+                               name="startDate"
+                               max="{{endDate | date:'yyyy-MM-dd'}}"
+                               required
                                placeholder="Select start date">
+                        <span class="help-block" ng-show="dateRangeForm.startDate.$error.max && dateRangeForm.startDate.$touched">
+                            Start date cannot be after end date
+                        </span>
                     </div>
                 </div>
                 <div class="col-md-5">
@@ -66,7 +72,13 @@
                         <input type="date" 
                                class="form-control" 
                                ng-model="endDate"
+                               name="endDate"
+                               min="{{startDate | date:'yyyy-MM-dd'}}"
+                               required
                                placeholder="Select end date">
+                        <span class="help-block" ng-show="dateRangeForm.endDate.$error.min && dateRangeForm.endDate.$touched">
+                            End date cannot be before start date
+                        </span>
                     </div>
                 </div>
                 <div class="col-md-2">

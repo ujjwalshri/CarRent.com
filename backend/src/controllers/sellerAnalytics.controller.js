@@ -731,3 +731,36 @@ export const getPriceRangeAnalytics = async (req, res) => {
         return handleResponse(res, 500, { error: 'Failed to fetch price range analytics data' });
     }
 };
+
+
+/**
+ * function to get the average rating for a seller based on price ranges of his cars
+ * @param {*} req 
+ * @param {*} res 
+ * @returns returns the average rating for a seller based on price ranges of his cars
+ */
+export const priceRangeWiseAverageRating = async (req, res) => {
+    console.log("priceRangeWiseAverageRating");
+    const userId = req.user._id;
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+        return handleResponse(res, 400, { error: "startDate and endDate are required" });
+    }
+
+    const cacheKey = `seller-price-range-wise-average-rating-${userId}-${startDate}-${endDate}`;
+
+    try {
+        const cachedData = await getCachedData(cacheKey);
+        if (cachedData) {
+            return handleResponse(res, 200, cachedData);
+        }
+        const priceRangeWiseAverageRatingData = await Review.aggregate(pipelines.priceRangeWiseAverageRating(userId, startDate, endDate));
+        console.log(priceRangeWiseAverageRatingData);
+        await setCachedData(cacheKey, priceRangeWiseAverageRatingData);
+        return handleResponse(res, 200, priceRangeWiseAverageRatingData);
+    } catch (error) {
+        console.error('Error in getPriceRangeWiseAverageRating:', error);
+        return handleResponse(res, 500, { error: 'Failed to fetch price range wise average rating data' });
+    }
+}
