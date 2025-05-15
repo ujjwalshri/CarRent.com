@@ -27,6 +27,8 @@ angular.module("myApp").component("dynamicNavbar", {
   controller: function($element, AuthService, ToastService, $compile, $scope, $rootScope, $state) {
     var ctrl = this;
     
+    
+    
     // Menu configurations for different user types
     const menuConfigs = {
       seller: {

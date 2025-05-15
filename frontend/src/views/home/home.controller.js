@@ -20,13 +20,7 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
     
     $scope.fuelTypes = CarFactory.fuelTypes;
     $scope.fuelType = ''; // Selected fuel type
-    
-    // Sort options
-    $scope.sortOptions = [
-        { value: '', label: 'Most Recent' },
-        { value: 'price-low', label: 'Price: Low to High' },
-        { value: 'price-high', label: 'Price: High to Low' },
-    ];
+
 
     // Debounce mechanism for search input
     let searchTimeout;
