@@ -5,7 +5,6 @@
                 <h2 class="text-center">My Biddings</h2>
             </div>
 
-
             <div class="panel panel-primary">
                 <div class="panel-heading">
                     <h3 class="panel-title">
@@ -138,7 +137,7 @@
                                     </td>
                                     <td>
                                         <div>{{booking.owner.firstName}} {{booking.owner.lastName}}</div>
-                                        <div class="text-muted"><small>@{{booking.owner.username}}</small></div>
+                                        <div class="text-muted"><small>{{booking.owner.username}}</small></div>
                                     </td>
                                     <td>
                                         <span class="label" ng-class="{
@@ -160,6 +159,7 @@
                                             <i class="glyphicon glyphicon-info-sign"></i> No add-ons
                                         </div>
                                     </td>
+                                   
                                 </tr>
                             </tbody>
                         </table>

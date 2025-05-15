@@ -14,7 +14,7 @@ angular
     $scope.minPrice = 0;
     $scope.maxPrice = 0;
     
-    const rgbToHex = CarFactory.rgbToHex;
+    const rgbToHex = CarFactory.rgbToHex;// factory function to convert rgb to hex
     
     // car model variable to bind the form fields
     $scope.car = {

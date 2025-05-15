@@ -4,7 +4,7 @@
  * Angular service that handles all Socket.IO functionality for real-time communication
  * Provides methods for socket events and maintains connection state
  */
-angular.module('myApp').service('SocketService', function($timeout, ApiService) {
+angular.module('myApp').service('SocketService', function($timeout, ApiService, $state) {
     // Socket.io instance
     let socket = null;
     
@@ -158,7 +158,6 @@ angular.module('myApp').service('SocketService', function($timeout, ApiService) 
      * @param {Function} callback - Callback function
      */
     this.on = function(eventName, callback) {
-        console.log('Registering event listener for:', eventName);
         if (!eventListeners[eventName]) {
             eventListeners[eventName] = [];
         }

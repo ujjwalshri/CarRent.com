@@ -38,11 +38,12 @@ angular
       $scope.loggedInUser = null; // Current user's profile
       $scope.image; // Image attachment for current message
       
+      
 
+      // Function to initialize the controller
+      // Fetches user data and conversations
       $scope.init = () => {
-
         $scope.isLoading = true;
-        
         $q.all([
           AuthService.getLoggedinUser(),
           $stateParams.id
@@ -53,11 +54,9 @@ angular
 
             $scope.loggedInUser = user;
             $scope.myConversations = conversationsData.conversations;
-            
-
+          
             SocketService.initialize(user);
-            
-
+          
             SocketService.on("newMessage", (message) => {
               console.log('New message received:', message);
                 $scope.messages.push(message);
@@ -238,11 +237,9 @@ angular
           return false;
         }
         
-
         const otherUserName = conversation.reciever.username === $scope.loggedInUser.username ? 
           conversation.creator.username : conversation.reciever.username;
           
-
         return $scope.onlineUsers.includes(otherUserName);
       };
 
@@ -254,7 +251,26 @@ angular
 
         const modalInstance = $uibModal.open({
           templateUrl: 'imagesModal.html',
-          controller: 'ImagesModalCtrl',
+          controller: function($scope, $uibModalInstance, conversationId, ChatService, ToastService) {
+            $scope.isLoading = true;
+            $scope.images = [];
+        
+            $scope.close = function() {
+              $uibModalInstance.dismiss('cancel');
+            };
+        
+            // Load images when modal opens
+            ChatService.getAllAttachments(conversationId)
+              .then((response) => {
+                $scope.images = response.attachments;
+              })
+              .catch((err) => {
+                ToastService.error("Error loading images: " + err);
+              })
+              .finally(() => {
+                $scope.isLoading = false;
+              });
+          },
           size: 'lg',
           resolve: {
             conversationId: function() {
@@ -265,25 +281,5 @@ angular
       };
     }
   )
-  // Images modal controller
-  .controller('ImagesModalCtrl', function($scope, $uibModalInstance, conversationId, ChatService, ToastService) {
-    $scope.isLoading = true;
-    $scope.images = [];
 
-    $scope.close = function() {
-      $uibModalInstance.dismiss('cancel');
-    };
 
-    // Load images when modal opens
-    ChatService.getAllAttachments(conversationId)
-      .then((response) => {
-        console.log('Fetched images:', response.attachments);
-        $scope.images = response.attachments;
-      })
-      .catch((err) => {
-        ToastService.error("Error loading images: " + err);
-      })
-      .finally(() => {
-        $scope.isLoading = false;
-      });
-  });

@@ -135,7 +135,7 @@
         <div class="text-center" ng-if="!isLoading && (!myConversations || myConversations.length === 0)" style="padding: 30px 20px;">
           <div style="background-color: #f8f9fa; border-radius: 10px; padding: 20px; margin: 10px;">
             <i class="glyphicon glyphicon-comment" style="font-size: 48px; color: #075E54; margin-bottom: 15px;"></i>
-            <h4 style="color: #075E54; margin-bottom: 15px;">No Conversations Yet</h4>
+            <h4 style="color: #075E54; margin-bottom: 15px;">No Conversations</h4>
             <p style="color: #666; margin-bottom: 15px;">Start a conversation by:</p>
             <ol class="text-left" style="color: #666; padding-left: 20px;">
               <li>Browsing available cars</li>
@@ -206,7 +206,11 @@
         <button ng-show="selectedConversation" class="btn btn-sm pull-right" style="background-color: #128C7E; color: white; border: none;" ng-click="openImagesModal()">
           <i class="glyphicon glyphicon-picture"></i> View Images
         </button>
-        <p ng-hide="selectedConversation" style="color: white;">Click on a conversation to view messages</p>
+      </div>
+
+      <div ng-hide="selectedConversation" class="text-center" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <i class="glyphicon glyphicon-comment" style="font-size: 48px; color: rgba(6, 6, 6, 0.5); margin-bottom: 15px; display: block;"></i>
+        <h4 style="color: rgba(3, 3, 3, 0.8);">Select a conversation to start messaging</h4>
       </div>
 
       <loading-component is-loading="messageLoading" loading-text="Loading messages..."></loading-component>

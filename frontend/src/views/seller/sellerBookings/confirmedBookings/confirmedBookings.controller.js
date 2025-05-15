@@ -13,7 +13,7 @@ angular
         itemsPerPage: 6,
         totalPages : 0,
       }
-      
+      $scope.isDateFilterApplied = false;
       // Data collections and state
       $scope.allBookings = [];
       $scope.bookingsType = {
@@ -250,6 +250,7 @@ angular
         $scope.validateDateRange();
         
         if (!$scope.dateFilterError) {
+          $scope.isDateFilterApplied = true;
           $scope.pagination.currentPage = 1;
           fetchOwnerConfirmedBookings();
         }

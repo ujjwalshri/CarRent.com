@@ -1,4 +1,4 @@
-angular.module('myApp').controller('myBiddingsCtrl', function($scope, BiddingFactory, BiddingService, ToastService) {
+angular.module('myApp').controller('myBiddingsCtrl', function($scope, BiddingFactory, BiddingService, ToastService, ChatService, $state) {
 
     $scope.biddingStatus = 'pending'; // setting the bidding status to an empty string
     $scope.isLoading = false; // loading state
@@ -128,5 +128,8 @@ angular.module('myApp').controller('myBiddingsCtrl', function($scope, BiddingFac
             ? sortLabels[$scope.sortField][$scope.sortOrder] 
             : 'Default';
     };
+
+
+  
 
 });

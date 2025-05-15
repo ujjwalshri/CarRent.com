@@ -330,7 +330,6 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             createBookingCharts({
                 bookings: {
                     peakHours: peakHours,
-                    monthlyBookings: monthlyBookings,
                     topCustomers: topCustomers,
                     cityWiseBookings: cityWiseBookings,
                     selectedAddonsCount: selectedAddonsCount,
@@ -455,7 +454,7 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             createChartIfCanvasExists("top3CarsWithMostEarning", () =>
                 ChartService.createBarChart(
                     "bar",
-                    performance.topEarningCars.map(car => car._id),
+                    performance.topEarningCars.map(car => car._id ),
                     performance.topEarningCars.map(car => car.totalRevenue),
                     'Total Revenue (₹)',
                     "Top 3 Earning Car Models",
@@ -493,18 +492,7 @@ angular.module('myApp').controller('sellerAnalyticsCtrl', function($scope, $q, T
             );
         }
 
-        if (bookings.monthlyBookings) {
-            createChartIfCanvasExists("numberOfBookingsPerMonth", () =>
-                ChartService.createBarChart(
-                    "bar",
-                    bookings.monthlyBookings.map(booking => booking._id),
-                    bookings.monthlyBookings.map(booking => booking.count),
-                    'Number of Bookings',
-                    "Monthly Booking Trends",
-                    "numberOfBookingsPerMonth"
-                )
-            );
-        }
+       
         if(bookings.priceRangeWiseAverageRating) {
             createChartIfCanvasExists("priceRangeWiseAverageRating", () =>
                 ChartService.createComboChart(

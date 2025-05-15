@@ -22,7 +22,6 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
         $scope.loadingProfileData = true;
         UserService.getUserProfile().then((result) => {
                 $scope.user = result.data;
-                console.log($scope.user);
                 if($scope.user.isSeller){
                     return UserService.getSellerRating($scope.user._id);
                 }else{

@@ -83,6 +83,7 @@ angular.module('myApp').service('GeolocationService', ['$q', '$http', 'ApiServic
                     fullAddress: response.data.display_name || 'Unknown address',
                     raw: response.data // Keep raw data for additional processing if needed
                 };
+                console.log("Location Data: ", locationData);
                 deferred.resolve(locationData);
             } else {
                 deferred.reject('No location data found');

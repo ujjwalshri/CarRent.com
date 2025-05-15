@@ -78,7 +78,29 @@ angular.module('myApp').controller('taxesManagementCtrl', function($scope, TaxSe
     $scope.openEditTaxModal = function(tax) {
         const modalInstance = $uibModal.open({
             templateUrl: 'editTaxModal.html',
-            controller: 'editTaxModalCtrl',
+            controller: function($scope, $uibModalInstance, TaxService, ToastService, tax, validateTax) {
+                $scope.tax = tax;
+                
+                $scope.save = function() {
+                    // Validate tax data
+                    if (!validateTax($scope.tax)) {
+                        return;
+                    }
+                    
+                    TaxService.updateTax($scope.tax._id, $scope.tax)
+                        .then(function() {
+                            ToastService.success('Tax updated successfully');
+                            $uibModalInstance.close();
+                        })
+                        .catch(function(error) {
+                            ToastService.error(error);
+                        });
+                };
+                
+                $scope.cancel = function() {
+                    $uibModalInstance.dismiss('cancel');
+                };
+            },
             resolve: {
                 tax: function() {
                     // Create a copy to avoid modifying the original tax object
@@ -156,30 +178,4 @@ angular.module('myApp').controller('taxesManagementCtrl', function($scope, TaxSe
 
 });
 
-/**
- * Edit Tax Modal Controller
- * Handles tax editing in a modal window
- */
-angular.module('myApp').controller('editTaxModalCtrl', function($scope, $uibModalInstance, TaxService, ToastService, tax, validateTax) {
-    $scope.tax = tax;
-    
-    $scope.save = function() {
-        // Validate tax data
-        if (!validateTax($scope.tax)) {
-            return;
-        }
-        
-        TaxService.updateTax($scope.tax._id, $scope.tax)
-            .then(function() {
-                ToastService.success('Tax updated successfully');
-                $uibModalInstance.close();
-            })
-            .catch(function(error) {
-                ToastService.error(error);
-            });
-    };
-    
-    $scope.cancel = function() {
-        $uibModalInstance.dismiss('cancel');
-    };
-});
+

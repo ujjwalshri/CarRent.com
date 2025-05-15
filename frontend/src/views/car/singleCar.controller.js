@@ -51,7 +51,6 @@ angular
        */
       $scope.init = () => {
         fetchCarData();
-        $scope.loadReviews();
       };
 
       /**
@@ -75,39 +74,50 @@ angular
       function fetchCarData() {
         
         $scope.isLoading = true;
+
         $q.all([
           CarService.getCarById($stateParams.id),
           CarService.fetchBookingsAtCarId($stateParams.id),
           AuthService.getLoggedinUser(),
           CarService.getCharges(),
         ])
-          .then((results) => {
-            $scope.blockedDates = BiddingFactory.calculateBlockedDates(results);
-
-            $scope.car = results[0].data;
-            $scope.LoggedinUser = results[2];
-            $scope.platformFeePercentage = results[3][0].percentage;
-            
-            return AddonService.getOwnerAddons($scope.car.owner._id); 
+          .then(([carResponse, bookings, loggedInUser, charges]) => {
+            $scope.car = carResponse.data;
+            $scope.LoggedinUser = loggedInUser;
+            $scope.platformFeePercentage = charges[0].percentage;
+        
+            $scope.blockedDates = BiddingFactory.calculateBlockedDates([
+              carResponse,
+              bookings,
+              loggedInUser,
+              charges
+            ]);
+        
+            // Return another $q.all for the dependent calls (using car.owner._id)
+            return $q.all([
+              AddonService.getOwnerAddons($scope.car.owner._id),
+              UserService.getSellerRating($scope.car.owner._id),
+              CarService.getReviewsByCarId($stateParams.id, { skip: 0, limit: 3 }),
+            ]);
           })
-          .then((addOns) => {
-            // Directly using the addOns array returned by the service
+          .then(([addOns, sellerRatingResponse, reviewResponse]) => {
             $scope.addOns = addOns;
-            return UserService.getSellerRating($scope.car.owner._id);
-          })
-          .then(({sellerRating}) => {
-            $scope.sellerRating = sellerRating[0]?.averageRating;
+        
+            const sellerRating = sellerRatingResponse?.sellerRating;
+            $scope.sellerRating = sellerRating?.[0]?.averageRating;
+        
+            $scope.carReviews = reviewResponse.data.reviews;
+            $scope.averageRating = parseFloat(reviewResponse.data.avgRating).toFixed(1);
+            $scope.hasMoreReviews = reviewResponse.data.reviews.length >= $scope.limit;
           })
           .catch((error) => {
-            ToastService.error(`error fetching the car data ${error}`);
-          }).finally(() => {
+            ToastService.error(`Error fetching the car data: ${error}`);
+          })
+          .finally(() => {
             $scope.isLoading = false;
           });
+        
       }
-
-
-      console.log("loading state" ,$scope.isLoading)
-      
 
       /**
        * Opens the place bid modal
@@ -137,12 +147,6 @@ angular
         });
 
         modalInstance.result.then(
-          function(success) {
-            if (success) {
-              // Refresh car data after successful bid
-              fetchCarData();
-            }
-          },
           function() {
             // Modal dismissed
             console.log('Bid modal dismissed');

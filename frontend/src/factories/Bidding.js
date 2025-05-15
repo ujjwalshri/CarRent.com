@@ -414,7 +414,7 @@ angular.module('myApp').factory('BiddingFactory', function($timeout, CarService,
                     {
                         stack: [
                             { text: 'Terms & Conditions', style: 'termsHeader' },
-                            { text: '• Platform fee is non-refundable • Extra distance charges apply beyond 300km • All prices include applicable taxes', style: 'termsContent' },
+                            { text: 'Extra distance charges apply beyond 300km', style: 'termsContent' },
                             { text: 'Thank you for choosing our service!', style: 'footer' }
                         ]
                     }

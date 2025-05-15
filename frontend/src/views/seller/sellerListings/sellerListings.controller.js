@@ -326,9 +326,7 @@ angular.module('myApp').controller('sellerListingsCtrl', function($scope, $state
         });
 
         modalInstance.result.then(function(newCar) {
-            // Refresh the car listings after successfully adding a car
-            $scope.pagination.currentPage = 1;
-            fetchCarListings();
+            
         });
     };
 });

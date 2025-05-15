@@ -1,5 +1,5 @@
 const app = angular.module("myApp", ["ui.router", "ui.bootstrap"]);
-app.controller("appCtrl", function($scope, $rootScope, ToastService, AuthService, AuthService, SocketService) {
+app.controller("appCtrl", function($scope, $rootScope, ToastService, AuthService, AuthService, SocketService, $state) {
     /**
      * Initializes the application
      * Fetches the logged-in user and updates the root scope
@@ -38,7 +38,9 @@ app.controller("appCtrl", function($scope, $rootScope, ToastService, AuthService
         // Listen for bid success notifications
         SocketService.on('bidSuccess', function(bidData) {
             // Show success toast with bid details
-            ToastService.success(`Bid placed successfully on ${bidData.carName}`);
+            console.log('Bid placed successfully:', bidData);
+            ToastService.success(`Bid placed successfully`);
+            $state.go('myProfile.biddings');
         });
         SocketService.on('bidSuccess', function() {
             ToastService.success("Thank you for trusting us with your money");

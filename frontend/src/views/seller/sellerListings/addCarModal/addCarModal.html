@@ -72,7 +72,7 @@
       <label class="col-sm-3 control-label">Registration Number:</label>
       <div class="col-sm-9">
         <input type="text" class="form-control" ng-model="car.registrationNumber" name="registrationNumber" placeholder="Enter vehicle registration number (e.g., MP O9 KK 9000 )" required >
-        <small class="help-block">Enter the official registration number as it appears on your vehicle documents</small>
+        <small class="help-block">Enter the official registration number other wise your vehicle may get rejected</small>
         <div class="text-danger" ng-show="addCarModalForm.registrationNumber.$touched && addCarModalForm.registrationNumber.$invalid">
           <span ng-show="addCarModalForm.registrationNumber.$error.required">Registration number is required.</span>
         </div>
@@ -82,7 +82,7 @@
     <div class="form-group">
       <label class="col-sm-3 control-label">Price Per Day:</label>
       <div class="col-sm-9">
-        <input type="number" class="form-control" ng-model="car.price" name="carPrice" placeholder="{{minPrice}} - {{maxPrice}}" required ng-min="{{minPrice}}" ng-max="{{maxPrice}}">
+        <input type="number" class="form-control" ng-model="car.price" name="carPrice" placeholder="₹{{minPrice}} - ₹{{maxPrice}}" required ng-min="{{minPrice}}" ng-max="{{maxPrice}}">
         <div class="text-danger" ng-show="addCarModalForm.carPrice.$touched && addCarModalForm.carPrice.$invalid">
           <span ng-show="addCarModalForm.carPrice.$error.required">Price is required.</span>
           <span ng-show="addCarModalForm.carPrice.$error.min || addCarModalForm.carPrice.$error.max">Price must be between {{minPrice}} and {{maxPrice}}.</span>

@@ -57,7 +57,9 @@ angular.module("myApp").controller("homeCtrl", function($scope, $state, ToastSer
         $scope.loadingCars = true;
         GeolocationService.getUserLocationWithCity()
         .then((response) => {
+            
             $scope.city = response.city;
+            console.log("City fetched successfully:", $scope.city);
             return fetchCars();
         })
         .then(()=>{

@@ -1,7 +1,7 @@
 <div ng-controller="confirmedBookingsCtrl" class="container" ng-init="init()">
     <h1 class="text-center text-primary">Confirmed Bookings</h1>
     
-    <div class="panel panel-default">
+    <div class="panel panel-primary">
 
         <div class="panel-heading clearfix">
             <div class="row">
@@ -78,7 +78,7 @@
                 <div class="col-sm-12" ng-if="dateFilterError">
                     <p class="text-danger"><i class="fa fa-exclamation-triangle"></i> {{dateFilterError}}</p>
                 </div>
-                <div class="col-sm-12" ng-if="dateFilter.startDate && dateFilter.endDate && !dateFilterError">
+                <div class="col-sm-12" ng-if="dateFilter.startDate && dateFilter.endDate && !dateFilterError  && isDateFilterApplied">
                     <div class="alert alert-info" style="margin-top: 10px;">
                         <i class="fa fa-info-circle"></i> Showing bookings starting between <strong>{{dateFilter.startDate | date:'MMM dd, yyyy'}}</strong> and <strong>{{dateFilter.endDate | date:'MMM dd, yyyy'}}</strong>
                     </div>
@@ -149,8 +149,8 @@
                                 <div><i class="fa fa-calendar-check-o"></i> {{ booking.startDate | date: 'MMM dd, yyyy' }}</div>
                                 <div><i class="fa fa-calendar-times-o"></i> {{ booking.endDate | date: 'MMM dd, yyyy' }}</div>
                                 <div class="small text-muted" ng-if="booking.status === 'started' || booking.status === 'ended' || booking.status === 'reviewed'">
-                                    <span ng-if="booking.startOdometerValue">Start: {{booking.startOdometerValue}} km</span>
-                                    <span ng-if="booking.endOdometerValue && booking.startOdometerValue !== -1"><br>End: {{booking.endOdometerValue}} km</span>
+                                    <span ng-if="booking.startOdometerValue!== -1">Start: {{booking.startOdometerValue}} km</span>
+                                    <span ng-if="booking.endOdometerValue && booking.endOdometerValue !== -1"><br>End: {{booking.endOdometerValue}} km</span>
                                 </div>
                             </td>
                             <td>

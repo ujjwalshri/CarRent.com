@@ -57,28 +57,12 @@ angular
           // Handle the new response format that includes cars array and pagination metadata
           if (response.cars && Array.isArray(response.cars)) {
             $scope.cars = response.cars;
-
+            
             // Set pagination data from the response
             if (response.pagination) {
               $scope.pagination.totalItems = response.pagination.total;
             }
-          } else {
-            // Fallback for backward compatibility
-            $scope.cars = response;
-
-            // Estimate total items if we don't have exact count
-            if (response.length < $scope.pagination.itemsPerPage) {
-              $scope.pagination.totalItems =
-                ($scope.pagination.currentPage - 1) *
-                  $scope.pagination.itemsPerPage +
-                response.length;
-            } else {
-              $scope.pagination.totalItems = Math.max(
-                $scope.pagination.totalItems,
-                $scope.pagination.currentPage * $scope.pagination.itemsPerPage
-              );
-            }
-          }
+          } 
         })
         .catch((err) => {
           ToastService.error("Error fetching pending cars: " + err);

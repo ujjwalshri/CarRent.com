@@ -134,7 +134,6 @@ angular.module('myApp').service('ChartService', function() {
                             callback: function(value) {
                                 if (isEarningsChart) {
                                     return '₹' + value.toLocaleString('en-IN', {
-                                        minimumFractionDigits: 2,
                                         maximumFractionDigits: 2
                                     });
                                 }
@@ -157,7 +156,16 @@ angular.module('myApp').service('ChartService', function() {
                 ],
                 xAxes: [
                     {
-                        ticks: { fontColor: "#555", fontSize: 14 },
+                        ticks: { 
+                            fontColor: "#555", 
+                            fontSize: 14,
+                            callback: function(value) {
+                                if (value.length > 15) {
+                                    return value.substr(0, 12) + '...';
+                                }
+                                return value;
+                            }
+                        },
                         gridLines: { color: "rgba(200, 200, 200, 0.3)" }
                     },
                 ],
@@ -269,17 +277,17 @@ angular.module('myApp').service('ChartService', function() {
    * @returns {Chart} The created chart instance
    */
   this.createMultilineChart = function(rawData, canvasId) {
-      // Step 1: Extract all unique dates
+
       const allDates = new Set();
       rawData.forEach(city => {
           city.reviewCounts.forEach(rc => allDates.add(rc.date));
       });
       const sortedDates = Array.from(allDates).sort();
   
-      // Step 2: Define colors for the chart
+
       const colors = ['#e6194b', '#3cb44b', '#4363d8', '#f58231', '#911eb4'];
   
-      // Step 3: Prepare datasets for up to 5 cities
+
       const datasets = rawData
           .filter(city => city._id) // Ignore entries with null _id
           .slice(0, 5) // Ensure only up to 5 cities
@@ -299,17 +307,17 @@ angular.module('myApp').service('ChartService', function() {
               };
           });
   
-      // Step 4: Store chart instances in a map to manage multiple charts
+
       if (!this.chartInstances) {
           this.chartInstances = {};
       }
   
-      // Step 5: Check if a chart already exists for the given element ID and destroy it
+
       if (this.chartInstances[canvasId]) {
           this.chartInstances[canvasId].destroy();
       }
   
-      // Step 6: Check if the canvas element exists
+
       const canvas = document.getElementById(canvasId);
       if (!canvas) {
           console.warn(`Canvas element with ID ${canvasId} not found in the DOM`);
@@ -322,7 +330,7 @@ angular.module('myApp').service('ChartService', function() {
           return null;
       }
       
-      // Step 7: Create and return the chart
+
       this.chartInstances[canvasId] = new Chart(ctx, {
           type: 'line',
           data: {
@@ -373,9 +381,6 @@ angular.module('myApp').service('ChartService', function() {
     const labels = data.map(item => `₹${item.priceRange}`);
     const counts = data.map(item => item.count);
     const ratings = data.map(item => parseFloat(item.averageRating).toFixed(1));
-    console.log("Counts: ", counts);
-    console.log("Ratings: ", ratings);
-    console.log("Labels: ", labels);
 
     // Create new chart
     this.chartInstances[canvasId] = new Chart(ctx, {

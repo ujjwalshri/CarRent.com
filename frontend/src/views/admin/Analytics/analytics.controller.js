@@ -16,8 +16,7 @@ angular
       $scope.numberOfSatisfiedCustomers;
       $scope.isLoading = false;
       $scope.newUsers;
-      // Initialize active tab
-      $scope.activeTab = "Overview";
+      
       // Geographical data for mapping
       $scope.indianCitiesAndLongitudeAndLatitudeMap =
         City.getIndianCitiesAndLongitudeMap();
@@ -32,6 +31,9 @@ angular
           new Date().setDate(new Date().getDate() - 7)
         );
         $scope.endDate = new Date();
+
+        // Initialize active tab
+      $scope.activeTab = "Overview";
       };
 
       /**
@@ -463,7 +465,7 @@ angular
        */
       $scope.sendCongratulationMail = (data) => {
         let emailData = {};
-
+        // admin clicked on the send congratulations button of the seller
         if (data.totalEarnings !== undefined) {
           emailData = {
             email: data.ownerEmail,
@@ -471,7 +473,7 @@ angular
             startDate: $scope.startDate,
             endDate: $scope.endDate,
           };
-        } else if (data.count !== undefined) {
+        } else if (data.count !== undefined) { // admin clicked on the send congratulations button of the buyer
           emailData = {
             email: data.buyerEmail,
             totalBookings: data.count,
@@ -479,7 +481,7 @@ angular
             endDate: $scope.endDate,
           };
         }
-
+         // calling admin analytics service to send the email
         AdminAnalyticsService.sendCongratulationMail(emailData)
           .then(() => {
             ToastService.success(`Congratulation mail sent successfully`);

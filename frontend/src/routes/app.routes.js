@@ -311,9 +311,7 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
 
 angular.module('myApp')
 .run(function($window, $transitions) {
-
   $transitions.onSuccess({}, function() {
-    console.log('State changed successfully');
     $window.scrollTo(0, 0);
   });
 });

@@ -160,10 +160,10 @@
                 <label class="col-sm-3 control-label">Registration Number:</label>
                 <div class="col-sm-9">
                   <input type="text" class="form-control" ng-model="car.registrationNumber" name="registrationNumber" placeholder="Enter vehicle registration number (e.g., MP 07 DD 4567)" required >
-                  <small class="help-block">Enter the official registration number as it appears on your vehicle documents (e.g., MP07-DD-4567)</small>
+                  <small class="help-block">Enter the official registration number as it appears on your vehicle documents (e.g., MP 07 DD 4567)</small>
                   <div class="text-danger" ng-show="addCarForm.registrationNumber.$touched && addCarForm.registrationNumber.$invalid">
                     <span ng-show="addCarForm.registrationNumber.$error.required">Registration number is required.</span>
-                    <span ng-show="addCarForm.registrationNumber.$error.pattern">Please enter a valid registration number format (e.g., MP07-DD-4567).</span>
+                    <span ng-show="addCarForm.registrationNumber.$error.pattern">Please enter a valid registration number format (e.g., MP 07 DD 4567).</span>
                   </div>
                 </div>
               </div>
@@ -171,7 +171,7 @@
               <div class="form-group">
                 <label class="col-sm-3 control-label">Price Per Day:</label>
                 <div class="col-sm-9">
-                  <input type="number" class="form-control" ng-model="car.price" name="carPrice" placeholder="{{minPrice}} - {{maxPrice}}" required ng-min="{{minPrice}}" ng-max="{{maxPrice}}">
+                  <input type="number" class="form-control" ng-model="car.price" name="carPrice" placeholder="₹{{minPrice}} - ₹{{maxPrice}}" required ng-min="{{minPrice}}" ng-max="{{maxPrice}}">
                   <div class="text-danger" ng-show="addCarForm.carPrice.$touched && addCarForm.carPrice.$invalid">
                     <span ng-show="addCarForm.carPrice.$error.required">Price is required.</span>
                     <span ng-show="addCarForm.carPrice.$error.min || addCarForm.carPrice.$error.max">Price must be between {{minPrice}} and {{maxPrice}}.</span>

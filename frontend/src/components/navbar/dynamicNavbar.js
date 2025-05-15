@@ -47,7 +47,7 @@ angular.module("myApp").component("dynamicNavbar", {
         mainLinks: [],
         rightLinks: [
           { href: "conversations({id: undefined})", icon: "glyphicon-comment", text: "Chats" },
-          { href: "becomeSeller", icon: "glyphicon-briefcase", text: "Become a host" },
+          { href: "becomeSeller", icon: "glyphicon-briefcase", text: "Become a Seller" },
           { href: "myProfile.overview", icon: "glyphicon-user", text: "Profile" },
         ]
       },

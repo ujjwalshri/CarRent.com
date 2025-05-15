@@ -1,7 +1,7 @@
 <div ng-controller="ownerBiddingsCtrl" class="container" ng-init="init()">
-    <h1 class="text-center text-primary">Bidding Requests</h1>
+    <h1 class="text-center text-primary" style="margin-top: 20px;">Bidding Requests</h1>
     
-    <div class="panel panel-default">
+    <div class="panel panel-primary">
 
         <div class="panel-heading clearfix">
             <div class="row">
@@ -41,7 +41,7 @@
                                     </label>
                                     <select id="sortSelect" class="form-control input-sm" ng-model="sort.sortBy" ng-change="fetchBookings()">
                                         <option value="">Default (Latest First)</option>
-                                        <option value="amount">Price (High to Low)</option>
+                                        <option value="amount">Bid Amount (High to Low)</option>
                                         <option value="startDate">Start Date (Latest First)</option>
                                     </select>
                                 </div>
@@ -170,7 +170,6 @@
                                 <strong>{{booking.vehicle.company}} {{booking.vehicle.name}}</strong>
                                 <div class="small text-muted">
                                     <span><i class="fa fa-calendar"></i> {{booking.vehicle.modelYear}}</span><br>
-                                    <span><i class="fa fa-money"></i> {{booking.vehicle.price | currency:"₹"}} /day</span>
                                 </div>
                             </td>
                             <td>

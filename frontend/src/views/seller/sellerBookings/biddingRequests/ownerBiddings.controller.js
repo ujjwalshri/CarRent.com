@@ -164,7 +164,7 @@ angular
               const totalBids = $scope.optimalBids.length;
             
               ToastService.success(
-                `Found ${totalBids} optimal bids across ${totalVehicles} vehicles that would maximize your revenue}`
+                `Found ${totalBids} optimal bids across ${totalVehicles} vehicles that would maximize your revenue`
               );
             } else {
               ToastService.info("No optimal bid recommendations found");

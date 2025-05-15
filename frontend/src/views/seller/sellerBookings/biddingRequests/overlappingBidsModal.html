@@ -12,8 +12,8 @@
                     <th>User</th>
                     <th>Base Price</th>
                     <th>Bid Amount</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
+                    <th style="min-width: 90px;">Start</th>
+                    <th style="min-width: 90px;">End</th>
                     <th>Total Payable</th>
                 </tr>
             </thead>
@@ -22,8 +22,8 @@
                     <td>{{bid.from.firstName}} {{bid.from.lastName}}</td>
                     <td>{{bid.vehicle.price | currency:"₹"}}</td>
                     <td>{{bid.amount | currency:"₹"}}</td>
-                    <td>{{bid.startDate | date:'yyyy-MM-dd'}}</td>
-                    <td>{{bid.endDate | date:'yyyy-MM-dd'}}</td>
+                    <td style="white-space: nowrap;">{{bid.startDate | date:'dd MMM yy'}}</td>
+                    <td style="white-space: nowrap;">{{bid.endDate | date:'dd MMM yy'}}</td>
                     <td>{{bid.calculate() | currency:"₹"}}</td>
                 </tr>
             </tbody>
