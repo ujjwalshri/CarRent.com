@@ -77,7 +77,7 @@ app.use(cookieParser());
  * across different domains/ports
  */
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5500", 
+    origin:  "https://car-rent-com.vercel.app", 
     credentials: true, 
 }));
 
