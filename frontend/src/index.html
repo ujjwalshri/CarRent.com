@@ -11,7 +11,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
     
-    <!-- angular (load only once) -->
+    <!-- angular -->
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/1.0.29/angular-ui-router.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.5.6/ui-bootstrap-tpls.min.js"></script>
@@ -20,39 +20,49 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     
-    <!--color theif library -->
+    <!--color theif library for picking the color from the images-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.2/color-thief.umd.js"></script>
 
-    <!--socket.io client -->
+    <!--importing the socket.io client -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
     
-    <!--async library -->
+    <!--importing the async library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/async/3.2.6/async.min.js"></script>
     
-    <!--pdfKit -->
+    <!--importing the pdfKit lib to download the pdf of the bill generated-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.56/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.56/vfs_fonts.js"></script>
     
-    <!--chart.js -->
+    <!--importing the chart js library-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
     
-    <!--heatmap.js -->
+    <!--importing the heatmap.js library-->
     <script src="https://cdn.jsdelivr.net/npm/heatmap.js@2.0.5/build/heatmap.min.js"></script>
     
-    <!--toastify -->
+    <!--importing the css for the toastify library-->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    
+    <!--importing the js for the toastify library-->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     
-    <!--font awesome-->
+    <!--importing the font awesome-->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-    <!-- Google Maps (load async) -->
+    <!-- Google Maps -->
+    <script>
+      window.initMap = function() {
+        // Global initialization function that will be called by Google Maps
+        window.mapsInitialized = true;
+      };
+    </script>
     <script async defer
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB438DF3pwmDK9oh_5ULpO504fYhfOKQ0o&libraries=visualization">
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB438DF3pwmDK9oh_5ULpO504fYhfOKQ0o&libraries=visualization&callback=initMap">
     </script>
 
-    <!-- App Scripts -->
+    <!-- App Initialization -->
     <script src="app.controller.js"></script>
+
+    <!-- Components -->
     <script src="components/backButton.js"></script>
     <script src="components/loading/loadingComponent.js"></script>
     <script src="components/loading/loadingCarComponent.js"></script>
