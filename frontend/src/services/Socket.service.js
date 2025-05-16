@@ -39,7 +39,7 @@ angular.module('myApp').service('SocketService', function($timeout, ApiService, 
         }
         
 
-        socket = io(ApiService.baseURL || "http://localhost:8000", {
+        socket = io(ApiService.baseURL, {
             reconnection: true,
             reconnectionDelay: 1000,
             reconnectionDelayMax: 5000,
@@ -273,4 +273,4 @@ angular.module('myApp').service('SocketService', function($timeout, ApiService, 
     this.getSocket = function() {
         return socket;
     };
-}); 
+});

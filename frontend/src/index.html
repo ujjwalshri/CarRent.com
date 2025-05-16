@@ -10,22 +10,9 @@
     <!-- Dependencies  -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-
+    
     <!-- angular -->
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
-
-    <!-- Google Maps with init function -->
-    <script>
-      function initMap() {
-        // This function will be called by Google Maps API as a callback
-      }
-    </script>
-    <script async
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB438DF3pwmDK9oh_5ULpO504fYhfOKQ0o&loading=async&libraries=visualization&callback=initMap">
-    </script>
-   
-    <!-- ui Router -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/1.0.29/angular-ui-router.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/2.5.6/ui-bootstrap-tpls.min.js"></script>
      
@@ -48,8 +35,6 @@
     
     <!--importing the chart js library-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
-
-
     
     <!--importing the heatmap.js library-->
     <script src="https://cdn.jsdelivr.net/npm/heatmap.js@2.0.5/build/heatmap.min.js"></script>
@@ -63,16 +48,20 @@
     <!--importing the font awesome-->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
+    <!-- Google Maps -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB438DF3pwmDK9oh_5ULpO504fYhfOKQ0o&libraries=visualization"></script>
+
     <!-- App Initialization -->
     <script src="app.controller.js"></script>
 
-
+    <!-- Components -->
     <script src="components/backButton.js"></script>
     <script src="components/loading/loadingComponent.js"></script>
     <script src="components/loading/loadingCarComponent.js"></script>
     <script src="components/navbar/dynamicNavbar.js"></script>
     <script src="components/loading/loadingSingleCarComponent.js"></script>
 
+    <!-- Controllers -->
     <script src="views/admin/admin.controller.js"></script>
     <script src="views/admin/Analytics/analytics.controller.js"></script>
     <script src="views/admin/platformManagement/platformManagement.controller.js"></script>
@@ -86,7 +75,6 @@
     <script src="views/profile/myProfile.controller.js"></script>
     <script src="views/admin/userManagement/userManagement.controller.js"></script>
     <script src="views/conversations/conversations.controller.js"></script>
-    <script src="views/seller/sellerBookings/confirmedBookings/confirmedBookings.controller.js"></script>
     <script src="views/profile/userBookings/myBiddings/myBiddings.controller.js"></script>
     <script src="views/profile/userBookings/bookingsHistory/bookingsHistory.controller.js"></script>
     <script src="views/seller/sellerBookings/biddingRequests/overlappingBidsModal.controller.js"></script>
@@ -99,12 +87,11 @@
     <script src="views/admin/platformManagement/rejectCarModal.controller.js"></script>
     <script src="views/seller/sellerListings/bookingsModal/bookingModal.controller.js"></script>
 
-
-
+    <!-- Services -->
+    <script src="services/Api.service.js"></script>
     <script src="services/Auth.service.js"></script>
     <script src="services/Toast.service.js"></script>
     <script src="services/Chart.service.js"></script>
-    <script src="services/Api.service.js"></script>
     <script src="services/Car.service.js"></script>
     <script src="services/Bidding.service.js"></script>
     <script src="services/User.service.js"></script>
@@ -118,12 +105,13 @@
     <script src="services/Recommendation.service.js"></script>
     <script src="services/Geolocation.service.js"></script>
 
+    <!-- Factories -->
     <script src="factories/Bidding.js"></script>
     <script src="factories/Car.js"></script>
     <script src="factories/Review.js"></script>
     <script src="factories/User.js"></script>
 
-
+    <!-- Routes -->
     <script src="routes/app.routes.js"></script>
   </head>
   <body ng-controller="appCtrl" ng-init="init()">
@@ -152,6 +140,5 @@
         }
       }
     </style>
-</body>
-
+  </body>
 </html>

@@ -34,8 +34,9 @@ angular.module('myApp').service('AuthService', function($q, ApiService, $http, $
 
     this.loginUser = function(username, password) {
         const deferred = $q.defer();
-        $http({method: "POST",
-            url: "http://localhost:8000/api/auth/login",
+        $http({
+            method: "POST",
+            url: `${ApiService.baseURL}/api/auth/login`,
             data: {
                 username: username,
                 password: password
