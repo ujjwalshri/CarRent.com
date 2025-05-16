@@ -1,4 +1,11 @@
 const app = angular.module("myApp", ["ui.router", "ui.bootstrap"]);
+
+// Google Maps initialization
+window.initMap = function() {
+    // This will be called when Maps API is loaded
+    window.googleMapsInitialized = true;
+};
+
 app.controller("appCtrl", function($scope, $rootScope, ToastService, AuthService, SocketService, $state) {
     /**
      * Initializes the application

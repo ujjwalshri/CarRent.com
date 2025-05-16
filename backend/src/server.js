@@ -74,20 +74,16 @@ app.use(cookieParser());
 /**
  * Configure Cross-Origin Resource Sharing (CORS)
  */
-const allowedOrigins = [
-    'https://car-rent-com.vercel.app',
-    'https://car-rent-cpbwtu35q-ujjwals-projects-76fd4110.vercel.app',
-    'http://localhost:5500',
-    'http://localhost:8000',
-    'http://127.0.0.1:5500'
-];
+const allowedOrigins = process.env.NODE_ENV === 'development' 
+    ? ['http://localhost:5500', 'http://127.0.0.1:5500']
+    : ['https://car-rent-com.vercel.app', 'https://car-rent-cpbwtu35q-ujjwals-projects-76fd4110.vercel.app'];
 
 app.use(cors({
     origin: function(origin, callback) {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
         
-        if (allowedOrigins.indexOf(origin) !== -1) {
+        if (allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
