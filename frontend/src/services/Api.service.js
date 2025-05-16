@@ -1,3 +1,3 @@
 angular.module('myApp').service('ApiService', function() {
-    this.baseURL = 'http://localhost:8000'; // Base URL of the Backend API
+    this.baseURL = 'https://carrent-com-7.onrender.com'; // Base URL of the Backend API
 });
