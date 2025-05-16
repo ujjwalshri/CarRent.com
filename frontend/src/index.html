@@ -49,7 +49,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
     <!-- Google Maps -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB438DF3pwmDK9oh_5ULpO504fYhfOKQ0o&libraries=visualization"></script>
+    <script>
+      window.initMap = function() {
+        // Global initialization function that will be called by Google Maps
+        window.mapsInitialized = true;
+      };
+    </script>
+    <script async defer
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB438DF3pwmDK9oh_5ULpO504fYhfOKQ0o&libraries=visualization&callback=initMap">
+    </script>
 
     <!-- App Initialization -->
     <script src="app.controller.js"></script>
