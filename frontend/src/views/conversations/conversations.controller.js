@@ -12,7 +12,8 @@ angular
       $q,
       ToastService,
       $timeout,
-      $uibModal
+      $uibModal,
+      $document
     ) {
 
       $scope.myConversations = []; // List of user's active conversations
@@ -38,7 +39,79 @@ angular
       $scope.loggedInUser = null; // Current user's profile
       $scope.image; // Image attachment for current message
       
-      
+      // Initialize dragging state
+      $scope.isDragging = false;
+      $scope.startX = 0;
+      $scope.startWidth = 0;
+      $scope.minWidth = 280;
+      $scope.maxWidth = 0;
+
+      // Function to update the max width based on container size
+      function updateMaxWidth() {
+        const container = document.querySelector('.resizable-panels');
+        if (container) {
+          const containerWidth = container.offsetWidth;
+          $scope.maxWidth = Math.min(containerWidth * 0.6, containerWidth - 400);
+        }
+      }
+
+      // Document-level event handlers for dragging
+      const mouseMoveHandler = function(e) {
+        if (!$scope.isDragging) return;
+
+        const leftPanel = document.getElementById('leftPanel');
+        if (!leftPanel) return;
+
+        const width = $scope.startWidth + (e.pageX - $scope.startX);
+        
+        if (width >= $scope.minWidth && width <= $scope.maxWidth) {
+          leftPanel.style.width = width + 'px';
+          $scope.$apply();
+        }
+      };
+
+      const mouseUpHandler = function() {
+        if (!$scope.isDragging) return;
+        
+        $scope.isDragging = false;
+        document.body.classList.remove('dragging-active');
+        $scope.$apply();
+      };
+
+      // Start dragging
+      $scope.startDragging = function($event) {
+        const leftPanel = document.getElementById('leftPanel');
+        if (!leftPanel) return;
+        
+        $scope.isDragging = true;
+        $scope.startX = $event.pageX;
+        $scope.startWidth = leftPanel.offsetWidth;
+        
+        // Add dragging class to body
+        document.body.classList.add('dragging-active');
+        
+        // Update maxWidth when starting to drag
+        updateMaxWidth();
+      };
+
+      // Add document-level event listeners
+      $document.on('mousemove', mouseMoveHandler);
+      $document.on('mouseup', mouseUpHandler);
+      $document.on('mouseleave', mouseUpHandler);
+
+      // Handle window resize
+      angular.element(window).on('resize', function() {
+        updateMaxWidth();
+        
+        const leftPanel = document.getElementById('leftPanel');
+        if (!leftPanel) return;
+
+        const currentWidth = leftPanel.offsetWidth;
+        if (currentWidth > $scope.maxWidth) {
+          leftPanel.style.width = $scope.maxWidth + 'px';
+          $scope.$apply();
+        }
+      });
 
       // Function to initialize the controller
       // Fetches user data and conversations
@@ -94,7 +167,15 @@ angular
 
 
       $scope.$on("$destroy", function () {
-
+        // Remove document-level event listeners
+        $document.off('mousemove', mouseMoveHandler);
+        $document.off('mouseup', mouseUpHandler);
+        $document.off('mouseleave', mouseUpHandler);
+        
+        // Remove window resize listener
+        angular.element(window).off('resize');
+        
+        // Clean up socket listeners
         SocketService.off("newMessage");
         SocketService.off("onlineUsers");
         SocketService.off("newConversation");

@@ -1,0 +1,30 @@
+.panel {
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin-bottom: 15px;
+}
+.panel-heading {
+    background-image: linear-gradient(to bottom, #337ab7 0%, #2e6da4 100%);
+}
+.panel-title {
+    font-weight: 600;
+    color: white;
+}
+.table-condensed {
+    font-size: 12px;
+}
+/* Fix pagination alignment */
+.pagination {
+    margin: 10px 0;
+}
+.m-r-5 { margin-right: 5px; }
+.p-0 { padding: 0; }
+.table-hover tbody tr:hover {
+    background-color: #f0f7fd;
+}
+.btn-group-sm > .btn {
+    padding: 5px 10px;
+}
+.label {
+    display: inline-block;
+    padding: 0.3em 0.6em;
+}

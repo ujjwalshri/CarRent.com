@@ -7,6 +7,8 @@ angular
     $scope.isLoading = false;
     // Flag to control visibility of car form (initially false to show info first)
     $scope.showCarForm = false;
+    // Flag to track terms acceptance
+    $scope.termsAccepted = false;
     // Get available cities from the City service
     $scope.cities = City.getCities(); 
     $scope.companies = CarFactory.companies;

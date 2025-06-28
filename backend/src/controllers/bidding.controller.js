@@ -62,6 +62,10 @@ export const addBidController = async (req, res) => {
         const vehicle = await Vehicle.findById(carId);
         const platformFeePercentage = await Charges.findOne({name: "Platform Fee"});
         const taxes = await Tax.find({isActive: true});
+
+        console.log("vehicle ki category"   , vehicle.category);
+
+
         const biddingData = {
             amount, 
             startDate, 

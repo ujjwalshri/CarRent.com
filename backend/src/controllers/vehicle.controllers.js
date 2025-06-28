@@ -6,6 +6,7 @@
 import User from "../models/user.model.js";
 import Vehicle from "../models/vehicle.model.js";
 import Bidding from "../models/bidding.model.js";
+import carCategoryModel from "../models/car.category.model.js";
 import { createCarValidation } from "../validation/car.validation.js";
 import {
   sendCongratulationEmail,
@@ -64,6 +65,17 @@ export const addCarController = async (req, res) => {
       uploadedAt: new Date(),
     }));
 
+    console.log("category from the request", category);
+ 
+
+    const categoryObj = await carCategoryModel.findOne({ name: category });
+
+    console.log( 
+      "category from the database",
+      categoryObj);
+      
+
+
     const carData = {
       name,
       company,
@@ -74,7 +86,7 @@ export const addCarController = async (req, res) => {
       vehicleImages: images,
       registrationNumber,
       fuelType,
-      category,
+      category: categoryObj,
       city,
       owner: {
         username: user.username,
@@ -109,7 +121,10 @@ export const addCarController = async (req, res) => {
       color,
       mileage,
       fuelType,
-      category,
+      category: {
+        _id: categoryObj._id,
+        name: categoryObj.name
+      },
       city,
       vehicleImages: images,
       registrationNumber: registrationNumber,
@@ -190,6 +205,9 @@ export const getAllCarController = async (req, res) => {
   } = req.query;
   skip = parseInt(skip);
   limit = parseInt(limit);
+
+
+  console.log(sortBy, sortOrder);
 
   if (city === "undefined") city = false;
   if (category === "undefined") category = false;
@@ -299,7 +317,6 @@ export const getVehicleByStatus = async (req, res) => {
     const cars = await Vehicle.find({ status: statusValue });
     res.status(200).json(cars);
   } catch (err) {
-    console.log(`error in the getVehicleByStatus ${err.message}`);
     res
       .status(500)
       .json({ message: `error in the getVehicleByStatus ${err.message}` });
@@ -399,10 +416,8 @@ export const toggleVehicleStatusController = async (req, res) => {
 export const updateVehicleController = async (req, res) => {
   const { id } = req.params;
   const { price } = req.body;
-
   try {
     await Vehicle.updateOne({ _id: id }, { price: price });
-
     res.status(200).json({ message: "Car updated successfully" });
   } catch (err) {
     console.log(`error in the updateCarController ${err.message}`);

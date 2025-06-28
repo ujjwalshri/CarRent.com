@@ -8,6 +8,7 @@
  * The service communicates with the backend API endpoints for vehicles and related entities.
  */
 angular.module('myApp').service('CarService', function($http, ApiService, $q) {
+    console.log(ApiService.baseURL);
     /*
     function to get all approved cars
     @params search, sortBy, city, category, fuelType, skip

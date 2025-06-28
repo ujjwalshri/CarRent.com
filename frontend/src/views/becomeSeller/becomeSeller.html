@@ -1,20 +1,64 @@
 <div class="container-fluid" ng-app="carApp" ng-init="init()">
-  
-  
   <div class="panel panel-default">
     <div class="panel-heading text-center">
-      <h3 class="text-primary">Add Your Vehicle</h3>
+      <h3 class="text-primary">Become a Seller on Car.com</h3>
     </div>
     <div class="panel-body">
       <div ng-if="isLoading" class="text-center" style="padding: 20px; background-color: rgba(0,0,0,0.05); border-radius: 5px; margin-bottom: 15px;">
         <loading-component is-loading="isLoading" loading-text="Saving Car Data..."></loading-component>
       </div>
+      
+      <!-- Terms and Conditions View -->
       <div ng-show="!showCarForm">
         <div class="panel panel-info">
           <div class="panel-heading">
-            <h3 class="panel-title"><i class="glyphicon glyphicon-info-sign"></i> Become a Seller on Car.com</h3>
+            <h3 class="panel-title"><i class="glyphicon glyphicon-file"></i> Terms and Conditions</h3>
           </div>
           <div class="panel-body">
+            <!-- Scrollable terms and conditions area -->
+            <div class="terms-container" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; background-color: #f9f9f9; margin-bottom: 15px; font-size: 13px; line-height: 1.5;">
+              <h4>Car.com Seller Agreement</h4>
+              <p>Last updated: May 19, 2025</p>
+              
+              <h5>1. Introduction</h5>
+              <p>Welcome to Car.com. This Seller Agreement ("Agreement") contains the terms and conditions that govern your access to and use of the Car.com Services and is an agreement between you and Car.com. By registering for or using the Services, you agree to be bound by this Agreement.</p>
+              
+              <h5>2. Car Listing and Rental Requirements</h5>
+              <p>2.1. <b>Vehicle Ownership:</b> You must be the legal owner of the vehicle you list, or be authorized by the owner to list the vehicle for rental purposes.</p>
+              <p>2.2. <b>Vehicle Documentation:</b> All vehicles must have valid registration, insurance, and any required governmental permits. You agree to provide accurate information and images regarding your vehicle.</p>
+              <p>2.3. <b>Pricing and Service Fee:</b> You may set your own daily rental price within our platform's minimum and maximum guidelines. Car.com will collect a service fee of 15% from each completed rental transaction.</p>
+              
+              <h5>3. Approval Process</h5>
+              <p>3.1. <b>Initial Review:</b> All vehicle listings are subject to approval by Car.com administrators before becoming visible to potential renters.</p>
+              <p>3.2. <b>Verification:</b> Car.com may request additional documentation to verify vehicle ownership, condition, or your identity.</p>
+              <p>3.3. <b>Denial of Listing:</b> Car.com reserves the right to decline any vehicle listing that does not meet our quality standards or violates this Agreement.</p>
+              
+              <h5>4. Seller Responsibilities</h5>
+              <p>4.1. <b>Communication:</b> You agree to maintain responsive communication with renters and Car.com support.</p>
+              <p>4.2. <b>Vehicle Maintenance:</b> You are responsible for ensuring your vehicle is in good mechanical condition, clean, and ready for each rental period.</p>
+              <p>4.3. <b>Reservation Fulfillment:</b> You agree to honor all bookings that you accept through the platform.</p>
+              
+              <h5>5. Payments</h5>
+              <p>5.1. <b>Payout Timeline:</b> Sellers will receive payment for completed rentals within 3 business days after the rental period ends.</p>
+              <p>5.2. <b>Cancellations:</b> Cancellation policies and associated fees are outlined in our Cancellation Policy document.</p>
+              
+              <h5>6. Account Suspension and Termination</h5>
+              <p>6.1. Car.com reserves the right to temporarily suspend or permanently terminate your seller account for violations of this Agreement, low performance ratings, or fraudulent activity.</p>
+              
+              <h5>7. Limitation of Liability</h5>
+              <p>7.1. Car.com is not liable for any damages, including lost profits, resulting from your use of our services or your inability to use our services.</p>
+              
+              <h5>8. Changes to the Agreement</h5>
+              <p>8.1. Car.com reserves the right to modify this Agreement at any time. Continued use of the services after such modifications constitutes your consent to the modified terms.</p>
+              
+              <h5>9. Dispute Resolution</h5>
+              <p>9.1. Any disputes arising out of or related to this Agreement will be resolved through arbitration in accordance with our Dispute Resolution Policy.</p>
+              
+              <h5>10. Privacy Policy</h5>
+              <p>10.1. Your use of Car.com services is also governed by our Privacy Policy, which is incorporated into this Agreement by reference.</p>
+            </div>
+            
+            <!-- Steps and Benefits remain the same -->
             <div class="row">
               <div class="col-xs-12 col-md-8">
                 <h4 class="text-info"><strong>How the Car Approval Process Works</strong></h4>
@@ -69,13 +113,20 @@
               <i class="glyphicon glyphicon-exclamation-sign"></i> <strong>Important:</strong> Please ensure all information and images are accurate. Misrepresentation may result in rejection or future account restrictions.
             </div>
             
+            <!-- Terms acceptance checkbox and continue button -->
             <div class="row">
-              <div class="col-xs-12 text-center">
-                <button class="btn btn-success btn-block btn-lg visible-xs-block" ng-click="showCarForm = true">
-                  <i class="glyphicon glyphicon-ok"></i> I Understand & Agree
-                </button>
-                <button class="btn btn-success btn-lg hidden-xs" ng-click="showCarForm = true">
-                  <i class="glyphicon glyphicon-ok"></i> I Understand & Agree - Continue to Form
+              <div class="col-xs-12">
+                <div class="form-group terms-checkbox">
+                  <div class="checkbox">
+                    <label>
+                      <input type="checkbox" ng-model="termsAccepted"> 
+                      I have read and agree to the Car.com Seller Agreement and Terms & Conditions
+                    </label>
+                  </div>
+                </div>
+                
+                <button class="btn btn-success btn-lg" ng-click="showCarForm = true" ng-disabled="!termsAccepted">
+                  <i class="glyphicon glyphicon-ok"></i> Continue to Car Form
                 </button>
               </div>
             </div>
@@ -83,7 +134,7 @@
         </div>
       </div>
       
-
+      <!-- Car Form View -->
       <div ng-show="showCarForm">
         <div class="panel panel-primary">
           <div class="panel-heading">
@@ -220,10 +271,19 @@
 
               <div class="form-group">
                 <div class="col-xs-12">
-                  <button type="submit" class="btn btn-success btn-block" ng-disabled="addCarForm.$invalid || isLoading">
-                    <span ng-if="!isLoading">Add Car</span>
-                    <span ng-if="isLoading"><i class="glyphicon glyphicon-refresh" style="animation: spin 1s infinite linear;"></i> Saving...</span>
-                  </button>
+                  <div class="row">
+                    <div class="col-sm-8">
+                      <button type="submit" class="btn btn-success btn-block" ng-disabled="addCarForm.$invalid || isLoading">
+                        <span ng-if="!isLoading">Add Car</span>
+                        <span ng-if="isLoading"><i class="glyphicon glyphicon-refresh" style="animation: spin 1s infinite linear;"></i> Saving...</span>
+                      </button>
+                    </div>
+                    <div class="col-sm-4">
+                      <button type="button" class="btn btn-default btn-block" ng-click="showCarForm = false; termsAccepted = false;">
+                        <i class="glyphicon glyphicon-arrow-left"></i> Back to Terms
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </form>

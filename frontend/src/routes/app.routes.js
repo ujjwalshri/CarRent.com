@@ -155,6 +155,22 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
                 }]
             }
         }) 
+        .state('exploreCars', {
+            url: '/exploreCars',
+            templateUrl: 'views/car/exploreCars.html',
+            controller: 'exploreCarsCtrl',
+            resolve : {
+                auth: ['$state', 'AuthService', function($state, AuthService){
+                    AuthService.getLoggedinUser().then((user)=>{
+                        if(user && user.isAdmin){
+                            $state.go('admin');
+                        }
+                    }).catch((err)=>{
+                    })
+                }]
+            }
+        })
+
         .state('myProfile', {
             url: '/myProfile?/:id',
             templateUrl: 'views/profile/myProfile.html',
@@ -175,6 +191,11 @@ angular.module("myApp").config(function($stateProvider, $urlRouterProvider) {
             url: '/overview',
             templateUrl: 'views/profile/overview.html',
             controller: 'myProfileCtrl'
+        })
+        .state('myProfile.myConversations', {
+            url: '/conversations',
+            templateUrl: 'views/conversations/conversations.html',
+            controller: 'conversationsCtrl'
         })
         .state('myProfile.biddings', {
             url: '/biddings',

@@ -14,7 +14,7 @@
                 <div class="panel-body">
                     <div class="row">
 
-                        <div class="col-sm-6 col-md-3">
+                        <div class="col-sm-6 col-md-5">
                             <div class="form-group">
                                 <div uib-dropdown class="btn-block">
                                     <button type="button" class="btn btn-default btn-block" uib-dropdown-toggle>
@@ -38,7 +38,7 @@
                         </div>
 
 
-                        <div class="col-sm-6 col-md-4">
+                        <div class="col-sm-6 col-md-5">
                             <div class="form-group">
                                 <div class="input-group">
                                     <div class="input-group-addon">
@@ -50,41 +50,6 @@
                                            ng-change="applyFilter()"
                                            ng-model-options="{ debounce: 500 }"
                                            placeholder="Search by Car Name or Company">
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <div class="col-sm-6 col-md-3">
-                            <div class="form-group">
-                                <div uib-dropdown class="btn-block">
-                                    <button class="btn btn-default btn-block" uib-dropdown-toggle>
-                                        <i class="glyphicon glyphicon-sort"></i>
-                                        Sort: {{getSortLabel()}}
-                                        <span class="caret"></span>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-right" uib-dropdown-menu>
-                                        <li><a href ng-click="setSort('amount', 'asc')">
-                                            <i class="glyphicon glyphicon-arrow-up"></i> Price: Low-High
-                                        </a></li>
-                                        <li><a href ng-click="setSort('amount', 'desc')">
-                                            <i class="glyphicon glyphicon-arrow-down"></i> Price: High-Low
-                                        </a></li>
-                                        <li class="divider"></li>
-                                        <li><a href ng-click="setSort('startDate', 'asc')">
-                                            <i class="glyphicon glyphicon-calendar"></i> Earliest Starting
-                                        </a></li>
-                                        <li><a href ng-click="setSort('startDate', 'desc')">
-                                            <i class="glyphicon glyphicon-calendar"></i> Latest Starting
-                                        </a></li>
-                                        <li class="divider"></li>
-                                        <li><a href ng-click="setSort('createdAt', 'desc')">
-                                            <i class="glyphicon glyphicon-time"></i> Newest First
-                                        </a></li>
-                                        <li><a href ng-click="setSort('createdAt', 'asc')">
-                                            <i class="glyphicon glyphicon-time"></i> Oldest First
-                                        </a></li>
-                                    </ul>
                                 </div>
                             </div>
                         </div>
@@ -102,6 +67,38 @@
     </div>
     <div class="row" ng-show="bookings.length > 0">
         <div class="col-md-12">
+            <div class="sort-container">
+                <div uib-dropdown dropdown-append-to-body="true" class="sort-dropdown">
+                    <button class="btn btn-sm btn-default" uib-dropdown-toggle>
+                        <i class="glyphicon glyphicon-sort"></i>
+                        Sort: {{getSortLabel()}}
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-right" uib-dropdown-menu>
+                        <li><a href ng-click="setSort('amount', 'asc')">
+                            <i class="glyphicon glyphicon-arrow-up"></i> Price: Low-High
+                        </a></li>
+                        <li><a href ng-click="setSort('amount', 'desc')">
+                            <i class="glyphicon glyphicon-arrow-down"></i> Price: High-Low
+                        </a></li>
+                        <li class="divider"></li>
+                        <li><a href ng-click="setSort('startDate', 'asc')">
+                            <i class="glyphicon glyphicon-calendar"></i> Earliest Starting
+                        </a></li>
+                        <li><a href ng-click="setSort('startDate', 'desc')">
+                            <i class="glyphicon glyphicon-calendar"></i> Latest Starting
+                        </a></li>
+                        <li class="divider"></li>
+                        <li><a href ng-click="setSort('createdAt', 'desc')">
+                            <i class="glyphicon glyphicon-time"></i> Newest First
+                        </a></li>
+                        <li><a href ng-click="setSort('createdAt', 'asc')">
+                            <i class="glyphicon glyphicon-time"></i> Oldest First
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+
             <div class="panel panel-primary">
                 <div class="panel-heading">
                     <h3 class="panel-title">Bidding Details</h3>
@@ -198,4 +195,44 @@
             rotate="true">
         </ul>
     </div>
+
+    <style>
+        .sort-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 100;
+        }
+        
+        .sort-dropdown .btn {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .sort-dropdown .btn:hover {
+            background-color: #f8f8f8;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+        
+        .sort-dropdown .btn i {
+            color: #2563eb;
+            margin-right: 5px;
+        }
+        
+        .sort-dropdown .dropdown-menu {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .sort-dropdown .dropdown-menu > li > a {
+            padding: 8px 20px;
+        }
+        
+        .sort-dropdown .dropdown-menu > li > a:hover {
+            background-color: rgba(37,99,235,0.05);
+        }
+    </style>
 </div>

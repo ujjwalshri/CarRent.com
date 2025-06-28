@@ -115,8 +115,8 @@ angular.module('myApp').controller('myBiddingsCtrl', function($scope, BiddingFac
                 'desc': 'Price: High-Low'
             },
             'startDate': {
-                'asc': 'Latest Starting',
-                'desc': 'Earliest Starting'
+                'asc': 'Earliest Starting',
+                'desc': 'Latest Starting'
             },
             'createdAt': {
                 'asc': 'Oldest First',

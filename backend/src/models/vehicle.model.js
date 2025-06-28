@@ -29,13 +29,20 @@ const vehicleSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    category:{
-        type:String,
-        required:true
+    category: {
+        _id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'CarCategory',
+            required: true
+        },
+        name: {
+            type: String,
+            required: true
+        }
     },
-    deleted:{
-        type:Boolean,
-        default:false
+    deleted: {
+        type: Boolean,
+        default: false
     },
     status: {
         type: String,

@@ -27,7 +27,7 @@ const validateBiddingData = (data) => {
             color: Joi.string().required(),
             mileage: Joi.number().positive().required(),
             fuelType: Joi.string().valid('Petrol', 'Diesel', 'Electric', 'Hybrid').required(),
-            category: Joi.string().required(),
+            category: Joi.object().required(),
             status: Joi.string().valid('pending', 'approved').required(),
             city: Joi.string().required(),
             vehicleImage: Joi.object().required(),

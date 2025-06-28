@@ -57,6 +57,7 @@ angular
           // Handle the new response format that includes cars array and pagination metadata
           if (response.cars && Array.isArray(response.cars)) {
             $scope.cars = response.cars;
+            console.log($scope.cars);
             
             // Set pagination data from the response
             if (response.pagination) {

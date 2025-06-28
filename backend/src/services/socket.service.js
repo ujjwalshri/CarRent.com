@@ -17,8 +17,9 @@ let onlineUsers = [];
 export const initializeSocket = (server) => {
     io = new Server(server, {
         cors: {
-            origin: process.env.FRONTEND_URL || 'http://localhost:5500',
-            methods: ['GET', 'POST']
+            origin: true,
+            methods: ['GET', 'POST'],
+            credentials: true
         }
     });
     setupSocketEvents();
@@ -175,4 +176,4 @@ export const emitBidSuccess = (username, bidData) => {
         io.to(username).emit('bidSuccess', bidData);
         console.log(`Emitted bid success to user ${username}`);
     }
-}; 
+};

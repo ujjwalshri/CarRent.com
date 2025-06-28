@@ -77,10 +77,8 @@ app.use(cookieParser());
  * across different domains/ports
  */
 app.use(cors({
-    origin: process.env.ISPRODUCTION ? 'https://car-rent-com.vercel.app'  :["http://localhost:5500"],
+    origin: true,
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
 
 /**

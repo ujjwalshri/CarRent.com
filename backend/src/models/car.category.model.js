@@ -1,9 +1,13 @@
 import mongoose from "mongoose";
 
-const carCategorySchema = new mongoose.Schema({
+const carCategorySchema = new mongoose.Schema(
+  {
     name: { type: String, required: true },
-}, { timestamps: true });
+  },
+  {
+    timestamps: true,
+    collection: "categories",  
+  }
+);
 
-const CarCategory = mongoose.model("CarCategory", carCategorySchema);
-
-export default CarCategory;
+export default mongoose.model("CarCategory", carCategorySchema);

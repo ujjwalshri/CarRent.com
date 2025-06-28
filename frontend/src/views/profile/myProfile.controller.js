@@ -30,7 +30,7 @@ angular.module("myApp").controller("myProfileCtrl", function($scope, $state, Toa
         })
         .then((res)=>{
             if(res){
-                $scope.user.rating = res.sellerRating[0].averageRating.toFixed(1);
+                $scope.user.rating = res.sellerRating[0]?.averageRating.toFixed(1);
             }
         })
         .catch((err) => {

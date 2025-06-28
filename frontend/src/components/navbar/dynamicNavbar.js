@@ -1,6 +1,6 @@
 angular.module("myApp").component("dynamicNavbar", {
   template: `
-    <nav class="navbar navbar-inverse" id="dynamicNavbar">
+    <nav class="navbar custom-navbar" id="dynamicNavbar">
         <div class="container-fluid">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" ng-click="$ctrl.toggleNav()">
@@ -23,6 +23,70 @@ angular.module("myApp").component("dynamicNavbar", {
             </div>
         </div>
     </nav>
+    
+    <style>
+      .custom-navbar {
+        background-color: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border: none;
+        margin-bottom: 20px;
+      }
+      
+      .custom-navbar .navbar-brand,
+      .custom-navbar .navbar-nav > li > a {
+        color: #333;
+        font-weight: 500;
+        transition: color 0.2s, background-color 0.2s;
+      }
+      
+      .custom-navbar .navbar-brand {
+        color: #2563eb;
+        font-weight: 600;
+      }
+      
+      .custom-navbar .navbar-brand:hover {
+        color: #1e40af;
+      }
+      
+      .custom-navbar .navbar-nav > li > a:hover,
+      .custom-navbar .navbar-nav > li > a:focus {
+        background-color: rgba(37, 99, 235, 0.05);
+        color: #2563eb;
+      }
+
+      /* Remove active state styles */
+      .custom-navbar .navbar-nav > li.active > a,
+      .custom-navbar .navbar-nav > li.active > a:hover,
+      .custom-navbar .navbar-nav > li.active > a:focus {
+        background-color: transparent;
+        color: #333;
+      }
+      
+      .custom-navbar .navbar-toggle {
+        border-color: #ddd;
+      }
+      
+      .custom-navbar .navbar-toggle .icon-bar {
+        background-color: #333;
+      }
+      
+      .custom-navbar .dropdown-menu {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      
+      
+      .custom-navbar .dropdown-menu > li > a {
+        color: #333;
+        padding: 8px 20px;
+      }
+      
+      .custom-navbar .dropdown-menu > li > a:hover {
+        background-color: rgba(37, 99, 235, 0.05);
+        color: #2563eb;
+      }
+    </style>
   `,
   controller: function($element, AuthService, ToastService, $compile, $scope, $rootScope, $state) {
     var ctrl = this;
@@ -36,19 +100,17 @@ angular.module("myApp").component("dynamicNavbar", {
           { href: "sellerListings", icon: "glyphicon-list-alt", text: "My Listings" },
           { dropdown: true, icon: "glyphicon-calendar", text: "Bookings Management", items: [
             { href: "ownerBookings", icon: "glyphicon-tag", text: "Bidding Requests" },
-            { href: "confirmedBookings", icon: "glyphicon-ok", text: "Confirmed Requests" }
+            { href: "confirmedBookings", icon: "glyphicon-ok", text: "Confirmed Bookings" }
           ]},
           { href: "sellerAnalytics", icon: "glyphicon-stats", text: "Seller Analytics" }
         ],
         rightLinks: [
-          { href: "conversations({id: undefined})", icon: "glyphicon-comment", text: "Chats" },
           { href: "myProfile.overview", icon: "glyphicon-user", text: "Profile" },
         ]
       },
       user: {
         mainLinks: [],
         rightLinks: [
-          { href: "conversations({id: undefined})", icon: "glyphicon-comment", text: "Chats" },
           { href: "becomeSeller", icon: "glyphicon-briefcase", text: "Become a Seller" },
           { href: "myProfile.overview", icon: "glyphicon-user", text: "Profile" },
         ]
@@ -126,7 +188,8 @@ angular.module("myApp").component("dynamicNavbar", {
       if (item.action === 'logout') {
         link = angular.element('<a href="#" ng-click="$ctrl.logout(); $ctrl.closeNav()"><span class="glyphicon ' + item.icon + '"></span> ' + item.text + '</a>');
       } else {
-        link = angular.element('<a ui-sref="' + item.href + '" ng-click="$ctrl.closeNav()"><span class="glyphicon ' + item.icon + '"></span> ' + item.text + '</a>');
+        // Add ui-sref-opts to prevent active class
+        link = angular.element('<a ui-sref="' + item.href + '" ui-sref-opts="{reload: true}" ng-click="$ctrl.closeNav()"><span class="glyphicon ' + item.icon + '"></span> ' + item.text + '</a>');
       }
       
       $compile(link)($scope);
