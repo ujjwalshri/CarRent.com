@@ -37,6 +37,7 @@ import { initializeSocket, emitBidSuccess } from './services/socket.service.js';
 import { Worker } from 'worker_threads';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { trusted } from "mongoose";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -77,7 +78,7 @@ app.use(cookieParser());
  * across different domains/ports
  */
 app.use(cors({
-    origin: true,
+    origin: true, // Frontend URL
     credentials: true,
 }));
 

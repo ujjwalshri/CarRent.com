@@ -42,7 +42,7 @@ angular.module("myApp").controller("exploreCarsCtrl", function($scope, $state, T
             const filters = JSON.parse(savedFilters);
             $scope.search = filters.search;
             $scope.category = filters.category;
-            $scope.city = filters.city;
+            $scope.city = filters.city || 'Gwalior';
             $scope.fuelType = filters.fuelType;
             $scope.sort.sortBy = filters.sortBy;
             return true;
@@ -70,30 +70,9 @@ angular.module("myApp").controller("exploreCarsCtrl", function($scope, $state, T
     * @description: this function will be called when the controller is loaded, fetches the geolocation and cars initially
     */
     $scope.init = function() {
-        const hasStoredFilters = loadFiltersFromLocalStorage();
-        if (hasStoredFilters) {
             fetchCars();
-        } else {
-            fetchGeolocation();
-        }
     };
 
-    function fetchGeolocation(){
-        $scope.loadingCars = true;
-        GeolocationService.getUserLocationWithCity()
-        .then((response) => {
-            
-            $scope.city = response.city;
-            console.log("City fetched successfully:", $scope.city);
-            return fetchCars();
-        })
-        .then(()=>{
-
-            console.log("Cars fetched successfully");
-        }).catch((error) => {
-            console.error("Error fetching geolocation data:", error);
-        })
-    }
 
     function fetchCars() {
         console.log("Fetching cars called" , $scope.sort.sortBy);
@@ -107,6 +86,7 @@ angular.module("myApp").controller("exploreCarsCtrl", function($scope, $state, T
             .then(function(responses) {
                 if (responses[0] && responses[0].data) {
                     $scope.allCars = responses[0].data;
+                    console.log("Cars fetched successfully", $scope.allCars);
                     $scope.hasMoreCars = responses[0].data.length > $scope.limit;
                 }
                 if (responses[1]) {
@@ -184,7 +164,7 @@ angular.module("myApp").controller("exploreCarsCtrl", function($scope, $state, T
         $scope.skip = 0;
         $scope.isLoading = false;
         localStorage.removeItem('carFilters'); // Clear stored filters
-        fetchGeolocation();
+        fetchCars();
     };
 
     /**

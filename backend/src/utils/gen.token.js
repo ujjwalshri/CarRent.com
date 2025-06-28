@@ -31,6 +31,7 @@ export const generateTokenAndSetCookie = async(user, res) => {
   res.cookie("jwt", token, {
      maxAge: 24*60*60*1000, // 24 hours in milliseconds
      httpOnly: true, // Prevents client-side JavaScript from accessing the cookie
+   
   });
 };
 
